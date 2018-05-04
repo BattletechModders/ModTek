@@ -1,0 +1,48 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+
+namespace ModTek
+{
+    public class ModDef
+    {
+        // this path will be set at runtime by ModTek
+        [JsonIgnore]
+        public string Directory { get; set; }
+
+        // name will probably have to be unique
+        [JsonProperty(Required = Required.Always)]
+        public string Name { get; set; }
+
+        // this will abort loading by ModTek if set to false
+        [DefaultValue(true)]
+        public bool Enabled { get; set; } = true;
+
+        // versioning
+        public string Version { get; set; }
+        public DateTime? PackagedOn { get; set; }
+
+        // load order
+        public List<string> DependsOn { get; set; }
+        public List<string> LoadBefore { get; set; }
+        public List<string> LoadAfter { get; set; }
+        public List<string> ConflictsWith { get; set; }
+
+        // adding and running code
+        public string DLL { get; set; }
+        public string DLLEntryPoint { get; set; }
+
+        // ignoring stuff, so that it doesn't get loaded
+        public List<string> IgnoreDirectories { get; set; }
+        public List<string> IgnoreFiles { get; set; }
+
+        // a settings file to be nice to our users and have a known place for settings
+        // these will be different depending on the mod obviously
+        public Dictionary<string, Object> Settings { get; set; }
+
+        public ModDef() { }
+    }
+}
