@@ -50,8 +50,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Loading.cs" />
     <Compile Include="ModDef.cs" />
-    <Compile Include="ModTek.cs" />
+    <Compile Include="Core.cs" />
     <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
