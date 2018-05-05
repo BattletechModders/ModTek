@@ -9,6 +9,24 @@ namespace ModTek
 {
     public class ModDef
     {
+        public class ManifestEntry
+        {
+            [JsonProperty(Required = Required.Always)]
+            public string Type;
+
+            [JsonProperty(Required = Required.Always)]
+            public string Path;
+
+            public string ID;
+
+            public ManifestEntry(string type, string path, string id = null)
+            {
+                Type = type;
+                Path = path;
+                ID = id;
+            }
+        }
+
         // this path will be set at runtime by ModTek
         [JsonIgnore]
         public string Directory { get; set; }
@@ -38,6 +56,9 @@ namespace ModTek
         // ignoring stuff, so that it doesn't get loaded
         public List<string> IgnoreDirectories { get; set; }
         public List<string> IgnoreFiles { get; set; }
+
+        // manifest, for including any kind of things to add to the game's manifest
+        public List<ManifestEntry> Manifest { get; set; }
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
