@@ -20,27 +20,24 @@ namespace ModTek
 
                 if (File.Exists(dllPath))
                 {
-                    if (modDef.DLLEntryPoint == null)
-                    {
-                        BTModLoader.LoadDLL(dllPath, logWriter);
-                    }
-                    else
-                    {
-                        string typeName = null;
-                        string methodName = "Init";
-                        int pos = modDef.DLLEntryPoint.LastIndexOf('.');
+                    string typeName = null;
+                    string methodName = "Init";
 
+                    if (modDef.DLLEntryPoint != null)
+                    {
+                        int pos = modDef.DLLEntryPoint.LastIndexOf('.');
                         if (pos == -1)
+                        {
                             methodName = modDef.DLLEntryPoint;
+                        }
                         else
                         {
                             typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
                             methodName = modDef.DLLEntryPoint.Substring(pos + 1);
                         }
-
-                        // TODO: pass in param for modDef.Path, and modDef.Settings if available
-                        BTModLoader.LoadDLL(dllPath, logWriter, methodName, typeName);
                     }
+
+                    BTModLoader.LoadDLL(dllPath, logWriter, methodName, typeName, new object[] { modDef.Directory, modDef.Settings });
                 }
                 else
                 {

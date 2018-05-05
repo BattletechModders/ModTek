@@ -41,7 +41,7 @@ namespace ModTek
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public Dictionary<string, Object> Settings { get; set; }
+        public Dictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
 
         public ModDef() { }
     }
