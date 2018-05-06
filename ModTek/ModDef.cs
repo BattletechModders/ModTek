@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -62,14 +63,12 @@ namespace ModTek
         // changing implicit loading behavior
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;
-        [DefaultValue(true)]
-        public bool MergeImplicitJSON { get; set; } = true;
 
         // manifest, for including any kind of things to add to the game's manifest
         public List<ManifestEntry> Manifest { get; set; }
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public Dictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
+        public JObject Settings { get; set; }
     }
 }
