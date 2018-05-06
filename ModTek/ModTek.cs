@@ -155,7 +155,7 @@ namespace ModTek
                         else if (File.Exists(entryPath))
                         {
                             // path is a file, add the single entry
-                            var id = entry.ID;
+                            var id = entry.Id;
 
                             if (id == null)
                                 id = InferIDFromFileAndType(entryPath, entry.Type);

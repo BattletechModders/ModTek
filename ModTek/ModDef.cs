@@ -12,19 +12,17 @@ namespace ModTek
         public class ManifestEntry
         {
             [JsonProperty(Required = Required.Always)]
-            public string Type;
+            public string Type { get; set; }
 
             [JsonProperty(Required = Required.Always)]
-            public string Path;
+            public string Path { get; set; }
 
-            public string ID;
+            public string Id { get; set; }
+            public string AssetBundleName { get; set; }
+            public bool? AssetBundlePersistent { get; set; }
 
-            public ManifestEntry(string type, string path, string id = null)
-            {
-                Type = type;
-                Path = path;
-                ID = id;
-            }
+            [DefaultValue(true)]
+            public bool MergeJSON { get; set; } = true;
         }
 
         // this path will be set at runtime by ModTek
@@ -35,27 +33,28 @@ namespace ModTek
         [JsonProperty(Required = Required.Always)]
         public string Name { get; set; }
 
+        // versioning
+        [JsonProperty(Required = Required.Always)]
+        public string Version { get; set; }
+        public DateTime? PackagedOn { get; set; }
+        
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
-
-        // versioning
-        public string Version { get; set; }
-        public DateTime? PackagedOn { get; set; }
-
+        
         // load order
         public List<string> DependsOn { get; set; }
-        public List<string> LoadBefore { get; set; }
-        public List<string> LoadAfter { get; set; }
         public List<string> ConflictsWith { get; set; }
 
         // adding and running code
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
-        // ignoring stuff, so that it doesn't get loaded
-        public List<string> IgnoreDirectories { get; set; }
-        public List<string> IgnoreFiles { get; set; }
+        // changing implicit loading behavior
+        [DefaultValue(true)]
+        public bool LoadImplicitManifest { get; set; } = true;
+        [DefaultValue(true)]
+        public bool MergeImplicitJSON { get; set; } = true;
 
         // manifest, for including any kind of things to add to the game's manifest
         public List<ManifestEntry> Manifest { get; set; }
@@ -63,7 +62,5 @@ namespace ModTek
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
         public Dictionary<string, string> Settings { get; set; } = new Dictionary<string, string>();
-
-        public ModDef() { }
     }
 }
