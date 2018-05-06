@@ -11,44 +11,50 @@ using Newtonsoft.Json;
 
 namespace ModTek
 {
-    public static class Core
+    public static class ModTek
     {
         public static string ModDirectory { get; private set; }
 
-        private static string logPath;
-        private static string MOD_JSON_NAME = "mod.json";
+        private static readonly string MOD_JSON_NAME = "mod.json";
 
-        public static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; set; } = new Dictionary<string, ModDef.ManifestEntry>();
-
-        public static void LogMessage(string message, params object[] formatThings)
+        internal static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; set; } = new Dictionary<string, ModDef.ManifestEntry>();
+        
+        // logging
+        internal static string logPath;
+        internal static void Log(string message, params object[] formatObjects)
         {
             if (logPath != null && logPath != "")
-            {
                 using (var logWriter = File.AppendText(logPath))
-                {
-                    logWriter.WriteLine(message, formatThings);
-                }
-            }
+                    logWriter.WriteLine(message, formatObjects);
+        }
+        internal static void LogWithDate(string message, params object[] formatObjects)
+        {
+            if (logPath != null && logPath != "")
+                using (var logWriter = File.AppendText(logPath))
+                    logWriter.WriteLine(DateTime.Now.ToShortTimeString() + " - " + message, formatObjects);
         }
 
         // ran by BTML
         public static void Init()
         {
-            ModDirectory = Path.GetFullPath(BTModLoader.ModDirectory);
+            ModDirectory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH), @"..\..\..\Mods\"));
             logPath = Path.Combine(ModDirectory, "ModTek.log");
 
-            // init harmony and patch the stuff that comes with ModTek
+            // create log file, overwritting if it's already there
+            using (var logWriter = File.CreateText(logPath))
+                logWriter.WriteLine("ModTek -- {0}", DateTime.Now);
+            
+            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            
-
-            var modDefs = new List<ModDef>();
-            LogMessage("ModTek -- {0}", DateTime.Now);
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory).Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME)));
             if (modDirectories.Count() == 0)
-                LogMessage("No ModTek-compatable mods found.");
+                Log("No ModTek-compatable mods found.");
+
+            // create ModDef objects for each mod.json file, building a dependancy graph
+            var modDefs = new List<ModDef>();
             foreach (var modDirectory in modDirectories)
             {
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
@@ -56,7 +62,7 @@ namespace ModTek
 
                 if (modDef == null)
                 {
-                    LogMessage("ModDef found in {0} not valid.", modDefPath);
+                    Log("ModDef found in {0} not valid.", modDefPath);
                     continue;
                 }
 
@@ -64,11 +70,11 @@ namespace ModTek
                 {
                     modDef.Directory = Path.GetDirectoryName(modDefPath);
                     modDefs.Add(modDef);
-                    LogMessage("Loaded ModDef for {0}.", modDef.Name);
+                    Log("Loaded ModDef for {0}.", modDef.Name);
                 }
                 else
                 {
-                    LogMessage("{0} disabled, skipping load.", modDef.Name);
+                    Log("{0} disabled, skipping load.", modDef.Name);
                     continue;
                 }
 
@@ -81,44 +87,30 @@ namespace ModTek
                 LoadMod(modDef);
             }
         }
-
-
-        private static string InferIDFromFileAndType(string path, string type)
+        
+        internal static string InferIDFromFileAndType(string path, string type)
         {
-            // this is actually the worst function known to mankind
-            // TODO: uhh.. make it not awful
             if (Path.GetExtension(path).ToLower() == "json" && File.Exists(path))
             {
                 try
                 {
-                    string id;
                     var jObj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
+                    string id;
                     
-                    id = (string)jObj.SelectToken("Description.Id");
-                    if (id != null)
-                        return id;
-
-                    id = (string)jObj.SelectToken("id");
-                    if (id != null)
-                        return id;
-
-                    id = (string)jObj.SelectToken("Id");
-                    if (id != null)
-                        return id;
-
-                    id = (string)jObj.SelectToken("ID");
-                    if (id != null)
-                        return id;
-
-                    id = (string)jObj.SelectToken("identifier");
-                    if (id != null)
-                        return id;
-
-                    id = (string)jObj.SelectToken("Identifier");
-                    if (id != null)
-                        return id;
+                    // go through the different kinds of id storage in JSONS
+                    // TODO: make this specific to the type
+                    string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
+                    foreach (var jPath in jPaths)
+                    {
+                        id = (string)jObj.SelectToken(jPath);
+                        if (id != null)
+                            return id;
+                    }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Log("\tException occurred while parsing type {1} json at {0}: {2}", path, type, e.ToString());
+                }
             }
 
             // fall back to using the path
@@ -129,7 +121,7 @@ namespace ModTek
         {
             var potentialAdditions = new Dictionary<string, ModDef.ManifestEntry>();
 
-            LogMessage("Loading {0}", modDef.Name);
+            LogWithDate("Loading {0}", modDef.Name);
 
             // load out of the manifest
             // TODO: actually ignore the modDef specified files/directories
@@ -137,21 +129,21 @@ namespace ModTek
             {
                 foreach (var entry in modDef.Manifest)
                 {
-                    var path = Path.Combine(modDef.Directory, entry.Path);
+                    var entryPath = Path.Combine(modDef.Directory, entry.Path);
 
                     if (entry.Path != null && entry.Path != "" && entry.Type != null && entry.Type != "")
                     {
-                        if (Directory.Exists(path))
+                        if (Directory.Exists(entryPath))
                         {
                             // path is a directory, add all the files there
-                            var files = Directory.GetFiles(path);
+                            var files = Directory.GetFiles(entryPath);
                             foreach (var filePath in files)
                             {
                                 var id = InferIDFromFileAndType(filePath, entry.Type);
 
                                 if (potentialAdditions.ContainsKey(id))
                                 {
-                                    LogMessage("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
+                                    LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
                                     return;
                                 }
                                 else
@@ -160,33 +152,33 @@ namespace ModTek
                                 }
                             }
                         }
-                        else if (File.Exists(path))
+                        else if (File.Exists(entryPath))
                         {
                             // path is a file, add the single entry
                             var id = entry.ID;
 
                             if (id == null)
-                                id = InferIDFromFileAndType(path, entry.Type);
+                                id = InferIDFromFileAndType(entryPath, entry.Type);
 
                             if (potentialAdditions.ContainsKey(id))
                             {
-                                LogMessage("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, path);
+                                LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, entryPath);
                                 return;
                             }
                             else
                             {
-                                potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, path));
+                                potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
                             }
                         }
                         else
                         {
-                            LogMessage("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, path);
+                            LogWithDate("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, entryPath);
                             return;
                         }
                     }
                     else
                     {
-                        LogMessage("{0} has a manifest entry that is missing its type or path! Aborting load.", modDef.Name);
+                        LogWithDate("{0} has a manifest entry that is missing its type or path! Aborting load.", modDef.Name);
                         return;
                     }
                 }
@@ -216,11 +208,12 @@ namespace ModTek
                         }
                     }
 
+                    LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
                     BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings });
                 }
                 else
                 {
-                    LogMessage("{0} has a DLL specified ({1}), but it's missing! Aborting load.", modDef.Name, dllPath);
+                    LogWithDate("{0} has a DLL specified ({1}), but it's missing! Aborting load.", modDef.Name, dllPath);
                     return;
                 }
             }
@@ -228,14 +221,15 @@ namespace ModTek
             // actually add the additions, since we successfully got through loading the other stuff
             if (potentialAdditions.Count > 0)
             {
+                // TODO, this kvp is the weirdest thing
                 foreach (var additionKVP in potentialAdditions)
                 {
-                    LogMessage("\tWill load manifest entry -- id: {0} type: {1} path: {2}", additionKVP.Key, additionKVP.Value.Type, additionKVP.Value.Path);
+                    Log("\tWill load manifest entry -- id: {0} type: {1} path: {2}", additionKVP.Key, additionKVP.Value.Type, additionKVP.Value.Path);
                     NewManifestEntries[additionKVP.Key] = additionKVP.Value;
                 }
             }
 
-            LogMessage("Loaded {0}", modDef.Name);
+            LogWithDate("Loaded {0}", modDef.Name);
         }
     }
 }

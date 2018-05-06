@@ -21,16 +21,17 @@ namespace ModTek
     {
         static void Postfix(BattleTech.VersionManifest __result)
         {
-            Core.LogMessage("BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch");
+            ModTek.LogWithDate("BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch");
 
             // add to the manifest here
-            foreach (var entryKVP in Core.NewManifestEntries)
+            // TODO: these freaking kvp look so bad
+            foreach (var entryKVP in ModTek.NewManifestEntries)
             {
                 var id = entryKVP.Key;
                 var path = entryKVP.Value.Path;
                 var type = entryKVP.Value.Type;
 
-                Core.LogMessage("\tAddOrUpdate({0},{1},{2},{3})", entryKVP.Key, path, type, DateTime.Now);
+                ModTek.Log("\tAddOrUpdate({0},{1},{2},{3})", entryKVP.Key, path, type, DateTime.Now);
                 __result.AddOrUpdate(entryKVP.Key, path, type, DateTime.Now);
             }
         }
