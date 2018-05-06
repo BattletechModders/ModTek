@@ -23,13 +23,13 @@ namespace ModTek
         internal static string logPath;
         internal static void Log(string message, params object[] formatObjects)
         {
-            if (logPath != null && logPath != "")
+            if (!string.IsNullOrEmpty(logPath))
                 using (var logWriter = File.AppendText(logPath))
                     logWriter.WriteLine(message, formatObjects);
         }
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
-            if (logPath != null && logPath != "")
+            if (!string.IsNullOrEmpty(logPath))
                 using (var logWriter = File.AppendText(logPath))
                     logWriter.WriteLine(DateTime.Now.ToShortTimeString() + " - " + message, formatObjects);
         }
@@ -137,54 +137,52 @@ namespace ModTek
                 {
                     var entryPath = Path.Combine(modDef.Directory, entry.Path);
 
-                    if (entry.Path != null && entry.Path != "" && entry.Type != null && entry.Type != "")
+                    if (string.IsNullOrEmpty(entry.Path) || string.IsNullOrEmpty(entry.Type))
                     {
-                        if (Directory.Exists(entryPath))
+                        LogWithDate("{0} has a manifest entry that is missing its type or path! Aborting load.", modDef.Name);
+                        return;
+                    }
+                    
+                    if (Directory.Exists(entryPath))
+                    {
+                        // path is a directory, add all the files there
+                        var files = Directory.GetFiles(entryPath);
+                        foreach (var filePath in files)
                         {
-                            // path is a directory, add all the files there
-                            var files = Directory.GetFiles(entryPath);
-                            foreach (var filePath in files)
-                            {
-                                var id = InferIDFromFileAndType(filePath, entry.Type);
-
-                                if (potentialAdditions.ContainsKey(id))
-                                {
-                                    LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
-                                    return;
-                                }
-                                else
-                                {
-                                    potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
-                                }
-                            }
-                        }
-                        else if (File.Exists(entryPath))
-                        {
-                            // path is a file, add the single entry
-                            var id = entry.ID;
-
-                            if (id == null)
-                                id = InferIDFromFileAndType(entryPath, entry.Type);
+                            var id = InferIDFromFileAndType(filePath, entry.Type);
 
                             if (potentialAdditions.ContainsKey(id))
                             {
-                                LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, entryPath);
+                                LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
                                 return;
                             }
                             else
                             {
-                                potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
+                                potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
                             }
+                        }
+                    }
+                    else if (File.Exists(entryPath))
+                    {
+                        // path is a file, add the single entry
+                        var id = entry.Id;
+
+                        if (id == null)
+                            id = InferIDFromFileAndType(entryPath, entry.Type);
+
+                        if (potentialAdditions.ContainsKey(id))
+                        {
+                            LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, entryPath);
+                            return;
                         }
                         else
                         {
-                            LogWithDate("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, entryPath);
-                            return;
+                            potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
                         }
                     }
                     else
                     {
-                        LogWithDate("{0} has a manifest entry that is missing its type or path! Aborting load.", modDef.Name);
+                        LogWithDate("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, entryPath);
                         return;
                     }
                 }
@@ -215,7 +213,7 @@ namespace ModTek
                     }
 
                     LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
-                    BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings });
+                    BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
                 }
                 else
                 {
