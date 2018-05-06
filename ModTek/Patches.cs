@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BattleTech;
 
 namespace ModTek
 {
@@ -16,12 +17,12 @@ namespace ModTek
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.VersionManifestUtilities), "LoadDefaultManifest")]
-    public static class BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch
+    [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
+    public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        static void Postfix(BattleTech.VersionManifest __result)
+        static void Postfix(VersionManifest __result)
         {
-            ModTek.LogWithDate("BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch");
+            ModTek.LogWithDate("VersionManifestUtilities_LoadDefaultManifest_Patch");
 
             // add to the manifest here
             // TODO: these freaking kvp look so bad
