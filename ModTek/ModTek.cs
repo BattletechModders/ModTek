@@ -88,7 +88,7 @@ namespace ModTek
             }
         }
         
-        internal static string InferIDFromFileAndType(string path, string type)
+        public static string InferIDFromFileAndType(string path, string type)
         {
             if (Path.GetExtension(path).ToLower() == "json" && File.Exists(path))
             {
