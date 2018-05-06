@@ -1,12 +1,16 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [ModTek .json Format](). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stack game files that are easy to remove, version, and persist through patches.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [ModTek .json Format](). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
 ***THERE ARE NO RELEASES YET -- IN HEAVY DEVELOPMENT!***
 
 ## Installing
 
-ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader). Install BTML according to its instructions, and then move ModTek.dll into your `\BATTLETECH\Mods\` directory. On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
+ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
+
+Installing is as simple as moving ModTek.dll into your `\BATTLETECH\Mods\` directory.
+
+On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 
 ## Anatomy of a ModTek Mod
 
@@ -16,7 +20,7 @@ ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader). Install 
         MyModName.modtek.json
         MyDllName.dll
 
-        \(WeaponDef)\
+        \data\weapon\
             Weapon_Autocannon_AC5_0-Stock.json
 ```
 
