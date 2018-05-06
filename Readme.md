@@ -76,3 +76,5 @@ This change would make the AC/5 do 450 damage, and probably ensure the rapid uni
 
 Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should ***absolutely not*** copy the entire file from the
 stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+
+If you would like to add a brand new file declaration to BATTLETECH, such as a new weapon or equipment, then you may do so by including JSON files here.
