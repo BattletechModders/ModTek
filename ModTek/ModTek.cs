@@ -87,6 +87,22 @@ namespace ModTek
                 LoadMod(modDef);
             }
         }
+
+        public static string InferIDFromJSONBlob(Newtonsoft.Json.Linq.JObject jObj)
+        {
+            // go through the different kinds of id storage in JSONS
+            // TODO: make this specific to the type
+            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
+            string id;
+            foreach (var jPath in jPaths)
+            {
+                id = (string)jObj.SelectToken(jPath);
+                if (id != null)
+                    return id;
+            }
+
+            return null;
+        }
         
         public static string InferIDFromFileAndType(string path, string type)
         {
@@ -95,17 +111,7 @@ namespace ModTek
                 try
                 {
                     var jObj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-                    string id;
-                    
-                    // go through the different kinds of id storage in JSONS
-                    // TODO: make this specific to the type
-                    string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-                    foreach (var jPath in jPaths)
-                    {
-                        id = (string)jObj.SelectToken(jPath);
-                        if (id != null)
-                            return id;
-                    }
+                    return InferIDFromJSONBlob(jObj);
                 }
                 catch (Exception e)
                 {
