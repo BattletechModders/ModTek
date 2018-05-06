@@ -23,6 +23,15 @@ namespace ModTek
 
             [DefaultValue(true)]
             public bool MergeJSON { get; set; } = true;
+
+            public ManifestEntry(string type, string path, string id = null, string assetBundleName = null, bool? assetBundlePersistent = null)
+            {
+                Type = type;
+                Path = path;
+                Id = id;
+                AssetBundleName = assetBundleName;
+                AssetBundlePersistent = assetBundlePersistent;
+            }
         }
 
         // this path will be set at runtime by ModTek
