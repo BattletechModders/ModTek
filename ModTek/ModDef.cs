@@ -23,7 +23,7 @@ namespace ModTek
             public bool? AssetBundlePersistent { get; set; }
 
             [DefaultValue(true)]
-            public bool MergeJSON { get; set; } = true;
+            public bool ShouldMergeJSON { get; set; } = true;
 
             public ManifestEntry(string type, string path, string id = null, string assetBundleName = null, bool? assetBundlePersistent = null)
             {

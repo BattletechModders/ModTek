@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using BattleTech;
 
 namespace ModTek
 {
@@ -18,24 +20,24 @@ namespace ModTek
         }
     }
 
-    public static class DoModulePatch
+    public static class DoJSONMerge
     {
-        public static Dictionary<string, List<string>> ModulePatches = new Dictionary<string, List<string>>();
+        public static Dictionary<string, List<string>> JSONMerges = new Dictionary<string, List<string>>();
         public static void Execute<T>(ref string json, T __instance)
         {
             var copy_json = json;
             try
             {
-                var oldJObj = Newtonsoft.Json.Linq.JObject.Parse(copy_json);
-                var id = ModTek.InferIDFromJSONBlob(oldJObj);
-                if (ModulePatches.ContainsKey(id))
+                var oldJObj = JObject.Parse(copy_json);
+                var id = ModTek.InferIDFromJObject(oldJObj);
+                if (JSONMerges.ContainsKey(id))
                 {
-                    ModulePatches[id].ForEach((string json_patch) =>
+                    JSONMerges[id].ForEach((string json_patch) =>
                     {
-                        var patchJObj = Newtonsoft.Json.Linq.JObject.Parse(json_patch);
+                        var patchJObj = JObject.Parse(json_patch);
                         oldJObj.Merge(patchJObj);
                     });
-                    ModulePatches.Remove(id);
+                    JSONMerges.Remove(id);
                 }
                 // Once we are here, we can commit to changing the json file
                 json = oldJObj.ToString();
@@ -49,210 +51,209 @@ namespace ModTek
         }
     }
     
-    [HarmonyPatch(typeof(BattleTech.AbilityDef), "FromJSON")]
-    public static class BattleTech_AbilityDef_FromJSON_Patch
+    [HarmonyPatch(typeof(AbilityDef), "FromJSON")]
+    public static class AbilityDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.AbilityDef __instance)
+        static void Prefix(ref string json, AbilityDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.AmmunitionBoxDef), "FromJSON")]
-    public static class BattleTech_AmmunitionBoxDef_FromJSON_Patch
+    [HarmonyPatch(typeof(AmmunitionBoxDef), "FromJSON")]
+    public static class AmmunitionBoxDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.AmmunitionBoxDef __instance)
+        static void Prefix(ref string json, AmmunitionBoxDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.AmmunitionDef), "FromJSON")]
-    public static class BattleTech_AmmoDef_FromJSON_Patch
+    [HarmonyPatch(typeof(AmmunitionDef), "FromJSON")]
+    public static class AmmoDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.AmmunitionDef __instance)
+        static void Prefix(ref string json, AmmunitionDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.AudioEventDef), "FromJSON")]
-    public static class BattleTech_AudioEventDef_FromJSON_Patch
+    [HarmonyPatch(typeof(AudioEventDef), "FromJSON")]
+    public static class AudioEventDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.AudioEventDef __instance)
+        static void Prefix(ref string json, AudioEventDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.BackgroundDef), "FromJSON")]
-    public static class BattleTech_BackgroundDef_FromJSON_Patch
+    [HarmonyPatch(typeof(BackgroundDef), "FromJSON")]
+    public static class BackgroundDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.BackgroundDef __instance)
+        static void Prefix(ref string json, BackgroundDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.BuildingDef), "FromJSON")]
-    public static class BattleTech_BuildingDef_FromJSON_Patch
+    [HarmonyPatch(typeof(BuildingDef), "FromJSON")]
+    public static class BuildingDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.BuildingDef __instance)
+        static void Prefix(ref string json, BuildingDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.CastDef), "FromJSON")]
-    public static class BattleTech_CastDef_FromJSON_Patch
+    [HarmonyPatch(typeof(CastDef), "FromJSON")]
+    public static class CastDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.CastDef __instance)
+        static void Prefix(ref string json, CastDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.ChassisDef), "FromJSON")]
-    public static class BattleTech_ChassisDef_FromJSON_Patch
+    [HarmonyPatch(typeof(ChassisDef), "FromJSON")]
+    public static class ChassisDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.ChassisDef __instance)
+        static void Prefix(ref string json, ChassisDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.HardpointDataDef), "FromJSON")]
-    public static class BattleTech_HardpointDataDef_FromJSON_Patch
+    [HarmonyPatch(typeof(HardpointDataDef), "FromJSON")]
+    public static class HardpointDataDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.HardpointDataDef __instance)
+        static void Prefix(ref string json, HardpointDataDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.HeatSinkDef), "FromJSON")]
-    public static class BattleTech_HeatSinkDef_FromJSON_Patch
+    [HarmonyPatch(typeof(HeatSinkDef), "FromJSON")]
+    public static class HeatSinkDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.HeatSinkDef __instance)
+        static void Prefix(ref string json, HeatSinkDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.JumpJetDef), "FromJSON")]
-    public static class BattleTech_JumpJetDef_FromJSON_Patch
+    [HarmonyPatch(typeof(JumpJetDef), "FromJSON")]
+    public static class JumpJetDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.JumpJetDef __instance)
+        static void Prefix(ref string json, JumpJetDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.LanceDef), "FromJSON")]
-    public static class BattleTech_LanceDef_FromJSON_Patch
+    [HarmonyPatch(typeof(LanceDef), "FromJSON")]
+    public static class LanceDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.LanceDef __instance)
+        static void Prefix(ref string json, LanceDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.MechDef), "FromJSON")]
-    public static class BattleTech_MechDef_FromJSON_Patch
+    [HarmonyPatch(typeof(MechDef), "FromJSON")]
+    public static class MechDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.MechDef __instance)
+        static void Prefix(ref string json, MechDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.PilotDef), "FromJSON")]
-    public static class BattleTech_PilotDef_FromJSON_Patch
+    [HarmonyPatch(typeof(PilotDef), "FromJSON")]
+    public static class PilotDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.PilotDef __instance)
+        static void Prefix(ref string json, PilotDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.TurretDef), "FromJSON")]
-    public static class BattleTech_TurretDef_FromJSON_Patch
+    [HarmonyPatch(typeof(TurretDef), "FromJSON")]
+    public static class TurretDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.TurretDef __instance)
+        static void Prefix(ref string json, TurretDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.TurretChassisDef), "FromJSON")]
-    public static class BattleTech_TurretChassisDef_FromJSON_Patch
+    [HarmonyPatch(typeof(TurretChassisDef), "FromJSON")]
+    public static class TurretChassisDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.TurretChassisDef __instance)
+        static void Prefix(ref string json, TurretChassisDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.VehicleDef), "FromJSON")]
-    public static class BattleTech_VehicleDef_FromJSON_Patch
+    [HarmonyPatch(typeof(VehicleDef), "FromJSON")]
+    public static class VehicleDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.VehicleDef __instance)
+        static void Prefix(ref string json, VehicleDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.WeaponDef), "FromJSON")]
-    public static class BattleTech_WeaponDef_FromJSON_Patch
+    [HarmonyPatch(typeof(WeaponDef), "FromJSON")]
+    public static class WeaponDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.WeaponDef __instance)
+        static void Prefix(ref string json, WeaponDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.UpgradeDef), "FromJSON")]
-    public static class BattleTech_UpgradeDef_FromJSON_Patch
+    [HarmonyPatch(typeof(UpgradeDef), "FromJSON")]
+    public static class UpgradeDef_FromJSON_Patch
     {
-        static void Prefix(ref string json, BattleTech.UpgradeDef __instance)
+        static void Prefix(ref string json, UpgradeDef __instance)
         {
-            DoModulePatch.Execute(ref json, __instance);
+            DoJSONMerge.Execute(ref json, __instance);
         }
     }
 
-    [HarmonyPatch(typeof(BattleTech.VersionManifestUtilities), "LoadDefaultManifest")]
-    public static class BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch
+    [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
+    public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        static void Postfix(BattleTech.VersionManifest __result)
+        static void Postfix(VersionManifest __result)
         {
-            ModTek.LogWithDate("BattleTech_VersionManifestUtilities_LoadDefaultManifest_Patch");
+            ModTek.LogWithDate("VersionManifestUtilities_LoadDefaultManifest_Patch");
 
             // add to the manifest here
             // TODO: these freaking kvp look so bad
             foreach (var entryKVP in ModTek.NewManifestEntries)
             {
                 var id = entryKVP.Key;
-                var path = entryKVP.Value.Path;
-                var type = entryKVP.Value.Type;
+                var newEntry = entryKVP.Value;
                 
-                ModTek.Log("\tAddOrUpdate({0},{1},{2},{3})", entryKVP.Key, path, type, DateTime.Now);
-
-                if (__result.Contains(id, type))
+                if (newEntry.ShouldMergeJSON && __result.Contains(id, newEntry.Type))
                 {
-                    // The registry already contains this information, so we need to throw it through a json merger.
-                    var json = File.ReadAllText(path);
+                    // The manifest already contains this information, so we need to queue it to be merged
+                    var partialJSON = File.ReadAllText(newEntry.Path);
 
-                    if(!DoModulePatch.ModulePatches.ContainsKey(id))
+                    if(!DoJSONMerge.JSONMerges.ContainsKey(id))
                     {
-                        DoModulePatch.ModulePatches.Add(id, new List<string>());
+                        DoJSONMerge.JSONMerges.Add(id, new List<string>());
                     }
 
-                    DoModulePatch.ModulePatches[id].Add(json);
+                    ModTek.Log("\tAdding id {0} to JSONMerges", id);
+                    DoJSONMerge.JSONMerges[id].Add(partialJSON);
                 }
                 else
                 {
-                    // This is a new definition, so it can be added directly to the registry.
-                    __result.AddOrUpdate(entryKVP.Key, path, type, DateTime.Now);
+                    // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
+                    ModTek.Log("\tAddOrUpdate({0}, {1}, {2}, {3}, {4}, {5})", id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
+                    __result.AddOrUpdate(id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
                 }
             }
         }

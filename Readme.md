@@ -1,80 +1,90 @@
 # ModTek
 
-ModTek is a mod which allows the dynamic loading of other modifications to the base BATTLETECH game by HBS. In addition to ensuring that 
-load order is respected, ModTek also allows incremental patching of the stock game files in a way that is easy to remove, version, and 
-persists through patches.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json Format](). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
-## Installing ModTek
+***THERE ARE NO RELEASES YET -- IN HEAVY DEVELOPMENT!***
 
-ModTek requires the use of the [BTML](https://github.com/Mpstark/BattleTechModLoader). Install the BTML, and then install ModTek.dll to your
-BATTLETECH/Mods directory.
+## Installing
 
-## Developing a mod which uses ModTek
+ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
 
-Every ModTek-compatible mod consists of the following structure:
+Installing is as simple as moving ModTek.dll into your `\BATTLETECH\Mods\` directory.
 
-```
-  Author-ModName\
-  .. mod.json
-  .. (Author-ModName).dll
-  .. (WeaponDef)\
-  .... Weapon_Autocannon_AC5_0-Stock.json
-```
+On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 
-Of the structure noted, only mod.json is required. Some mods will not have DLLs, nor will other have definition folders.
-
-A basic mod.json looks like this:
+## Anatomy of a ModTek Mod
 
 ```
+\BATTLETECH\Mods\
+    \MyModDirectory\
+        mod.json
+        MyDllName.dll
+
+        \data\weapon\
+            Weapon_Autocannon_AC5_0-Stock.json
+```
+
+## A Brief Primer on Developing ModTek Mods
+
+It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.]()
+
+Here's an example `mod.json`:
+
+```JSON
 {
-    "Name": "Legoman-ReallyCoolMod",
-    "Enabled": true,
+    "Name": "ReallyCoolMod",
     "Version": "0.0.1",
-    "DependsOn": [],
-    "LoadBefore": [],
-    "LoadAfter": [],
-    "ConflictsWith": [],
+    "Enabled": true,
+
+    "DependsOn": [ "ReallyCoolOtherMod", "RadicalMod" ],
+    "ConflictsWith": [ "IncompatableMod" ],
+
+    "DLL": "LegomanCoolMod.dll",
+    "DLLEntryPoint": "CoolModNamespace.CoolModClass.CoolModPublicStaticMethod",
 
     "Manifest": [
-        {
-            "Type": "WeaponDef",
-            "Path": "WeaponDefs"
-        }
+        { "Type": "WeaponDef", "Path": "\\MyCustomWeaponDefsFolder\\" }
+        { "Type": "MechDef", "Path": "\\MyCustomMech\\mechdef_my_super_mech.json" }
     ],
 
-	"DLL": "LegomanCoolMod.dll"
-	"DLLEntryPoint": "CoolModClass",
-
-	"Settings": {
-	  "LegomanAc5DamageValue": 450
-	}
+    "Settings": {
+        "CoolSetting": 450,
+        "GreatSetting": true
+    }
 }
 ```
 
-* The Name is required, and must be unique. For this reason, it is recommended to use the format of `{AuthorName}-{ModName}`.
-* The Enabled field must be set to true to function. Toggling this to false is useful for debugging purposes.
-* The Version is required, and should be some format which makes sense. The recommendation is that prerelease versions always start with '0', and release versions take the form 'YYYY.MM.DD.releasenumber'.
-* Mods listed in DependsOn will be loaded before this mod. In the event that those mods are not installed, **ModTek will not load your mod**
-* Mods listed in LoadBefore will be loaded before this mod, but are not required to function.
-* Mods listed in LoadAfter will be loaded after this mod, but are not required for this mod to function.
-* If you mod would be loaded, but a mod in "ConflictsWith" has already been loaded, then **ModTek will not load your mod**. Use this field sparingly.
-* The manifest is a simple directory of files which should be parsed by ModTek. Files referenced in the "Path" portion of these stanzas will be loaded and appended to the internal version manifest the game will load.
-* DLL specifies a DLL which ModTek should load as well. This is optional, but 
-* DLL Entry Point specifies a class where ModTek should look for a `public static void Init()` method to call. This method is your cue to inject Harmony behaviors.
-* Settings is used from within your DLL to fetch dynamic values without requiring a recompile. More on that below.
+The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here]().
 
-## Patching JSON with ModTek
+If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
 
-Assume the structure we have listed earlier - where we have the `Weapon_Autocannon_AC5_0-Stock.json` file. Because this file directly shadows a file already loaded by the game, ModTek will *merge* your file
-with the game's file dynamically. For example, if you wanted AC/5s to get a little bit of a boost, the file could just be the following:
+The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\data\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\data` and will load those files without needing to be told about them. There are other implicit directories like `\MyModDirectory\MechDefs`, a list of which can be found in, you guessed it, [the in-depth guide to the `mod.json` format]().
 
-```
-  { "Damage": 450 }
+## Merging JSON
+
+For JSON files of specific types, if a file is loaded that has the same ID as a file that is already in the game, instead of completely replacing the file, ModTek will do a simple merge of the two types when these files are deserialized from JSON. Here's a simple example of a mod that changes the AC/5s damage to give it a *little* boost.
+
+`mod.json`:
+
+```JSON
+{
+    "Name": "BoostedAC5",
+    "Version": "0.0.1"
+}
 ```
 
-This change would make the AC/5 do 450 damage, and probably ensure the rapid uninstallation of your mod. All other settings on the stock AC/5 will be unchanged.
+`\BoostedAC5\data\weapon\Weapon_Autocannon_AC5_0-Stock.json`:
 
-Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should ***absolutely not*** copy the entire file from the
-stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+```JSON
+{
+    "Damage": 450
+}
+```
 
-If you would like to add a brand new file declaration to BATTLETECH, such as a new weapon or equipment, then you may do so by including JSON files here.
+This change would make the AC/5 do 450 damage and all other settings on the stock AC/5 will be unchanged.
+
+Note: Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should ***absolutely not*** copy the entire file from the stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+
+## License
+
+ModTek, like BTML before it, is provided under the "Unlicence", which releases the work into the public domain.

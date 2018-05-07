@@ -8,6 +8,7 @@ using BattleTech;
 using BattleTechModLoader;
 using Harmony;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
@@ -88,7 +89,7 @@ namespace ModTek
             }
         }
 
-        public static string InferIDFromJSONBlob(Newtonsoft.Json.Linq.JObject jObj)
+        public static string InferIDFromJObject(JObject jObj, string type = null)
         {
             // go through the different kinds of id storage in JSONS
             // TODO: make this specific to the type
@@ -110,8 +111,8 @@ namespace ModTek
             {
                 try
                 {
-                    var jObj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-                    return InferIDFromJSONBlob(jObj);
+                    var jObj = JObject.Parse(File.ReadAllText(path));
+                    return InferIDFromJObject(jObj, type);
                 }
                 catch (Exception e)
                 {
@@ -212,7 +213,7 @@ namespace ModTek
                         }
                     }
 
-                    LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
+                    LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), typeName ?? "NoNameSpecified", methodName);
                     BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
                 }
                 else
