@@ -61,8 +61,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Documents\README.md" />
-    <None Include="Documents\UNLICENSE" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
