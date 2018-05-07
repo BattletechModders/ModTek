@@ -57,8 +57,19 @@ namespace ModTek
             var modDefs = new List<ModDef>();
             foreach (var modDirectory in modDirectories)
             {
+                ModDef modDef = null;
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
-                var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(modDefPath));
+
+                try
+                {
+                    modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(modDefPath));
+                }
+                catch (Exception e)
+                {
+                    Log("Caught exception while parsing {1} at path {0}", modDefPath, MOD_JSON_NAME);
+                    Log("Exception: {0}", e.ToString());
+                    continue;
+                }
 
                 if (modDef == null)
                 {
@@ -66,17 +77,15 @@ namespace ModTek
                     continue;
                 }
 
-                if (modDef.Enabled)
-                {
-                    modDef.Directory = Path.GetDirectoryName(modDefPath);
-                    modDefs.Add(modDef);
-                    Log("Loaded ModDef for {0}.", modDef.Name);
-                }
-                else
+                if (!modDef.Enabled)
                 {
                     Log("{0} disabled, skipping load.", modDef.Name);
                     continue;
                 }
+                
+                modDef.Directory = Path.GetDirectoryName(modDefPath);
+                modDefs.Add(modDef);
+                Log("Loaded ModDef for {0}.", modDef.Name);
 
                 // TODO: build some sort of dependacy graph
             }
@@ -150,10 +159,8 @@ namespace ModTek
                                 LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
                                 return;
                             }
-                            else
-                            {
-                                potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
-                            }
+                            
+                            potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
                         }
                     }
                     else if (File.Exists(entryPath))
@@ -162,20 +169,21 @@ namespace ModTek
                         var id = entry.Id;
 
                         if (id == null)
+                        {
                             id = InferIDFromFileAndType(entryPath, entry.Type);
+                        }
 
                         if (potentialAdditions.ContainsKey(id))
                         {
                             LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, entryPath);
                             return;
                         }
-                        else
-                        {
-                            potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
-                        }
+
+                        potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
                     }
                     else
                     {
+                        // wasn't a file and wasn't a path, must not exist
                         LogWithDate("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, entryPath);
                         return;
                     }
@@ -186,34 +194,31 @@ namespace ModTek
             if (modDef.DLL != null)
             {
                 var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
+                string typeName = null;
+                string methodName = "Init";
 
-                if (File.Exists(dllPath))
-                {
-                    string typeName = null;
-                    string methodName = "Init";
-
-                    if (modDef.DLLEntryPoint != null)
-                    {
-                        int pos = modDef.DLLEntryPoint.LastIndexOf('.');
-                        if (pos == -1)
-                        {
-                            methodName = modDef.DLLEntryPoint;
-                        }
-                        else
-                        {
-                            typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
-                            methodName = modDef.DLLEntryPoint.Substring(pos + 1);
-                        }
-                    }
-
-                    LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
-                    BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
-                }
-                else
+                if (!File.Exists(dllPath))
                 {
                     LogWithDate("{0} has a DLL specified ({1}), but it's missing! Aborting load.", modDef.Name, dllPath);
                     return;
                 }
+                
+                if (modDef.DLLEntryPoint != null)
+                {
+                    int pos = modDef.DLLEntryPoint.LastIndexOf('.');
+                    if (pos == -1)
+                    {
+                        methodName = modDef.DLLEntryPoint;
+                    }
+                    else
+                    {
+                        typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
+                        methodName = modDef.DLLEntryPoint.Substring(pos + 1);
+                    }
+                }
+
+                LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
+                BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
             
             // actually add the additions, since we successfully got through loading the other stuff

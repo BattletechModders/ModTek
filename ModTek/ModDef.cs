@@ -44,7 +44,6 @@ namespace ModTek
         public string Name { get; set; }
 
         // versioning
-        [JsonProperty(Required = Required.Always)]
         public string Version { get; set; }
         public DateTime? PackagedOn { get; set; }
         
