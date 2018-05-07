@@ -22,8 +22,10 @@ namespace ModTek
 
     public static class DoJSONMerge
     {
+        public static HashSet<Int32> JSONHashes = new HashSet<Int32>();
         public static Dictionary<string, List<string>> JSONMerges = new Dictionary<string, List<string>>();
-        public static void Execute<T>(ref string json, T __instance)
+
+        public static void Execute(ref string json)
         {
             var copy_json = json;
             try
@@ -51,174 +53,18 @@ namespace ModTek
         }
     }
     
-    [HarmonyPatch(typeof(AbilityDef), "FromJSON")]
-    public static class AbilityDef_FromJSON_Patch
+    [HarmonyPatch(typeof(HBS.Util.JSONSerializationUtility), "StripHBSCommentsFromJSON")]
+    public static class HBS_Util_JSONSerializationUtility_StripHBSCommentsFromJSON_Patch
     {
-        static void Prefix(ref string json, AbilityDef __instance)
+        public static void Postfix(string json, ref string __result)
         {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(AmmunitionBoxDef), "FromJSON")]
-    public static class AmmunitionBoxDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, AmmunitionBoxDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(AmmunitionDef), "FromJSON")]
-    public static class AmmoDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, AmmunitionDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(AudioEventDef), "FromJSON")]
-    public static class AudioEventDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, AudioEventDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(BackgroundDef), "FromJSON")]
-    public static class BackgroundDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, BackgroundDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(BuildingDef), "FromJSON")]
-    public static class BuildingDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, BuildingDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(CastDef), "FromJSON")]
-    public static class CastDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, CastDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(ChassisDef), "FromJSON")]
-    public static class ChassisDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, ChassisDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(HardpointDataDef), "FromJSON")]
-    public static class HardpointDataDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, HardpointDataDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(HeatSinkDef), "FromJSON")]
-    public static class HeatSinkDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, HeatSinkDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(JumpJetDef), "FromJSON")]
-    public static class JumpJetDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, JumpJetDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(LanceDef), "FromJSON")]
-    public static class LanceDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, LanceDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(MechDef), "FromJSON")]
-    public static class MechDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, MechDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(PilotDef), "FromJSON")]
-    public static class PilotDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, PilotDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(TurretDef), "FromJSON")]
-    public static class TurretDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, TurretDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(TurretChassisDef), "FromJSON")]
-    public static class TurretChassisDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, TurretChassisDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(VehicleDef), "FromJSON")]
-    public static class VehicleDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, VehicleDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(WeaponDef), "FromJSON")]
-    public static class WeaponDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, WeaponDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(UpgradeDef), "FromJSON")]
-    public static class UpgradeDef_FromJSON_Patch
-    {
-        static void Prefix(ref string json, UpgradeDef __instance)
-        {
-            DoJSONMerge.Execute(ref json, __instance);
+            // function has invalid json coming from file
+            // and hopefully valid json (i.e. comments out) coming out from function
+            if (DoJSONMerge.JSONHashes.Contains(json.GetHashCode()))
+            {
+                ModTek.LogWithDate("Hash hit so running JSON Merge");
+                DoJSONMerge.Execute(ref __result);
+            }
         }
     }
 
@@ -238,6 +84,9 @@ namespace ModTek
                 
                 if (newEntry.ShouldMergeJSON && __result.Contains(id, newEntry.Type))
                 {
+                    // read the manifest pointed entry and hash the contents
+                    DoJSONMerge.JSONHashes.Add(File.ReadAllText(__result.Get(id, newEntry.Type).FilePath).GetHashCode());
+
                     // The manifest already contains this information, so we need to queue it to be merged
                     var partialJSON = File.ReadAllText(newEntry.Path);
 
