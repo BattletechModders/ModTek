@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace ModTek
         {
             if (!string.IsNullOrEmpty(logPath))
                 using (var logWriter = File.AppendText(logPath))
-                    logWriter.WriteLine(DateTime.Now.ToShortTimeString() + " - " + message, formatObjects);
+                    logWriter.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
 
         // ran by BTML
@@ -53,16 +54,23 @@ namespace ModTek
             if (modDirectories.Count() == 0)
                 Log("No ModTek-compatable mods found.");
 
-            // create ModDef objects for each mod.json file, building a dependancy graph
+            // create ModDef objects for each mod.json file
             var modDefs = new List<ModDef>();
             foreach (var modDirectory in modDirectories)
             {
-                ModDef modDef = null;
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
 
                 try
                 {
-                    modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(modDefPath));
+                    ModDef modDef = ModDefFromPath(modDefPath);
+
+                    if (!modDef.Enabled)
+                    {
+                        LogWithDate("Will not load {0} because it's disabled.", modDef.Name);
+                        continue;
+                    }
+
+                    modDefs.Add(modDef);
                 }
                 catch (Exception e)
                 {
@@ -70,31 +78,55 @@ namespace ModTek
                     Log("Exception: {0}", e.ToString());
                     continue;
                 }
-
-                if (modDef == null)
-                {
-                    Log("ModDef found in {0} not valid.", modDefPath);
-                    continue;
-                }
-
-                if (!modDef.Enabled)
-                {
-                    Log("{0} disabled, skipping load.", modDef.Name);
-                    continue;
-                }
-                
-                modDef.Directory = Path.GetDirectoryName(modDefPath);
-                modDefs.Add(modDef);
-                Log("Loaded ModDef for {0}.", modDef.Name);
-
-                // TODO: build some sort of dependacy graph
             }
 
-            // TODO: load mods in the correct order
-            foreach (var modDef in modDefs)
+            // TODO: be able to read load order from a JSON
+            var loadOrder = GetLoadOrder(modDefs, out List<ModDef> willNotLoad);
+            while (loadOrder.Count() > 0)
             {
+                var modDef = loadOrder.Dequeue();
                 LoadMod(modDef);
             }
+
+            foreach (var modDef in willNotLoad)
+            {
+                LogWithDate("Will not load {0} because its dependancies are unmet.", modDef.Name);
+            }
+        }
+
+        internal static Queue<ModDef> GetLoadOrder(List<ModDef> modDefs, out List<ModDef> unloaded)
+        {
+            var loadOrder = new Queue<ModDef>();
+            var loaded = new HashSet<string>();
+            unloaded = modDefs.OrderByDescending(x => x.Name).ToList();
+            
+            int removedThisPass;
+            do
+            {
+                removedThisPass = 0;
+
+                for (int i = unloaded.Count - 1; i >= 0; i--)
+                {
+                    var modDef = unloaded[i];
+                    if (modDef.DependsOn == null || modDef.DependsOn.Count == 0 || modDef.DependsOn.Intersect(loaded).Count() == modDef.DependsOn.Count)
+                    {
+                        unloaded.RemoveAt(i);
+                        loadOrder.Enqueue(modDef);
+                        loaded.Add(modDef.Name);
+                        removedThisPass++;
+                    }
+                }
+            } while (removedThisPass > 0 && unloaded.Count > 0);
+
+            return loadOrder;
+        }
+
+        internal static ModDef ModDefFromPath(string path)
+        {
+            ModDef modDef;
+            modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
+            modDef.Directory = Path.GetDirectoryName(path);
+            return modDef;
         }
         
         public static string InferIDFromFileAndType(string path, string type)
@@ -217,8 +249,8 @@ namespace ModTek
                     }
                 }
 
-                LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), (typeName != null)?typeName:"NoNameSpecified", methodName);
-                BTModLoader.LoadDLL(dllPath, null, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
+                LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), typeName ?? "NoNameSpecified", methodName);
+                BTModLoader.LoadDLL(dllPath, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
             
             // actually add the additions, since we successfully got through loading the other stuff
