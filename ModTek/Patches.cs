@@ -22,8 +22,6 @@ namespace ModTek
     {
         static void Postfix(VersionManifest __result)
         {
-            ModTek.LogWithDate("VersionManifestUtilities_LoadDefaultManifest_Patch");
-
             // add to the manifest here
             // TODO: these freaking kvp look so bad
             foreach (var entryKVP in ModTek.NewManifestEntries)
