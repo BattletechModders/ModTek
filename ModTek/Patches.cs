@@ -1,5 +1,6 @@
-﻿using Harmony;
+using Harmony;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,19 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BattleTech;
+using JetBrains.Annotations;
 
 namespace ModTek
 {
+    using static Logger;
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(VersionInfo), "GetReleaseVersion")]
     public static class VersionInfo_GetReleaseVersion_Patch
     {
-        static void Postfix(ref string __result)
+        [UsedImplicitly]
+        public static void Postfix(ref string __result)
         {
             string old = __result;
             __result = old + " w/ ModTek";
@@ -46,13 +53,15 @@ namespace ModTek
             }
             catch (JsonReaderException e)
             {
-                ModTek.Log(e.Message);
-                ModTek.Log(e.StackTrace);
-                ModTek.Log("Error encountered loading json, skipping any patches which would have been applied.");
+                Log(e.Message);
+                Log(e.StackTrace);
+                Log("Error encountered loading json, skipping any patches which would have been applied.");
             }
         }
     }
-    
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(HBS.Util.JSONSerializationUtility), "StripHBSCommentsFromJSON")]
     public static class HBS_Util_JSONSerializationUtility_StripHBSCommentsFromJSON_Patch
     {
@@ -62,16 +71,19 @@ namespace ModTek
             // and hopefully valid json (i.e. comments out) coming out from function
             if (DoJSONMerge.JSONHashes.Contains(json.GetHashCode()))
             {
-                ModTek.LogWithDate("Hash hit so running JSON Merge");
+                LogWithDate("Hash hit so running JSON Merge");
                 DoJSONMerge.Execute(ref __result);
             }
         }
     }
 
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        static void Postfix(VersionManifest __result)
+        [UsedImplicitly]
+        public static void Postfix(VersionManifest __result)
         {
             // add to the manifest here
             // TODO: these freaking kvp look so bad
@@ -93,13 +105,13 @@ namespace ModTek
                         DoJSONMerge.JSONMerges.Add(id, new List<string>());
                     }
 
-                    ModTek.Log("\tAdding id {0} to JSONMerges", id);
+                    Log("\tAdding id {0} to JSONMerges", id);
                     DoJSONMerge.JSONMerges[id].Add(partialJSON);
                 }
                 else
                 {
                     // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                    ModTek.Log("\tAddOrUpdate({0}, {1}, {2}, {3}, {4}, {5})", id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
+                    Log($"\tAddOrUpdate({id}, {newEntry.Path}, {newEntry.Type}, {DateTime.Now}, {newEntry.AssetBundleName}, {newEntry.AssetBundlePersistent})");
                     __result.AddOrUpdate(id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
                 }
             }

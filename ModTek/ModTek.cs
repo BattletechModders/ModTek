@@ -1,58 +1,54 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using BattleTech;
 using BattleTechModLoader;
 using Harmony;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine.Assertions;
 
 namespace ModTek
 {
+    using static Logger;
+
+    [UsedImplicitly]
     public static class ModTek
     {
+        // ReSharper disable once MemberCanBePrivate.Global
         public static string ModDirectory { get; private set; }
 
-        private static readonly string MOD_JSON_NAME = "mod.json";
+        // ReSharper disable once InconsistentNaming
+        private const string MOD_JSON_NAME = "mod.json";
 
-        internal static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; set; } = new Dictionary<string, ModDef.ManifestEntry>();
-        
-        // logging
-        internal static string logPath;
-        internal static void Log(string message, params object[] formatObjects)
-        {
-            if (!string.IsNullOrEmpty(logPath))
-                using (var logWriter = File.AppendText(logPath))
-                    logWriter.WriteLine(message, formatObjects);
-        }
-        internal static void LogWithDate(string message, params object[] formatObjects)
-        {
-            if (!string.IsNullOrEmpty(logPath))
-                using (var logWriter = File.AppendText(logPath))
-                    logWriter.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
-        }
+        internal static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; } =
+            new Dictionary<string, ModDef.ManifestEntry>();
 
         // ran by BTML
+        [UsedImplicitly]
         public static void Init()
         {
-            ModDirectory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH), @"..\..\..\Mods\"));
-            logPath = Path.Combine(ModDirectory, "ModTek.log");
+            var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
+            Assert.IsNotNull(manifestDirectory, nameof(manifestDirectory) + " != null");
+            ModDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\..\..\Mods\"));
+            LogPath = Path.Combine(ModDirectory, "ModTek.log");
 
             // create log file, overwritting if it's already there
-            using (var logWriter = File.CreateText(logPath))
-                logWriter.WriteLine("ModTek -- {0}", DateTime.Now);
-            
+            using (var logWriter = File.CreateText(LogPath))
+                logWriter.WriteLine($"ModTek -- {DateTime.Now}");
+
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModDirectory).Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME)));
-            if (modDirectories.Count() == 0)
+            var modDirectories = Directory.GetDirectories(ModDirectory)
+                .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            if (modDirectories.Length == 0)
                 Log("No ModTek-compatable mods found.");
 
             // create ModDef objects for each mod.json file
@@ -63,11 +59,11 @@ namespace ModTek
 
                 try
                 {
-                    ModDef modDef = ModDefFromPath(modDefPath);
+                    var modDef = ModDefFromPath(modDefPath);
 
                     if (!modDef.Enabled)
                     {
-                        LogWithDate("Will not load {0} because it's disabled.", modDef.Name);
+                        LogWithDate($"Will not load {modDef.Name} because it's disabled.");
                         continue;
                     }
 
@@ -75,15 +71,15 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Caught exception while parsing {1} at path {0}", modDefPath, MOD_JSON_NAME);
-                    Log("Exception: {0}", e.ToString());
-                    continue;
+                    Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
+                    Log($"Exception: {e}");
+                    //continue;
                 }
             }
 
             // TODO: be able to read load order from a JSON
-            var loadOrder = GetLoadOrder(modDefs, out List<ModDef> willNotLoad);
-            while (loadOrder.Count() > 0)
+            var loadOrder = GetLoadOrder(modDefs, out var willNotLoad);
+            while (loadOrder.Count > 0)
             {
                 var modDef = loadOrder.Dequeue();
                 LoadMod(modDef);
@@ -95,37 +91,40 @@ namespace ModTek
             }
         }
 
-        internal static Queue<ModDef> GetLoadOrder(List<ModDef> modDefs, out List<ModDef> unloaded)
+        [SuppressMessage("ReSharper", "ParameterTypeCanBeEnumerable.Global")]
+        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
+        // ReSharper disable once MemberCanBePrivate.Global
+        internal static Queue<ModDef> GetLoadOrder(IList<ModDef> modDefs, out List<ModDef> unloaded)
         {
             var loadOrder = new Queue<ModDef>();
             var loaded = new HashSet<string>();
             unloaded = modDefs.OrderByDescending(x => x.Name).ToList();
-            
+
             int removedThisPass;
             do
             {
                 removedThisPass = 0;
 
-                for (int i = unloaded.Count - 1; i >= 0; i--)
+                for (var i = unloaded.Count - 1; i >= 0; i--)
                 {
                     var modDef = unloaded[i];
-                    if (modDef.DependsOn == null || modDef.DependsOn.Count == 0 || modDef.DependsOn.Intersect(loaded).Count() == modDef.DependsOn.Count)
-                    {
-                        unloaded.RemoveAt(i);
-                        loadOrder.Enqueue(modDef);
-                        loaded.Add(modDef.Name);
-                        removedThisPass++;
-                    }
+                    if (modDef.DependsOn != null && modDef.DependsOn.Count != 0 &&
+                        modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count) continue;
+                    unloaded.RemoveAt(i);
+                    loadOrder.Enqueue(modDef);
+                    loaded.Add(modDef.Name);
+                    removedThisPass++;
                 }
             } while (removedThisPass > 0 && unloaded.Count > 0);
 
             return loadOrder;
         }
 
+        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
+        // ReSharper disable once MemberCanBePrivate.Global
         internal static ModDef ModDefFromPath(string path)
         {
-            ModDef modDef;
-            modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
+            var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
             return modDef;
         }
@@ -165,11 +164,12 @@ namespace ModTek
             return Path.GetFileNameWithoutExtension(path);
         }
 
+        [UsedImplicitly]
         public static void LoadMod(ModDef modDef)
         {
             var potentialAdditions = new Dictionary<string, ModDef.ManifestEntry>();
 
-            LogWithDate("Loading {0}", modDef.Name);
+            LogWithDate($"Loading {modDef.Name}");
 
             // load out of the manifest
             // TODO: actually ignore the modDef specified files/directories
@@ -181,10 +181,11 @@ namespace ModTek
 
                     if (string.IsNullOrEmpty(entry.Path) || string.IsNullOrEmpty(entry.Type))
                     {
-                        LogWithDate("{0} has a manifest entry that is missing its type or path! Aborting load.", modDef.Name);
+                        LogWithDate(
+                            $"{modDef.Name} has a manifest entry that is missing its type or path! Aborting load.");
                         return;
                     }
-                    
+
                     if (Directory.Exists(entryPath))
                     {
                         // path is a directory, add all the files there
@@ -195,26 +196,21 @@ namespace ModTek
 
                             if (potentialAdditions.ContainsKey(id))
                             {
-                                LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, filePath);
+                                LogWithDate($"{modDef.Name}'s manifest has a file at {filePath}, but it's inferred ID is already used by this mod! Aborting load.");
                                 return;
                             }
-                            
+
                             potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
                         }
                     }
                     else if (File.Exists(entryPath))
                     {
                         // path is a file, add the single entry
-                        var id = entry.Id;
-
-                        if (id == null)
-                        {
-                            id = InferIDFromFileAndType(entryPath, entry.Type);
-                        }
+                        var id = entry.Id ?? InferIDFromFileAndType(entryPath, entry.Type);
 
                         if (potentialAdditions.ContainsKey(id))
                         {
-                            LogWithDate("{0}'s manifest has a file at {1}, but it's inferred ID is already used by this mod! Aborting load.", modDef.Name, entryPath);
+                            LogWithDate($"{modDef.Name}'s manifest has a file at {entryPath}, but it's inferred ID is already used by this mod! Aborting load.");
                             return;
                         }
 
@@ -223,7 +219,7 @@ namespace ModTek
                     else
                     {
                         // wasn't a file and wasn't a path, must not exist
-                        LogWithDate("{0} has a manifest entry {1}, but it's missing! Aborting load.", modDef.Name, entryPath);
+                        LogWithDate($"{modDef.Name} has a manifest entry {entryPath}, but it's missing! Aborting load.");
                         return;
                     }
                 }
@@ -234,17 +230,17 @@ namespace ModTek
             {
                 var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
                 string typeName = null;
-                string methodName = "Init";
+                var methodName = "Init";
 
                 if (!File.Exists(dllPath))
                 {
-                    LogWithDate("{0} has a DLL specified ({1}), but it's missing! Aborting load.", modDef.Name, dllPath);
+                    LogWithDate($"{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
                     return;
                 }
-                
+
                 if (modDef.DLLEntryPoint != null)
                 {
-                    int pos = modDef.DLLEntryPoint.LastIndexOf('.');
+                    var pos = modDef.DLLEntryPoint.LastIndexOf('.');
                     if (pos == -1)
                     {
                         methodName = modDef.DLLEntryPoint;
@@ -256,18 +252,20 @@ namespace ModTek
                     }
                 }
 
-                LogWithDate("Using BTML to load dll {0} with entry path {1}.{2}", Path.GetFileName(dllPath), typeName ?? "NoNameSpecified", methodName);
-                BTModLoader.LoadDLL(dllPath, methodName, typeName, new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
+                LogWithDate($"Using BTML to load dll {Path.GetFileName(dllPath)} with entry path {typeName ?? "NoNameSpecified"}.{methodName}");
+
+                BTModLoader.LoadDLL(dllPath, methodName, typeName,
+                    new object[] {modDef.Directory, modDef.Settings.ToString(Formatting.None)});
             }
-            
+
             // actually add the additions, since we successfully got through loading the other stuff
             if (potentialAdditions.Count > 0)
             {
                 // TODO, this kvp is the weirdest thing
-                foreach (var additionKVP in potentialAdditions)
+                foreach (var additionKvp in potentialAdditions)
                 {
-                    Log("\tWill load manifest entry -- id: {0} type: {1} path: {2}", additionKVP.Key, additionKVP.Value.Type, additionKVP.Value.Path);
-                    NewManifestEntries[additionKVP.Key] = additionKVP.Value;
+                    Log($"\tWill load manifest entry -- id: {additionKvp.Key} type: {additionKvp.Value.Type} path: {additionKvp.Value.Path}");
+                    NewManifestEntries[additionKvp.Key] = additionKvp.Value;
                 }
             }
 
