@@ -54,8 +54,8 @@ namespace ModTek
         public bool Enabled { get; set; } = true;
 
         // load order
-        public List<string> DependsOn { get; [UsedImplicitly] set; }
-        public List<string> ConflictsWith { get; set; }
+        public HashSet<string> DependsOn { get; [UsedImplicitly] set; } = new HashSet<string>();
+        public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
 
         // adding and running code
         public string DLL { get; [UsedImplicitly] set; }

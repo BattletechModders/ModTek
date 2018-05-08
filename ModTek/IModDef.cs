@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
@@ -12,8 +12,8 @@ namespace ModTek
         string Version { get; set; }
         DateTime? PackagedOn { get; set; }
         bool Enabled { get; set; }
-        List<string> DependsOn { get; [UsedImplicitly] set; }
-        List<string> ConflictsWith { get; set; }
+        HashSet<string> DependsOn { get; [UsedImplicitly] set; }
+        HashSet<string> ConflictsWith { get; set; }
 
         // ReSharper disable once InconsistentNaming
         string DLL { get; [UsedImplicitly] set; }

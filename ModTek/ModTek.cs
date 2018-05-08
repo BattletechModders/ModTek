@@ -60,7 +60,7 @@ namespace ModTek
                 Log("No ModTek-compatable mods found.");
 
             // create ModDef objects for each mod.json file
-            var modDefs = new List<ModDef>();
+            var modDefs = new Dictionary<string, ModDef>();
             foreach (var modDirectory in modDirectories)
             {
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
@@ -75,7 +75,7 @@ namespace ModTek
                         continue;
                     }
 
-                    modDefs.Add(modDef);
+                    modDefs.Add(modDef.Name, modDef);
                 }
                 catch (Exception e)
                 {
@@ -86,6 +86,7 @@ namespace ModTek
             }
 
             // TODO: be able to read load order from a JSON
+            PropagateConflictsForward(modDefs);
             var loadOrder = GetLoadOrder(modDefs, out var willNotLoad);
             while (loadOrder.Count > 0)
             {
@@ -95,20 +96,30 @@ namespace ModTek
 
             foreach (var modDef in willNotLoad)
             {
-                LogWithDate($"Will not load {modDef.Name} because its dependancies are unmet.");
+                LogWithDate($"Will not load {modDef} because its dependancies are unmet.");
             }
         }
 
-        [SuppressMessage("ReSharper", "ParameterTypeCanBeEnumerable.Global")]
-        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-        // ReSharper disable once MemberCanBePrivate.Global
-        private static Queue<ModDef> GetLoadOrder(IList<ModDef> modDefs, out List<ModDef> unloaded)
+        private static void PropagateConflictsForward(Dictionary<string, ModDef> modDefs)
+        {
+            foreach (var modDefKvp in modDefs)
+            {
+                var modDef = modDefKvp.Value;
+                if (modDef.ConflictsWith.Count == 0) continue;
+
+                foreach (var conflict in modDef.ConflictsWith)
+                {
+                    modDefs[conflict].ConflictsWith.Add(modDef.Name);
+                }
+            }
+        }
+
+        private static Queue<ModDef> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
         {
             var loadOrder = new Queue<ModDef>();
             var loaded = new HashSet<string>();
-            unloaded = modDefs.OrderByDescending(x => x.Name).ToList();
-            
-            // TODO: support ConflictsWith
+            unloaded = modDefs.Keys.OrderByDescending(x => x).ToList();
+
             int removedThisPass;
             do
             {
@@ -116,9 +127,9 @@ namespace ModTek
 
                 for (var i = unloaded.Count - 1; i >= 0; i--)
                 {
-                    var modDef = unloaded[i];
-                    if (modDef.DependsOn != null && modDef.DependsOn.Count != 0 &&
-                        modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count) continue;
+                    var modDef = modDefs[unloaded[i]];
+                    if (modDef.DependsOn.Count != 0 && modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count
+                        || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any()) continue;
 
                     unloaded.RemoveAt(i);
                     loadOrder.Enqueue(modDef);
