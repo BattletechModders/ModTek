@@ -9,6 +9,7 @@ using BattleTech;
 using BattleTechModLoader;
 using Harmony;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
@@ -128,6 +129,22 @@ namespace ModTek
             modDef.Directory = Path.GetDirectoryName(path);
             return modDef;
         }
+
+        public static string InferIDFromJObject(JObject jObj, string type = null)
+        {
+            // go through the different kinds of id storage in JSONS
+            // TODO: make this specific to the type
+            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
+            string id;
+            foreach (var jPath in jPaths)
+            {
+                id = (string)jObj.SelectToken(jPath);
+                if (id != null)
+                    return id;
+            }
+
+            return null;
+        }
         
         public static string InferIDFromFileAndType(string path, string type)
         {
@@ -135,18 +152,8 @@ namespace ModTek
             {
                 try
                 {
-                    var jObj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-                    string id;
-                    
-                    // go through the different kinds of id storage in JSONS
-                    // TODO: make this specific to the type
-                    string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-                    foreach (var jPath in jPaths)
-                    {
-                        id = (string)jObj.SelectToken(jPath);
-                        if (id != null)
-                            return id;
-                    }
+                    var jObj = JObject.Parse(File.ReadAllText(path));
+                    return InferIDFromJObject(jObj, type);
                 }
                 catch (Exception e)
                 {
