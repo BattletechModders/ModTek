@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using BattleTech;
 using BattleTechModLoader;
 using Harmony;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using UnityEngine.Assertions;
 
 namespace ModTek
@@ -25,7 +25,13 @@ namespace ModTek
         // ReSharper disable once InconsistentNaming
         private const string MOD_JSON_NAME = "mod.json";
 
-        internal static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; } =
+        private static Dictionary<Int32, string> JsonHashToId { get;  } =
+            new Dictionary<int, string>();
+
+        private static Dictionary<string, List<string>> JsonMerges { get; } =
+            new Dictionary<string, List<string>>();
+
+        private static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; } =
             new Dictionary<string, ModDef.ManifestEntry>();
 
         // ran by BTML
@@ -33,7 +39,9 @@ namespace ModTek
         public static void Init()
         {
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
+
             Assert.IsNotNull(manifestDirectory, nameof(manifestDirectory) + " != null");
+
             ModDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\..\..\Mods\"));
             LogPath = Path.Combine(ModDirectory, "ModTek.log");
 
@@ -87,19 +95,20 @@ namespace ModTek
 
             foreach (var modDef in willNotLoad)
             {
-                LogWithDate("Will not load {0} because its dependancies are unmet.", modDef.Name);
+                LogWithDate($"Will not load {modDef.Name} because its dependancies are unmet.");
             }
         }
 
         [SuppressMessage("ReSharper", "ParameterTypeCanBeEnumerable.Global")]
         // ReSharper disable once ParameterTypeCanBeEnumerable.Local
         // ReSharper disable once MemberCanBePrivate.Global
-        internal static Queue<ModDef> GetLoadOrder(IList<ModDef> modDefs, out List<ModDef> unloaded)
+        private static Queue<ModDef> GetLoadOrder(IList<ModDef> modDefs, out List<ModDef> unloaded)
         {
             var loadOrder = new Queue<ModDef>();
             var loaded = new HashSet<string>();
             unloaded = modDefs.OrderByDescending(x => x.Name).ToList();
-
+            
+            // TODO: support ConflictsWith
             int removedThisPass;
             do
             {
@@ -110,6 +119,7 @@ namespace ModTek
                     var modDef = unloaded[i];
                     if (modDef.DependsOn != null && modDef.DependsOn.Count != 0 &&
                         modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count) continue;
+
                     unloaded.RemoveAt(i);
                     loadOrder.Enqueue(modDef);
                     loaded.Add(modDef.Name);
@@ -129,39 +139,101 @@ namespace ModTek
             return modDef;
         }
 
-        public static string InferIDFromJObject(JObject jObj, string type = null)
+        private static string InferIDFromJObject(JObject jObj, string type = null)
         {
             // go through the different kinds of id storage in JSONS
             // TODO: make this specific to the type
             string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-            string id;
             foreach (var jPath in jPaths)
             {
-                id = (string)jObj.SelectToken(jPath);
+                var id = (string)jObj.SelectToken(jPath);
                 if (id != null)
                     return id;
             }
 
             return null;
         }
-        
-        public static string InferIDFromFileAndType(string path, string type)
+
+        // ReSharper disable once MemberCanBePrivate.Global
+        private static string InferIDFromFileAndType(string path, string type)
         {
-            if (Path.GetExtension(path).ToLower() == "json" && File.Exists(path))
+            var ext = Path.GetExtension(path);
+
+            if (ext == null || ext.ToLower() != ".json" || !File.Exists(path))
+                return Path.GetFileNameWithoutExtension(path);
+
+            try
             {
-                try
-                {
-                    var jObj = JObject.Parse(File.ReadAllText(path));
-                    return InferIDFromJObject(jObj, type);
-                }
-                catch (Exception e)
-                {
-                    Log("\tException occurred while parsing type {1} json at {0}: {2}", path, type, e.ToString());
-                }
+                var jObj = JObject.Parse(File.ReadAllText(path));
+                return InferIDFromJObject(jObj, type);
+            }
+            catch (Exception e)
+            {
+                Log($"\tException occurred while parsing type {type} json at {path}: {e}");
             }
 
             // fall back to using the path
             return Path.GetFileNameWithoutExtension(path);
+        }
+
+        public static void TryMergeJsonInto(string jsonIn, ref string jsonOut)
+        {
+            var jsonHash = jsonIn.GetHashCode();
+            var jsonCopy = jsonOut;
+
+            if (!JsonHashToId.ContainsKey(jsonHash))
+                return;
+
+            var id = JsonHashToId[jsonHash];
+
+            if (!JsonMerges.ContainsKey(id))
+                return;
+            
+            try
+            {
+                var ontoJObj = JObject.Parse(jsonCopy);
+                foreach (var jsonMerge in JsonMerges[id])
+                {
+                    var inJObj = JObject.Parse(jsonMerge);
+                    ontoJObj.Merge(inJObj);
+                }
+
+                jsonOut = ontoJObj.ToString();
+            }
+            catch (JsonReaderException e)
+            {
+                Log($"Error merging JSON ${e}");
+            }
+        }
+
+        public static void TryAddToVersionManifest(VersionManifest manifest)
+        {
+            foreach (var entryKvp in NewManifestEntries)
+            {
+                var id = entryKvp.Key;
+                var newEntry = entryKvp.Value;
+
+                if (newEntry.ShouldMergeJSON && manifest.Contains(id, newEntry.Type))
+                {
+                    // read the manifest pointed entry and hash the contents
+                    JsonHashToId.Add(File.ReadAllText(manifest.Get(id, newEntry.Type).FilePath).GetHashCode(), id);
+
+                    // The manifest already contains this information, so we need to queue it to be merged
+                    var partialJson = File.ReadAllText(newEntry.Path);
+
+                    if (!JsonMerges.ContainsKey(id))
+                        JsonMerges.Add(id, new List<string>());
+
+                    Log($"\tAdding id {id} to JSONMerges");
+                    JsonMerges[id].Add(partialJson);
+                }
+                else
+                {
+                    // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
+                    Log($"\tAddOrUpdate({id}, {newEntry.Path}, {newEntry.Type}, {DateTime.Now}, {newEntry.AssetBundleName}, {newEntry.AssetBundlePersistent})");
+                    manifest.AddOrUpdate(id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
+                }
+            }
         }
 
         [UsedImplicitly]
@@ -181,8 +253,7 @@ namespace ModTek
 
                     if (string.IsNullOrEmpty(entry.Path) || string.IsNullOrEmpty(entry.Type))
                     {
-                        LogWithDate(
-                            $"{modDef.Name} has a manifest entry that is missing its type or path! Aborting load.");
+                        LogWithDate($"{modDef.Name} has a manifest entry that is missing its type or path! Aborting load.");
                         return;
                     }
 
@@ -269,7 +340,7 @@ namespace ModTek
                 }
             }
 
-            LogWithDate("Loaded {0}", modDef.Name);
+            LogWithDate($"Loaded {modDef.Name}");
         }
     }
 }
