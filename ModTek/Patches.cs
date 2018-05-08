@@ -1,18 +1,10 @@
 using Harmony;
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using BattleTech;
 using JetBrains.Annotations;
 
 namespace ModTek
 {
-    using static Logger;
 
     [UsedImplicitly]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -26,12 +18,13 @@ namespace ModTek
             __result = old + " w/ ModTek";
         }
     }
-    
+
     [UsedImplicitly]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(HBS.Util.JSONSerializationUtility), "StripHBSCommentsFromJSON")]
     public static class HBS_Util_JSONSerializationUtility_StripHBSCommentsFromJSON_Patch
     {
+        [UsedImplicitly]
         public static void Postfix(string json, ref string __result)
         {
             // function has invalid json coming from file
