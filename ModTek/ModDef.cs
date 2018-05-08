@@ -5,12 +5,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace ModTek
 {
     public class ModDef
+        : IModDef
     {
-        public class ManifestEntry
+
+        public class ManifestEntry : IManifestEntry
         {
             [JsonProperty(Required = Required.Always)]
             public string Type { get; set; }
@@ -25,7 +28,8 @@ namespace ModTek
             [DefaultValue(true)]
             public bool MergeJSON { get; set; } = true;
 
-            public ManifestEntry(string type, string path, string id = null, string assetBundleName = null, bool? assetBundlePersistent = null)
+            public ManifestEntry(string type, string path, string id = null, string assetBundleName = null,
+                bool? assetBundlePersistent = null)
             {
                 Type = type;
                 Path = path;
@@ -46,28 +50,28 @@ namespace ModTek
         // versioning
         public string Version { get; set; }
         public DateTime? PackagedOn { get; set; }
-        
+
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
-        
+
         // load order
-        public List<string> DependsOn { get; set; }
+        public List<string> DependsOn { get; [UsedImplicitly] set; }
         public List<string> ConflictsWith { get; set; }
 
         // adding and running code
-        public string DLL { get; set; }
-        public string DLLEntryPoint { get; set; }
+        public string DLL { get; [UsedImplicitly] set; }
+        public string DLLEntryPoint { get; [UsedImplicitly] set; }
 
         // changing implicit loading behavior
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;
 
         // manifest, for including any kind of things to add to the game's manifest
-        public List<ManifestEntry> Manifest { get; set; }
+        public List<ManifestEntry> Manifest { get; [UsedImplicitly] set; }
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public JObject Settings { get; set; }
+        public JObject Settings { get; [UsedImplicitly] set; }
     }
 }

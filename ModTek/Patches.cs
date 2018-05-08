@@ -1,26 +1,33 @@
 ﻿using Harmony;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using BattleTech;
+using JetBrains.Annotations;
 
 namespace ModTek
 {
+    using static Logger;
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(VersionInfo), "GetReleaseVersion")]
     public static class VersionInfo_GetReleaseVersion_Patch
     {
-        static void Postfix(ref string __result)
+        [UsedImplicitly]
+        public static void Postfix(ref string __result)
         {
             string old = __result;
             __result = old + " w/ ModTek";
         }
     }
 
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        static void Postfix(VersionManifest __result)
+        [UsedImplicitly]
+        public static void Postfix(VersionManifest __result)
         {
             // add to the manifest here
             // TODO: these freaking kvp look so bad
@@ -30,8 +37,8 @@ namespace ModTek
                 var path = entryKVP.Value.Path;
                 var type = entryKVP.Value.Type;
 
-                ModTek.Log("\tAddOrUpdate({0},{1},{2},{3})", entryKVP.Key, path, type, DateTime.Now);
-                __result.AddOrUpdate(entryKVP.Key, path, type, DateTime.Now);
+                Log($"\tAddOrUpdate({id},{path},{type},{DateTime.Now})");
+                __result.AddOrUpdate(id, path, type, DateTime.Now);
             }
         }
     }
