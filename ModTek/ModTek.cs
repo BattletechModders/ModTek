@@ -9,6 +9,7 @@ using BattleTechModLoader;
 using Harmony;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine.Assertions;
 
 namespace ModTek
@@ -128,31 +129,35 @@ namespace ModTek
             return modDef;
         }
 
-        // ReSharper disable once MemberCanBePrivate.Global
-        // ReSharper disable once InconsistentNaming
+        public static string InferIDFromJObject(JObject jObj, string type = null)
+        {
+            // go through the different kinds of id storage in JSONS
+            // TODO: make this specific to the type
+            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
+            string id;
+            foreach (var jPath in jPaths)
+            {
+                id = (string)jObj.SelectToken(jPath);
+                if (id != null)
+                    return id;
+            }
+
+            return null;
+        }
+        
         public static string InferIDFromFileAndType(string path, string type)
         {
-            var ext = Path.GetExtension(path);
-
-            Assert.IsNotNull(ext, nameof(ext) + " != null");
-            if (ext.ToLower() != "json" || !File.Exists(path)) return Path.GetFileNameWithoutExtension(path);
-            try
+            if (Path.GetExtension(path).ToLower() == "json" && File.Exists(path))
             {
-                var jObj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
-
-                // go through the different kinds of id storage in JSONS
-                // TODO: make this specific to the type
-                string[] jPaths = {"Description.Id", "id", "Id", "ID", "identifier", "Identifier"};
-                foreach (var jPath in jPaths)
+                try
                 {
-                    var id = (string) jObj.SelectToken(jPath);
-                    if (id != null)
-                        return id;
+                    var jObj = JObject.Parse(File.ReadAllText(path));
+                    return InferIDFromJObject(jObj, type);
                 }
-            }
-            catch (Exception e)
-            {
-                Log($"\tException occurred while parsing type {type} json at {path}: {e}");
+                catch (Exception e)
+                {
+                    Log("\tException occurred while parsing type {1} json at {0}: {2}", path, type, e.ToString());
+                }
             }
 
             // fall back to using the path

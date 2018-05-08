@@ -1,4 +1,4 @@
-﻿namespace ModTek
+namespace ModTek
 {
     public interface IManifestEntry
     {
@@ -9,6 +9,6 @@
         bool? AssetBundlePersistent { get; set; }
 
         // ReSharper disable once InconsistentNaming
-        bool MergeJSON { get; set; }
+        bool ShouldMergeJSON { get; set; }
     }
 }
