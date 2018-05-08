@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -22,10 +21,10 @@ namespace ModTek
         // ReSharper disable once MemberCanBePrivate.Global
         public static string ModDirectory { get; private set; }
 
-        // ReSharper disable once InconsistentNaming
         private const string MOD_JSON_NAME = "mod.json";
 
-        private static Dictionary<Int32, string> JsonHashToId { get;  } =
+        // ReSharper disable once BuiltInTypeReferenceStyle
+        private static Dictionary<Int32, string> JsonHashToId { get; } =
             new Dictionary<int, string>();
 
         private static Dictionary<string, List<string>> JsonMerges { get; } =
@@ -99,15 +98,12 @@ namespace ModTek
             }
         }
 
-        [SuppressMessage("ReSharper", "ParameterTypeCanBeEnumerable.Global")]
-        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-        // ReSharper disable once MemberCanBePrivate.Global
         private static Queue<ModDef> GetLoadOrder(IList<ModDef> modDefs, out List<ModDef> unloaded)
         {
             var loadOrder = new Queue<ModDef>();
             var loaded = new HashSet<string>();
             unloaded = modDefs.OrderByDescending(x => x.Name).ToList();
-            
+
             // TODO: support ConflictsWith
             int removedThisPass;
             do
@@ -139,14 +135,15 @@ namespace ModTek
             return modDef;
         }
 
+        // ReSharper disable once UnusedParameter.Local
         private static string InferIDFromJObject(JObject jObj, string type = null)
         {
             // go through the different kinds of id storage in JSONS
-            // TODO: make this specific to the type
+            // TODO: make this specific to the type, remove Resharper disable once above
             string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
             foreach (var jPath in jPaths)
             {
-                var id = (string)jObj.SelectToken(jPath);
+                var id = (string) jObj.SelectToken(jPath);
                 if (id != null)
                     return id;
             }
@@ -154,7 +151,6 @@ namespace ModTek
             return null;
         }
 
-        // ReSharper disable once MemberCanBePrivate.Global
         private static string InferIDFromFileAndType(string path, string type)
         {
             var ext = Path.GetExtension(path);
@@ -188,7 +184,7 @@ namespace ModTek
 
             if (!JsonMerges.ContainsKey(id))
                 return;
-            
+
             try
             {
                 var ontoJObj = JObject.Parse(jsonCopy);
@@ -326,7 +322,7 @@ namespace ModTek
                 LogWithDate($"Using BTML to load dll {Path.GetFileName(dllPath)} with entry path {typeName ?? "NoNameSpecified"}.{methodName}");
 
                 BTModLoader.LoadDLL(dllPath, methodName, typeName,
-                    new object[] {modDef.Directory, modDef.Settings.ToString(Formatting.None)});
+                    new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
 
             // actually add the additions, since we successfully got through loading the other stuff
