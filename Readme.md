@@ -1,6 +1,6 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json Format](). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
 ***THERE ARE NO RELEASES YET -- IN HEAVY DEVELOPMENT!***
 
@@ -26,7 +26,7 @@ On game startup, ModTek decorates the version number found in the bottom left co
 
 ## A Brief Primer on Developing ModTek Mods
 
-It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.]()
+It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format)
 
 Here's an example `mod.json`:
 
@@ -54,11 +54,11 @@ Here's an example `mod.json`:
 }
 ```
 
-The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here]().
+The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format).
 
 If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
 
-The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\data\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\data` and will load those files without needing to be told about them. There are other implicit directories like `\MyModDirectory\MechDefs`, a list of which can be found in, you guessed it, [the in-depth guide to the `mod.json` format]().
+The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\data\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\data` and will load those files without needing to be told about them. There are other implicit directories like `\MyModDirectory\MechDefs`, a list of which can be found in, you guessed it, [the in-depth guide to the `mod.json` format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format).
 
 ## Merging JSON
 
