@@ -18,19 +18,19 @@ namespace ModTek
     [UsedImplicitly]
     public static class ModTek
     {
-        // ReSharper disable once MemberCanBePrivate.Global
+        [UsedImplicitly]
         public static string ModDirectory { get; private set; }
 
         private const string MOD_JSON_NAME = "mod.json";
+        private static bool hasLoadedMods = false;
 
-        // ReSharper disable once BuiltInTypeReferenceStyle
         private static Dictionary<Int32, string> JsonHashToId { get; } =
             new Dictionary<int, string>();
 
         private static Dictionary<string, List<string>> JsonMerges { get; } =
             new Dictionary<string, List<string>>();
-
-        private static Dictionary<string, ModDef.ManifestEntry> NewManifestEntries { get; } =
+        
+        private static Dictionary<string, ModDef.ManifestEntry> ModManifest { get; } =
             new Dictionary<string, ModDef.ManifestEntry>();
 
         // ran by BTML
@@ -51,6 +51,126 @@ namespace ModTek
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+
+        [UsedImplicitly]
+        public static void LoadMod(ModDef modDef)
+        {
+            var potentialAdditions = new Dictionary<string, ModDef.ManifestEntry>();
+
+            LogWithDate($"Loading {modDef.Name}");
+
+            // load out of the manifest
+            if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
+                modDef.Manifest.Add(new ModDef.ManifestEntry("StreamingAssets", true));
+
+            foreach (var entry in modDef.Manifest)
+            {
+                var entryPath = Path.Combine(modDef.Directory, entry.Path);
+
+                if (string.IsNullOrEmpty(entry.Path) && (string.IsNullOrEmpty(entry.Type) || entry.Path == "StreamingAssets"))
+                {
+                    Log($"\t{modDef.Name} has a manifest entry that is missing its path! Aborting load.");
+                    return;
+                }
+
+                if (Directory.Exists(entryPath))
+                {
+                    // path is a directory, add all the files there
+                    var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories);
+                    foreach (var filePath in files)
+                    {
+                        var id = InferIDFromFileAndType(filePath, entry.Type);
+                        var childModDef = new ModDef.ManifestEntry(entry, filePath, id);
+
+                        if (potentialAdditions.ContainsKey(id))
+                        {
+                            Log($"\t{modDef.Name}'s manifest has a file at {filePath}, but it's inferred ID is already used by this mod! Aborting load.");
+                            return;
+                        }
+
+                        potentialAdditions.Add(id, childModDef);
+                    }
+                }
+                else if (File.Exists(entryPath))
+                {
+                    // path is a file, add the single entry
+                    entry.Id = entry.Id ?? InferIDFromFileAndType(entryPath, entry.Type);
+                    entry.Path = entryPath;
+
+                    if (potentialAdditions.ContainsKey(entry.Id))
+                    {
+                        Log($"\t{modDef.Name}'s manifest has a file at {entryPath}, but it's inferred ID is already used by this mod! Aborting load.");
+                        return;
+                    }
+
+                    potentialAdditions.Add(entry.Id, entry);
+                }
+                else
+                {
+                    // wasn't a file and wasn't a path, must not exist
+
+                    // TODO: what to do with manifest entries that aren't implicit that are missing?
+
+                    //Log($"\t{modDef.Name} has a manifest entry {entryPath}, but it's missing! Aborting load.");
+                    //return;
+                }
+            }
+
+            // load mod dll
+            if (modDef.DLL != null)
+            {
+                var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
+                string typeName = null;
+                var methodName = "Init";
+
+                if (!File.Exists(dllPath))
+                {
+                    Log($"\t{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
+                    return;
+                }
+
+                if (modDef.DLLEntryPoint != null)
+                {
+                    var pos = modDef.DLLEntryPoint.LastIndexOf('.');
+                    if (pos == -1)
+                    {
+                        methodName = modDef.DLLEntryPoint;
+                    }
+                    else
+                    {
+                        typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
+                        methodName = modDef.DLLEntryPoint.Substring(pos + 1);
+                    }
+                }
+
+                Log($"\tUsing BTML to load dll {Path.GetFileName(dllPath)} with entry path {typeName ?? "NoNameSpecified"}.{methodName}");
+
+                BTModLoader.LoadDLL(dllPath, methodName, typeName,
+                    new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
+            }
+
+            // actually add the additions, since we successfully got through loading the other stuff
+            if (potentialAdditions.Count > 0)
+            {
+                foreach (var additionKvp in potentialAdditions)
+                {
+                    var id = additionKvp.Key;
+                    var entry = additionKvp.Value;
+                    var relativeModPath = entry.Path.Replace(ModDirectory, "");
+
+                    Log($"\tNew Entry: {relativeModPath}");
+                    ModManifest[id] = entry;
+                }
+            }
+
+            LogWithDate($"Loaded {modDef.Name}");
+        }
+
+        private static void LoadMods()
+        {
+            if (hasLoadedMods)
+                return;
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
@@ -90,17 +210,31 @@ namespace ModTek
             while (loadOrder.Count > 0)
             {
                 var modDef = loadOrder.Dequeue();
-                LoadMod(modDef);
+
+                try
+                {
+                    LoadMod(modDef);
+                }
+                catch (Exception e)
+                {
+                    LogWithDate($"Exception caught while trying to load {modDef.Name}: {e}");
+                }
             }
 
             foreach (var modDef in willNotLoad)
             {
-                LogWithDate($"Will not load {modDef} because its dependancies are unmet.");
+                LogWithDate($"Will not load {modDef}. It's lacking a dependancy or a conflict loaded before it.");
             }
+
+            Log("");
+            Log("----------");
+            Log("");
+            hasLoadedMods = true;
         }
 
         private static void PropagateConflictsForward(Dictionary<string, ModDef> modDefs)
         {
+            // conflicts are a unidirectional edge, so make them one in ModDefs
             foreach (var modDefKvp in modDefs)
             {
                 var modDef = modDefKvp.Value;
@@ -139,10 +273,8 @@ namespace ModTek
 
             return loadOrder;
         }
-
-        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-        // ReSharper disable once MemberCanBePrivate.Global
-        internal static ModDef ModDefFromPath(string path)
+        
+        private static ModDef ModDefFromPath(string path)
         {
             var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
@@ -175,7 +307,10 @@ namespace ModTek
             try
             {
                 var jObj = JObject.Parse(File.ReadAllText(path));
-                return InferIDFromJObject(jObj, type);
+                var id = InferIDFromJObject(jObj, type);
+
+                if (id != null)
+                    return id;
             }
             catch (Exception e)
             {
@@ -186,7 +321,7 @@ namespace ModTek
             return Path.GetFileNameWithoutExtension(path);
         }
 
-        public static void TryMergeJsonInto(string jsonIn, ref string jsonOut)
+        public static void TryMergeIntoInterceptedJson(string jsonIn, ref string jsonOut)
         {
             var jsonHash = jsonIn.GetHashCode();
             var jsonCopy = jsonOut;
@@ -212,24 +347,35 @@ namespace ModTek
             }
             catch (JsonReaderException e)
             {
-                Log($"Error merging JSON ${e}");
+                Log($"Error merging JSON! Skipping all mod merges on hash {jsonHash}: {e}");
             }
         }
-
+        
         public static void TryAddToVersionManifest(VersionManifest manifest)
         {
-            foreach (var entryKvp in NewManifestEntries)
+            if (!hasLoadedMods)
+                LoadMods();
+
+            LogWithDate("Adding mod manifests to a manifest");
+        
+            foreach (var entryKvp in ModManifest)
             {
                 var id = entryKvp.Key;
-                var newEntry = entryKvp.Value;
+                var entry = entryKvp.Value;
+                var realEntry = manifest.Find(x => x.Id == id);
 
-                if (newEntry.ShouldMergeJSON && manifest.Contains(id, newEntry.Type))
+                if (entry.Type == null)
+                {
+                    entry.Type = realEntry?.Type;
+                }
+                
+                if (Path.GetExtension(entry.Path).ToLower() == ".json" && entry.ShouldMergeJSON && realEntry != null)
                 {
                     // read the manifest pointed entry and hash the contents
-                    JsonHashToId.Add(File.ReadAllText(manifest.Get(id, newEntry.Type).FilePath).GetHashCode(), id);
+                    JsonHashToId[File.ReadAllText(realEntry.FilePath).GetHashCode()] = id;
 
                     // The manifest already contains this information, so we need to queue it to be merged
-                    var partialJson = File.ReadAllText(newEntry.Path);
+                    var partialJson = File.ReadAllText(entry.Path);
 
                     if (!JsonMerges.ContainsKey(id))
                         JsonMerges.Add(id, new List<string>());
@@ -240,117 +386,10 @@ namespace ModTek
                 else
                 {
                     // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                    Log($"\tAddOrUpdate({id}, {newEntry.Path}, {newEntry.Type}, {DateTime.Now}, {newEntry.AssetBundleName}, {newEntry.AssetBundlePersistent})");
-                    manifest.AddOrUpdate(id, newEntry.Path, newEntry.Type, DateTime.Now, newEntry.AssetBundleName, newEntry.AssetBundlePersistent);
+                    Log($"\tAddOrUpdate({id}, {entry.Path}, {entry.Type}, {DateTime.Now}, {entry.AssetBundleName}, {entry.AssetBundlePersistent})");
+                    manifest.AddOrUpdate(id, entry.Path, entry.Type, DateTime.Now, entry.AssetBundleName, entry.AssetBundlePersistent);
                 }
             }
-        }
-
-        [UsedImplicitly]
-        public static void LoadMod(ModDef modDef)
-        {
-            var potentialAdditions = new Dictionary<string, ModDef.ManifestEntry>();
-
-            LogWithDate($"Loading {modDef.Name}");
-
-            // load out of the manifest
-            // TODO: actually ignore the modDef specified files/directories
-            if (modDef.Manifest != null && modDef.Manifest.Count > 0)
-            {
-                foreach (var entry in modDef.Manifest)
-                {
-                    var entryPath = Path.Combine(modDef.Directory, entry.Path);
-
-                    if (string.IsNullOrEmpty(entry.Path) || string.IsNullOrEmpty(entry.Type))
-                    {
-                        LogWithDate($"{modDef.Name} has a manifest entry that is missing its type or path! Aborting load.");
-                        return;
-                    }
-
-                    if (Directory.Exists(entryPath))
-                    {
-                        // path is a directory, add all the files there
-                        var files = Directory.GetFiles(entryPath);
-                        foreach (var filePath in files)
-                        {
-                            var id = InferIDFromFileAndType(filePath, entry.Type);
-
-                            if (potentialAdditions.ContainsKey(id))
-                            {
-                                LogWithDate($"{modDef.Name}'s manifest has a file at {filePath}, but it's inferred ID is already used by this mod! Aborting load.");
-                                return;
-                            }
-
-                            potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, filePath));
-                        }
-                    }
-                    else if (File.Exists(entryPath))
-                    {
-                        // path is a file, add the single entry
-                        var id = entry.Id ?? InferIDFromFileAndType(entryPath, entry.Type);
-
-                        if (potentialAdditions.ContainsKey(id))
-                        {
-                            LogWithDate($"{modDef.Name}'s manifest has a file at {entryPath}, but it's inferred ID is already used by this mod! Aborting load.");
-                            return;
-                        }
-
-                        potentialAdditions.Add(id, new ModDef.ManifestEntry(entry.Type, entryPath));
-                    }
-                    else
-                    {
-                        // wasn't a file and wasn't a path, must not exist
-                        LogWithDate($"{modDef.Name} has a manifest entry {entryPath}, but it's missing! Aborting load.");
-                        return;
-                    }
-                }
-            }
-
-            // load mod dll
-            if (modDef.DLL != null)
-            {
-                var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
-                string typeName = null;
-                var methodName = "Init";
-
-                if (!File.Exists(dllPath))
-                {
-                    LogWithDate($"{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
-                    return;
-                }
-
-                if (modDef.DLLEntryPoint != null)
-                {
-                    var pos = modDef.DLLEntryPoint.LastIndexOf('.');
-                    if (pos == -1)
-                    {
-                        methodName = modDef.DLLEntryPoint;
-                    }
-                    else
-                    {
-                        typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
-                        methodName = modDef.DLLEntryPoint.Substring(pos + 1);
-                    }
-                }
-
-                LogWithDate($"Using BTML to load dll {Path.GetFileName(dllPath)} with entry path {typeName ?? "NoNameSpecified"}.{methodName}");
-
-                BTModLoader.LoadDLL(dllPath, methodName, typeName,
-                    new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
-            }
-
-            // actually add the additions, since we successfully got through loading the other stuff
-            if (potentialAdditions.Count > 0)
-            {
-                // TODO, this kvp is the weirdest thing
-                foreach (var additionKvp in potentialAdditions)
-                {
-                    Log($"\tWill load manifest entry -- id: {additionKvp.Key} type: {additionKvp.Value.Type} path: {additionKvp.Value.Path}");
-                    NewManifestEntries[additionKvp.Key] = additionKvp.Value;
-                }
-            }
-
-            LogWithDate($"Loaded {modDef.Name}");
         }
     }
 }

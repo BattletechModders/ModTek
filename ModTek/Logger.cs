@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -7,7 +7,6 @@ namespace ModTek
     internal static class Logger
     {
         // logging
-        // ReSharper disable once MemberCanBePrivate.Global
         internal static string LogPath { get; set; }
 
         [StringFormatMethod("message")]

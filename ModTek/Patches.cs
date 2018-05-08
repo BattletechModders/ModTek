@@ -29,7 +29,7 @@ namespace ModTek
         {
             // function has invalid json coming from file
             // and hopefully valid json (i.e. comments out) coming out from function
-            ModTek.TryMergeJsonInto(json, ref __result);
+            ModTek.TryMergeIntoInterceptedJson(json, ref __result);
         }
     }
 
