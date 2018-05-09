@@ -54,7 +54,6 @@ namespace ModTek
         [UsedImplicitly]
         public static void Prefix()
         {
-            Logger.Log("DataManager_CTOR_Patch");
             ModTek.LoadMods();
         }
     }
