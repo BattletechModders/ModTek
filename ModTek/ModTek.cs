@@ -25,7 +25,9 @@ namespace ModTek
         public static string StreamingAssetsDirectory { get; private set; }
 
         private const string MOD_JSON_NAME = "mod.json";
+
         private static bool hasLoadedMods = false;
+        private static List<string> modLoadOrder;
 
         private static Dictionary<Int32, string> JsonHashToId { get; } =
             new Dictionary<int, string>();
@@ -33,8 +35,8 @@ namespace ModTek
         private static Dictionary<string, List<string>> JsonMerges { get; } =
             new Dictionary<string, List<string>>();
         
-        private static Dictionary<string, ModDef.ManifestEntry> ModManifest { get; } =
-            new Dictionary<string, ModDef.ManifestEntry>();
+        private static Dictionary<string, List<ModDef.ManifestEntry>> ModManifest { get; } =
+            new Dictionary<string, List<ModDef.ManifestEntry>>();
 
         // ran by BTML
         [UsedImplicitly]
@@ -60,7 +62,7 @@ namespace ModTek
         [UsedImplicitly]
         public static void LoadMod(ModDef modDef)
         {
-            var potentialAdditions = new Dictionary<string, ModDef.ManifestEntry>();
+            var potentialAdditions = new List<ModDef.ManifestEntry>();
 
             LogWithDate($"Loading {modDef.Name}");
 
@@ -84,16 +86,8 @@ namespace ModTek
                     var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories);
                     foreach (var filePath in files)
                     {
-                        var id = InferIDFromFileAndType(filePath, entry.Type);
-                        var childModDef = new ModDef.ManifestEntry(entry, filePath, id);
-
-                        if (potentialAdditions.ContainsKey(id))
-                        {
-                            Log($"\t{modDef.Name}'s manifest has a file at {filePath}, but it's inferred ID is already used by this mod! Aborting load.");
-                            return;
-                        }
-
-                        potentialAdditions.Add(id, childModDef);
+                        var childModDef = new ModDef.ManifestEntry(entry, filePath, InferIDFromFileAndType(filePath, entry.Type));
+                        potentialAdditions.Add(childModDef);
                     }
                 }
                 else if (File.Exists(entryPath))
@@ -101,14 +95,7 @@ namespace ModTek
                     // path is a file, add the single entry
                     entry.Id = entry.Id ?? InferIDFromFileAndType(entryPath, entry.Type);
                     entry.Path = entryPath;
-
-                    if (potentialAdditions.ContainsKey(entry.Id))
-                    {
-                        Log($"\t{modDef.Name}'s manifest has a file at {entryPath}, but it's inferred ID is already used by this mod! Aborting load.");
-                        return;
-                    }
-
-                    potentialAdditions.Add(entry.Id, entry);
+                    potentialAdditions.Add(entry);
                 }
                 else
                 {
@@ -157,18 +144,13 @@ namespace ModTek
             // actually add the additions, since we successfully got through loading the other stuff
             if (potentialAdditions.Count > 0)
             {
-                foreach (var additionKvp in potentialAdditions)
+                foreach (var addition in potentialAdditions)
                 {
-                    var id = additionKvp.Key;
-                    var entry = additionKvp.Value;
-                    var relativeModPath = entry.Path.Replace(ModDirectory, "");
-
-                    Log($"\tNew Entry: {relativeModPath}");
-                    ModManifest[id] = entry;
+                    Log($"\tNew Entry: {addition.Path.Replace(ModDirectory, "")}");
                 }
-            }
 
-            LogWithDate($"Loaded {modDef.Name}");
+                ModManifest[modDef.Name] = potentialAdditions;
+            }
         }
 
         internal static void LoadMods()
@@ -210,10 +192,12 @@ namespace ModTek
 
             // TODO: be able to read load order from a JSON
             PropagateConflictsForward(modDefs);
-            var loadOrder = GetLoadOrder(modDefs, out var willNotLoad);
-            while (loadOrder.Count > 0)
+            modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
+
+            // lists guarentee order
+            foreach (var modName in modLoadOrder)
             {
-                var modDef = loadOrder.Dequeue();
+                var modDef = modDefs[modName];
 
                 try
                 {
@@ -224,7 +208,7 @@ namespace ModTek
                     LogWithDate($"Exception caught while trying to load {modDef.Name}: {e}");
                 }
             }
-
+            
             foreach (var modDef in willNotLoad)
             {
                 LogWithDate($"Will not load {modDef}. It's lacking a dependancy or a conflict loaded before it.");
@@ -251,9 +235,9 @@ namespace ModTek
             }
         }
 
-        private static Queue<ModDef> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
+        private static List<string> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
         {
-            var loadOrder = new Queue<ModDef>();
+            var loadOrder = new List<string>();
             var loaded = new HashSet<string>();
             unloaded = modDefs.Keys.OrderByDescending(x => x).ToList();
 
@@ -269,7 +253,7 @@ namespace ModTek
                         || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any()) continue;
 
                     unloaded.RemoveAt(i);
-                    loadOrder.Enqueue(modDef);
+                    loadOrder.Add(modDef.Name);
                     loaded.Add(modDef.Name);
                     removedThisPass++;
                 }
@@ -341,12 +325,12 @@ namespace ModTek
             LogWithDate($"Hash hit on ID: {id}");
 
             try
-            {
+            {   
                 var ontoJObj = JObject.Parse(jsonCopy);
                 foreach (var jsonMerge in JsonMerges[id])
                 {
                     var inJObj = JObject.Parse(jsonMerge);
-                    ontoJObj.Merge(inJObj);
+                    ontoJObj.Merge(inJObj, new JsonMergeSettings{ MergeArrayHandling = MergeArrayHandling.Replace });
                 }
 
                 jsonOut = ontoJObj.ToString();
@@ -364,46 +348,52 @@ namespace ModTek
 
             LogWithDate("Adding in mod manifests!");
 
-            foreach (var entryKvp in ModManifest)
+            foreach (var modName in modLoadOrder)
             {
-                var modEntry = entryKvp.Value;
-                var existingEntry = manifest.Find(x => x.Id == modEntry.Id);
+                if (!ModManifest.ContainsKey(modName))
+                    continue;
 
-                if (modEntry.Type == null)
+                Log($"\t{modName}:");
+                foreach (var modEntry in ModManifest[modName])
                 {
-                    // null type means that we have to find existing entry with the same rel path to fill in the entry
-                    // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
-                    var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
-                    var fakeStreamingAssetsPath = Path.Combine(StreamingAssetsDirectory, relPath);
-                    
-                    existingEntry = manifest.Find(x => Path.GetFullPath(x.FilePath) == Path.GetFullPath(fakeStreamingAssetsPath));
+                    var existingEntry = manifest.Find(x => x.Id == modEntry.Id);
 
-                    if (existingEntry == null)
-                        continue;
-                    
-                    modEntry.Id = existingEntry.Id;
-                    modEntry.Type = existingEntry.Type;
-                }
+                    if (modEntry.Type == null)
+                    {
+                        // null type means that we have to find existing entry with the same rel path to fill in the entry
+                        // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
+                        var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
+                        var fakeStreamingAssetsPath = Path.Combine(StreamingAssetsDirectory, relPath);
 
-                if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON && existingEntry != null)
-                {
-                    // read the manifest pointed entry and hash the contents
-                    JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = modEntry.Id;
+                        existingEntry = manifest.Find(x => Path.GetFullPath(x.FilePath) == Path.GetFullPath(fakeStreamingAssetsPath));
 
-                    // The manifest already contains this information, so we need to queue it to be merged
-                    var partialJson = File.ReadAllText(modEntry.Path);
+                        if (existingEntry == null)
+                            continue;
 
-                    if (!JsonMerges.ContainsKey(modEntry.Id))
-                        JsonMerges.Add(modEntry.Id, new List<string>());
+                        modEntry.Id = existingEntry.Id;
+                        modEntry.Type = existingEntry.Type;
+                    }
 
-                    Log($"\tAdding id {modEntry.Id} to JSONMerges");
-                    JsonMerges[modEntry.Id].Add(partialJson);
-                }
-                else
-                {
-                    // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                    Log($"\tAddOrUpdate({modEntry.Id}, {modEntry.Path}, {modEntry.Type}, {DateTime.Now}, {modEntry.AssetBundleName}, {modEntry.AssetBundlePersistent})");
-                    manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                    if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON && existingEntry != null)
+                    {
+                        // read the manifest pointed entry and hash the contents
+                        JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = modEntry.Id;
+
+                        // The manifest already contains this information, so we need to queue it to be merged
+                        var partialJson = File.ReadAllText(modEntry.Path);
+
+                        if (!JsonMerges.ContainsKey(modEntry.Id))
+                            JsonMerges.Add(modEntry.Id, new List<string>());
+
+                        Log($"\t\tAdding {modEntry.Id} to JSONMerges");
+                        JsonMerges[modEntry.Id].Add(partialJson);
+                    }
+                    else
+                    {
+                        // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
+                        Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
+                        manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                    }
                 }
             }
 
