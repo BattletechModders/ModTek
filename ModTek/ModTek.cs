@@ -322,7 +322,7 @@ namespace ModTek
             if (!JsonMerges.ContainsKey(id))
                 return;
 
-            LogWithDate($"Hash hit on ID: {id}");
+            LogWithDate($"Merging json into ID: {id}");
 
             try
             {   
