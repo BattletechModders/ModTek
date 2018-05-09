@@ -56,6 +56,12 @@ namespace ModTek
         [JsonProperty(Required = Required.Always)]
         public string Name { get; set; }
 
+        // informational
+        public string Description { get; set; }
+        public string Author { get; set; }
+        public string Website { get; set; }
+        public string Contact { get; set; }
+
         // versioning
         public string Version { get; set; }
         public DateTime? PackagedOn { get; set; }
