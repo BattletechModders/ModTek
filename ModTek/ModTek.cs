@@ -321,7 +321,7 @@ namespace ModTek
             return Path.GetFileNameWithoutExtension(path);
         }
 
-        public static void TryMergeIntoInterceptedJson(string jsonIn, ref string jsonOut)
+        internal static void TryMergeIntoInterceptedJson(string jsonIn, ref string jsonOut)
         {
             var jsonHash = jsonIn.GetHashCode();
             var jsonCopy = jsonOut;
@@ -353,24 +353,28 @@ namespace ModTek
             }
         }
         
-        public static void TryAddToVersionManifest(VersionManifest manifest)
+        internal static void TryAddToVersionManifest(VersionManifest manifest)
         {
             if (!hasLoadedMods)
                 LoadMods();
 
-            LogWithDate("Adding mod manifests to a manifest");
+            LogWithDate("Adding in mod manifests!");
 
             foreach (var entryKvp in ModManifest)
             {
                 var id = entryKvp.Key;
                 var entry = entryKvp.Value;
                 var realEntry = manifest.Find(x => x.Id == id);
+                
+                entry.Type = entry.Type ?? realEntry?.Type;
 
+                // TODO: mod name needs to be specified somewhere, perhaps in entry
                 if (entry.Type == null)
                 {
-                    entry.Type = realEntry?.Type;
+                    Log($"\tSkipping {entry.Id} with null type and no matching entry in VersionManifest!");
+                    continue;
                 }
-                
+
                 if (Path.GetExtension(entry.Path).ToLower() == ".json" && entry.ShouldMergeJSON && realEntry != null)
                 {
                     // read the manifest pointed entry and hash the contents
