@@ -21,6 +21,9 @@ namespace ModTek
         [UsedImplicitly]
         public static string ModDirectory { get; private set; }
 
+        [UsedImplicitly]
+        public static string StreamingAssetsDirectory { get; private set; }
+
         private const string MOD_JSON_NAME = "mod.json";
         private static bool hasLoadedMods = false;
 
@@ -42,6 +45,7 @@ namespace ModTek
             Assert.IsNotNull(manifestDirectory, nameof(manifestDirectory) + " != null");
 
             ModDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\..\..\Mods\"));
+            StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\"));
             LogPath = Path.Combine(ModDirectory, "ModTek.log");
 
             // create log file, overwritting if it's already there
@@ -362,38 +366,44 @@ namespace ModTek
 
             foreach (var entryKvp in ModManifest)
             {
-                var id = entryKvp.Key;
-                var entry = entryKvp.Value;
-                var realEntry = manifest.Find(x => x.Id == id);
-                
-                entry.Type = entry.Type ?? realEntry?.Type;
+                var modEntry = entryKvp.Value;
+                var existingEntry = manifest.Find(x => x.Id == modEntry.Id);
 
-                // TODO: mod name needs to be specified somewhere, perhaps in entry
-                if (entry.Type == null)
+                if (modEntry.Type == null)
                 {
-                    Log($"\tSkipping {entry.Id} with null type and no matching entry in VersionManifest!");
-                    continue;
+                    // null type means that we have to find existing entry with the same rel path to fill in the entry
+                    // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
+                    var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
+                    var fakeStreamingAssetsPath = Path.Combine(StreamingAssetsDirectory, relPath);
+                    
+                    existingEntry = manifest.Find(x => Path.GetFullPath(x.FilePath) == Path.GetFullPath(fakeStreamingAssetsPath));
+
+                    if (existingEntry == null)
+                        continue;
+                    
+                    modEntry.Id = existingEntry.Id;
+                    modEntry.Type = existingEntry.Type;
                 }
 
-                if (Path.GetExtension(entry.Path).ToLower() == ".json" && entry.ShouldMergeJSON && realEntry != null)
+                if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON && existingEntry != null)
                 {
                     // read the manifest pointed entry and hash the contents
-                    JsonHashToId[File.ReadAllText(realEntry.FilePath).GetHashCode()] = id;
+                    JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = modEntry.Id;
 
                     // The manifest already contains this information, so we need to queue it to be merged
-                    var partialJson = File.ReadAllText(entry.Path);
+                    var partialJson = File.ReadAllText(modEntry.Path);
 
-                    if (!JsonMerges.ContainsKey(id))
-                        JsonMerges.Add(id, new List<string>());
+                    if (!JsonMerges.ContainsKey(modEntry.Id))
+                        JsonMerges.Add(modEntry.Id, new List<string>());
 
-                    Log($"\tAdding id {id} to JSONMerges");
-                    JsonMerges[id].Add(partialJson);
+                    Log($"\tAdding id {modEntry.Id} to JSONMerges");
+                    JsonMerges[modEntry.Id].Add(partialJson);
                 }
                 else
                 {
                     // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                    Log($"\tAddOrUpdate({id}, {entry.Path}, {entry.Type}, {DateTime.Now}, {entry.AssetBundleName}, {entry.AssetBundlePersistent})");
-                    manifest.AddOrUpdate(id, entry.Path, entry.Type, DateTime.Now, entry.AssetBundleName, entry.AssetBundlePersistent);
+                    Log($"\tAddOrUpdate({modEntry.Id}, {modEntry.Path}, {modEntry.Type}, {DateTime.Now}, {modEntry.AssetBundleName}, {modEntry.AssetBundlePersistent})");
+                    manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
                 }
             }
 
