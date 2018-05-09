@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -113,29 +114,40 @@ namespace ModTek
             }
         }
 
-        private static Queue<ModDef> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
+        internal static Queue<ModDef> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> skippedMods)
         {
             var loadOrder = new Queue<ModDef>();
-            var loaded = new HashSet<string>();
-            unloaded = modDefs.Keys.OrderByDescending(x => x).ToList();
+            var loadedMods = new HashSet<string>();
+            var candidateMods = new SortedDictionary<string, ModDef>(modDefs);
 
-            int removedThisPass;
+            //// remove all mods that can't ever be loaded due to missing dependency
+            // not necessary as load order issues have to be fixed by the user anyway
+            // only helps with allowing conflicting mods to load in case the offender can't be loaded due to dependency issues
+            //candidateMods.Values.ToList() // iterate over copy (ToList) to allow removal in original
+            //    .Where(m => !m.DependsOn.All(modDefs.ContainsKey))
+            //    .Do(m => candidateMods.Remove(m.Name));
+
+            // remove all mods who have conflicts, in order to be fair, remove all mods that conflict and don't pick a winner
+            candidateMods.Values.ToList() // iterate over copy (ToList) to allow removeal in original
+                .Where(m => m.ConflictsWith.Any(modDefs.ContainsKey))
+                .Do(m => candidateMods.Remove(m.Name));
+
+            int candidateCountBefore;
             do
             {
-                removedThisPass = 0;
+                candidateCountBefore = candidateMods.Count;
 
-                for (var i = unloaded.Count - 1; i >= 0; i--)
-                {
-                    var modDef = modDefs[unloaded[i]];
-                    if (modDef.DependsOn.Count != 0 && modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count
-                        || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any()) continue;
+                candidateMods.Values.ToList() // iterate over copy (ToList) to allow removal in original
+                    .Where(m => m.DependsOn.All(loadedMods.Contains))
+                    .Do(m =>
+                    {
+                        loadOrder.Enqueue(m);
+                        loadedMods.Add(m.Name);
+                        candidateMods.Remove(m.Name);
+                    });
+            } while (candidateMods.Any() && candidateMods.Count != candidateCountBefore);
 
-                    unloaded.RemoveAt(i);
-                    loadOrder.Enqueue(modDef);
-                    loaded.Add(modDef.Name);
-                    removedThisPass++;
-                }
-            } while (removedThisPass > 0 && unloaded.Count > 0);
+            skippedMods = modDefs.Keys.Except(loadedMods).ToList();
 
             return loadOrder;
         }
