@@ -20,7 +20,7 @@ On game startup, ModTek decorates the version number found in the bottom left co
         mod.json
         MyDllName.dll
 
-        \data\weapon\
+        StreamingAssets\data\weapon\
             Weapon_Autocannon_AC5_0-Stock.json
 ```
 
@@ -58,7 +58,7 @@ The only required field is "Name" which must be **unique** between all installed
 
 If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
 
-The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\data\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\data` and will load those files without needing to be told about them. There are other implicit directories like `\MyModDirectory\MechDefs`, a list of which can be found in, you guessed it, [the in-depth guide to the `mod.json` format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format).
+The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\StreamingAssets\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\` and will load those files without needing to be told about them. There are other implicit directories like `\MyModDirectory\MechDefs`, a list of which can be found in, you guessed it, [the in-depth guide to the `mod.json` format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format).
 
 ## Merging JSON
 
@@ -73,7 +73,7 @@ For JSON files of specific types, if a file is loaded that has the same ID as a 
 }
 ```
 
-`\BoostedAC5\data\weapon\Weapon_Autocannon_AC5_0-Stock.json`:
+`\BoostedAC5\StreamingAssets\data\weapon\Weapon_Autocannon_AC5_0-Stock.json`:
 
 ```JSON
 {

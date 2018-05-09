@@ -167,7 +167,7 @@ namespace ModTek
             LogWithDate($"Loaded {modDef.Name}");
         }
 
-        private static void LoadMods()
+        internal static void LoadMods()
         {
             if (hasLoadedMods)
                 return;
@@ -334,6 +334,8 @@ namespace ModTek
             if (!JsonMerges.ContainsKey(id))
                 return;
 
+            LogWithDate($"Hash hit on ID: {id}");
+
             try
             {
                 var ontoJObj = JObject.Parse(jsonCopy);
@@ -357,7 +359,7 @@ namespace ModTek
                 LoadMods();
 
             LogWithDate("Adding mod manifests to a manifest");
-        
+
             foreach (var entryKvp in ModManifest)
             {
                 var id = entryKvp.Key;
@@ -390,6 +392,8 @@ namespace ModTek
                     manifest.AddOrUpdate(id, entry.Path, entry.Type, DateTime.Now, entry.AssetBundleName, entry.AssetBundlePersistent);
                 }
             }
+
+            Log("");
         }
     }
 }
