@@ -191,7 +191,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
-                    Log($"Exception: {e}");
+                    Log($"\t{e.Message}");
                     //continue;
                 }
             }
@@ -211,7 +211,8 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    LogWithDate($"Exception caught while trying to load {modDef.Name}: {e}");
+                    LogWithDate($"Exception caught while trying to load {modDef.Name}");
+                    Log($"{e.Message}");
                 }
             }
             
@@ -308,7 +309,8 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                Log($"\tException occurred while parsing type {type} json at {path}: {e}");
+                Log($"\tException occurred while parsing type {type} json at {path}");
+                Log($"\t\t{e.Message}");
             }
 
             // fall back to using the path
@@ -329,22 +331,34 @@ namespace ModTek
                 return;
 
             LogWithDate($"Merging json into ID: {id}");
-
+            
+            JObject ontoJObj;
             try
-            {   
-                var ontoJObj = JObject.Parse(jsonCopy);
-                foreach (var jsonMerge in JsonMerges[id])
+            {
+                ontoJObj = JObject.Parse(jsonCopy);
+            }
+            catch (Exception e)
+            {
+                Log($"\tParent JSON has an error preventing merges. Check JSON for missing commas (extra commas seem fine) or other problems");
+                Log($"\t\t{e.Message}");
+                return;
+            }
+
+            foreach (var jsonMerge in JsonMerges[id])
+            {
+                try
                 {
                     var inJObj = JObject.Parse(jsonMerge);
-                    ontoJObj.Merge(inJObj, new JsonMergeSettings{ MergeArrayHandling = MergeArrayHandling.Replace });
+                    ontoJObj.Merge(inJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
                 }
+                catch (Exception e)
+                {
+                    Log($"\tError merging particular JSON merge onto {id}, skipping just this single merge");
+                    Log($"\t\t{e.Message}");
+                }
+            }
 
-                jsonOut = ontoJObj.ToString();
-            }
-            catch (JsonReaderException e)
-            {
-                Log($"Error merging JSON! Skipping all mod merges on hash {jsonHash}: {e}");
-            }
+            jsonOut = ontoJObj.ToString();
         }
         
         internal static void TryAddToVersionManifest(VersionManifest manifest)
@@ -391,7 +405,7 @@ namespace ModTek
                         if (!JsonMerges.ContainsKey(modEntry.Id))
                             JsonMerges.Add(modEntry.Id, new List<string>());
 
-                        Log($"\t\tAdding {modEntry.Id} to JSONMerges");
+                        Log($"\t\tAdding {modEntry.Id} to JsonMerges");
                         JsonMerges[modEntry.Id].Add(partialJson);
                     }
                     else
