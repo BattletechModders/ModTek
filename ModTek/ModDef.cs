@@ -87,6 +87,6 @@ namespace ModTek
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public JObject Settings { get; [UsedImplicitly] set; }
+        public JObject Settings { get; [UsedImplicitly] set; } = new JObject();
     }
 }
