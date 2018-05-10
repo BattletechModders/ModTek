@@ -43,8 +43,8 @@ Here's an example `mod.json`:
     "DLLEntryPoint": "CoolModNamespace.CoolModClass.CoolModPublicStaticMethod",
 
     "Manifest": [
-        { "Type": "WeaponDef", "Path": "\\MyCustomWeaponDefsFolder\\" }
-        { "Type": "MechDef", "Path": "\\MyCustomMech\\mechdef_my_super_mech.json" }
+        { "Type": "WeaponDef", "Path": "MyCustomWeaponDefsFolder\\" }
+        { "Type": "MechDef", "Path": "MyCustomMech\\mechdef_my_super_mech.json" }
     ],
 
     "Settings": {
