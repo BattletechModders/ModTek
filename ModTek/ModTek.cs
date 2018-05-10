@@ -64,12 +64,6 @@ namespace ModTek
         {
             var potentialAdditions = new List<ModDef.ManifestEntry>();
 
-            if (ModManifest.ContainsKey(modDef.Name))
-            {
-                LogWithDate($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
-                return;
-            }
-
             LogWithDate($"Loading {modDef.Name}");
 
             // load out of the manifest
@@ -183,6 +177,12 @@ namespace ModTek
                     if (!modDef.Enabled)
                     {
                         LogWithDate($"Will not load {modDef.Name} because it's disabled.");
+                        continue;
+                    }
+
+                    if (modDefs.ContainsKey(modDef.Name))
+                    {
+                        LogWithDate($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
                         continue;
                     }
 
