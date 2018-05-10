@@ -383,8 +383,13 @@ namespace ModTek
                     {
                         addendum = manifest.GetAddendumByName(modEntry.AddToAddendum);
 
+                        // create the addendum if it doesn't exist
                         if (addendum == null)
-                            continue;
+                        {
+                            Log($"\t\tCreated addendum {modEntry.AddToAddendum}:");
+                            addendum = new VersionManifestAddendum(modEntry.AddToAddendum);
+                            manifest.ApplyAddendum(addendum);
+                        }
                     }
 
                     if (modEntry.Type == null)
@@ -416,20 +421,19 @@ namespace ModTek
 
                         Log($"\t\tAdding {modEntry.Id} to JsonMerges");
                         JsonMerges[modEntry.Id].Add(partialJson);
+                        continue;
                     }
-                    else
-                    {
-                        if (!string.IsNullOrEmpty(modEntry.AddToAddendum) && addendum != null)
-                        {
-                            Log($"\t\tAddendum AddOrUpdate {modEntry.Type} {modEntry.Id}");
-                            addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
-                            continue;
-                        }
 
-                        // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                        Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
-                        manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                    if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
+                    {
+                        Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id} to addendum {addendum.Name}");
+                        addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                        continue;
                     }
+
+                    // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
+                    Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
+                    manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
                 }
             }
 
