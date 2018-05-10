@@ -64,6 +64,12 @@ namespace ModTek
         {
             var potentialAdditions = new List<ModDef.ManifestEntry>();
 
+            if (ModManifest.ContainsKey(modDef.Name))
+            {
+                LogWithDate($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
+                return;
+            }
+
             LogWithDate($"Loading {modDef.Name}");
 
             // load out of the manifest
