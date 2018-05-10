@@ -52,7 +52,7 @@ namespace ModTek
 
             // create log file, overwritting if it's already there
             using (var logWriter = File.CreateText(LogPath))
-                logWriter.WriteLine($"ModTek -- {DateTime.Now}");
+                logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
