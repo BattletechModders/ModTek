@@ -19,21 +19,18 @@ namespace ModTek
             [DefaultValue(false)]
             public bool ShouldMergeJSON { get; set; }
 
+            public string AddToAddendum { get; set; }
+
             public string Type { get; set; }
             public string Id { get; set; }
             public string AssetBundleName { get; set; }
             public bool? AssetBundlePersistent { get; set; }
             
             [JsonConstructor]
-            public ManifestEntry(string path, bool shouldMergeJSON = false, string type = null, string id = null, string assetBundleName = null,
-                bool? assetBundlePersistent = null)
+            public ManifestEntry(string path, bool shouldMergeJSON = false)
             {
                 Path = path;
                 ShouldMergeJSON = shouldMergeJSON;
-                Type = type;
-                Id = id;
-                AssetBundleName = assetBundleName;
-                AssetBundlePersistent = assetBundlePersistent;
             }
 
             public ManifestEntry(ManifestEntry parent, string path, string id)
@@ -45,6 +42,7 @@ namespace ModTek
                 AssetBundleName = parent.AssetBundleName;
                 AssetBundlePersistent = parent.AssetBundlePersistent;
                 ShouldMergeJSON = parent.ShouldMergeJSON;
+                AddToAddendum = parent.AddToAddendum;
             }
         }
 

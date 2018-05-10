@@ -7,8 +7,8 @@ namespace ModTek
         string Id { get; set; }
         string AssetBundleName { get; set; }
         bool? AssetBundlePersistent { get; set; }
-
-        // ReSharper disable once InconsistentNaming
+        
         bool ShouldMergeJSON { get; set; }
+        string AddToAddendum { get; set; }
     }
 }

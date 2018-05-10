@@ -377,6 +377,15 @@ namespace ModTek
                 foreach (var modEntry in ModManifest[modName])
                 {
                     var existingEntry = manifest.Find(x => x.Id == modEntry.Id);
+                    VersionManifestAddendum addendum = null;
+
+                    if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
+                    {
+                        addendum = manifest.GetAddendumByName(modEntry.AddToAddendum);
+
+                        if (addendum == null)
+                            continue;
+                    }
 
                     if (modEntry.Type == null)
                     {
@@ -410,6 +419,13 @@ namespace ModTek
                     }
                     else
                     {
+                        if (!string.IsNullOrEmpty(modEntry.AddToAddendum) && addendum != null)
+                        {
+                            Log($"\t\tAddendum AddOrUpdate {modEntry.Type} {modEntry.Id}");
+                            addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                            continue;
+                        }
+
                         // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
                         Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
                         manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
