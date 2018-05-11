@@ -130,7 +130,7 @@ namespace ModTek
                     }
                     else
                     {
-                        typeName = modDef.DLLEntryPoint.Substring(0, pos - 1);
+                        typeName = modDef.DLLEntryPoint.Substring(0, pos);
                         methodName = modDef.DLLEntryPoint.Substring(pos + 1);
                     }
                 }
