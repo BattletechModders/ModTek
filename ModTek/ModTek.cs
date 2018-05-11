@@ -46,8 +46,11 @@ namespace ModTek
 
             Assert.IsNotNull(manifestDirectory, nameof(manifestDirectory) + " != null");
 
-            ModDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\..\..\Mods\"));
-            StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, @"..\"));
+            ModDirectory = Path.GetFullPath(
+                Path.Combine(manifestDirectory,
+                    Path.Combine(Path.Combine(Path.Combine(
+                                 "..", ".."), ".."), "Mods")));
+            StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, ".."));
             LogPath = Path.Combine(ModDirectory, "ModTek.log");
 
             // create log file, overwritting if it's already there
