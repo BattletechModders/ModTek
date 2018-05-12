@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BattleTech.Data;
 using UnityEngine.Assertions;
 
 namespace ModTek
@@ -369,7 +370,12 @@ namespace ModTek
             if (!hasLoadedMods)
                 LoadMods();
 
+            var breakMyGame = File.Exists(Path.Combine(ModDirectory, "break.my.game"));
+            
             LogWithDate("Adding in mod manifests!");
+
+            if (breakMyGame)
+                Log($"\tBreak my game mode enabled! All new modded content (doesn't currently support merges) will be added to the DB.");
 
             foreach (var modName in modLoadOrder)
             {
@@ -425,6 +431,16 @@ namespace ModTek
                         Log($"\t\tAdding {modEntry.Id} to JsonMerges");
                         JsonMerges[modEntry.Id].Add(partialJson);
                         continue;
+                    }
+                    
+                    if (breakMyGame && Path.GetExtension(modEntry.Path).ToLower() == ".json")
+                    {
+                        var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
+                        using (var metadataDatabase = new MetadataDatabase())
+                        {
+                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
+                            Log($"\t\tAdding to MDDB! {type} {modEntry.Path}");
+                        }
                     }
 
                     if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
