@@ -396,13 +396,13 @@ namespace ModTek
             if (breakMyGame)
             {
                 var mddPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), "MetadataDatabase.db");
-                var mddBackupPath = Path.Combine(mddPath, ".orig");
+                var mddBackupPath = mddPath + ".orig";
 
                 Log($"\tBreak my game mode enabled! All new modded content (doesn't currently support merges) will be added to the DB.");
                 
                 if (!File.Exists(mddBackupPath))
                 {
-                    Log($"\t\tBacked up metadata database to {Path.GetFileName(mddBackupPath)}");
+                    Log($"\t\tBacking up metadata database to {Path.GetFileName(mddBackupPath)}");
                     File.Copy(mddPath, mddBackupPath);
                 }
             }
