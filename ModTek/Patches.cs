@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
@@ -16,7 +17,7 @@ namespace ModTek
         public static void Postfix(ref string __result)
         {
             var old = __result;
-            __result = old + " w/ ModTek";
+            __result = old + $" w/ ModTek v{Assembly.GetExecutingAssembly().GetName().Version}";
         }
     }
 
