@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using BattleTech.Data;
 using UnityEngine.Assertions;
 
@@ -321,6 +322,12 @@ namespace ModTek
             return Path.GetFileNameWithoutExtension(path);
         }
 
+        internal static string FixMissingCommas(string json)
+        {
+            var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
+            return rgx.Replace(json, "$1,\n$2");
+        }
+
         internal static void TryMergeIntoInterceptedJson(string jsonIn, ref string jsonOut)
         {
             var jsonHash = jsonIn.GetHashCode();
@@ -343,9 +350,21 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                Log($"\tParent JSON has an error preventing merges. Check JSON for missing commas (extra commas seem fine) or other problems");
-                Log($"\t\t{e.Message}");
-                return;
+                try
+                {
+                    Log("\tParent JSON has an JSON parse error, trying to fix missing commas with regex");
+                    jsonCopy = FixMissingCommas(jsonCopy);
+                    ontoJObj = JObject.Parse(jsonCopy);
+                }
+                catch (Exception e2)
+                {
+                    Log("\tParent JSON has an error preventing merges that couldn't be fixed with regex.");
+                    Log($"\t\t Exception before regex: {e.Message}");
+                    Log($"\t\t Exception after regex: {e2.Message}");
+                    return;
+                }
+
+                Log("\tFixed missing commas.");
             }
 
             foreach (var jsonMerge in JsonMerges[id])
