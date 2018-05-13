@@ -352,19 +352,19 @@ namespace ModTek
             {
                 try
                 {
-                    Log("\tParent JSON has an JSON parse error, trying to fix missing commas with regex");
+                    Log("\tParent JSON has an JSON parse error, attempting to fix missing commas with regex");
                     jsonCopy = FixMissingCommas(jsonCopy);
                     ontoJObj = JObject.Parse(jsonCopy);
                 }
                 catch (Exception e2)
                 {
-                    Log("\tParent JSON has an error preventing merges that couldn't be fixed with regex.");
+                    Log("\tParent JSON has an error preventing merges that couldn't be fixed with missing comma regex");
                     Log($"\t\t Exception before regex: {e.Message}");
                     Log($"\t\t Exception after regex: {e2.Message}");
                     return;
                 }
 
-                Log("\tFixed missing commas.");
+                Log("\tFixed missing commas in parent JSON.");
             }
 
             foreach (var jsonMerge in JsonMerges[id])
@@ -383,7 +383,7 @@ namespace ModTek
 
             jsonOut = ontoJObj.ToString();
         }
-        
+
         internal static void TryAddToVersionManifest(VersionManifest manifest)
         {
             if (!hasLoadedMods)
@@ -394,7 +394,18 @@ namespace ModTek
             LogWithDate("Adding in mod manifests!");
 
             if (breakMyGame)
+            {
+                var mddPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), "MetadataDatabase.db");
+                var mddBackupPath = Path.Combine(mddPath, ".orig");
+
                 Log($"\tBreak my game mode enabled! All new modded content (doesn't currently support merges) will be added to the DB.");
+                
+                if (!File.Exists(mddBackupPath))
+                {
+                    Log($"\t\tBacked up metadata database to {Path.GetFileName(mddBackupPath)}");
+                    File.Copy(mddPath, mddBackupPath);
+                }
+            }
 
             foreach (var modName in modLoadOrder)
             {
@@ -446,6 +457,12 @@ namespace ModTek
 
                         if (!JsonMerges.ContainsKey(modEntry.Id))
                             JsonMerges.Add(modEntry.Id, new List<string>());
+
+                        if (JsonMerges[modEntry.Id].Contains(partialJson))
+                        {
+                            Log($"\t\tAlready added {modEntry.Id} to JsonMerges");
+                            continue;
+                        }
 
                         Log($"\t\tAdding {modEntry.Id} to JsonMerges");
                         JsonMerges[modEntry.Id].Add(partialJson);
