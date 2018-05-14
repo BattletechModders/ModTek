@@ -2,8 +2,6 @@
 
 ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
-***THERE ARE NO RELEASES YET -- IN HEAVY DEVELOPMENT!***
-
 ## Installing
 
 ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
