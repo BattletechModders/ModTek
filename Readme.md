@@ -12,7 +12,7 @@ On game startup, ModTek decorates the version number found in the bottom left co
 
 ## Handling Game Updates
 
-Because ModTek is a BTML mod and doesn't change any game files, all you have to do to get your ModTek mods working again after an update is to re-run `BattleTechModLoaderInjector.exe`, which will re-inject BTML into the game.
+Because ModTek is a BTML mod and doesn't change any game files, all you have to do to get your ModTek mods working again after an update is to re-run `BattleTechModLoaderInjector.exe`, which will re-inject BTML into the game. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
 
 ## Anatomy of a ModTek Mod
 
