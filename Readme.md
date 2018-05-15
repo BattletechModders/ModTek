@@ -6,7 +6,7 @@ ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://
 
 ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
 
-Installing is as simple as moving ModTek.dll into your `\BATTLETECH\Mods\` directory.
+If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving `ModTek.dll` into the `BATTLETECH\Mods\` folder. BTML will now load ModTek.
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 
