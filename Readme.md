@@ -10,6 +10,10 @@ If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 
+## Handling Game Updates
+
+Because ModTek is a BTML mod and doesn't change any game files, all you have to do to get your ModTek mods working again after an update is to re-run `BattleTechModLoaderInjector.exe`, which will re-inject BTML into the game.
+
 ## Anatomy of a ModTek Mod
 
 ```
