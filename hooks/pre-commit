@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+git ls-files -mz -- | while IFS= read -r -d $'\0' FILE; do
+	FENC=$(file -b --mime-encoding "$FILE")
+	case "$FENC" in
+		'us-ascii' | 'utf-8')
+			#echo "$FILE is ok"
+		;;
+		*)
+			echo "Encoding is $FENC for $FILE"
+			exit 1
+		;;
+	esac
+done
