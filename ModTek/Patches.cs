@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using BattleTech;
+using BattleTech.Assetbundles;
 using BattleTech.Data;
 using Harmony;
 using HBS.Util;
@@ -32,6 +33,36 @@ namespace ModTek
             // function has invalid json coming from file
             // and hopefully valid json (i.e. comments out) coming out from function
             ModTek.TryMergeIntoInterceptedJson(json, ref __result);
+        }
+    }
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
+    public static class AssetBundleManager_AssetBundleNameToFilepath_Patch
+    {
+        [UsedImplicitly]
+        public static void Postfix(string assetBundleName, ref string __result)
+        {
+            if (ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+            {
+                __result = ModTek.ModAssetBundlePaths[assetBundleName];
+            }
+        }
+    }
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFileURL")]
+    public static class AssetBundleManager_AssetBundleNameToFileURL_Patch
+    {
+        [UsedImplicitly]
+        public static void Postfix(string assetBundleName, ref string __result)
+        {
+            if (ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+            {
+                __result = $"file://{ModTek.ModAssetBundlePaths[assetBundleName]}";
+            }
         }
     }
 

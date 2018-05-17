@@ -1,93 +1,96 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
-    <PropertyGroup>
-        <NoStdLib>True</NoStdLib>
-        <LangVersion>7.2</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{8D955C2C-D75B-453C-99D1-B337BBF82CCA}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>ModTek</RootNamespace>
-        <AssemblyName>ModTek</AssemblyName>
-        <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE;UNITY_ASSERTIONS</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>none</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>
-        </DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="mscorlib">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\mscorlib.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="0Harmony">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\0Harmony.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Assembly-CSharp">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\Assembly-CSharp.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="BattleTechModLoader">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\BattleTechModLoader.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\Newtonsoft.Json.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System.Core">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Core.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System.Data">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Data.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System.Xml">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Xml.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine">
-            <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\UnityEngine.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="IManifestEntry.cs"/>
-        <Compile Include="IModDef.cs"/>
-        <Compile Include="Logger.cs"/>
-        <Compile Include="ModDef.cs"/>
-        <Compile Include="ModTek.cs"/>
-        <Compile Include="Patches.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="packages.config"/>
-    </ItemGroup>
-    <ItemGroup/>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <NoStdLib>True</NoStdLib>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8D955C2C-D75B-453C-99D1-B337BBF82CCA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ModTek</RootNamespace>
+    <AssemblyName>ModTek</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;UNITY_ASSERTIONS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BattleTechModLoader">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\BattleTechModLoader.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Data.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IManifestEntry.cs" />
+    <Compile Include="IModDef.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="ModDef.cs" />
+    <Compile Include="ModTek.cs" />
+    <Compile Include="Patches.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(TargetDir)$(TargetFileName)" "$(BattleTechGame)\Mods\" /y</PostBuildEvent>
+  </PropertyGroup>
 </Project>

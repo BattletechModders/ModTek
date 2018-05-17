@@ -40,6 +40,9 @@ namespace ModTek
         private static Dictionary<string, List<ModDef.ManifestEntry>> ModManifest { get; } =
             new Dictionary<string, List<ModDef.ManifestEntry>>();
 
+        internal static Dictionary<string, string> ModAssetBundlePaths { get; } =
+            new Dictionary<string, string>();
+
         // ran by BTML
         [UsedImplicitly]
         public static void Init()
@@ -77,6 +80,19 @@ namespace ModTek
 
             foreach (var entry in modDef.Manifest)
             {
+                if (entry.Type == "Prefab" && !string.IsNullOrEmpty(entry.AssetBundleName))
+                {
+                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == entry.AssetBundleName))
+                    {
+                        Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded.");
+                        return;
+                    }
+
+                    entry.Id = Path.GetFileNameWithoutExtension(entry.Path);
+                    potentialAdditions.Add(entry);
+                    continue;
+                }
+
                 var entryPath = Path.Combine(modDef.Directory, entry.Path);
 
                 if (string.IsNullOrEmpty(entry.Path) && (string.IsNullOrEmpty(entry.Type) || entry.Path == "StreamingAssets"))
@@ -415,8 +431,8 @@ namespace ModTek
                 Log($"\t{modName}:");
                 foreach (var modEntry in ModManifest[modName])
                 {
-                    var existingEntry = manifest.Find(x => x.Id == modEntry.Id);
                     VersionManifestAddendum addendum = null;
+                    VersionManifestEntry existingEntry = null;
 
                     if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
                     {
@@ -430,7 +446,7 @@ namespace ModTek
                             manifest.ApplyAddendum(addendum);
                         }
                     }
-
+                    
                     if (modEntry.Type == null)
                     {
                         // null type means that we have to find existing entry with the same rel path to fill in the entry
@@ -447,8 +463,16 @@ namespace ModTek
                         modEntry.Type = existingEntry.Type;
                     }
 
-                    if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON && existingEntry != null)
+                    if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
+                        existingEntry = existingEntry ?? manifest.Find(x => x.Id == modEntry.Id);
+
+                        if (existingEntry == null)
+                        {
+                            Log($"\t\tCannot add JSONMerge with {modEntry.Id}, it has no matching existing entry!");
+                            continue;
+                        }
+
                         // read the manifest pointed entry and hash the contents
                         JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = modEntry.Id;
 
@@ -468,7 +492,8 @@ namespace ModTek
                         JsonMerges[modEntry.Id].Add(partialJson);
                         continue;
                     }
-                    
+
+                    // add to DB
                     if (breakMyGame && Path.GetExtension(modEntry.Path).ToLower() == ".json")
                     {
                         var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
@@ -477,6 +502,12 @@ namespace ModTek
                             VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
                             Log($"\t\tAdding to MDDB! {type} {modEntry.Path}");
                         }
+                    }
+                    
+                    if (modEntry.Type == "AssetBundle")
+                    {
+                        // add assetbundle path so it can be changed when the assetbundle path is requested
+                        ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     }
 
                     if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
