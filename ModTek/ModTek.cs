@@ -400,6 +400,71 @@ namespace ModTek
             jsonOut = ontoJObj.ToString();
         }
 
+        private static void AddModJsonMerge(VersionManifestEntry existingEntry, string id, string path)
+        {
+            if (existingEntry == null)
+            {
+                Log($"\t\tCannot add JSONMerge with {id}, it has no matching existing entry!");
+                return;
+            }
+
+            var partialJson = File.ReadAllText(path);
+
+            // read the manifest pointed entry and hash the contents
+            JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = id;
+            
+            if (!JsonMerges.ContainsKey(id))
+                JsonMerges.Add(id, new List<string>());
+
+            if (JsonMerges[id].Contains(partialJson))
+            {
+                Log($"\t\tAlready added {id} to JsonMerges");
+                return;
+            }
+
+            Log($"\t\tAdding {id} to JsonMerges");
+            JsonMerges[id].Add(partialJson);
+        }
+
+        private static void AddModEntryToVersionManifest(VersionManifest manifest, ModDef.ManifestEntry modEntry, bool addToDB, VersionManifestAddendum addendum = null, VersionManifestEntry existingEntry = null)
+        {
+            // add to JsonMerges
+            if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
+            {
+                // jsonmerges do not currently affect the manifest at all, it'll still load from original path
+                existingEntry = existingEntry ?? manifest.Find(x => x.Id == modEntry.Id);
+                AddModJsonMerge(existingEntry, modEntry.Id, modEntry.Path);
+                return;
+            }
+
+            // add to DB
+            if (addToDB && Path.GetExtension(modEntry.Path).ToLower() == ".json")
+            {
+                var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
+                using (var metadataDatabase = new MetadataDatabase())
+                {
+                    VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
+                    Log($"\t\tAdding to MDDB! {type} {modEntry.Path}");
+                }
+            }
+
+            // add assetbundle path so it can be changed when the assetbundle path is requested
+            if (modEntry.Type == "AssetBundle")
+                ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
+
+            // add to addendum instead of adding to manifest
+            if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
+            {
+                Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id} to addendum {addendum.Name}");
+                addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                return;
+            }
+
+            // not added to addendum, not added to jsonmerges
+            Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
+            manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+        }
+
         internal static void TryAddToVersionManifest(VersionManifest manifest)
         {
             if (!hasLoadedMods)
@@ -432,7 +497,6 @@ namespace ModTek
                 foreach (var modEntry in ModManifest[modName])
                 {
                     VersionManifestAddendum addendum = null;
-                    VersionManifestEntry existingEntry = null;
 
                     if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
                     {
@@ -453,73 +517,27 @@ namespace ModTek
                         // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.Combine(StreamingAssetsDirectory, relPath);
+                        var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == Path.GetFullPath(fakeStreamingAssetsPath));
 
-                        existingEntry = manifest.Find(x => Path.GetFullPath(x.FilePath) == Path.GetFullPath(fakeStreamingAssetsPath));
-
-                        if (existingEntry == null)
-                            continue;
-
-                        modEntry.Id = existingEntry.Id;
-                        modEntry.Type = existingEntry.Type;
-                    }
-
-                    if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
-                    {
-                        existingEntry = existingEntry ?? manifest.Find(x => x.Id == modEntry.Id);
-
-                        if (existingEntry == null)
+                        if (matchingEntries == null || matchingEntries.Count == 0)
                         {
-                            Log($"\t\tCannot add JSONMerge with {modEntry.Id}, it has no matching existing entry!");
+                            Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                             continue;
                         }
 
-                        // read the manifest pointed entry and hash the contents
-                        JsonHashToId[File.ReadAllText(existingEntry.FilePath).GetHashCode()] = modEntry.Id;
-
-                        // The manifest already contains this information, so we need to queue it to be merged
-                        var partialJson = File.ReadAllText(modEntry.Path);
-
-                        if (!JsonMerges.ContainsKey(modEntry.Id))
-                            JsonMerges.Add(modEntry.Id, new List<string>());
-
-                        if (JsonMerges[modEntry.Id].Contains(partialJson))
+                        // since there could be multiple entries matching the path, we have to handle this a little
+                        // differently, right now this only makes sense to me for for mulitple types
+                        foreach (var existingEntry in matchingEntries)
                         {
-                            Log($"\t\tAlready added {modEntry.Id} to JsonMerges");
-                            continue;
+                            var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
+                            subModEntry.Type = existingEntry.Type;
+                            AddModEntryToVersionManifest(manifest, subModEntry, breakMyGame, addendum, existingEntry);
                         }
 
-                        Log($"\t\tAdding {modEntry.Id} to JsonMerges");
-                        JsonMerges[modEntry.Id].Add(partialJson);
                         continue;
-                    }
-
-                    // add to DB
-                    if (breakMyGame && Path.GetExtension(modEntry.Path).ToLower() == ".json")
-                    {
-                        var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
-                        using (var metadataDatabase = new MetadataDatabase())
-                        {
-                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
-                            Log($"\t\tAdding to MDDB! {type} {modEntry.Path}");
-                        }
                     }
                     
-                    if (modEntry.Type == "AssetBundle")
-                    {
-                        // add assetbundle path so it can be changed when the assetbundle path is requested
-                        ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
-                    }
-
-                    if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
-                    {
-                        Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id} to addendum {addendum.Name}");
-                        addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
-                        continue;
-                    }
-
-                    // This is a new definition or a replacement that doesn't get merged, so add or update the manifest
-                    Log($"\t\tAddOrUpdate {modEntry.Type} {modEntry.Id}");
-                    manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
+                    AddModEntryToVersionManifest(manifest, modEntry, breakMyGame, addendum);
                 }
             }
 
