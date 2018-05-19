@@ -17,10 +17,25 @@ namespace ModTek
     {
         internal class CacheEntry
         {
+            internal class PathTimeTuple
+            {
+                public string Path { get; set; }
+                public DateTime Time { get; set; }
+
+                public PathTimeTuple(string path, DateTime time)
+                {
+                    Path = path;
+                    Time = time;
+                }
+            }
+
             public string CachePath { get; set; }
             public string OriginalPath { get; set; }
-            public DateTime OriginalTimeStamp { get; set; }
-            public Dictionary<string, DateTime> Merges { get; set; } = new Dictionary<string, DateTime>();
+            public DateTime OriginalTime { get; set; }
+            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
+
+            [JsonIgnore]
+            public bool CacheHit;
 
             [JsonConstructor]
             public CacheEntry() { }
@@ -29,11 +44,11 @@ namespace ModTek
             {
                 CachePath = path;
                 OriginalPath = originalPath;
-                OriginalTimeStamp = File.GetLastWriteTimeUtc(originalPath);
+                OriginalTime = File.GetLastWriteTimeUtc(originalPath);
 
                 foreach (var mergePath in mergePaths)
                 {
-                    Merges[mergePath] = File.GetLastWriteTimeUtc(mergePath);
+                    Merges.Add(new PathTimeTuple(mergePath, File.GetLastWriteTimeUtc(mergePath)));
                 }
 
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -67,29 +82,32 @@ namespace ModTek
                     };
                     parentJObj.WriteTo(jsonWriter);
                     jsonWriter.Close();
-
-                    Log($"Merged into {originalPath}, now cached");
                 }
             }
 
-            public bool MatchesPaths(string originalPath, List<string> paths)
+            public bool MatchesPaths(string originalPath, List<string> mergePaths)
             {
-                if (OriginalPath != originalPath || File.GetLastWriteTimeUtc(originalPath) != OriginalTimeStamp)
-                {
+                // must have an existing cached json
+                if (!File.Exists(CachePath))
                     return false;
-                }
+
+                // must have the same original file
+                if (OriginalPath != originalPath || File.GetLastWriteTimeUtc(originalPath) != OriginalTime)
+                    return false;
+
+                // must match number of merges
+                if (mergePaths.Count != Merges.Count)
+                    return false;
 
                 // if all paths match with write times, we match
-                foreach (var path in paths)
+                for (var index = 0; index < mergePaths.Count; index++)
                 {
-                    if (!Merges.ContainsKey(path) || Merges[path] != File.GetLastWriteTimeUtc(path))
-                        return false;
-                }
+                    var mergePath = mergePaths[index];
+                    var mergeTime = File.GetLastWriteTimeUtc(mergePath);
+                    var cachedMergePath = Merges[index].Path;
+                    var cachedMergeTime = Merges[index].Time;
 
-                // must match both ways
-                foreach (var merge in Merges)
-                {
-                    if (!paths.Contains(merge.Key))
+                    if (mergePath != cachedMergePath || mergeTime != cachedMergeTime)
                         return false;
                 }
 
@@ -108,9 +126,42 @@ namespace ModTek
                 // create new cache entry; substring is to get rid of the path seperator -.-
                 string cachePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, originalPath.Replace(ModTek.GameDirectory, "").Substring(1)));
                 CachedEntries[originalPath] = new CacheEntry(cachePath, originalPath, mergePaths);
+
+                Log($"\tMerge performed: {Path.GetFileName(originalPath)}. Now cached.");
+            }
+            else
+            {
+                Log($"\tLoaded cached merge: {Path.GetFileName(originalPath)}.");
+            }
+
+            CachedEntries[originalPath].CacheHit = true;
+            return CachedEntries[originalPath].CachePath;
+        }
+
+        public void WriteCacheToDisk(string path)
+        {
+            // remove all of the cache that we didn't use
+            var unusedMergePaths = new List<string>();
+
+            foreach (var cachedEntry in CachedEntries)
+            {
+                if (!cachedEntry.Value.CacheHit)
+                    unusedMergePaths.Add(cachedEntry.Key);
+            }
+
+            foreach (var unusedMergePath in unusedMergePaths)
+            {
+                var cachePath = CachedEntries[unusedMergePath].CachePath;
+                CachedEntries.Remove(unusedMergePath);
+
+                if(File.Exists(cachePath))
+                    File.Delete(cachePath);
+
+                if(Directory.GetFiles(Path.GetDirectoryName(cachePath)).Length == 0)
+                    Directory.Delete(Path.GetDirectoryName(cachePath));
             }
             
-            return CachedEntries[originalPath].CachePath;
+            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
     }
 }

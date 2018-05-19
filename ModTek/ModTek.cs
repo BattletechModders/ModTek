@@ -17,16 +17,17 @@ namespace ModTek
     
     public static class ModTek
     {
-        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
-        
         public static string GameDirectory { get; private set; }
         public static string ModDirectory { get; private set; }
         public static string StreamingAssetsDirectory { get; private set; }
-        public static string ModTekDirectory { get; private set; }
-        public static string CacheDirectory { get; private set; }
-        public static string MergeCachePath { get; private set; }
-        public static string TypeCachePath { get; private set; }
-        
+
+        internal static string ModTekDirectory { get; private set; }
+        internal static string CacheDirectory { get; private set; }
+        internal static string MergeCachePath { get; private set; }
+        internal static string TypeCachePath { get; private set; }
+
+        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MOD_JSON_NAME = "mod.json";
         private const string MODTEK_DIRECTORY_NAME = ".modtek";
@@ -35,9 +36,8 @@ namespace ModTek
         private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
         private const string LOG_NAME = "ModTek.log";
         private const string LOAD_ORDER_FILE_NAME = "load_order.json";
-
-        // apparently this defaults to false
-        private static bool hasLoadedMods;
+        
+        private static bool hasLoadedMods; //defaults to false
 
         private static List<string> modLoadOrder;
         private static MergeCache JsonMergeCache;
@@ -549,7 +549,7 @@ namespace ModTek
                 }
             }
 
-            Log("\tMerge Cache:");
+            LogWithDate("Doing merges...");
             foreach (var jsonMerge in jsonMerges)
             {
                 var cachePath = JsonMergeCache.GetOrCreateCachedEntry(jsonMerge.Key, jsonMerge.Value);
@@ -564,7 +564,7 @@ namespace ModTek
             }
 
             // write merge cache to disk
-            File.WriteAllText(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME), JsonConvert.SerializeObject(JsonMergeCache, Formatting.Indented));
+            JsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
             // write type cache to disk
             File.WriteAllText(Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME), JsonConvert.SerializeObject(TypeCache, Formatting.Indented));
