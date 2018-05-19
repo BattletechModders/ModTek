@@ -24,20 +24,6 @@ namespace ModTek
 
     [UsedImplicitly]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    [HarmonyPatch(typeof(JSONSerializationUtility), "StripHBSCommentsFromJSON")]
-    public static class JSONSerializationUtility_StripHBSCommentsFromJSON_Patch
-    {
-        [UsedImplicitly]
-        public static void Postfix(string json, ref string __result)
-        {
-            // function has invalid json coming from file
-            // and hopefully valid json (i.e. comments out) coming out from function
-            ModTek.TryMergeIntoInterceptedJson(json, ref __result);
-        }
-    }
-
-    [UsedImplicitly]
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
     public static class AssetBundleManager_AssetBundleNameToFilepath_Patch
     {

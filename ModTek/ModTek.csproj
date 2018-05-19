@@ -80,6 +80,7 @@
     <Compile Include="IManifestEntry.cs" />
     <Compile Include="IModDef.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Patches.cs" />
