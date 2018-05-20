@@ -23,9 +23,12 @@ namespace ModTek
 
         internal static string ModTekDirectory { get; private set; }
         internal static string CacheDirectory { get; private set; }
+        internal static string DatabaseDirectory { get; private set; }
         internal static string MergeCachePath { get; private set; }
         internal static string TypeCachePath { get; private set; }
-
+        internal static string ModMDDPath { get; private set; }
+        internal static string DBCachePath { get; private set; }
+        
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
 
         private const string MODS_DIRECTORY_NAME = "Mods";
@@ -36,12 +39,16 @@ namespace ModTek
         private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
         private const string LOG_NAME = "ModTek.log";
         private const string LOAD_ORDER_FILE_NAME = "load_order.json";
+        private const string DATABASE_DIRECTORY_NAME = "Database";
+        private const string MOD_MDD_FILE_NAME = "MetadataDatabase.db";
+        private const string DB_CACHE_FILE_NAME = "database_cache.json";
         
         private static bool hasLoadedMods; //defaults to false
 
         private static List<string> modLoadOrder;
         private static MergeCache JsonMergeCache;
         private static Dictionary<string, List<string>> TypeCache;
+        private static Dictionary<string, DateTime> DBCache;
         
         private static Dictionary<string, List<ModDef.ManifestEntry>> ModManifest = new Dictionary<string, List<ModDef.ManifestEntry>>();
         private static List<ModDef.ManifestEntry> modEntries;
@@ -69,17 +76,44 @@ namespace ModTek
             CacheDirectory = Path.Combine(ModTekDirectory, CACHE_DIRECTORY_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
+            DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
+            ModMDDPath = Path.Combine(DatabaseDirectory, MOD_MDD_FILE_NAME);
+            DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
+            Directory.CreateDirectory(DatabaseDirectory);
 
             // create log file, overwritting if it's already there
             using (var logWriter = File.CreateText(LogPath))
                 logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
+            
+            // copy database over if needed
+            if (!File.Exists(ModMDDPath))
+            {
+                var mddPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), "MetadataDatabase.db");
+                File.Copy(mddPath, ModMDDPath);
+            }
 
-            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            // load db cache if it exists
+            if (File.Exists(DBCachePath))
+            {
+                try
+                {
+                    DBCache = JsonConvert.DeserializeObject<Dictionary<string, DateTime>>(File.ReadAllText(DBCachePath));
+                    Log("Loaded DB cache.");
+                }
+                catch (Exception e)
+                {
+                    DBCache = new Dictionary<string, DateTime>();
+                    Log("Loading DB cache failed.");
+                    Log($"\t{e.Message}");
+                }
+            }
+            else
+            {
+                DBCache = new Dictionary<string, DateTime>();
+            }
 
             // load merge cache if it exists
             if (File.Exists(MergeCachePath))
@@ -120,6 +154,10 @@ namespace ModTek
             {
                 TypeCache = new Dictionary<string, List<string>>();
             }
+
+            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
+            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
         
         private static void LoadMod(ModDef modDef)
@@ -418,10 +456,27 @@ namespace ModTek
             if (addToDB && Path.GetExtension(modEntry.Path).ToLower() == ".json")
             {
                 var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
-                using (var metadataDatabase = new MetadataDatabase())
+                switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
                 {
-                    VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
-                    Log($"\t\tAdding to MDDB! {type} {modEntry.Path}");
+                    case BattleTechResourceType.TurretDef:
+                    case BattleTechResourceType.UpgradeDef:
+                    case BattleTechResourceType.VehicleDef:
+                    case BattleTechResourceType.ContractOverride:
+                    case BattleTechResourceType.SimGameEventDef:
+                    case BattleTechResourceType.LanceDef:
+                    case BattleTechResourceType.MechDef:
+                    case BattleTechResourceType.PilotDef:
+                    case BattleTechResourceType.WeaponDef:
+                        if (!DBCache.ContainsKey(modEntry.Path) || DBCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
+                        {
+                            using (var metadataDatabase = new MetadataDatabase())
+                            {
+                                Log($"\t\t\tAdd/Update DB: {Path.GetFileNameWithoutExtension(modEntry.Path)} ({modEntry.Type})");
+                                VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
+                                DBCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -608,6 +663,9 @@ namespace ModTek
 
             // write merge cache to disk
             JsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
+
+            // write db cache to disk
+            File.WriteAllText(Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME), JsonConvert.SerializeObject(DBCache, Formatting.Indented));
 
             // write type cache to disk
             File.WriteAllText(Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME), JsonConvert.SerializeObject(TypeCache, Formatting.Indented));

@@ -29,10 +29,10 @@ namespace ModTek
         [UsedImplicitly]
         public static void Postfix(string assetBundleName, ref string __result)
         {
-            if (ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
-            {
-                __result = ModTek.ModAssetBundlePaths[assetBundleName];
-            }
+            if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+                return;
+
+            __result = ModTek.ModAssetBundlePaths[assetBundleName];
         }
     }
 
@@ -44,10 +44,26 @@ namespace ModTek
         [UsedImplicitly]
         public static void Postfix(string assetBundleName, ref string __result)
         {
-            if (ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
-            {
-                __result = $"file://{ModTek.ModAssetBundlePaths[assetBundleName]}";
-            }
+            if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+                return;
+
+            __result = $"file://{ModTek.ModAssetBundlePaths[assetBundleName]}";
+        }
+    }
+
+    [UsedImplicitly]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [HarmonyPatch(typeof(MetadataDatabase))]
+    [HarmonyPatch("MDD_DB_PATH", PropertyMethod.Getter)]
+    public static class MetadataDatabase_MDD_DB_PATH_Patch
+    {
+        [UsedImplicitly]
+        public static void Postfix(ref string __result)
+        {
+            if (string.IsNullOrEmpty(ModTek.ModMDDPath))
+                return;
+
+            __result = ModTek.ModMDDPath;
         }
     }
 
