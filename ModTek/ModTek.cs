@@ -482,8 +482,7 @@ namespace ModTek
                 Log($"\t{modName}:");
                 foreach (var modEntry in ModManifest[modName])
                 {
-                    // TODO: FIX NON-STREAMINGASSETS MERGES
-                    
+                    // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
                     {
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
@@ -497,10 +496,10 @@ namespace ModTek
                         }
                         else
                         {
+                            // get the type from the manifest
                             var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == fakeStreamingAssetsPath);
                             if (matchingEntries == null || matchingEntries.Count == 0)
                             {
-                                // null type means that we have to find existing entry with the same rel path to fill in the entry
                                 // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
                                 Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                                 continue;
@@ -524,6 +523,7 @@ namespace ModTek
                             if (jsonMerges[fakeStreamingAssetsPath].Contains(modEntry.Path))
                                 continue;
 
+                            // this assumes that .json can only have a single type
                             modEntry.Type = TypeCache[fakeStreamingAssetsPath][0];
 
                             Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
@@ -541,6 +541,27 @@ namespace ModTek
                                 modEntries.Add(modEntry);
                         }
 
+                        continue;
+                    }
+
+                    // non-streamingassets json merges
+                    if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
+                    {
+                        // have to find the original path for the manifest entry that we're merging onto
+                        var matchingEntry = manifest.Find(x => x.Id == modEntry.Id);
+
+                        if (!jsonMerges.ContainsKey(matchingEntry.FilePath))
+                            jsonMerges[matchingEntry.FilePath] = new List<string>();
+
+                        if (jsonMerges[matchingEntry.FilePath].Contains(modEntry.Path))
+                            continue;
+
+                        // this assumes that .json can only have a single type
+                        modEntry.Type = matchingEntry.Type;
+
+                        Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
+
+                        jsonMerges[matchingEntry.FilePath].Add(modEntry.Path);
                         continue;
                     }
 

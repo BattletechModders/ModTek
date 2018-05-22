@@ -4,7 +4,6 @@ using BattleTech;
 using BattleTech.Assetbundles;
 using BattleTech.Data;
 using Harmony;
-using HBS.Util;
 using JetBrains.Annotations;
 
 namespace ModTek

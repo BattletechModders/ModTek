@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
+using Harmony;
 using HBS.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -55,13 +53,11 @@ namespace ModTek
 
                 using (var writer = File.CreateText(path))
                 {
-                    // use reflection to get HBS's strip method
                     var originalText = File.ReadAllText(originalPath);
 
-                    var type = typeof(JSONSerializationUtility);
-                    var stripMethod = type.GetMethod("StripHBSCommentsFromJSON", BindingFlags.NonPublic | BindingFlags.Static);
-                    var commentsStripped = stripMethod.Invoke(null, new object[]{ originalText }) as string;
-
+                    // because StripHBSCommentsFromJSON is private, use Harmony to call the method
+                    var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", originalText).GetValue() as string;
+                    
                     // add missing commas
                     var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
                     var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
