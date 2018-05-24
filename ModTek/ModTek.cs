@@ -235,6 +235,7 @@ namespace ModTek
 
             if (modDirectories.Length == 0)
             {
+                hasLoadedMods = true;
                 Log("No ModTek-compatable mods found.");
                 return;
             }
@@ -446,6 +447,10 @@ namespace ModTek
         {
             if (!hasLoadedMods)
                 LoadMods();
+
+            // there are no mods loaded, just return
+            if (modLoadOrder == null || modLoadOrder.Count == 0)
+                return;
             
             if (modEntries != null)
             {
