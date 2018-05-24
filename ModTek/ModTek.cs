@@ -172,6 +172,11 @@ namespace ModTek
                     entry.Path = entryPath;
                     potentialAdditions.Add(entry);
                 }
+                else if (entry.Path != "StreamingAssets")
+                {
+                    // path is not streamingassets and it's missing
+                    Log($"\tMissing Entry: Manifest specifies file/directory of {entry.Type} at path {entry.Path}, but it's not there. Continuing to load.");
+                }
             }
 
             // load mod dll
