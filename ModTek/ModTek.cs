@@ -485,6 +485,7 @@ namespace ModTek
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
                     {
+                        // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relPath));
 
@@ -500,7 +501,6 @@ namespace ModTek
                             var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == fakeStreamingAssetsPath);
                             if (matchingEntries == null || matchingEntries.Count == 0)
                             {
-                                // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
                                 Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                                 continue;
                             }
@@ -517,6 +517,12 @@ namespace ModTek
 
                         if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
                         {
+                            if (!TypeCache.ContainsKey(fakeStreamingAssetsPath))
+                            {
+                                Log($"\t\tUnable to determine type of {modEntry.Id}. Is there someone screwy with your this mod.json?");
+                                continue;
+                            }
+
                             if (!jsonMerges.ContainsKey(fakeStreamingAssetsPath))
                                 jsonMerges[fakeStreamingAssetsPath] = new List<string>();
 
@@ -549,6 +555,12 @@ namespace ModTek
                     {
                         // have to find the original path for the manifest entry that we're merging onto
                         var matchingEntry = manifest.Find(x => x.Id == modEntry.Id);
+
+                        if (matchingEntry == null)
+                        {
+                            Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}!");
+                            continue;
+                        }
 
                         if (!jsonMerges.ContainsKey(matchingEntry.FilePath))
                             jsonMerges[matchingEntry.FilePath] = new List<string>();
