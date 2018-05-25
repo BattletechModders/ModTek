@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
-using Harmony;
-using HBS.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,61 +10,128 @@ namespace ModTek
 
     internal class MergeCache
     {
-        internal class CacheEntry
-        {
-            internal class PathTimeTuple
-            {
-                public string Path { get; set; }
-                public DateTime Time { get; set; }
+        private Dictionary<string, CacheEntry> CachedEntries { get; } = new Dictionary<string, CacheEntry>();
 
-                public PathTimeTuple(string path, DateTime time)
-                {
-                    Path = path;
-                    Time = time;
-                }
+        /// <summary>
+        ///     Gets (from the cache) or creates (and adds to cache) a JSON merge
+        /// </summary>
+        /// <param name="originalPath">The path to the original JSON file</param>
+        /// <param name="mergePaths">A list of the paths to merged in JSON</param>
+        /// <returns>A path to the cached JSON that contains the original JSON with the mod merges applied</returns>
+        public string GetOrCreateCachedEntry(string originalPath, List<string> mergePaths)
+        {
+            originalPath = Path.GetFullPath(originalPath);
+
+            if (!CachedEntries.ContainsKey(originalPath) || !CachedEntries[originalPath].MatchesPaths(originalPath, mergePaths))
+            {
+                // create new cache entry; substring is to get rid of the path seperator -.-
+                var cachePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, originalPath.Replace(ModTek.GameDirectory, "").Substring(1)));
+                var cachedEntry = new CacheEntry(cachePath, originalPath, mergePaths);
+
+                if (cachedEntry.HasErrors)
+                    return null;
+
+                CachedEntries[originalPath] = cachedEntry;
+
+                Log($"\tMerge performed: {Path.GetFileName(originalPath)}. Now cached.");
+            }
+            else
+            {
+                Log($"\tLoaded cached merge: {Path.GetFileName(originalPath)}.");
             }
 
-            public string CachePath { get; set; }
-            public string OriginalPath { get; set; }
-            public DateTime OriginalTime { get; set; }
-            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
+            CachedEntries[originalPath].CacheHit = true;
+            return CachedEntries[originalPath].CachePath;
+        }
 
-            [JsonIgnore]
-            public bool CacheHit;
+        /// <summary>
+        ///     Writes the cache to disk to the path, after cleaning up old entries
+        /// </summary>
+        /// <param name="path">Where the cache should be written to</param>
+        public void WriteCacheToDisk(string path)
+        {
+            // remove all of the cache that we didn't use
+            var unusedMergePaths = new List<string>();
+            foreach (var cachedEntry in CachedEntries)
+                if (!cachedEntry.Value.CacheHit)
+                    unusedMergePaths.Add(cachedEntry.Key);
+
+            foreach (var unusedMergePath in unusedMergePaths)
+            {
+                var cachePath = CachedEntries[unusedMergePath].CachePath;
+                CachedEntries.Remove(unusedMergePath);
+
+                if (File.Exists(cachePath))
+                    File.Delete(cachePath);
+
+                var directory = Path.GetDirectoryName(cachePath);
+                if (directory != null && Directory.GetFiles(directory).Length == 0)
+                    Directory.Delete(directory);
+            }
+
+            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
+
+        internal class CacheEntry
+        {
+            [JsonIgnore] internal bool CacheHit; // default is false
+            [JsonIgnore] internal string ContainingDirectory;
+            [JsonIgnore] internal bool HasErrors; // default is false
 
             [JsonConstructor]
-            public CacheEntry() { }
+            public CacheEntry()
+            {
+            }
 
             public CacheEntry(string path, string originalPath, List<string> mergePaths)
             {
                 CachePath = path;
+                ContainingDirectory = Path.GetDirectoryName(path);
                 OriginalPath = originalPath;
                 OriginalTime = File.GetLastWriteTimeUtc(originalPath);
 
-                foreach (var mergePath in mergePaths)
+                if (string.IsNullOrEmpty(ContainingDirectory))
                 {
-                    Merges.Add(new PathTimeTuple(mergePath, File.GetLastWriteTimeUtc(mergePath)));
+                    HasErrors = true;
+                    return;
                 }
 
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                // get the parent JSON
+                JObject parentJObj;
+                try
+                {
+                    parentJObj = ModTek.ParseGameJSON(File.ReadAllText(originalPath));
+                }
+                catch (Exception e)
+                {
+                    Log($"\tParent JSON at path {originalPath} has errors preventing any merges!");
+                    Log($"\t\t{e.Message}");
+                    HasErrors = true;
+                    return;
+                }
+
+                foreach (var mergePath in mergePaths)
+                    Merges.Add(new PathTimeTuple(mergePath, File.GetLastWriteTimeUtc(mergePath)));
+
+                Directory.CreateDirectory(ContainingDirectory);
 
                 using (var writer = File.CreateText(path))
                 {
-                    var originalText = File.ReadAllText(originalPath);
-
-                    // because StripHBSCommentsFromJSON is private, use Harmony to call the method
-                    var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", originalText).GetValue() as string;
-                    
-                    // add missing commas
-                    var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
-                    var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
-
-                    var parentJObj = JObject.Parse(commasAdded);
-
                     // merge all of the merges
                     foreach (var mergePath in mergePaths)
                     {
-                        var mergeJObj = JObject.Parse(File.ReadAllText(mergePath));
+                        JObject mergeJObj;
+                        try
+                        {
+                            mergeJObj = ModTek.ParseGameJSON(File.ReadAllText(mergePath));
+                        }
+                        catch (Exception e)
+                        {
+                            Log($"\tMod merge JSON at path {originalPath} has errors preventing any merges!");
+                            Log($"\t\t{e.Message}");
+                            continue;
+                        }
+
                         parentJObj.Merge(mergeJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
                     }
 
@@ -81,7 +145,12 @@ namespace ModTek
                 }
             }
 
-            public bool MatchesPaths(string originalPath, List<string> mergePaths)
+            public string CachePath { get; set; }
+            public string OriginalPath { get; set; }
+            public DateTime OriginalTime { get; set; }
+            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
+
+            internal bool MatchesPaths(string originalPath, List<string> mergePaths)
             {
                 // must have an existing cached json
                 if (!File.Exists(CachePath))
@@ -109,55 +178,18 @@ namespace ModTek
 
                 return true;
             }
-        }
 
-        public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new Dictionary<string, CacheEntry>();
-        
-        public string GetOrCreateCachedEntry(string originalPath, List<string> mergePaths)
-        {
-            originalPath = Path.GetFullPath(originalPath);
-
-            if (!CachedEntries.ContainsKey(originalPath) || !CachedEntries[originalPath].MatchesPaths(originalPath, mergePaths))
+            internal class PathTimeTuple
             {
-                // create new cache entry; substring is to get rid of the path seperator -.-
-                string cachePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, originalPath.Replace(ModTek.GameDirectory, "").Substring(1)));
-                CachedEntries[originalPath] = new CacheEntry(cachePath, originalPath, mergePaths);
+                public PathTimeTuple(string path, DateTime time)
+                {
+                    Path = path;
+                    Time = time;
+                }
 
-                Log($"\tMerge performed: {Path.GetFileName(originalPath)}. Now cached.");
+                public string Path { get; set; }
+                public DateTime Time { get; set; }
             }
-            else
-            {
-                Log($"\tLoaded cached merge: {Path.GetFileName(originalPath)}.");
-            }
-
-            CachedEntries[originalPath].CacheHit = true;
-            return CachedEntries[originalPath].CachePath;
-        }
-
-        public void WriteCacheToDisk(string path)
-        {
-            // remove all of the cache that we didn't use
-            var unusedMergePaths = new List<string>();
-
-            foreach (var cachedEntry in CachedEntries)
-            {
-                if (!cachedEntry.Value.CacheHit)
-                    unusedMergePaths.Add(cachedEntry.Key);
-            }
-
-            foreach (var unusedMergePath in unusedMergePaths)
-            {
-                var cachePath = CachedEntries[unusedMergePath].CachePath;
-                CachedEntries.Remove(unusedMergePath);
-
-                if(File.Exists(cachePath))
-                    File.Delete(cachePath);
-
-                if(Directory.GetFiles(Path.GetDirectoryName(cachePath)).Length == 0)
-                    Directory.Delete(Path.GetDirectoryName(cachePath));
-            }
-            
-            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
     }
 }

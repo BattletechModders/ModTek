@@ -13,18 +13,18 @@ namespace ModTek
         string Contact { get; set; }
 
         bool Enabled { get; set; }
-        
+
         string Version { get; set; }
         DateTime? PackagedOn { get; set; }
-        
+
         HashSet<string> DependsOn { get; set; }
         HashSet<string> ConflictsWith { get; set; }
-        
+
         string DLL { get; set; }
         string DLLEntryPoint { get; set; }
 
         bool LoadImplicitManifest { get; set; }
-        List<ModDef.ManifestEntry> Manifest { get;  set; }
+        List<ModDef.ManifestEntry> Manifest { get; set; }
 
         JObject Settings { get; set; }
     }

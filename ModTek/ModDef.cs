@@ -1,51 +1,15 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using JetBrains.Annotations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
-    public class ModDef
-        : IModDef
+    public class ModDef : IModDef
     {
-
-        public class ManifestEntry : IManifestEntry
-        {
-            [JsonProperty(Required = Required.Always)]
-            public string Path { get; set; }
-
-            [DefaultValue(false)]
-            public bool ShouldMergeJSON { get; set; }
-
-            public string AddToAddendum { get; set; }
-
-            public string Type { get; set; }
-            public string Id { get; set; }
-            public string AssetBundleName { get; set; }
-            public bool? AssetBundlePersistent { get; set; }
-            
-            [JsonConstructor]
-            public ManifestEntry(string path, bool shouldMergeJSON = false)
-            {
-                Path = path;
-                ShouldMergeJSON = shouldMergeJSON;
-            }
-
-            public ManifestEntry(ManifestEntry parent, string path, string id)
-            {
-                Path = path;
-                Id = id;
-
-                Type = parent.Type;
-                AssetBundleName = parent.AssetBundleName;
-                AssetBundlePersistent = parent.AssetBundlePersistent;
-                ShouldMergeJSON = parent.ShouldMergeJSON;
-                AddToAddendum = parent.AddToAddendum;
-            }
-        }
-
         // this path will be set at runtime by ModTek
         [JsonIgnore]
         public string Directory { get; set; }
@@ -86,5 +50,52 @@ namespace ModTek
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
         public JObject Settings { get; [UsedImplicitly] set; } = new JObject();
+
+        /// <summary>
+        ///     Creates a ModDef from a path to a mod.json
+        /// </summary>
+        /// <param name="path">Path to mod.json</param>
+        /// <returns>A ModDef representing the mod.json</returns>
+        public static ModDef CreateFromPath(string path)
+        {
+            var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
+            modDef.Directory = Path.GetDirectoryName(path);
+            return modDef;
+        }
+
+        public class ManifestEntry : IManifestEntry
+        {
+            [JsonConstructor]
+            public ManifestEntry(string path, bool shouldMergeJSON = false)
+            {
+                Path = path;
+                ShouldMergeJSON = shouldMergeJSON;
+            }
+
+            public ManifestEntry(ManifestEntry parent, string path, string id)
+            {
+                Path = path;
+                Id = id;
+
+                Type = parent.Type;
+                AssetBundleName = parent.AssetBundleName;
+                AssetBundlePersistent = parent.AssetBundlePersistent;
+                ShouldMergeJSON = parent.ShouldMergeJSON;
+                AddToAddendum = parent.AddToAddendum;
+            }
+
+            [JsonProperty(Required = Required.Always)]
+            public string Path { get; set; }
+
+            [DefaultValue(false)]
+            public bool ShouldMergeJSON { get; set; }
+
+            public string AddToAddendum { get; set; }
+
+            public string Type { get; set; }
+            public string Id { get; set; }
+            public string AssetBundleName { get; set; }
+            public bool? AssetBundlePersistent { get; set; }
+        }
     }
 }
