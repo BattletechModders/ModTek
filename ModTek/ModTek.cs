@@ -359,7 +359,7 @@ namespace ModTek
         {
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
             var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", jsonText).GetValue() as string;
-
+            
             if (commentsStripped == null)
                 throw new Exception("StripHBSCommentsFromJSON returned null.");
             

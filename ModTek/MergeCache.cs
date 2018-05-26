@@ -10,7 +10,7 @@ namespace ModTek
 
     internal class MergeCache
     {
-        private Dictionary<string, CacheEntry> CachedEntries { get; } = new Dictionary<string, CacheEntry>();
+        public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new Dictionary<string, CacheEntry>();
 
         /// <summary>
         ///     Gets (from the cache) or creates (and adds to cache) a JSON merge
