@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using BattleTech;
 using BattleTech.Data;
 using BattleTechModLoader;
@@ -12,6 +6,12 @@ using HBS.Util;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace ModTek
 {
@@ -52,6 +52,7 @@ namespace ModTek
         internal static string TypeCachePath { get; private set; }
         internal static string ModDBPath { get; private set; }
         internal static string DBCachePath { get; private set; }
+        internal static string LoadOrderPath { get; private set; }
 
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
 
@@ -79,6 +80,7 @@ namespace ModTek
             DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
 
             LogPath = Path.Combine(ModTekDirectory, LOG_NAME);
+            LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModDBPath = Path.Combine(DatabaseDirectory, MOD_MDD_FILE_NAME);
@@ -127,12 +129,60 @@ namespace ModTek
             }
         }
 
+        private static List<string> LoadLoadOrder(string path)
+        {
+            List<string> order;
+
+            if (File.Exists(path))
+                try
+                {
+                    order = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
+                    Log("Loaded cached load order.");
+                    return order;
+                }
+                catch (Exception e)
+                {
+                    Log("Loading cached load order failed, rebuilding it.");
+                    Log($"\t{e.Message}");
+                }
+
+            // create a new one if it doesn't exist or couldn't be added
+            Log("Building new load order!");
+            order = new List<string>();
+            return order;
+        }
+
+        private static bool AreDependanciesResolved(ModDef modDef, HashSet<string> loaded)
+        {
+            return !(modDef.DependsOn.Count != 0 && modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count
+                || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any());
+        }
+
         private static List<string> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
         {
+            var modDefsCopy = new Dictionary<string, ModDef>(modDefs);
+            var cachedOrder = LoadLoadOrder(LoadOrderPath);
             var loadOrder = new List<string>();
             var loaded = new HashSet<string>();
-            unloaded = modDefs.Keys.OrderByDescending(x => x).ToList();
 
+            // load the order specified in the file
+            foreach (var modName in cachedOrder)
+            {
+                if (!modDefs.ContainsKey(modName) || !AreDependanciesResolved(modDefs[modName], loaded)) continue;
+
+                modDefsCopy.Remove(modName);
+                loadOrder.Add(modName);
+                loaded.Add(modName);
+            }
+
+            // everything that is left in the copy hasn't been loaded before
+            unloaded = modDefsCopy.Keys.OrderByDescending(x => x).ToList();
+
+            // there is nothing left to load
+            if (unloaded.Count == 0)
+                return loadOrder;
+
+            // this is the remainder that haven't been loaded before
             int removedThisPass;
             do
             {
@@ -141,8 +191,8 @@ namespace ModTek
                 for (var i = unloaded.Count - 1; i >= 0; i--)
                 {
                     var modDef = modDefs[unloaded[i]];
-                    if (modDef.DependsOn.Count != 0 && modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count
-                        || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any()) continue;
+
+                    if (!AreDependanciesResolved(modDef, loaded)) continue;
 
                     unloaded.RemoveAt(i);
                     loadOrder.Add(modDef.Name);
@@ -153,7 +203,7 @@ namespace ModTek
 
             return loadOrder;
         }
-
+        
 
         // LOADING MODS
         private static void LoadMod(ModDef modDef)
@@ -332,7 +382,7 @@ namespace ModTek
             Log("");
 
             // write out load order
-            File.WriteAllText(Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME), JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
+            File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
 
             hasLoadedMods = true;
         }
