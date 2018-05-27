@@ -28,7 +28,7 @@ namespace ModTek
         private const string LOG_NAME = "ModTek.log";
         private const string LOAD_ORDER_FILE_NAME = "load_order.json";
         private const string DATABASE_DIRECTORY_NAME = "Database";
-        private const string MOD_MDD_FILE_NAME = "MetadataDatabase.db";
+        private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
 
         private static bool hasLoadedMods; //defaults to false
@@ -83,7 +83,7 @@ namespace ModTek
             LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
-            ModDBPath = Path.Combine(DatabaseDirectory, MOD_MDD_FILE_NAME);
+            ModDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
 
             // creates the directories above it as well
@@ -94,13 +94,6 @@ namespace ModTek
             using (var logWriter = File.CreateText(LogPath))
             {
                 logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
-            }
-
-            // copy database over if needed
-            if (!File.Exists(ModDBPath))
-            {
-                var dbPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), "MetadataDatabase.db");
-                File.Copy(dbPath, ModDBPath);
             }
 
             // create all of the caches
@@ -443,6 +436,7 @@ namespace ModTek
             MergeCache mergeCache;
 
             if (File.Exists(path))
+            {
                 try
                 {
                     mergeCache = JsonConvert.DeserializeObject<MergeCache>(File.ReadAllText(path));
@@ -454,6 +448,7 @@ namespace ModTek
                     Log("Loading merge cache failed -- will rebuild it.");
                     Log($"\t{e.Message}");
                 }
+            }
 
             // create a new one if it doesn't exist or couldn't be added'
             Log("Building new Merge Cache.");
@@ -466,6 +461,7 @@ namespace ModTek
             Dictionary<string, List<string>> cache;
 
             if (File.Exists(path))
+            {
                 try
                 {
                     cache = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(File.ReadAllText(path));
@@ -477,6 +473,7 @@ namespace ModTek
                     Log("Loading type cache failed -- will rebuild it.");
                     Log($"\t{e.Message}");
                 }
+            }
 
             // create a new one if it doesn't exist or couldn't be added
             Log("Building new Type Cache.");
@@ -488,7 +485,8 @@ namespace ModTek
         {
             Dictionary<string, DateTime> cache;
 
-            if (File.Exists(path))
+            if (File.Exists(path) && File.Exists(ModDBPath))
+            {
                 try
                 {
                     cache = JsonConvert.DeserializeObject<Dictionary<string, DateTime>>(File.ReadAllText(path));
@@ -500,9 +498,16 @@ namespace ModTek
                     Log("Loading db cache failed -- will rebuild it.");
                     Log($"\t{e.Message}");
                 }
+            }
+
+            // delete mod db if it exists the cache does not
+            if (File.Exists(ModDBPath))
+                File.Delete(ModDBPath);
+
+            File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
-            Log("Building new DB Cache.");
+            Log("Copying over DB and building new DB Cache.");
             cache = new Dictionary<string, DateTime>();
             return cache;
         }
