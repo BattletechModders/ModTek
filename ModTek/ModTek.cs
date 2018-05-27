@@ -519,7 +519,7 @@ namespace ModTek
 
 
         // ADDING TO VERSION MANIFEST
-        private static bool AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry, bool addToDB = false)
+        private static bool AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
         {
             if (modEntry.Path == null)
                 return false;
@@ -537,34 +537,7 @@ namespace ModTek
                     manifest.ApplyAddendum(addendum);
                 }
             }
-
-            // add to DB
-            if (addToDB && Path.GetExtension(modEntry.Path).ToLower() == ".json")
-            {
-                var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
-                switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
-                {
-                    case BattleTechResourceType.TurretDef:
-                    case BattleTechResourceType.UpgradeDef:
-                    case BattleTechResourceType.VehicleDef:
-                    case BattleTechResourceType.ContractOverride:
-                    case BattleTechResourceType.SimGameEventDef:
-                    case BattleTechResourceType.LanceDef:
-                    case BattleTechResourceType.MechDef:
-                    case BattleTechResourceType.PilotDef:
-                    case BattleTechResourceType.WeaponDef:
-                        if (!dbCache.ContainsKey(modEntry.Path) || dbCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
-                            using (var metadataDatabase = new MetadataDatabase())
-                            {
-                                Log($"\t\t\tAdd/Update DB: {Path.GetFileNameWithoutExtension(modEntry.Path)} ({modEntry.Type})");
-                                VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
-                                dbCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
-                            }
-
-                        break;
-                }
-            }
-
+            
             // add assetbundle path so it can be changed when the assetbundle path is requested
             if (modEntry.Type == "AssetBundle")
                 ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
@@ -583,6 +556,47 @@ namespace ModTek
             return true;
         }
 
+        private static bool AddModEntryToDB(VersionManifest manifest, ModDef.ManifestEntry modEntry)
+        {
+            if (Path.GetExtension(modEntry.Path).ToLower() == ".json")
+            {
+                var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
+                switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
+                {
+                    case BattleTechResourceType.TurretDef:
+                    case BattleTechResourceType.UpgradeDef:
+                    case BattleTechResourceType.VehicleDef:
+                    case BattleTechResourceType.ContractOverride:
+                    case BattleTechResourceType.SimGameEventDef:
+                    case BattleTechResourceType.LanceDef:
+                    case BattleTechResourceType.MechDef:
+                    case BattleTechResourceType.PilotDef:
+                    case BattleTechResourceType.WeaponDef:
+                        if (!dbCache.ContainsKey(modEntry.Path) || dbCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
+                        {
+                            try
+                            {
+                                using (var metadataDatabase = new MetadataDatabase())
+                                {
+                                    VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
+                                    dbCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
+                                    return true;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log($"\tAdd to DB failed for {modEntry.Id}, exception caught:");
+                                Log($"\t\t{e.Message}");
+                                return false;
+                            }
+                        }
+                        break;
+                }
+            }
+
+            return false;
+        }
+
         internal static void AddModEntries(VersionManifest manifest)
         {
             if (!hasLoadedMods)
@@ -595,7 +609,11 @@ namespace ModTek
             if (modEntries != null)
             {
                 LogWithDate("Loading another manifest with already setup mod manifests.");
-                foreach (var modEntry in modEntries) AddModEntry(manifest, modEntry);
+                foreach (var modEntry in modEntries)
+                {
+                    AddModEntry(manifest, modEntry);
+                }
+
                 LogWithDate("Done.");
                 return;
             }
@@ -603,22 +621,7 @@ namespace ModTek
             modEntries = new List<ModDef.ManifestEntry>();
 
             LogWithDate("Setting up mod manifests...");
-
-            var breakMyGame = File.Exists(Path.Combine(ModDirectory, "break.my.game"));
-            if (breakMyGame)
-            {
-                var mddPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), "MetadataDatabase.db");
-                var mddBackupPath = mddPath + ".orig";
-
-                Log("\tBreak my game mode enabled! All new modded content (doesn't currently support merges) will be added to the DB.");
-
-                if (!File.Exists(mddBackupPath))
-                {
-                    Log($"\t\tBacking up metadata database to {Path.GetFileName(mddBackupPath)}");
-                    File.Copy(mddPath, mddBackupPath);
-                }
-            }
-
+            
             var jsonMerges = new Dictionary<string, List<string>>();
 
             foreach (var modName in modLoadOrder)
@@ -687,7 +690,7 @@ namespace ModTek
                             var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
 
-                            if (AddModEntry(manifest, subModEntry, breakMyGame))
+                            if (AddModEntry(manifest, subModEntry))
                                 modEntries.Add(modEntry);
                         }
 
@@ -721,7 +724,7 @@ namespace ModTek
                         continue;
                     }
 
-                    if (AddModEntry(manifest, modEntry, breakMyGame))
+                    if (AddModEntry(manifest, modEntry))
                         modEntries.Add(modEntry);
                 }
             }
@@ -741,8 +744,19 @@ namespace ModTek
                 cacheEntry.Type = typeCache[jsonMerge.Key][0];
                 cacheEntry.Id = InferIDFromFile(cachePath);
 
-                if (AddModEntry(manifest, cacheEntry, breakMyGame))
+                if (AddModEntry(manifest, cacheEntry))
                     modEntries.Add(cacheEntry);
+            }
+            
+            if (File.Exists(Path.Combine(ModDirectory, "break.my.game")))
+            {
+                LogWithDate("Adding to DB...");
+
+                foreach (var modEntry in modEntries)
+                {
+                    if (AddModEntryToDB(manifest, modEntry))
+                        Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                }
             }
 
             // write merge cache to disk
