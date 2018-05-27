@@ -354,8 +354,7 @@ namespace ModTek
 
                 modDefs.Add(modDef.Name, modDef);
             }
-
-            // TODO: be able to read load order from a JSON
+            
             PropagateConflictsForward(modDefs);
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
 
