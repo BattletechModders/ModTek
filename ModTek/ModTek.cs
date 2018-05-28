@@ -556,12 +556,12 @@ namespace ModTek
             return true;
         }
 
-        private static bool AddModEntryToDB(MetadataDatabase db, ModDef.ManifestEntry modEntry)
+        private static bool AddModEntryToDB(MetadataDatabase db, string path, string typeStr)
         {
-            if (Path.GetExtension(modEntry.Path)?.ToLower() != ".json")
+            if (Path.GetExtension(path)?.ToLower() != ".json")
                 return false;
             
-            var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
+            var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), typeStr);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
             {
@@ -574,17 +574,17 @@ namespace ModTek
                 case BattleTechResourceType.MechDef:
                 case BattleTechResourceType.PilotDef:
                 case BattleTechResourceType.WeaponDef:
-                    if (!dbCache.ContainsKey(modEntry.Path) || dbCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
+                    if (!dbCache.ContainsKey(path) || dbCache[path] != File.GetLastWriteTimeUtc(path))
                     {
                         try
                         {
-                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, db);
-                            dbCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
+                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, path, db);
+                            dbCache[path] = File.GetLastWriteTimeUtc(path);
                             return true;
                         }
                         catch (Exception e)
                         {
-                            Log($"\tAdd to DB failed for {modEntry.Id}, exception caught:");
+                            Log($"\tAdd to DB failed for {Path.GetFileName(path)}, exception caught:");
                             Log($"\t\t{e.Message}");
                             return false;
                         }
@@ -727,6 +727,10 @@ namespace ModTek
                 }
             }
 
+            // write type cache to disk
+            WriteJsonFile(TypeCachePath, typeCache);
+
+            // perform merges into cache
             LogWithDate("Doing merges...");
             foreach (var jsonMerge in jsonMerges)
             {
@@ -745,27 +749,82 @@ namespace ModTek
                 if (AddModEntry(manifest, cacheEntry))
                     modEntries.Add(cacheEntry);
             }
-            
+
+            // write merge cache to disk
+            jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
+
             if (File.Exists(Path.Combine(ModDirectory, "break.my.game")))
             {
                 LogWithDate("Adding to DB...");
+                
+                // check if files removed from DB cache
+                var rebuildDB = false;
+                var replacementEntries = new List<VersionManifestEntry>();
+                var removeEntries = new List<string>();
+                foreach (var kvp in dbCache)
+                {
+                    var path = kvp.Key;
 
+                    if (File.Exists(path))
+                        continue;
+
+                    Log($"\tNeed to remove DB entry from file in path: {path}");
+
+                    // file is missing, check if another entry exists with same filename in manifest
+                    var fileName = Path.GetFileName(path);
+                    var existingEntry = manifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+
+                    if (existingEntry == null)
+                    {
+                        Log("\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
+                        rebuildDB = true;
+                        break;
+                    }
+
+                    replacementEntries.Add(existingEntry);
+                    removeEntries.Add(path);
+                }
+
+                // add removed entries replacements to db
+                if (!rebuildDB)
+                {
+                    // remove old entries
+                    foreach (var removeEntry in removeEntries)
+                        dbCache.Remove(removeEntry);
+                    
+                    using (var metadataDatabase = new MetadataDatabase())
+                    {
+                        foreach (var replacementEntry in replacementEntries)
+                        {
+                            if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                                Log($"\t\tReplaced DB entry with an existing entry in path: {Path.GetFullPath(replacementEntry.FilePath)}");
+                        }
+                    }
+                }
+
+                // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
+                if (rebuildDB)
+                {
+                    if (File.Exists(ModDBPath))
+                        File.Delete(ModDBPath);
+
+                    File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
+                    dbCache = new Dictionary<string, DateTime>();
+                }
+
+                // add needed files to db
                 using (var metadataDatabase = new MetadataDatabase())
                 {
                     foreach (var modEntry in modEntries)
                     {
-                        if (AddModEntryToDB(metadataDatabase, modEntry))
+                        if (AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                             Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     }
                 }
             }
 
-            // write merge cache to disk
-            jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
-
             // write db/type cache to disk
             WriteJsonFile(DBCachePath, dbCache);
-            WriteJsonFile(TypeCachePath, typeCache);
 
             LogWithDate("Done.");
             Log("");
