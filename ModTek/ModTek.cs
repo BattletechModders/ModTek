@@ -752,74 +752,71 @@ namespace ModTek
 
             // write merge cache to disk
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
-
-            if (File.Exists(Path.Combine(ModDirectory, "break.my.game")))
+            
+            LogWithDate("Adding to DB...");
+            
+            // check if files removed from DB cache
+            var rebuildDB = false;
+            var replacementEntries = new List<VersionManifestEntry>();
+            var removeEntries = new List<string>();
+            foreach (var kvp in dbCache)
             {
-                LogWithDate("Adding to DB...");
+                var path = kvp.Key;
+
+                if (File.Exists(path))
+                    continue;
+
+                Log($"\tNeed to remove DB entry from file in path: {path}");
+
+                // file is missing, check if another entry exists with same filename in manifest
+                var fileName = Path.GetFileName(path);
+                var existingEntry = manifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+
+                if (existingEntry == null)
+                {
+                    Log("\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
+                    rebuildDB = true;
+                    break;
+                }
+
+                replacementEntries.Add(existingEntry);
+                removeEntries.Add(path);
+            }
+
+            // add removed entries replacements to db
+            if (!rebuildDB)
+            {
+                // remove old entries
+                foreach (var removeEntry in removeEntries)
+                    dbCache.Remove(removeEntry);
                 
-                // check if files removed from DB cache
-                var rebuildDB = false;
-                var replacementEntries = new List<VersionManifestEntry>();
-                var removeEntries = new List<string>();
-                foreach (var kvp in dbCache)
-                {
-                    var path = kvp.Key;
-
-                    if (File.Exists(path))
-                        continue;
-
-                    Log($"\tNeed to remove DB entry from file in path: {path}");
-
-                    // file is missing, check if another entry exists with same filename in manifest
-                    var fileName = Path.GetFileName(path);
-                    var existingEntry = manifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
-
-                    if (existingEntry == null)
-                    {
-                        Log("\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
-                        rebuildDB = true;
-                        break;
-                    }
-
-                    replacementEntries.Add(existingEntry);
-                    removeEntries.Add(path);
-                }
-
-                // add removed entries replacements to db
-                if (!rebuildDB)
-                {
-                    // remove old entries
-                    foreach (var removeEntry in removeEntries)
-                        dbCache.Remove(removeEntry);
-                    
-                    using (var metadataDatabase = new MetadataDatabase())
-                    {
-                        foreach (var replacementEntry in replacementEntries)
-                        {
-                            if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
-                                Log($"\t\tReplaced DB entry with an existing entry in path: {Path.GetFullPath(replacementEntry.FilePath)}");
-                        }
-                    }
-                }
-
-                // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
-                if (rebuildDB)
-                {
-                    if (File.Exists(ModDBPath))
-                        File.Delete(ModDBPath);
-
-                    File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
-                    dbCache = new Dictionary<string, DateTime>();
-                }
-
-                // add needed files to db
                 using (var metadataDatabase = new MetadataDatabase())
                 {
-                    foreach (var modEntry in modEntries)
+                    foreach (var replacementEntry in replacementEntries)
                     {
-                        if (AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
-                            Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                        if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                            Log($"\t\tReplaced DB entry with an existing entry in path: {Path.GetFullPath(replacementEntry.FilePath)}");
                     }
+                }
+            }
+
+            // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
+            if (rebuildDB)
+            {
+                if (File.Exists(ModDBPath))
+                    File.Delete(ModDBPath);
+
+                File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
+                dbCache = new Dictionary<string, DateTime>();
+            }
+
+            // add needed files to db
+            using (var metadataDatabase = new MetadataDatabase())
+            {
+                foreach (var modEntry in modEntries)
+                {
+                    if (AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
+                        Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                 }
             }
 
