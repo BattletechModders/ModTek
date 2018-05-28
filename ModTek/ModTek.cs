@@ -556,42 +556,40 @@ namespace ModTek
             return true;
         }
 
-        private static bool AddModEntryToDB(VersionManifest manifest, ModDef.ManifestEntry modEntry)
+        private static bool AddModEntryToDB(MetadataDatabase db, ModDef.ManifestEntry modEntry)
         {
-            if (Path.GetExtension(modEntry.Path).ToLower() == ".json")
+            if (Path.GetExtension(modEntry.Path)?.ToLower() != ".json")
+                return false;
+            
+            var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
+
+            switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
             {
-                var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), modEntry.Type);
-                switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
-                {
-                    case BattleTechResourceType.TurretDef:
-                    case BattleTechResourceType.UpgradeDef:
-                    case BattleTechResourceType.VehicleDef:
-                    case BattleTechResourceType.ContractOverride:
-                    case BattleTechResourceType.SimGameEventDef:
-                    case BattleTechResourceType.LanceDef:
-                    case BattleTechResourceType.MechDef:
-                    case BattleTechResourceType.PilotDef:
-                    case BattleTechResourceType.WeaponDef:
-                        if (!dbCache.ContainsKey(modEntry.Path) || dbCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
+                case BattleTechResourceType.TurretDef:
+                case BattleTechResourceType.UpgradeDef:
+                case BattleTechResourceType.VehicleDef:
+                case BattleTechResourceType.ContractOverride:
+                case BattleTechResourceType.SimGameEventDef:
+                case BattleTechResourceType.LanceDef:
+                case BattleTechResourceType.MechDef:
+                case BattleTechResourceType.PilotDef:
+                case BattleTechResourceType.WeaponDef:
+                    if (!dbCache.ContainsKey(modEntry.Path) || dbCache[modEntry.Path] != File.GetLastWriteTimeUtc(modEntry.Path))
+                    {
+                        try
                         {
-                            try
-                            {
-                                using (var metadataDatabase = new MetadataDatabase())
-                                {
-                                    VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, metadataDatabase);
-                                    dbCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
-                                    return true;
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Log($"\tAdd to DB failed for {modEntry.Id}, exception caught:");
-                                Log($"\t\t{e.Message}");
-                                return false;
-                            }
+                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, modEntry.Path, db);
+                            dbCache[modEntry.Path] = File.GetLastWriteTimeUtc(modEntry.Path);
+                            return true;
                         }
-                        break;
-                }
+                        catch (Exception e)
+                        {
+                            Log($"\tAdd to DB failed for {modEntry.Id}, exception caught:");
+                            Log($"\t\t{e.Message}");
+                            return false;
+                        }
+                    }
+                    break;
             }
 
             return false;
@@ -752,10 +750,13 @@ namespace ModTek
             {
                 LogWithDate("Adding to DB...");
 
-                foreach (var modEntry in modEntries)
+                using (var metadataDatabase = new MetadataDatabase())
                 {
-                    if (AddModEntryToDB(manifest, modEntry))
-                        Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    foreach (var modEntry in modEntries)
+                    {
+                        if (AddModEntryToDB(metadataDatabase, modEntry))
+                            Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    }
                 }
             }
 
