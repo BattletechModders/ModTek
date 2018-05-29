@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,6 +41,7 @@ namespace ModTek
 
         private static List<ModDef.ManifestEntry> modEntries;
         private static Dictionary<string, List<ModDef.ManifestEntry>> modManifest = new Dictionary<string, List<ModDef.ManifestEntry>>();
+        private static Stopwatch stopwatch = new Stopwatch();
 
         public static string GameDirectory { get; private set; }
         public static string ModDirectory { get; private set; }
@@ -61,6 +63,8 @@ namespace ModTek
         [UsedImplicitly]
         public static void Init()
         {
+            stopwatch.Start();
+
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
             if (manifestDirectory == null)
@@ -105,7 +109,7 @@ namespace ModTek
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Log("");
+            stopwatch.Stop();
         }
 
 
@@ -203,7 +207,7 @@ namespace ModTek
         {
             var potentialAdditions = new List<ModDef.ManifestEntry>();
 
-            LogWithDate($"Loading {modDef.Name}");
+            Log($"Loading {modDef.Name}");
 
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
@@ -304,6 +308,11 @@ namespace ModTek
             if (hasLoadedMods)
                 return;
 
+            stopwatch.Start();
+
+            Log("");
+            LogWithDate($"Pre-load mods...");
+
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
                 .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
@@ -335,13 +344,13 @@ namespace ModTek
 
                 if (!modDef.Enabled)
                 {
-                    LogWithDate($"Will not load {modDef.Name} because it's disabled.");
+                    Log($"Will not load {modDef.Name} because it's disabled.");
                     continue;
                 }
 
                 if (modDefs.ContainsKey(modDef.Name))
                 {
-                    LogWithDate($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
+                    Log($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
                     continue;
                 }
 
@@ -362,16 +371,20 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    LogWithDate($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
-                    Log($"{e.Message}");
+                    Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
+                    Log($"\t{e.Message}");
                 }
             }
 
-            foreach (var modDef in willNotLoad) LogWithDate($"Will not load {modDef}. It's lacking a dependancy or a conflict loaded before it.");
+            foreach (var modDef in willNotLoad)
+            {
+                Log($"Will not load {modDef}. It's lacking a dependancy or a conflict loaded before it.");
+            }
 
+            stopwatch.Stop();
             Log("");
-            Log("----------");
-            Log("");
+            LogWithDate($"Done pre-load mods. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+            Log("----------\n");
 
             // write out load order
             File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
@@ -600,6 +613,8 @@ namespace ModTek
             if (!hasLoadedMods)
                 LoadMods();
 
+            stopwatch.Start();
+
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 return;
@@ -611,8 +626,10 @@ namespace ModTek
                 {
                     AddModEntry(manifest, modEntry);
                 }
-
-                LogWithDate("Done.");
+                
+                stopwatch.Stop();
+                Log("");
+                LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
                 return;
             }
 
@@ -823,8 +840,9 @@ namespace ModTek
             // write db/type cache to disk
             WriteJsonFile(DBCachePath, dbCache);
 
-            LogWithDate("Done.");
+            stopwatch.Stop();
             Log("");
+            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
         }
     }
 }
