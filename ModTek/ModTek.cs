@@ -31,6 +31,7 @@ namespace ModTek
         private const string DATABASE_DIRECTORY_NAME = "Database";
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
+        private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
 
         private static bool hasLoadedMods; //defaults to false
 
@@ -55,7 +56,8 @@ namespace ModTek
         internal static string ModDBPath { get; private set; }
         internal static string DBCachePath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
-
+        internal static string HarmonySummaryPath { get; private set; }
+        
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2D { get; } = new HashSet<string>();
 
@@ -85,6 +87,7 @@ namespace ModTek
             DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
 
             LogPath = Path.Combine(ModTekDirectory, LOG_NAME);
+            HarmonySummaryPath = Path.Combine(ModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
             LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
@@ -387,6 +390,9 @@ namespace ModTek
             LogWithDate($"Done pre-load mods. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
             Log("----------\n");
 
+            // write out harmony summary
+            PrintHarmonySummary(HarmonySummaryPath);
+
             // write out load order
             File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
 
@@ -402,6 +408,50 @@ namespace ModTek
 
             // read the json and get ID out of it if able to
             return InferIDFromJObject(ParseGameJSON(File.ReadAllText(path))) ?? Path.GetFileNameWithoutExtension(path);
+        }
+
+        private static void PrintHarmonySummary(string path)
+        {
+            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+
+            var patchedMethods = harmony.GetPatchedMethods().ToArray();
+            if (patchedMethods.Length == 0)
+                return;
+
+            using (var writer = File.CreateText(path))
+            {
+                writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
+                
+                foreach (var method in patchedMethods)
+                {
+                    var info = harmony.GetPatchInfo(method);
+
+                    if (info == null || method.ReflectedType == null)
+                        continue;
+
+                    writer.WriteLine($"{method.ReflectedType.FullName}.{method.Name}:");
+
+                    // prefixes
+                    if (info.Prefixes.Count != 0)
+                        writer.WriteLine("\tPrefixes:");
+                    foreach (var patch in info.Prefixes)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    // transpilers
+                    if (info.Transpilers.Count != 0)
+                        writer.WriteLine("\tTranspilers:");
+                    foreach (var patch in info.Transpilers)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    // postfixes
+                    if (info.Postfixes.Count != 0)
+                        writer.WriteLine("\tPostfixes:");
+                    foreach (var patch in info.Postfixes)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    writer.WriteLine("");
+                }
+            }
         }
 
 
