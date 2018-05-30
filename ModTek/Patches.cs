@@ -1,8 +1,10 @@
+using System;
 using System.Reflection;
 using BattleTech;
 using BattleTech.Assetbundles;
 using BattleTech.Data;
 using Harmony;
+using UnityEngine;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -53,6 +55,30 @@ namespace ModTek
                 return;
 
             __result = ModTek.ModDBPath;
+        }
+    }
+
+    [HarmonyPatch]
+    public static class DataManager_Texture2DLoadRequest_OnLoaded_Patch
+    {
+        public static MethodBase TargetMethod()
+        {
+            var type = Traverse.Create(typeof(DataManager)).Type("Texture2DLoadRequest").GetValue<Type>();
+            return type.GetMethod("OnLoaded");
+        }
+
+        public static void Postfix(object __instance)
+        {
+            var resourceId = Traverse.Create(__instance).Field("resourceId").GetValue<string>();
+
+            if (!ModTek.ModTexture2D.Contains(resourceId))
+                return;
+
+            var resource = Traverse.Create(__instance).Field("resource").GetValue<Texture2D>();
+            var dataManager = Traverse.Create(__instance).Field("dataManager").GetValue<DataManager>();
+            var textureManager = Traverse.Create(dataManager).Property("TextureManager").GetValue<TextureManager>();
+
+            textureManager.InsertTexture(resourceId, resource);
         }
     }
 

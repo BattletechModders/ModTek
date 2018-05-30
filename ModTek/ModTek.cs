@@ -57,6 +57,7 @@ namespace ModTek
         internal static string LoadOrderPath { get; private set; }
 
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+        internal static HashSet<string> ModTexture2D { get; } = new HashSet<string>();
 
 
         // INITIALIZATION (called by BTML)
@@ -550,10 +551,17 @@ namespace ModTek
                     manifest.ApplyAddendum(addendum);
                 }
             }
-            
-            // add assetbundle path so it can be changed when the assetbundle path is requested
-            if (modEntry.Type == "AssetBundle")
-                ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
+
+            // add special handling for particular types
+            switch (modEntry.Type)
+            {
+                case "AssetBundle":
+                    ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
+                    break;
+                case "Texture2D":
+                    ModTexture2D.Add(modEntry.Id);
+                    break;
+            }
 
             // add to addendum instead of adding to manifest
             if (addendum != null)
@@ -706,7 +714,7 @@ namespace ModTek
                             subModEntry.Type = type;
 
                             if (AddModEntry(manifest, subModEntry))
-                                modEntries.Add(modEntry);
+                                modEntries.Add(subModEntry);
                         }
 
                         continue;
