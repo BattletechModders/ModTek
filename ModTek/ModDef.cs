@@ -33,19 +33,19 @@ namespace ModTek
         public bool Enabled { get; set; } = true;
 
         // load order
-        public HashSet<string> DependsOn { get; [UsedImplicitly] set; } = new HashSet<string>();
+        public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
 
         // adding and running code
         public string DLL { get; [UsedImplicitly] set; }
-        public string DLLEntryPoint { get; [UsedImplicitly] set; }
+        public string DLLEntryPoint { get; set; }
 
         // changing implicit loading behavior
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;
 
         // manifest, for including any kind of things to add to the game's manifest
-        public List<ManifestEntry> Manifest { get; [UsedImplicitly] set; } = new List<ManifestEntry>();
+        public List<ManifestEntry> Manifest { get; set; } = new List<ManifestEntry>();
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
@@ -82,13 +82,17 @@ namespace ModTek
                 AssetBundlePersistent = parent.AssetBundlePersistent;
                 ShouldMergeJSON = parent.ShouldMergeJSON;
                 AddToAddendum = parent.AddToAddendum;
+                AddToDB = parent.AddToDB;
             }
 
             [JsonProperty(Required = Required.Always)]
             public string Path { get; set; }
 
             [DefaultValue(false)]
-            public bool ShouldMergeJSON { get; set; }
+            public bool ShouldMergeJSON { get; set; } // defaults to false
+
+            [DefaultValue(true)]
+            public bool AddToDB { get; set; } = true;
 
             public string AddToAddendum { get; set; }
 

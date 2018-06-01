@@ -690,13 +690,11 @@ namespace ModTek
                 LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
                 return;
             }
-
-            modEntries = new List<ModDef.ManifestEntry>();
-
+            
             LogWithDate("Setting up mod manifests...");
             
             var jsonMerges = new Dictionary<string, List<string>>();
-
+            modEntries = new List<ModDef.ManifestEntry>();
             foreach (var modName in modLoadOrder)
             {
                 if (!modManifest.ContainsKey(modName))
@@ -890,7 +888,7 @@ namespace ModTek
             {
                 foreach (var modEntry in modEntries)
                 {
-                    if (AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
+                    if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                 }
             }
