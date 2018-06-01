@@ -37,7 +37,7 @@ namespace ModTek
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
 
         // adding and running code
-        public string DLL { get; [UsedImplicitly] set; }
+        public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
         // changing implicit loading behavior
@@ -49,7 +49,7 @@ namespace ModTek
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public JObject Settings { get; [UsedImplicitly] set; } = new JObject();
+        public JObject Settings { get; set; } = new JObject();
 
         /// <summary>
         ///     Creates a ModDef from a path to a mod.json
