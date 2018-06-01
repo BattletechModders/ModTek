@@ -20,6 +20,9 @@ namespace ModTek
 
     public static class ModTek
     {
+        private static bool hasLoadedMods; //defaults to false
+
+        // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MOD_JSON_NAME = "mod.json";
         private const string MODTEK_DIRECTORY_NAME = ".modtek";
@@ -32,22 +35,26 @@ namespace ModTek
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
-
-        private static bool hasLoadedMods; //defaults to false
-
+        
+        // files that are read and written to (located in .modtek)
         private static List<string> modLoadOrder;
         private static MergeCache jsonMergeCache;
         private static Dictionary<string, List<string>> typeCache;
         private static Dictionary<string, DateTime> dbCache;
 
+        // things that we added to the VersionManifest, so we don't have to duplicate work when loaded again
         private static List<ModDef.ManifestEntry> modEntries;
-        private static Dictionary<string, List<ModDef.ManifestEntry>> modManifest = new Dictionary<string, List<ModDef.ManifestEntry>>();
-        private static Stopwatch stopwatch = new Stopwatch();
 
+        // TODO: remove modManifest
+        // pre-loaded mod entries in modName buckets
+        private static Dictionary<string, List<ModDef.ManifestEntry>> modManifest = new Dictionary<string, List<ModDef.ManifestEntry>>();
+        
+        // Game paths/directories
         public static string GameDirectory { get; private set; }
         public static string ModDirectory { get; private set; }
         public static string StreamingAssetsDirectory { get; private set; }
 
+        // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
         internal static string CacheDirectory { get; private set; }
         internal static string DatabaseDirectory { get; private set; }
@@ -57,9 +64,14 @@ namespace ModTek
         internal static string DBCachePath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
-        
+
+        // non-VersionManifest additions
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
-        internal static HashSet<string> ModTexture2D { get; } = new HashSet<string>();
+        internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
+        internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
+
+        // for timing our loading impact
+        private static Stopwatch stopwatch = new Stopwatch();
 
 
         // INITIALIZATION (called by BTML)
@@ -609,7 +621,7 @@ namespace ModTek
                     ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     break;
                 case "Texture2D":
-                    ModTexture2D.Add(modEntry.Id);
+                    ModTexture2Ds.Add(modEntry.Id);
                     break;
             }
 
@@ -768,6 +780,20 @@ namespace ModTek
                         continue;
                     }
 
+                    // get "fake" entries that don't actually go into the game's VersionManifest
+                    // add videos to be loaded from an external path
+                    if (modEntry.Type == "Video")
+                    {
+                        var fileName = Path.GetFileName(modEntry.Path);
+                        if (fileName != null && File.Exists(modEntry.Path))
+                        {
+                            Log($"\t\tVideo => {fileName}");
+                            ModVideos.Add(fileName, modEntry.Path);
+                        }
+
+                        continue;
+                    }
+
                     // non-streamingassets json merges
                     if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
@@ -794,7 +820,7 @@ namespace ModTek
                         jsonMerges[matchingEntry.FilePath].Add(modEntry.Path);
                         continue;
                     }
-
+                    
                     if (AddModEntry(manifest, modEntry))
                         modEntries.Add(modEntry);
                 }
