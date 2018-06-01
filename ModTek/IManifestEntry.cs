@@ -8,6 +8,7 @@ namespace ModTek
         string AssetBundleName { get; set; }
         bool? AssetBundlePersistent { get; set; }
 
+        bool AddToDB { get; set; }
         bool ShouldMergeJSON { get; set; }
         string AddToAddendum { get; set; }
     }
