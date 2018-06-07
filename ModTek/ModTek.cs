@@ -14,6 +14,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
+// ReSharper disable FieldCanBeMadeReadOnly.Local
+
 namespace ModTek
 {
     using static Logger;
@@ -57,7 +59,7 @@ namespace ModTek
         internal static string DBCachePath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
-        
+
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2D { get; } = new HashSet<string>();
 
@@ -204,7 +206,7 @@ namespace ModTek
 
             return loadOrder;
         }
-        
+
 
         // LOADING MODS
         private static void LoadMod(ModDef modDef)
@@ -334,7 +336,7 @@ namespace ModTek
             {
                 ModDef modDef;
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
-                
+
                 try
                 {
                     modDef = ModDef.CreateFromPath(modDefPath);
@@ -360,7 +362,7 @@ namespace ModTek
 
                 modDefs.Add(modDef.Name, modDef);
             }
-            
+
             PropagateConflictsForward(modDefs);
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
 
@@ -421,7 +423,7 @@ namespace ModTek
             using (var writer = File.CreateText(path))
             {
                 writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
-                
+
                 foreach (var method in patchedMethods)
                 {
                     var info = harmony.GetPatchInfo(method);
@@ -465,10 +467,10 @@ namespace ModTek
         {
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
             var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", jsonText).GetValue() as string;
-            
+
             if (commentsStripped == null)
                 throw new Exception("StripHBSCommentsFromJSON returned null.");
-            
+
             // add missing commas, this only fixes if there is a newline
             var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
             var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
@@ -631,7 +633,7 @@ namespace ModTek
         {
             if (Path.GetExtension(path)?.ToLower() != ".json")
                 return false;
-            
+
             var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), typeStr);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
@@ -684,7 +686,7 @@ namespace ModTek
                 {
                     AddModEntry(manifest, modEntry);
                 }
-                
+
                 stopwatch.Stop();
                 Log("");
                 LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
@@ -694,7 +696,7 @@ namespace ModTek
             modEntries = new List<ModDef.ManifestEntry>();
 
             LogWithDate("Setting up mod manifests...");
-            
+
             var jsonMerges = new Dictionary<string, List<string>>();
 
             foreach (var modName in modLoadOrder)
@@ -827,9 +829,9 @@ namespace ModTek
 
             // write merge cache to disk
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
-            
+
             LogWithDate("Adding to DB...");
-            
+
             // check if files removed from DB cache
             var rebuildDB = false;
             var replacementEntries = new List<VersionManifestEntry>();
@@ -864,7 +866,7 @@ namespace ModTek
                 // remove old entries
                 foreach (var removeEntry in removeEntries)
                     dbCache.Remove(removeEntry);
-                
+
                 using (var metadataDatabase = new MetadataDatabase())
                 {
                     foreach (var replacementEntry in replacementEntries)

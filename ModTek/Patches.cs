@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using BattleTech;
 using BattleTech.Assetbundles;
@@ -79,6 +80,16 @@ namespace ModTek
             var textureManager = Traverse.Create(dataManager).Property("TextureManager").GetValue<TextureManager>();
 
             textureManager.InsertTexture(resourceId, resource);
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGame_MDDExtensions), "UpdateContract")]
+    public static class SimGame_MDDExtensions_UpdateContract_Patch
+    {
+        public static void Prefix(ref string fileID)
+        {
+            if (Path.IsPathRooted(fileID))
+                fileID = Path.GetFileName(fileID);
         }
     }
 
