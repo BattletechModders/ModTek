@@ -89,7 +89,7 @@ namespace ModTek
         public static void Prefix(ref string fileID)
         {
             if (Path.IsPathRooted(fileID))
-                fileID = Path.GetFileName(fileID);
+                fileID = Path.GetFileNameWithoutExtension(fileID);
         }
     }
 
