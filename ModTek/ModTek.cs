@@ -312,13 +312,14 @@ namespace ModTek
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
 
-            // actually add the additions, since we successfully got through loading the other stuff
-            if (potentialAdditions.Count > 0)
-            {
-                foreach (var addition in potentialAdditions) Log($"\tNew Entry: {addition.Path.Replace(ModDirectory, "")}");
+            if (potentialAdditions.Count <= 0)
+                return;
 
-                modManifest[modDef.Name] = potentialAdditions;
-            }
+            // actually add the additions, since we successfully got through loading the other stuff
+            foreach (var addition in potentialAdditions)
+                Log($"\tNew Entry: {addition.Path.Replace(ModDirectory, "")}");
+
+            modManifest[modDef.Name] = potentialAdditions;
         }
 
         internal static void LoadMods()
@@ -329,7 +330,7 @@ namespace ModTek
             stopwatch.Start();
 
             Log("");
-            LogWithDate($"Pre-load mods...");
+            LogWithDate("Pre-loading mods...");
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
