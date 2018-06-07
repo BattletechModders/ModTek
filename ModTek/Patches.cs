@@ -4,7 +4,11 @@ using System.Reflection;
 using BattleTech;
 using BattleTech.Assetbundles;
 using BattleTech.Data;
+using BattleTech.Rendering;
+using BattleTech.Save;
+using BattleTech.UI;
 using Harmony;
+using RenderHeads.Media.AVProVideo;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming
@@ -72,7 +76,7 @@ namespace ModTek
         {
             var resourceId = Traverse.Create(__instance).Field("resourceId").GetValue<string>();
 
-            if (!ModTek.ModTexture2D.Contains(resourceId))
+            if (!ModTek.ModTexture2Ds.Contains(resourceId))
                 return;
 
             var resource = Traverse.Create(__instance).Field("resource").GetValue<Texture2D>();
@@ -80,6 +84,44 @@ namespace ModTek
             var textureManager = Traverse.Create(dataManager).Property("TextureManager").GetValue<TextureManager>();
 
             textureManager.InsertTexture(resourceId, resource);
+        }
+    }
+
+    [HarmonyPatch(typeof(AVPVideoPlayer), "PlayVideo")]
+    public static class AVPVideoPlayer_PlayVideo_Patch
+    {
+        public static bool Prefix(AVPVideoPlayer __instance, string video, AVPVideoPlayer.Language language, Action<string> onComplete = null)
+        {
+            if (!ModTek.ModVideos.ContainsKey(video))
+                return true;
+
+            // THIS CODE IS REWRITTEN FROM DECOMPILED HBS CODE
+            // AND IS NOT SUBJECT TO MODTEK LICENSE
+
+            var instance = Traverse.Create(__instance);
+            var AVPMediaPlayer = instance.Field("AVPMediaPlayer").GetValue<MediaPlayer>();
+
+            if (AVPMediaPlayer.Control == null)
+            {
+                instance.Method("ConfigureMediaPlayer").GetValue();
+            }
+            AVPMediaPlayer.OpenVideoFromFile(MediaPlayer.FileLocation.AbsolutePathOrURL, ModTek.ModVideos[video], false);
+            if (ActiveOrDefaultSettings.CloudSettings.subtitles)
+            {
+                instance.Method("LoadSubtitle", video, language.ToString()).GetValue();
+            }
+            else
+            {
+                AVPMediaPlayer.DisableSubtitles();
+            }
+            BTPostProcess.SetUIPostprocessing(false);
+
+            instance.Field("OnPlayerComplete").SetValue(onComplete);
+            instance.Method("Initialize").GetValue();
+
+            // END REWRITTEN DECOMPILED HBS CODE
+
+            return false;
         }
     }
 
