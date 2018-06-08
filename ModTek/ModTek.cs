@@ -138,9 +138,14 @@ namespace ModTek
             foreach (var modDefKvp in modDefs)
             {
                 var modDef = modDefKvp.Value;
-                if (modDef.ConflictsWith.Count == 0) continue;
+                if (modDef.ConflictsWith.Count == 0)
+                    continue;
 
-                foreach (var conflict in modDef.ConflictsWith) modDefs[conflict].ConflictsWith.Add(modDef.Name);
+                foreach (var conflict in modDef.ConflictsWith)
+                {
+                    if (modDefs.ContainsKey(conflict))
+                        modDefs[conflict].ConflictsWith.Add(modDef.Name);
+                }
             }
         }
 
