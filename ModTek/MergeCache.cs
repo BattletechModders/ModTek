@@ -123,7 +123,7 @@ namespace ModTek
                         JObject mergeJObj;
                         try
                         {
-                            mergeJObj = ModTek.ParseGameJSON(File.ReadAllText(mergePath));
+                            mergeJObj = ModTek.ParseGameJSONFile(mergePath);
                         }
                         catch (Exception e)
                         {
@@ -131,11 +131,19 @@ namespace ModTek
                             Log($"\t\t{e.Message}");
                             continue;
                         }
-
-                        var isAdvancedMerge = false; // TODO: detect if this mergeJObj is an advancedMerge
-                        if (isAdvancedMerge)
+                        
+                        if (AdvancedJSONMerger.IsAdvancedJSONMerge(mergeJObj))
                         {
-                            JSONPathMerger.ProcessReplacements(parentJObj, mergeJObj.ToString());
+                            try
+                            {
+                                AdvancedJSONMerger.ProcessInstructionsJObject(parentJObj, mergeJObj);
+                            }
+                            catch (Exception e)
+                            {
+                                Log($"\tMod advanced merge JSON at path {mergePath} has errors preventing any merges!");
+                                Log($"\t\t{e.Message}");
+                                continue;
+                            }
                         }
                         else
                         {

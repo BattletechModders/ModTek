@@ -496,6 +496,11 @@ namespace ModTek
             return JObject.Parse(commasAdded);
         }
 
+        internal static JObject ParseGameJSONFile(string path)
+        {
+            return ParseGameJSON(File.ReadAllText(path));
+        }
+
         private static string InferIDFromJObject(JObject jObj)
         {
             if (jObj == null)
@@ -801,7 +806,7 @@ namespace ModTek
                             }
                             continue;
                         case "AdvancedJSONMerge":
-                            var targetFile = ""; // TODO: select file(s) to be merged onto
+                            var targetFile = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
 
                             if (!jsonMerges.ContainsKey(targetFile))
                                 jsonMerges[targetFile] = new List<string>();

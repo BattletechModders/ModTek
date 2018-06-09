@@ -68,7 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="JSONPathMerger.cs" />
+    <Compile Include="AdvancedJSONMerger.cs" />
     <Compile Include="IManifestEntry.cs" />
     <Compile Include="IModDef.cs" />
     <Compile Include="Logger.cs" />
