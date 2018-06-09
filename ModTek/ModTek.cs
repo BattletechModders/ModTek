@@ -806,7 +806,8 @@ namespace ModTek
                             }
                             continue;
                         case "AdvancedJSONMerge":
-                            var targetFile = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
+                            var targetFileRelative = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
+                            var targetFile = Path.Combine(GameDirectory, targetFileRelative);
 
                             if (!jsonMerges.ContainsKey(targetFile))
                                 jsonMerges[targetFile] = new List<string>();
