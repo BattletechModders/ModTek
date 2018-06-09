@@ -790,16 +790,28 @@ namespace ModTek
 
                     // get "fake" entries that don't actually go into the game's VersionManifest
                     // add videos to be loaded from an external path
-                    if (modEntry.Type == "Video")
+                    switch (modEntry.Type)
                     {
-                        var fileName = Path.GetFileName(modEntry.Path);
-                        if (fileName != null && File.Exists(modEntry.Path))
-                        {
-                            Log($"\t\tVideo => {fileName}");
-                            ModVideos.Add(fileName, modEntry.Path);
-                        }
+                        case "Video":
+                            var fileName = Path.GetFileName(modEntry.Path);
+                            if (fileName != null && File.Exists(modEntry.Path))
+                            {
+                                Log($"\t\tVideo => {fileName}");
+                                ModVideos.Add(fileName, modEntry.Path);
+                            }
+                            continue;
+                        case "AdvancedJSONMerge":
+                            var targetFile = ""; // TODO: select file(s) to be merged onto
 
-                        continue;
+                            if (!jsonMerges.ContainsKey(targetFile))
+                                jsonMerges[targetFile] = new List<string>();
+
+                            if (jsonMerges[targetFile].Contains(modEntry.Path))
+                                continue;
+
+                            Log($"\t\tAdvancedJSONMerge => {modEntry.Id} ({modEntry.Type})");
+                            jsonMerges[targetFile].Add(modEntry.Path);
+                            continue;
                     }
 
                     // non-streamingassets json merges

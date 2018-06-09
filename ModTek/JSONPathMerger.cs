@@ -7,9 +7,9 @@ using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
-    public class JSONPathMerger
+    public static class JSONPathMerger
     {
-        public void ProcessReplacements(JObject root, string replacementsJson)
+        public static void ProcessReplacements(JObject root, string replacementsJson)
         {
             var instructions = JsonConvert.DeserializeObject<List<Instruction>>(replacementsJson);
             foreach (var instruction in instructions)

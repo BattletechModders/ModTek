@@ -1,4 +1,3 @@
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ModTek;
 using Newtonsoft.Json.Linq;
@@ -9,7 +8,6 @@ namespace ModTekUnitTests
     public class JSONPathMergerTests
     {
         private JObject root;
-        private JSONPathMerger merger;
 
         [TestInitialize]
         public void Initialize()
@@ -36,7 +34,6 @@ namespace ModTekUnitTests
     ]
 }
 ");
-            merger = new JSONPathMerger();
         }
 
         [TestMethod]
@@ -53,7 +50,7 @@ namespace ModTekUnitTests
         public void RemoveFromObject()
         {
             Assert.AreEqual("value1", root["objectkey1"]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
 @"
 [
     {
@@ -69,7 +66,7 @@ namespace ModTekUnitTests
         public void ReplaceInObject()
         {
             Assert.AreNotEqual("newvalue", root["objectkey2"]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -86,7 +83,7 @@ namespace ModTekUnitTests
         public void RemoveFromArray()
         {
             Assert.AreEqual("arrayvalue1", root["objectkey2"][0]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -102,7 +99,7 @@ namespace ModTekUnitTests
         public void ReplaceInArray()
         {
             Assert.AreNotEqual("newvalue", root["objectkey2"][0]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -120,7 +117,7 @@ namespace ModTekUnitTests
         {
             var oldFirst = root["objectkey2"][0];
             Assert.AreNotEqual("newvalue", root["objectkey2"][0]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -139,7 +136,7 @@ namespace ModTekUnitTests
         {
             var currentFirst = root["objectkey2"][0];
             Assert.AreNotEqual("newvalue", root["objectkey2"][1]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -159,7 +156,7 @@ namespace ModTekUnitTests
             var oldFirst = root["objectkey2"][0];
             Assert.IsNotNull(oldFirst);
 
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -172,14 +169,14 @@ namespace ModTekUnitTests
             Assert.AreEqual(new JArray("newvalue1", "newvalue2").ToString(), root["objectkey2"][0].ToString());
             Assert.AreEqual(oldFirst, root["objectkey2"][1]);
         }
-        
+
         [TestMethod]
         public void AddInArrayWithArray()
         {
             var oldLast = root.SelectToken("$.objectkey2[-1:]").ToString();
             Assert.IsNotNull(oldLast);
 
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -199,7 +196,7 @@ namespace ModTekUnitTests
             var oldLast = root.SelectToken("$.objectkey2[-1:]").ToString();
             Assert.IsNotNull(oldLast);
 
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -218,7 +215,7 @@ namespace ModTekUnitTests
         public void MergeRootObject()
         {
             Assert.IsNull(root["newobjectkey"]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {
@@ -235,7 +232,7 @@ namespace ModTekUnitTests
         public void MergeNestedObject()
         {
             Assert.IsNull(root["objectkey2"][1]["newobjectkey"]);
-            merger.ProcessReplacements(root,
+            JSONPathMerger.ProcessReplacements(root,
                 @"
 [
     {

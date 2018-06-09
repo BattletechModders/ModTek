@@ -132,7 +132,15 @@ namespace ModTek
                             continue;
                         }
 
-                        parentJObj.Merge(mergeJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                        var isAdvancedMerge = false; // TODO: detect if this mergeJObj is an advancedMerge
+                        if (isAdvancedMerge)
+                        {
+                            JSONPathMerger.ProcessReplacements(parentJObj, mergeJObj.ToString());
+                        }
+                        else
+                        {
+                            parentJObj.Merge(mergeJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                        }
                     }
 
                     // write the merged onto file to disk
