@@ -131,7 +131,7 @@ namespace ModTek
                             Log($"\t\t{e.Message}");
                             continue;
                         }
-                        
+
                         if (AdvancedJSONMerger.IsAdvancedJSONMerge(mergeJObj))
                         {
                             try
@@ -142,7 +142,6 @@ namespace ModTek
                             {
                                 Log($"\tMod advanced merge JSON at path {mergePath} has errors preventing any merges!");
                                 Log($"\t\t{e.Message}");
-                                continue;
                             }
                         }
                         else

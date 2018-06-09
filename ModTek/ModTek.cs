@@ -570,6 +570,28 @@ namespace ModTek
             return cache;
         }
 
+        internal static List<string> GetTypesFromCacheOrManifest(VersionManifest manifest, string path)
+        {
+            if (typeCache.ContainsKey(path))
+            {
+                return typeCache[path];
+            }
+
+            // get the type from the manifest
+            var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == path);
+
+            if (matchingEntries == null || matchingEntries.Count == 0)
+                return null;
+
+            var types = new List<string>();
+
+            foreach (var existingEntry in matchingEntries)
+                types.Add(existingEntry.Type);
+
+            typeCache[path] = types;
+            return typeCache[path];
+        }
+
         internal static Dictionary<string, DateTime> LoadOrCreateDBCache(string path)
         {
             Dictionary<string, DateTime> cache;
@@ -735,37 +757,16 @@ namespace ModTek
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relPath));
 
-                        List<string> types;
+                        var types = GetTypesFromCacheOrManifest(manifest, fakeStreamingAssetsPath);
 
-                        if (typeCache.ContainsKey(fakeStreamingAssetsPath))
+                        if (types == null)
                         {
-                            types = typeCache[fakeStreamingAssetsPath];
-                        }
-                        else
-                        {
-                            // get the type from the manifest
-                            var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == fakeStreamingAssetsPath);
-                            if (matchingEntries == null || matchingEntries.Count == 0)
-                            {
-                                Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
-                                continue;
-                            }
-
-                            types = new List<string>();
-
-                            foreach (var existingEntry in matchingEntries) types.Add(existingEntry.Type);
-
-                            typeCache[fakeStreamingAssetsPath] = types;
+                            Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
+                            continue;
                         }
 
                         if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
                         {
-                            if (!typeCache.ContainsKey(fakeStreamingAssetsPath))
-                            {
-                                Log($"\t\tUnable to determine type of {modEntry.Id}. Is there someone screwy with your this mod.json?");
-                                continue;
-                            }
-
                             if (!jsonMerges.ContainsKey(fakeStreamingAssetsPath))
                                 jsonMerges[fakeStreamingAssetsPath] = new List<string>();
 
@@ -773,6 +774,7 @@ namespace ModTek
                                 continue;
 
                             // this assumes that .json can only have a single type
+                            // typeCache will always contain this path
                             modEntry.Type = typeCache[fakeStreamingAssetsPath][0];
 
                             Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
@@ -808,6 +810,10 @@ namespace ModTek
                         case "AdvancedJSONMerge":
                             var targetFileRelative = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
                             var targetFile = Path.Combine(GameDirectory, targetFileRelative);
+
+                            // need to add the types of the file to the typeCache, so that they can be used later
+                            // this actually returns the type, but we don't actually care about that right now
+                            GetTypesFromCacheOrManifest(manifest, targetFile);
 
                             if (!jsonMerges.ContainsKey(targetFile))
                                 jsonMerges[targetFile] = new List<string>();
@@ -868,7 +874,7 @@ namespace ModTek
                 var cacheEntry = new ModDef.ManifestEntry(cachePath);
 
                 cacheEntry.ShouldMergeJSON = false;
-                cacheEntry.Type = typeCache[jsonMerge.Key][0];
+                cacheEntry.Type = typeCache[jsonMerge.Key][0]; // this assumes only one type for each json file
                 cacheEntry.Id = InferIDFromFile(cachePath);
 
                 if (AddModEntry(manifest, cacheEntry))
