@@ -1,0 +1,10 @@
+{
+    "BTMLAddBindableEscapeKey": {
+        "Settings": {
+            "escapeMouseButton": 5
+        }
+    },
+    "ExclusiveFilters": {
+        "Enabled": false
+    }
+}
