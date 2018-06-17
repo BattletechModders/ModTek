@@ -113,6 +113,17 @@ namespace ModTek
             ModDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
 
+            // creates the directories above it as well
+            Directory.CreateDirectory(CacheDirectory);
+            Directory.CreateDirectory(DatabaseDirectory);
+
+            // create log file, overwritting if it's already there
+            using (var logWriter = File.CreateText(LogPath))
+            {
+                logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
+            }
+
+
             if (!overrideLoaded)
             {
                 if (File.Exists(Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)))
@@ -130,15 +141,7 @@ namespace ModTek
                 }
             }
 
-            // creates the directories above it as well
-            Directory.CreateDirectory(CacheDirectory);
-            Directory.CreateDirectory(DatabaseDirectory);
 
-            // create log file, overwritting if it's already there
-            using (var logWriter = File.CreateText(LogPath))
-            {
-                logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
-            }
 
             // create all of the caches
             dbCache = LoadOrCreateDBCache(DBCachePath);
