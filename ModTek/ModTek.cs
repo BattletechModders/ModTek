@@ -403,7 +403,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
+                    Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath} in {modDirectory}");
                     Log($"\t{e.Message}\n\t{e.StackTrace}");
                     continue;
                 }
