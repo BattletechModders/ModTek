@@ -51,14 +51,44 @@ namespace ModTek
         public JObject Settings { get; set; } = new JObject();
 
         /// <summary>
-        ///     Creates a ModDef from a path to a mod.json
+        ///     Creates a ModDef from a path, a string for the mod's JSON file and a string for the mod's setting's JSON file
         /// </summary>
-        /// <param name="path">Path to mod.json</param>
+        /// <param name="path">Path to the mod's directory</param>
+        /// <param name="mod_json_file">String containing the mod's json file name</param>
+        /// <param name="settings_json_file">String containing the mod's settings file name</param>
         /// <returns>A ModDef representing the mod.json</returns>
-        public static ModDef CreateFromPath(string path)
+        public static ModDef CreateFromPath(string path, string mod_json_file, string settings_json_file, JObject overrideSettings)
         {
-            var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
-            modDef.Directory = Path.GetDirectoryName(path);
+            var mod_json_path = Path.Combine(path, mod_json_file);
+            var settings_json_path = Path.Combine(path, settings_json_file);
+            var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(mod_json_path));
+            JObject settingsOverride = new JObject();
+            if (File.Exists(settings_json_path))
+            {
+                settingsOverride = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(settings_json_path));
+                Logger.Log($"Overriding {modDef.Name} settings from settings.json");
+                modDef.Settings.Merge(settingsOverride);
+            }
+            if(overrideSettings.HasValues)
+            {
+                var modOverrides = overrideSettings[modDef.Name];
+                if(modOverrides != null)
+                {
+                    var enabled = modOverrides["Enabled"];
+                    var modSettingsOverrides = modOverrides["Settings"];
+                    if (enabled != null)
+                    {
+                        Logger.Log($"Overriding {modDef.Name} enabled to {enabled}");
+                        modDef.Enabled = (bool)enabled;
+                    }
+                    if(modSettingsOverrides != null)
+                    {
+                        Logger.Log($"Overriding {modDef.Name} settings");
+                        modDef.Settings.Merge(modSettingsOverrides);
+                    }
+                }
+            }
+            modDef.Directory = Path.GetFullPath(path);
             return modDef;
         }
 

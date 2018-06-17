@@ -27,6 +27,7 @@ namespace ModTek
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MOD_JSON_NAME = "mod.json";
+        private const string MOD_SETTINGS_JSON_NAME = "settings.json";
         private const string MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
         private const string MERGE_CACHE_FILE_NAME = "merge_cache.json";
@@ -37,12 +38,16 @@ namespace ModTek
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
+        private const string MODTEK_OVERRIDES_JSON_NAME = "modtek.overrides.json";
 
         // files that are read and written to (located in .modtek)
         private static List<string> modLoadOrder;
         private static MergeCache jsonMergeCache;
         private static Dictionary<string, List<string>> typeCache;
         private static Dictionary<string, DateTime> dbCache;
+
+        private static JObject overridesSettings = new JObject();
+        private static bool overrideLoaded = false;
 
         // things that we added to the VersionManifest, so we don't have to duplicate work when loaded again
         private static List<ModDef.ManifestEntry> modEntries;
@@ -107,6 +112,23 @@ namespace ModTek
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
+
+            if (!overrideLoaded)
+            {
+                if (File.Exists(Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)))
+                {
+                    Logger.Log($"Trying to load {Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)}");
+                    try
+                    {
+                        overridesSettings = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)));
+                        overrideLoaded = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log(e.ToString());
+                    }
+                }
+            }
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
@@ -348,21 +370,38 @@ namespace ModTek
                 return;
             }
 
+            if (!overrideLoaded)
+            {
+                if (File.Exists(Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)))
+                {
+                    Logger.Log($"Trying to load {Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)}");
+                    try
+                    {
+                        overridesSettings = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(Path.Combine(ModDirectory, MODTEK_OVERRIDES_JSON_NAME)));
+                        overrideLoaded = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log(e.ToString());
+                    }
+                }
+            }
+
             // create ModDef objects for each mod.json file
             var modDefs = new Dictionary<string, ModDef>();
             foreach (var modDirectory in modDirectories)
             {
                 ModDef modDef;
-                var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
+                var modDefPath = modDirectory;
 
                 try
                 {
-                    modDef = ModDef.CreateFromPath(modDefPath);
+                    modDef = ModDef.CreateFromPath(modDefPath,MOD_JSON_NAME,MOD_SETTINGS_JSON_NAME,overridesSettings);
                 }
                 catch (Exception e)
                 {
                     Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
-                    Log($"\t{e.Message}");
+                    Log($"\t{e.Message}\n\t{e.StackTrace}");
                     continue;
                 }
 
@@ -688,6 +727,7 @@ namespace ModTek
 
         internal static void AddModEntries(VersionManifest manifest)
         {
+
             if (!hasLoadedMods)
                 LoadMods();
 
