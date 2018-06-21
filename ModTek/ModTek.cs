@@ -405,7 +405,7 @@ namespace ModTek
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
-                yield return new ProgressReport((float)(modLoaded++)/ (float)modLoadOrder.Count, string.Format("Loading Mod: {0}", modDef.Name));
+                yield return new ProgressReport((float)(modLoaded)/ (float)modLoadOrder.Count, string.Format("Loading Mod: {0}", modDef.Name));
 
                 try
                 {
@@ -416,6 +416,7 @@ namespace ModTek
                     Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
                     Log($"\t{e.Message}");
                 }
+                modLoaded++;
             }
 
             foreach (var modDef in willNotLoad)
