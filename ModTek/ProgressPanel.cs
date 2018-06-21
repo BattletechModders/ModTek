@@ -28,7 +28,7 @@ namespace ModTek
         private static AssetBundle LoadAssets(string directory, string bundleName)
         {
             string name = Path.Combine(directory, bundleName);
-            Logger.LogWithDate(string.Format("Attempting to load asset bundle: {0}", name));
+            Logger.Log(string.Format("Attempting to load asset bundle: {0}", name));
             return AssetBundle.LoadFromFile(name);
         }
 
@@ -41,13 +41,11 @@ namespace ModTek
 
             void Awake()
             {
-                Logger.LogWithDate("ProgressBarLoadingBehavior: Awake called");
                 this.Slider = this.gameObject.GetComponent<Slider>();
             }
 
             void Start()
             {
-                Logger.LogWithDate("ProgressBarLoadingBehavior: Start called");
                 StartCoroutine(RunWorkFunc());
             }
 
@@ -71,12 +69,11 @@ namespace ModTek
                 Thread.Sleep(2000);
                 try
                 {
-                    Logger.LogWithDate("ProgressBarLoadingBehavior: Finish Action called");
                     FinishAction.Invoke();
                 }
                 catch (Exception e)
                 {
-                    Logger.Log(string.Format("Exception during RunWorkFunc {0}", e));
+                    Logger.Log(string.Format("Exception during ModTek: RunWorkFunc {0}", e));
                 }
 
                 yield break;
@@ -89,7 +86,7 @@ namespace ModTek
             try
             {
                 // Load the additional progress bar bundle located in the mod directory
-                AssetBundle assetBundle = LoadAssets(assetDirectory, "progressbarbundle");
+                AssetBundle assetBundle = LoadAssets(assetDirectory, "ModTekAssetBundle");
                 if (assetBundle == null)
                 {
                     Logger.LogWithDate("Error loading assets");
@@ -117,7 +114,6 @@ namespace ModTek
                 GameObject progressBarSliderGO = GameObject.Find("ProgressBar_Slider");
                 if (progressBarSliderGO != null)
                 {
-                    Logger.LogWithDate("Setting up the progressBarBehavior");
                     ProgressBarLoadingBehavior progressBarLoadingBehavior = progressBarSliderGO.AddComponent<ProgressBarLoadingBehavior>();
                     progressBarLoadingBehavior.LoadingText = progressBarLoadingText;
                     progressBarLoadingBehavior.WorkFunc = workFunc;
