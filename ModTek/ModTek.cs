@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +18,7 @@ using System.Text.RegularExpressions;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace ModTek
-{
+{    
     using static Logger;
 
     public static class ModTek
@@ -122,6 +123,9 @@ namespace ModTek
             dbCache = LoadOrCreateDBCache(DBCachePath);
             jsonMergeCache = LoadOrCreateMergeCache(MergeCachePath);
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
+
+            // First step in setting up the progress panel
+            ProgressPanel.Init(ModDirectory);
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -330,12 +334,24 @@ namespace ModTek
         internal static void LoadMods()
         {
             if (hasLoadedMods)
+            {
                 return;
+            }
+            else
+            {
+                // Set up the scene (with knowledge of knowing whats in it already)
+                ProgressPanel.InitializeProgressPanel(ModTek.ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}", ModTek.LoadMoadsLoop);
+                hasLoadedMods = true;
+            }
+        }
 
+        internal static IEnumerator<ProgressReport> LoadMoadsLoop()
+        { 
             stopwatch.Start();
 
             Log("");
             LogWithDate("Pre-loading mods...");
+            yield return new ProgressReport(0, "Pre-loading mods...");
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
@@ -345,7 +361,7 @@ namespace ModTek
             {
                 hasLoadedMods = true;
                 Log("No ModTek-compatable mods found.");
-                return;
+                yield break;
             }
 
             // create ModDef objects for each mod.json file
@@ -384,10 +400,12 @@ namespace ModTek
             PropagateConflictsForward(modDefs);
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
 
+            int modLoaded = 0;
             // lists guarentee order
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
+                yield return new ProgressReport((float)(modLoaded++)/ (float)modLoadOrder.Count, string.Format("Loading Mod: {0}", modDef.Name));
 
                 try
                 {
@@ -417,6 +435,8 @@ namespace ModTek
             File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
 
             hasLoadedMods = true;
+
+            yield break;
         }
 
         private static string InferIDFromFile(string path)

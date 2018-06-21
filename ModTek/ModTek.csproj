@@ -66,6 +66,9 @@
       <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(BattleTechGame)\BattleTech_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IManifestEntry.cs" />
@@ -75,6 +78,7 @@
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Patches.cs" />
+    <Compile Include="ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
