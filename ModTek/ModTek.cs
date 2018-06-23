@@ -734,14 +734,14 @@ namespace ModTek
 
             if (modEntries != null)
             {
-                string reloadingText = "Reloading Mod Manifests";
+                string reloadingText = "Additional Mod Manifests";
                 yield return new ProgressReport(0.0f, reloadingText, "Loading another manifest with already setup mod manifests..");
 
                 LogWithDate("Loading another manifest with already setup mod manifests.");
                 int count = 0;
                 foreach (var modEntry in modEntries)
                 {
-                    yield return new ProgressReport((float)count++ / (float)modEntries.Count, reloadingText, string.Format("Reloading manifiest {0}", modEntry.Id));
+                    yield return new ProgressReport((float)count++ / (float)modEntries.Count, reloadingText, string.Format("Loading additional manifiest {0}", modEntry.Id));
                     AddModEntry(manifest, modEntry);
                 }
 
