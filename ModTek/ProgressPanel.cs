@@ -43,11 +43,6 @@ namespace ModTek
                 this.Slider = this.gameObject.GetComponent<Slider>();
             }
 
-            void OnGui()
-            {
-                GUI.depth = 1;
-            }
-
             void Start()
             {
                 StartCoroutine(RunWorkList());
