@@ -125,7 +125,7 @@ namespace ModTek
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
             // First step in setting up the progress panel
-            ProgressPanel.Init(ModDirectory);
+            ProgressPanel.Init(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}");
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -333,25 +333,24 @@ namespace ModTek
 
         internal static void LoadMods()
         {
-            if (hasLoadedMods)
-            {
-                return;
-            }
-            else
-            {
-                // Set up the scene (with knowledge of knowing whats in it already)
-                ProgressPanel.InitializeProgressPanel(ModTek.ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}", ModTek.LoadMoadsLoop);
-                hasLoadedMods = true;
-            }
+            ProgressPanel.SubmitWork(ModTek.LoadMoadsLoop);
         }
 
         internal static IEnumerator<ProgressReport> LoadMoadsLoop()
-        { 
+        {
+            // Only want to run this function once -- it could get submitted a few times
+            if (hasLoadedMods)
+            {
+                yield break;
+            }
+
             stopwatch.Start();
+
+            string sliderText = "Loading Mods";
 
             Log("");
             LogWithDate("Pre-loading mods...");
-            yield return new ProgressReport(0, "Pre-loading mods...");
+            yield return new ProgressReport(0, sliderText, "Pre-loading mods...");
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
@@ -405,7 +404,7 @@ namespace ModTek
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
-                yield return new ProgressReport((float)(modLoaded)/ (float)modLoadOrder.Count, string.Format("Loading Mod: {0}", modDef.Name));
+                yield return new ProgressReport((float)modLoaded++/(float)modLoadOrder.Count, sliderText, string.Format("Loading Mod: {0}", modDef.Name));
 
                 try
                 {
@@ -416,7 +415,6 @@ namespace ModTek
                     Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
                     Log($"\t{e.Message}");
                 }
-                modLoaded++;
             }
 
             foreach (var modDef in willNotLoad)
@@ -709,39 +707,65 @@ namespace ModTek
 
         internal static void AddModEntries(VersionManifest manifest)
         {
-            if (!hasLoadedMods)
+            if (!hasLoadedMods) 
                 LoadMods();
+            
+            // Wrapper to be able to submit a parameterless work function
+            IEnumerator<ProgressReport> NestedFunc()
+            {
+                IEnumerator<ProgressReport> reports = AddModEntriesLoop(manifest);
+                while (reports.MoveNext())
+                {
+                    yield return reports.Current;
+                }
+            }
+
+            ProgressPanel.SubmitWork(NestedFunc);
+        }
+
+
+        internal static IEnumerator<ProgressReport> AddModEntriesLoop(VersionManifest manifest) { 
 
             stopwatch.Start();
 
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
-                return;
+                yield break;
 
             if (modEntries != null)
             {
+                string reloadingText = "Reloading Mod Manifests";
+                yield return new ProgressReport(0.0f, reloadingText, "Loading another manifest with already setup mod manifests..");
+
                 LogWithDate("Loading another manifest with already setup mod manifests.");
+                int count = 0;
                 foreach (var modEntry in modEntries)
                 {
+                    yield return new ProgressReport((float)count++ / (float)modEntries.Count, reloadingText, string.Format("Reloading manifiest {0}", modEntry.Id));
                     AddModEntry(manifest, modEntry);
                 }
 
                 stopwatch.Stop();
                 Log("");
                 LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-                return;
+                yield break;
             }
+
+            string loadingModText = "Loading Mod Manifests";
+            yield return new ProgressReport(0.0f, loadingModText, "Setting up mod manifests...");
 
             LogWithDate("Setting up mod manifests...");
 
             var jsonMerges = new Dictionary<string, List<string>>();
             modEntries = new List<ModDef.ManifestEntry>();
+            int modCount = 0;
             foreach (var modName in modLoadOrder)
             {
                 if (!modManifest.ContainsKey(modName))
                     continue;
 
                 Log($"\t{modName}:");
+                yield return new ProgressReport((float)modCount++/(float)modLoadOrder.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
                 foreach (var modEntry in modManifest[modName])
                 {
                     // type being null means we have to figure out the type from the path (StreamingAssets)
@@ -855,13 +879,19 @@ namespace ModTek
                 }
             }
 
+
+            yield return new ProgressReport(100.0f, "JSON", "Writing JSON file to disk");
+
             // write type cache to disk
             WriteJsonFile(TypeCachePath, typeCache);
 
             // perform merges into cache
             LogWithDate("Doing merges...");
+            yield return new ProgressReport(0.0f, "Merges", "Doing Merges...");
+            int mergeCount = 0;
             foreach (var jsonMerge in jsonMerges)
             {
+                yield return new ProgressReport((float)mergeCount++/jsonMerges.Count, "Merges", string.Format("Merging {0}", jsonMerge.Key));
                 var cachePath = jsonMergeCache.GetOrCreateCachedEntry(jsonMerge.Key, jsonMerge.Value);
 
                 // something went wrong (the parent json prob had errors)
@@ -878,6 +908,8 @@ namespace ModTek
                     modEntries.Add(cacheEntry);
             }
 
+            yield return new ProgressReport(100.0f, "Merge Cache", "Writing Merge Cache to disk");
+
             // write merge cache to disk
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
@@ -887,12 +919,18 @@ namespace ModTek
             var rebuildDB = false;
             var replacementEntries = new List<VersionManifestEntry>();
             var removeEntries = new List<string>();
+
+            string dbText = "Syncing Database";
+            yield return new ProgressReport(0.0f, dbText, "");
+            int dbCount = 0;
             foreach (var kvp in dbCache)
             {
                 var path = kvp.Key;
 
                 if (File.Exists(path))
                     continue;
+
+                yield return new ProgressReport((float)dbCount++ / (float)dbCache.Count, dbText, string.Format("Checking {0}", path));
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
 
@@ -912,6 +950,8 @@ namespace ModTek
             }
 
             // add removed entries replacements to db
+            dbText = "Cleaning Database";
+            yield return new ProgressReport(100.0f, dbText, "");
             if (!rebuildDB)
             {
                 // remove old entries
@@ -939,10 +979,14 @@ namespace ModTek
             }
 
             // add needed files to db
+            dbText = "Populating Database";
+            int addCount = 0;
+            yield return new ProgressReport(0.0f, dbText, "");
             using (var metadataDatabase = new MetadataDatabase())
             {
                 foreach (var modEntry in modEntries)
                 {
+                    yield return new ProgressReport((float)addCount++/(float)modEntries.Count, dbText, string.Format("Adding {0}", modEntry.Path));
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                 }
@@ -954,6 +998,8 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+
+            yield break;
         }
     }
 }

@@ -14,59 +14,72 @@ namespace ModTek
     class ProgressReport
     {
         public float Progress { get; set; }
+        public string SliderText { get; set; }
         public string LoadingText { get; set; }
 
-        public ProgressReport(float progress, string loadingText)
+        public ProgressReport(float progress, string sliderText, string loadingText)
         {
             this.Progress = progress;
+            this.SliderText = sliderText;
             this.LoadingText = loadingText;
         }
     }
 
     class ProgressPanel : MonoBehaviour
     {
-        private static AssetBundle LoadAssets(string directory, string bundleName)
-        {
-            string name = Path.Combine(directory, bundleName);
-            Logger.Log(string.Format("Attempting to load asset bundle: {0}", name));
-            return AssetBundle.LoadFromFile(name);
-        }
+        public const string ASSET_BUNDLE_NAME = "modtekassetbundle";
 
         public class ProgressBarLoadingBehavior : MonoBehaviour
         {
+            public Text SliderText { get; set; }
             public Text LoadingText{ get; set; }
             public Slider Slider { get; set; }
-            public Func<IEnumerator<ProgressReport>> WorkFunc { get; set; }
             public Action FinishAction { get; set; }
+
+            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
 
             void Awake()
             {
                 this.Slider = this.gameObject.GetComponent<Slider>();
             }
 
-            void Start()
+            void OnGui()
             {
-                StartCoroutine(RunWorkFunc());
+                GUI.depth = 1;
             }
 
-            IEnumerator RunWorkFunc()
+            void Start()
             {
-                IEnumerator<ProgressReport> reports = WorkFunc.Invoke();
-                while(reports.MoveNext())
-                {
-                    ProgressReport report = reports.Current;
-                    this.Slider.value = report.Progress;
-                    this.LoadingText.text = report.LoadingText;
+                StartCoroutine(RunWorkList());
+            }
+
+            public void SubmitWork(Func<IEnumerator<ProgressReport>> work)
+            {
+                this.WorkList.AddLast(work);
+            }
+
+            IEnumerator RunWorkList()
+            {
+                foreach (var workFunc in WorkList) {
+                    IEnumerator<ProgressReport> workEnumerator = workFunc.Invoke();
+                    while (workEnumerator.MoveNext())
+                    {
+                        ProgressReport report = workEnumerator.Current;
+                        this.Slider.value = report.Progress;
+                        this.SliderText.text = report.SliderText;
+                        this.LoadingText.text = report.LoadingText;
+                        yield return null;
+                    }
                     yield return null;
-                   
                 }
 
                 this.Slider.value = 1.0f;
-                this.LoadingText.text = "Finished";
+                this.SliderText.text = "Done";
+                this.LoadingText.text = "";
                 yield return null;
 
                 // Let Finished stay on the screen for a moment
-                Thread.Sleep(2000);
+                Thread.Sleep(1000);
                 try
                 {
                     FinishAction.Invoke();
@@ -80,26 +93,54 @@ namespace ModTek
             }
         }
 
+        
+        private static AssetBundle ProgressBarAssetBundle = null;
 
-        public static void InitializeProgressPanel(string assetDirectory, string panelTitle, Func<IEnumerator<ProgressReport>> workFunc)
+        private static void InitializeAssets(string assetDirectory)
         {
-            try
+            if (ProgressBarAssetBundle == null)
             {
                 // Load the additional progress bar bundle located in the mod directory
-                AssetBundle assetBundle = LoadAssets(assetDirectory, "ModTekAssetBundle");
-                if (assetBundle == null)
+                ProgressBarAssetBundle = LoadAssets(assetDirectory, ASSET_BUNDLE_NAME);
+                if (ProgressBarAssetBundle == null)
                 {
                     Logger.LogWithDate("Error loading assets");
+                }
+            }
+        }
+
+        private static AssetBundle LoadAssets(string directory, string bundleName)
+        {
+            string name = Path.Combine(directory, bundleName);
+            Logger.Log(string.Format("Attempting to load asset bundle: {0}", name));
+            return AssetBundle.LoadFromFile(name);
+        }
+
+
+        public static void ShowPanel(string panelTitle)
+        {
+            try
+            {   if (ProgressBarAssetBundle == null)
+                {
+                    Logger.LogWithDate("Assets not loaded. Cannot display panel!");
                     return;
                 }
 
-                var canvasPrefab = assetBundle.LoadAsset<GameObject>("ProgressBar_Canvas");
+                var canvasPrefab = ProgressBarAssetBundle.LoadAsset<GameObject>("ProgressBar_Canvas");
                 GameObject canvasGO = Instantiate(canvasPrefab);
 
                 GameObject panelTitleGO = GameObject.Find("ProgressBar_Title");
                 if (panelTitleGO != null)
                 {
                     panelTitleGO.GetComponent<Text>().text = panelTitle;
+                }
+
+                GameObject progressBarSliderTextGO = GameObject.Find("ProgressBar_Slider_Text");
+                Text progressBarSliderText = progressBarSliderTextGO != null ? progressBarSliderTextGO.GetComponent<Text>() : null;
+                if (progressBarSliderText == null)
+                {
+                    Logger.LogWithDate("Error loading ProgressBar_Slider_Text");
+                    return;
                 }
 
                 GameObject progressBarLoadingTextGO = GameObject.Find("ProgressBar_Loading_Text");
@@ -115,11 +156,11 @@ namespace ModTek
                 if (progressBarSliderGO != null)
                 {
                     ProgressBarLoadingBehavior progressBarLoadingBehavior = progressBarSliderGO.AddComponent<ProgressBarLoadingBehavior>();
+                    progressBarLoadingBehavior.SliderText = progressBarSliderText;
                     progressBarLoadingBehavior.LoadingText = progressBarLoadingText;
-                    progressBarLoadingBehavior.WorkFunc = workFunc;
                     progressBarLoadingBehavior.FinishAction = (() =>
                     {
-                        assetBundle.Unload(true);
+                        ProgressBarAssetBundle.Unload(true);
                         Destroy(canvasGO);
                         EnableMainManuLoading();
                     });
@@ -144,12 +185,29 @@ namespace ModTek
             Traverse.Create(activateAfterInit).Method("ActivateAndClose").GetValue();                
         }
 
-        public static void Init(string directory)
+        public static void SubmitWork(Func<IEnumerator<ProgressReport>> workFunc)
+        {
+            // Hook up the progress behavior to ProgressBar_Slider;
+            GameObject progressBarSliderGO = GameObject.Find("ProgressBar_Slider");
+            if (progressBarSliderGO != null)
+            {
+                ProgressBarLoadingBehavior progressBarLoadingBehavior = progressBarSliderGO.GetComponent<ProgressBarLoadingBehavior>();
+                progressBarLoadingBehavior.SubmitWork(workFunc);
+            }
+        }
+
+        public static void Init(string directory, string panelTitle)
         {
             try
             {
                 // Stop BTech from going to the main menu right away
                 DisableMainMenuLoading();
+
+                // Load the panel assets
+                InitializeAssets(directory);
+
+                // Instiates the panel assets and displays them on screen
+                ShowPanel(panelTitle);
             }
             catch (Exception e)
             {
