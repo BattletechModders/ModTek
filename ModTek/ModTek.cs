@@ -738,7 +738,6 @@ namespace ModTek
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 yield break;
 
-
             string loadingModText = "Loading Mod Manifests";
             yield return new ProgressReport(0.0f, loadingModText, "Setting up mod manifests...");
 
@@ -747,13 +746,12 @@ namespace ModTek
             var jsonMerges = new Dictionary<string, List<string>>();
             modEntries = new List<ModDef.ManifestEntry>();
             int modCount = 0;
-            foreach (var modName in modLoadOrder)
-            {
-                if (!modManifest.ContainsKey(modName))
-                    continue;
 
+            var manifestMods = modLoadOrder.Where(name => modManifest.ContainsKey(name)).ToList();
+            foreach (var modName in manifestMods)
+            {
                 Log($"\t{modName}:");
-                yield return new ProgressReport((float)modCount++/(float)modLoadOrder.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
+                yield return new ProgressReport((float)modCount++/(float)manifestMods.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
                 foreach (var modEntry in modManifest[modName])
                 {
                     // type being null means we have to figure out the type from the path (StreamingAssets)
@@ -867,7 +865,6 @@ namespace ModTek
                 }
             }
 
-
             yield return new ProgressReport(100.0f, "JSON", "Writing JSON file to disk");
 
             // write type cache to disk
@@ -910,15 +907,12 @@ namespace ModTek
 
             string dbText = "Syncing Database";
             yield return new ProgressReport(0.0f, dbText, "");
-            int dbCount = 0;
             foreach (var kvp in dbCache)
             {
                 var path = kvp.Key;
 
                 if (File.Exists(path))
                     continue;
-
-                yield return new ProgressReport((float)dbCount++ / (float)dbCache.Count, dbText, string.Format("Checking {0}", path));
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
 
@@ -974,9 +968,12 @@ namespace ModTek
             {
                 foreach (var modEntry in modEntries)
                 {
-                    yield return new ProgressReport((float)addCount++/(float)modEntries.Count, dbText, string.Format("Adding {0}", modEntry.Path));
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
+                    {
+                        yield return new ProgressReport((float)addCount / (float)modEntries.Count, dbText, string.Format("Added {0}", modEntry.Path));
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    }
+                    addCount++;
                 }
             }
 
