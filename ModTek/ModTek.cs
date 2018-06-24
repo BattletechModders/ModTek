@@ -23,6 +23,8 @@ namespace ModTek
 
     public static class ModTek
     {
+        public static VersionManifest cachedManifest = null;
+
         private static bool hasLoadedMods; //defaults to false
 
         // file/directory names
@@ -125,11 +127,15 @@ namespace ModTek
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
             // First step in setting up the progress panel
-            ProgressPanel.Init(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}");
+            ProgressPanel.Initialize(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}");
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            LoadMods();
+
+            BuildCachedManifest();
 
             stopwatch.Stop();
         }
@@ -705,15 +711,15 @@ namespace ModTek
             return false;
         }
 
-        internal static void AddModEntries(VersionManifest manifest)
+        internal static void BuildCachedManifest()
         {
-            if (!hasLoadedMods) 
-                LoadMods();
-            
+            // First load the default battletech manifest, then it'll get appended to
+            VersionManifest vanillaManifest = VersionManifestUtilities.LoadDefaultManifest();
+
             // Wrapper to be able to submit a parameterless work function
             IEnumerator<ProgressReport> NestedFunc()
             {
-                IEnumerator<ProgressReport> reports = AddModEntriesLoop(manifest);
+                IEnumerator<ProgressReport> reports = BuildCachedManifestLoop(vanillaManifest);
                 while (reports.MoveNext())
                 {
                     yield return reports.Current;
@@ -724,7 +730,7 @@ namespace ModTek
         }
 
 
-        internal static IEnumerator<ProgressReport> AddModEntriesLoop(VersionManifest manifest) { 
+        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) { 
 
             stopwatch.Start();
 
@@ -732,24 +738,6 @@ namespace ModTek
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 yield break;
 
-            if (modEntries != null)
-            {
-                string reloadingText = "Additional Mod Manifests";
-                yield return new ProgressReport(0.0f, reloadingText, "Loading another manifest with already setup mod manifests..");
-
-                LogWithDate("Loading another manifest with already setup mod manifests.");
-                int count = 0;
-                foreach (var modEntry in modEntries)
-                {
-                    yield return new ProgressReport((float)count++ / (float)modEntries.Count, reloadingText, string.Format("Loading additional manifiest {0}", modEntry.Id));
-                    AddModEntry(manifest, modEntry);
-                }
-
-                stopwatch.Stop();
-                Log("");
-                LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-                yield break;
-            }
 
             string loadingModText = "Loading Mod Manifests";
             yield return new ProgressReport(0.0f, loadingModText, "Setting up mod manifests...");
@@ -999,6 +987,9 @@ namespace ModTek
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
 
+            // Cache the completed manifest
+            ModTek.cachedManifest = manifest;
+            
             yield break;
         }
     }

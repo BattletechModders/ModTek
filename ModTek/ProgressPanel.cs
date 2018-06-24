@@ -157,7 +157,7 @@ namespace ModTek
                     {
                         ProgressBarAssetBundle.Unload(true);
                         Destroy(canvasGO);
-                        EnableMainManuLoading();
+                        TriggerGameLoading();
                     });
                 }
             }
@@ -167,17 +167,12 @@ namespace ModTek
             }
         }
 
-        private static void DisableMainMenuLoading()
-        {
-            var activateAfterInit = LazySingletonBehavior<UnityGameInstance>.Instance.gameObject.GetComponent<ActivateAfterInit>();
-            activateAfterInit.enabled = false;
-        }
 
         // Reactivate the main menu loading by calling the attached ActivateAndClose behavior on the UnityGameInstance (initializes a handful of different things);
-        private static void EnableMainManuLoading()
+        private static void TriggerGameLoading()
         {
-            var activateAfterInit = LazySingletonBehavior<UnityGameInstance>.Instance.gameObject.GetComponent<ActivateAfterInit>();
-            Traverse.Create(activateAfterInit).Method("ActivateAndClose").GetValue();                
+            var activateAfterInit = GameObject.Find("Main").GetComponent<ActivateAfterInit>();
+            Traverse.Create(activateAfterInit).Method("ActivateAndClose").GetValue();
         }
 
         public static void SubmitWork(Func<IEnumerator<ProgressReport>> workFunc)
@@ -189,19 +184,25 @@ namespace ModTek
                 ProgressBarLoadingBehavior progressBarLoadingBehavior = progressBarSliderGO.GetComponent<ProgressBarLoadingBehavior>();
                 progressBarLoadingBehavior.SubmitWork(workFunc);
             }
+            else
+            {
+                Logger.Log("ProgressPanel not found: Performing work on current thread");
+                IEnumerator<ProgressReport> workEnumerator = workFunc.Invoke();
+                while (workEnumerator.MoveNext())
+                {
+                    // do nothing -- drain the enumeration -- complete the work on this thread immediately
+                }
+            }
         }
 
-        public static void Init(string directory, string panelTitle)
+        public static void Initialize(string directory, string panelTitle)
         {
             try
             {
-                // Stop BTech from going to the main menu right away
-                DisableMainMenuLoading();
-
                 // Load the panel assets
                 InitializeAssets(directory);
 
-                // Instiates the panel assets and displays them on screen
+                // Instantiates the panel assets and displays them on screen
                 ShowPanel(panelTitle);
             }
             catch (Exception e)
