@@ -854,6 +854,12 @@ namespace ModTek
                         // this assumes that .json can only have a single type
                         modEntry.Type = matchingEntry.Type;
 
+                        if (!typeCache.ContainsKey(matchingEntry.FilePath))
+                        {
+                            typeCache[matchingEntry.FilePath] = new List<string>();
+                            typeCache[matchingEntry.FilePath].Add(modEntry.Type);
+                        }
+
                         Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
 
                         jsonMerges[matchingEntry.FilePath].Add(modEntry.Path);
