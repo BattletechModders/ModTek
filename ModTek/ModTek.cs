@@ -127,15 +127,20 @@ namespace ModTek
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
             // First step in setting up the progress panel
-            ProgressPanel.Initialize(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}");
+            if (ProgressPanel.Initialize(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            {
+                // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
+                var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+                LoadMods();
 
-            LoadMods();
-
-            BuildCachedManifest();
+                BuildCachedManifest();
+            }
+            else
+            {
+                Log("Failed to load progress bar.  Skipping mod loading completely.");
+            }
 
             stopwatch.Stop();
         }

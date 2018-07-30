@@ -99,7 +99,9 @@ namespace ModTek
                 ProgressBarAssetBundle = LoadAssets(assetDirectory, ASSET_BUNDLE_NAME);
                 if (ProgressBarAssetBundle == null)
                 {
-                    Logger.LogWithDate("Error loading assets");
+                    string message = string.Format("Error loading asset bundle {0}", ASSET_BUNDLE_NAME);
+                    Logger.LogWithDate(message);
+                    throw new IOException(message);
                 }
             }
         }
@@ -195,7 +197,7 @@ namespace ModTek
             }
         }
 
-        public static void Initialize(string directory, string panelTitle)
+        public static bool Initialize(string directory, string panelTitle)
         {
             try
             {
@@ -204,10 +206,13 @@ namespace ModTek
 
                 // Instantiates the panel assets and displays them on screen
                 ShowPanel(panelTitle);
+
+                return true;
             }
             catch (Exception e)
             {
                 Logger.Log(string.Format("Exception caught: {0}", e));
+                return false;
             }
         }
     }
