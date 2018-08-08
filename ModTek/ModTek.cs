@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,11 +18,13 @@ using System.Text.RegularExpressions;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace ModTek
-{
+{    
     using static Logger;
 
     public static class ModTek
     {
+        public static VersionManifest cachedManifest = null;
+
         private static bool hasLoadedMods; //defaults to false
 
         // file/directory names
@@ -123,9 +126,21 @@ namespace ModTek
             jsonMergeCache = LoadOrCreateMergeCache(MergeCachePath);
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
-            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            // First step in setting up the progress panel
+            if (ProgressPanel.Initialize(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            {
+                // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
+                var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+                LoadMods();
+
+                BuildCachedManifest();
+            }
+            else
+            {
+                Log("Failed to load progress bar.  Skipping mod loading completely.");
+            }
 
             stopwatch.Stop();
         }
@@ -329,13 +344,24 @@ namespace ModTek
 
         internal static void LoadMods()
         {
+            ProgressPanel.SubmitWork(ModTek.LoadMoadsLoop);
+        }
+
+        internal static IEnumerator<ProgressReport> LoadMoadsLoop()
+        {
+            // Only want to run this function once -- it could get submitted a few times
             if (hasLoadedMods)
-                return;
+            {
+                yield break;
+            }
 
             stopwatch.Start();
 
+            string sliderText = "Loading Mods";
+
             Log("");
             LogWithDate("Pre-loading mods...");
+            yield return new ProgressReport(0, sliderText, "Pre-loading mods...");
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModDirectory)
@@ -345,7 +371,7 @@ namespace ModTek
             {
                 hasLoadedMods = true;
                 Log("No ModTek-compatable mods found.");
-                return;
+                yield break;
             }
 
             // create ModDef objects for each mod.json file
@@ -384,10 +410,12 @@ namespace ModTek
             PropagateConflictsForward(modDefs);
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
 
+            int modLoaded = 0;
             // lists guarentee order
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
+                yield return new ProgressReport((float)modLoaded++/(float)modLoadOrder.Count, sliderText, string.Format("Loading Mod: {0}", modDef.Name));
 
                 try
                 {
@@ -417,6 +445,8 @@ namespace ModTek
             File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
 
             hasLoadedMods = true;
+
+            yield break;
         }
 
         private static string InferIDFromFile(string path)
@@ -686,41 +716,47 @@ namespace ModTek
             return false;
         }
 
-        internal static void AddModEntries(VersionManifest manifest)
+        internal static void BuildCachedManifest()
         {
-            if (!hasLoadedMods)
-                LoadMods();
+            // First load the default battletech manifest, then it'll get appended to
+            VersionManifest vanillaManifest = VersionManifestUtilities.LoadDefaultManifest();
+
+            // Wrapper to be able to submit a parameterless work function
+            IEnumerator<ProgressReport> NestedFunc()
+            {
+                IEnumerator<ProgressReport> reports = BuildCachedManifestLoop(vanillaManifest);
+                while (reports.MoveNext())
+                {
+                    yield return reports.Current;
+                }
+            }
+
+            ProgressPanel.SubmitWork(NestedFunc);
+        }
+
+
+        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) { 
 
             stopwatch.Start();
 
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
-                return;
+                yield break;
 
-            if (modEntries != null)
-            {
-                LogWithDate("Loading another manifest with already setup mod manifests.");
-                foreach (var modEntry in modEntries)
-                {
-                    AddModEntry(manifest, modEntry);
-                }
-
-                stopwatch.Stop();
-                Log("");
-                LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-                return;
-            }
+            string loadingModText = "Loading Mod Manifests";
+            yield return new ProgressReport(0.0f, loadingModText, "Setting up mod manifests...");
 
             LogWithDate("Setting up mod manifests...");
 
             var jsonMerges = new Dictionary<string, List<string>>();
             modEntries = new List<ModDef.ManifestEntry>();
-            foreach (var modName in modLoadOrder)
-            {
-                if (!modManifest.ContainsKey(modName))
-                    continue;
+            int modCount = 0;
 
+            var manifestMods = modLoadOrder.Where(name => modManifest.ContainsKey(name)).ToList();
+            foreach (var modName in manifestMods)
+            {
                 Log($"\t{modName}:");
+                yield return new ProgressReport((float)modCount++/(float)manifestMods.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
                 foreach (var modEntry in modManifest[modName])
                 {
                     // type being null means we have to figure out the type from the path (StreamingAssets)
@@ -840,13 +876,18 @@ namespace ModTek
                 }
             }
 
+            yield return new ProgressReport(100.0f, "JSON", "Writing JSON file to disk");
+
             // write type cache to disk
             WriteJsonFile(TypeCachePath, typeCache);
 
             // perform merges into cache
             LogWithDate("Doing merges...");
+            yield return new ProgressReport(0.0f, "Merges", "Doing Merges...");
+            int mergeCount = 0;
             foreach (var jsonMerge in jsonMerges)
             {
+                yield return new ProgressReport((float)mergeCount++/jsonMerges.Count, "Merges", string.Format("Merging {0}", jsonMerge.Key));
                 var cachePath = jsonMergeCache.GetOrCreateCachedEntry(jsonMerge.Key, jsonMerge.Value);
 
                 // something went wrong (the parent json prob had errors)
@@ -863,6 +904,8 @@ namespace ModTek
                     modEntries.Add(cacheEntry);
             }
 
+            yield return new ProgressReport(100.0f, "Merge Cache", "Writing Merge Cache to disk");
+
             // write merge cache to disk
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
@@ -872,6 +915,9 @@ namespace ModTek
             var rebuildDB = false;
             var replacementEntries = new List<VersionManifestEntry>();
             var removeEntries = new List<string>();
+
+            string dbText = "Syncing Database";
+            yield return new ProgressReport(0.0f, dbText, "");
             foreach (var kvp in dbCache)
             {
                 var path = kvp.Key;
@@ -897,6 +943,8 @@ namespace ModTek
             }
 
             // add removed entries replacements to db
+            dbText = "Cleaning Database";
+            yield return new ProgressReport(100.0f, dbText, "");
             if (!rebuildDB)
             {
                 // remove old entries
@@ -924,12 +972,19 @@ namespace ModTek
             }
 
             // add needed files to db
+            dbText = "Populating Database";
+            int addCount = 0;
+            yield return new ProgressReport(0.0f, dbText, "");
             using (var metadataDatabase = new MetadataDatabase())
             {
                 foreach (var modEntry in modEntries)
                 {
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
+                    {
+                        yield return new ProgressReport((float)addCount / (float)modEntries.Count, dbText, string.Format("Added {0}", modEntry.Path));
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    }
+                    addCount++;
                 }
             }
 
@@ -939,6 +994,11 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+
+            // Cache the completed manifest
+            ModTek.cachedManifest = manifest;
+            
+            yield break;
         }
     }
 }

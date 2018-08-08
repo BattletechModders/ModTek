@@ -138,18 +138,44 @@ namespace ModTek
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        public static void Postfix(VersionManifest __result)
+        public static bool Prefix(ref VersionManifest __result)
         {
-            ModTek.AddModEntries(__result);
+            // Return the cached manifest if it exists -- otherwise call the method as normal
+            if (ModTek.cachedManifest != null)
+            {
+                __result = ModTek.cachedManifest;
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 
-    [HarmonyPatch(typeof(DataManager), new[] { typeof(MessageCenter) })]
-    public static class DataManager_CTOR_Patch
+    // This will disable activateAfterInit from functioning for the Start() on the "Main" game object which activates the BattleTechGame object
+    // This stops the main game object from loading immediately -- so work can be done beforehand
+    [HarmonyPatch(typeof(ActivateAfterInit), "Start")]
+    public static class ActivateAfterInit_Start_Patch
     {
-        public static void Prefix()
+        public static bool Prefix(ActivateAfterInit __instance)
         {
-            ModTek.LoadMods();
+            Traverse trav = Traverse.Create(__instance);
+            if (ActivateAfterInit.ActivateAfter.Start.Equals(trav.Field("activateAfter").GetValue<ActivateAfterInit.ActivateAfter>()))
+            {
+                GameObject[] gameObjects = trav.Field("activationSet").GetValue<GameObject[]>();
+                foreach (var gameObject in gameObjects)
+                {
+                    if ("BattleTechGame".Equals(gameObject.name))
+                    {
+                        // Don't activate through this call!
+                        return false;
+                    }
+                }
+            }
+            // Call the method
+            return true;
         }
     }
 }
+
