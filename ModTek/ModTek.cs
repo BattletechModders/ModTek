@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +17,7 @@ using System.Text.RegularExpressions;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace ModTek
-{    
+{
     using static Logger;
 
     public static class ModTek
