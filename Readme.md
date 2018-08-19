@@ -1,12 +1,12 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/janxious/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
 ## Installing
 
 [A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/Mpstark/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
 
-ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
+ModTek requires [BTML](https://github.com/janxious/BattleTechModLoader).
 
 If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving `ModTek.dll` into the `BATTLETECH\Mods\` folder. BTML will now load ModTek.
 
