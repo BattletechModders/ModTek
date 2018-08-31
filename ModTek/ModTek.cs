@@ -238,13 +238,12 @@ namespace ModTek
             return loadOrder;
         }
 
-
         // LOADING MODS
         private static void LoadMod(ModDef modDef)
         {
             var potentialAdditions = new List<ModDef.ManifestEntry>();
 
-            Log($"Loading {modDef.Name}");
+            Log($"Loading {modDef.Name} {modDef.Version}");
 
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
@@ -263,7 +262,7 @@ namespace ModTek
                     }
 
                     entry.Id = Path.GetFileNameWithoutExtension(entry.Path);
-                    potentialAdditions.Add(entry);
+                    if (!FileIsOnDenyList(entry.Path)) potentialAdditions.Add(entry);
                     continue;
                 }
 
@@ -277,14 +276,14 @@ namespace ModTek
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
-                    var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories);
+                    var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
                     foreach (var filePath in files)
                     {
                         var childModDef = new ModDef.ManifestEntry(entry, filePath, InferIDFromFile(filePath));
                         potentialAdditions.Add(childModDef);
                     }
                 }
-                else if (File.Exists(entryPath))
+                else if (File.Exists(entryPath) && !FileIsOnDenyList(entryPath))
                 {
                     // path is a file, add the single entry
                     entry.Id = entry.Id ?? InferIDFromFile(entryPath);
@@ -414,8 +413,11 @@ namespace ModTek
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
-                yield return new ProgressReport((float)modLoaded++/(float)modLoadOrder.Count, sliderText, string.Format("Loading Mod: {0}", modDef.Name));
-
+                yield return new ProgressReport(
+                    (float)modLoaded++/(float)modLoadOrder.Count,
+                    sliderText,
+                    string.Format("Loading Mod: {0} {1}", modDef.Name, modDef.Version)
+                );
                 try
                 {
                     LoadMod(modDef);
@@ -503,6 +505,13 @@ namespace ModTek
             }
         }
 
+        // this is a very rudimentary version of an .ignore list for filetypes
+        // I have added it to remove my most common problems. PRs welcome.
+        private static readonly string[] ignoreList = { ".DS_STORE", "~", ".nomedia" };
+        private static bool FileIsOnDenyList(string filePath)
+        {
+            return ignoreList.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
+        }
 
         // JSON HANDLING
         /// <summary>

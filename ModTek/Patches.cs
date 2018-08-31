@@ -51,7 +51,7 @@ namespace ModTek
     }
 
     [HarmonyPatch(typeof(MetadataDatabase))]
-    [HarmonyPatch("MDD_DB_PATH", PropertyMethod.Getter)]
+    [HarmonyPatch("MDD_DB_PATH", MethodType.Getter)]
     public static class MetadataDatabase_MDD_DB_PATH_Patch
     {
         public static void Postfix(ref string __result)
