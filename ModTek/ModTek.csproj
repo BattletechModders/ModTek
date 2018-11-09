@@ -4,6 +4,7 @@
   <PropertyGroup>
     <NoStdLib>True</NoStdLib>
     <LangVersion>7.2</LangVersion>
+    <ReleaseVersion>0.4</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
