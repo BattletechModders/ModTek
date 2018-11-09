@@ -98,12 +98,12 @@ For JSON files of specific types, if a file is loaded that has the same ID as a 
 
 This change would make the AC/5 do 450 damage and all other settings on the stock AC/5 will be unchanged.
 
-Note: Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should ***absolutely not*** copy the entire file from the stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+Note: Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should probably ***not*** copy the entire file from the stock folder into your mod and make a few changes. Only include the values which you actually want to change.
 
 
 ## Building It
-In the project folder there is an example project user file (e.g. `ModTek.csproj.user.example`). You can copy that file and rename it without the `.example` ending and then update it to point to your BTG Managed DLL folder.
+In the project folder there is an example project user file (e.g. `ModTek.csproj.user.example`). You can make a copy of that file and rename it without the `.example` ending and then update it to point to your BTG Managed DLL folder.
 
 ## License
 
-ModTek, like BTML before it, is provided under the "Unlicence", which releases the work into the public domain.
+ModTek is provided under the [Unlicense](UNLICENSE), which releases the work into the public domain.
