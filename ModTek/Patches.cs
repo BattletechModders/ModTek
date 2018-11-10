@@ -90,7 +90,7 @@ namespace ModTek
     [HarmonyPatch(typeof(AVPVideoPlayer), "PlayVideo")]
     public static class AVPVideoPlayer_PlayVideo_Patch
     {
-        public static bool Prefix(AVPVideoPlayer __instance, string video, AVPVideoPlayer.Language language, Action<string> onComplete = null)
+        public static bool Prefix(AVPVideoPlayer __instance, string video, Language language, Action<string> onComplete = null)
         {
             if (!ModTek.ModVideos.ContainsKey(video))
                 return true;
