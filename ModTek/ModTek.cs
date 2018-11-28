@@ -24,6 +24,9 @@ namespace ModTek
     {
         public static VersionManifest cachedManifest = null;
 
+        // Lookup for all manifest entries that modtek adds
+        public static Dictionary<string, VersionManifestEntry> modtekOverrides = null;
+
         private static bool hasLoadedMods; //defaults to false
 
         // file/directory names
@@ -1005,7 +1008,24 @@ namespace ModTek
 
             // Cache the completed manifest
             ModTek.cachedManifest = manifest;
-            
+
+            try
+            {
+                if (manifest != null && ModTek.modEntries != null)
+                {
+                    ModTek.modtekOverrides = manifest.Entries.Where(e => ModTek.modEntries.Any(m => e.Id == m.Id))
+                        // ToDictionary expects distinct keys, so take the last entry of each Id
+                        .GroupBy(ks => ks.Id)
+                        .Select(v => v.Last())
+                        .ToDictionary(ks => ks.Id);
+                }
+                Logger.Log("Built {0} modtek overrides", ModTek.modtekOverrides.Count());
+            }
+            catch (Exception e)
+            {
+                Logger.Log("Failed to build overrides {0}", e);
+            }
+
             yield break;
         }
     }
