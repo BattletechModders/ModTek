@@ -153,6 +153,21 @@ namespace ModTek
         }
     }
 
+    // Flashpoint (and presumably all future DLC) modify the manifest later
+    // Rather than trying to maintain a valid manifest, it's easier to just
+    //   intercept the asset lookups, and provide a modtek asset if necessary
+    [HarmonyPatch(typeof(BattleTechResourceLocator), "EntryByID")]
+    public static class BattleTechResourceLocator_EntryByID_Patch
+    {
+        public static void Postfix(string id, ref VersionManifestEntry __result)
+        {
+            if (ModTek.modtekOverrides != null && ModTek.modtekOverrides.TryGetValue(id, out var entry))
+            {
+                __result = entry;
+            }
+        }
+    }
+
     // This will disable activateAfterInit from functioning for the Start() on the "Main" game object which activates the BattleTechGame object
     // This stops the main game object from loading immediately -- so work can be done beforehand
     [HarmonyPatch(typeof(ActivateAfterInit), "Start")]
