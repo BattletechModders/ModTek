@@ -235,7 +235,7 @@ Example selects the head location and sets new armor values.
 	"Action": "ObjectMerge",
 	"Value": {
 		"CurrentArmor": 100,
-        "AssignedArmor": 100
+		"AssignedArmor": 100
 	}
 }
 ```
@@ -256,10 +256,10 @@ Example replaces the mech tags with a new list of tags.
 	"JSONPath": "MechTags/items",
 	"Action": "Replace",
 	"Value": [
-        "unit_mech",
-        "unit_heavy",
-        "unit_role_brawler"
-    ]
+		"unit_mech",
+		"unit_heavy",
+		"unit_role_brawler"
+	]
 }
 ```
 
