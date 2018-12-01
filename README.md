@@ -1,12 +1,16 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/Mpstark/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/janxious/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+
+## Clarification
+
+This is a fork of Mpstark's great work here: https://github.com/Mpstark/ModTek. Many of the links point to wiki articles from that repo but the releases in this repo are the ones to use.
 
 ## Installing
 
-[A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/Mpstark/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
+[A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/janxious/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
 
-ModTek requires [BTML](https://github.com/Mpstark/BattleTechModLoader).
+ModTek requires [BTML](https://github.com/janxious/BattleTechModLoader).
 
 If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving `ModTek.dll` into the `BATTLETECH\Mods\` folder. BTML will now load ModTek.
 
@@ -37,7 +41,7 @@ Because ModTek is a BTML mod and doesn't change any game files, all you have to 
 
 ## A Brief Primer on Developing ModTek Mods
 
-It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format)
+It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.](https://github.com/janxious/ModTek/wiki/The-mod.json-format)
 
 Here's an example `mod.json`:
 
@@ -65,7 +69,7 @@ Here's an example `mod.json`:
 }
 ```
 
-The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format).
+The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/janxious/ModTek/wiki/The-mod.json-format).
 
 If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
 
@@ -94,8 +98,12 @@ For JSON files of specific types, if a file is loaded that has the same ID as a 
 
 This change would make the AC/5 do 450 damage and all other settings on the stock AC/5 will be unchanged.
 
-Note: Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should ***absolutely not*** copy the entire file from the stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+Note: Because of the way ModTek loads mods, **the last mod to change a property "wins"**. Because of this, you should probably ***not*** copy the entire file from the stock folder into your mod and make a few changes. Only include the values which you actually want to change.
+
+
+## Building It
+In the project folder there is an example project user file (e.g. `ModTek.csproj.user.example`). You can make a copy of that file and rename it without the `.example` ending and then update it to point to your BTG Managed DLL folder.
 
 ## License
 
-ModTek, like BTML before it, is provided under the "Unlicence", which releases the work into the public domain.
+ModTek is provided under the [Unlicense](UNLICENSE), which releases the work into the public domain.
