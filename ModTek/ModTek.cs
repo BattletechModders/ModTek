@@ -58,8 +58,9 @@ namespace ModTek
 
         // Game paths/directories
         public static string GameDirectory { get; private set; }
-        public static string ModDirectory { get; private set; }
+        public static string ModsDirectory { get; private set; }
         public static string StreamingAssetsDirectory { get; private set; }
+        public static string MDDBPath { get; private set; }
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -67,7 +68,7 @@ namespace ModTek
         internal static string DatabaseDirectory { get; private set; }
         internal static string MergeCachePath { get; private set; }
         internal static string TypeCachePath { get; private set; }
-        internal static string ModDBPath { get; private set; }
+        internal static string ModMDDBPath { get; private set; }
         internal static string DBCachePath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
@@ -93,15 +94,16 @@ namespace ModTek
                 return;
 
             // setup directories
-            ModDirectory = Path.GetFullPath(
+            ModsDirectory = Path.GetFullPath(
                 Path.Combine(manifestDirectory,
                     Path.Combine(Path.Combine(Path.Combine(
                         "..", ".."), ".."), MODS_DIRECTORY_NAME)));
 
             StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, ".."));
             GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
+            MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
 
-            ModTekDirectory = Path.Combine(ModDirectory, MODTEK_DIRECTORY_NAME);
+            ModTekDirectory = Path.Combine(ModsDirectory, MODTEK_DIRECTORY_NAME);
             CacheDirectory = Path.Combine(ModTekDirectory, CACHE_DIRECTORY_NAME);
             DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
 
@@ -110,7 +112,7 @@ namespace ModTek
             LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
-            ModDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
+            ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
 
             // creates the directories above it as well
@@ -129,7 +131,7 @@ namespace ModTek
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
             // First step in setting up the progress panel
-            if (ProgressPanel.Initialize(ModDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            if (ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
                 // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
                 var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -338,7 +340,7 @@ namespace ModTek
 
             // actually add the additions, since we successfully got through loading the other stuff
             foreach (var addition in potentialAdditions)
-                Log($"\tNew Entry: {addition.Path.Replace(ModDirectory, "")}");
+                Log($"\tNew Entry: {addition.Path.Replace(ModsDirectory, "")}");
 
             modManifest[modDef.Name] = potentialAdditions;
         }
@@ -365,7 +367,7 @@ namespace ModTek
             yield return new ProgressReport(0, sliderText, "Pre-loading mods...");
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModDirectory)
+            var modDirectories = Directory.GetDirectories(ModsDirectory)
                 .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
 
             if (modDirectories.Length == 0)
@@ -637,7 +639,7 @@ namespace ModTek
         {
             Dictionary<string, DateTime> cache;
 
-            if (File.Exists(path) && File.Exists(ModDBPath))
+            if (File.Exists(path) && File.Exists(ModMDDBPath))
             {
                 try
                 {
@@ -653,10 +655,10 @@ namespace ModTek
             }
 
             // delete mod db if it exists the cache does not
-            if (File.Exists(ModDBPath))
-                File.Delete(ModDBPath);
+            if (File.Exists(ModMDDBPath))
+                File.Delete(ModMDDBPath);
 
-            File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
+            File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
             Log("Copying over DB and building new DB Cache.");
@@ -772,6 +774,19 @@ namespace ModTek
             ProgressPanel.SubmitWork(NestedFunc);
         }
 
+        internal static string ResolvePath(string path)
+        {
+            path = path.Replace("$Mods", ModsDirectory);
+            //path = path.Replace("$StreamingAssets", StreamingAssetsDirectory);
+
+            if (!Path.IsPathRooted(path))
+            {
+                path = Path.Combine(StreamingAssetsDirectory, path);
+            }
+
+            var normalizedPath = Path.GetFullPath(path);
+            return normalizedPath;
+        }
 
         internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) { 
 
@@ -856,7 +871,7 @@ namespace ModTek
                             continue;
                         case "AdvancedJSONMerge":
                             var targetFileRelative = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
-                            var targetFile = Path.Combine(GameDirectory, targetFileRelative);
+                            var targetFile = ResolvePath(targetFileRelative);
 
                             // need to add the types of the file to the typeCache, so that they can be used later
                             // this actually returns the type, but we don't actually care about that right now
@@ -999,10 +1014,10 @@ namespace ModTek
             // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
             if (rebuildDB)
             {
-                if (File.Exists(ModDBPath))
-                    File.Delete(ModDBPath);
+                if (File.Exists(ModMDDBPath))
+                    File.Delete(ModMDDBPath);
 
-                File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModDBPath);
+                File.Copy(MDDBPath, ModMDDBPath);
                 dbCache = new Dictionary<string, DateTime>();
             }
 

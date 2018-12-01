@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -43,13 +44,13 @@ namespace ModTek
 
         public enum Action
         {
-            Add, // is equivalent to AddAfter of last array element
-            AddAfter, // mainly arrays, usable but useless for objects
-            AddBefore, // mainly arrays, usable but useless for objects
-            Concat, // only arrays
-            Merge, // only objects
-            Remove, // remove tokens from objects or arrays
-            Replace, // replace tokens in objects or arrays
+            ArrayAdd, // adds a given value to the end of the target array
+            ArrayAddAfter, // adds a given value after the target element in the array
+            ArrayAddBefore, // adds a given value before the target element in the array
+            ArrayConcat, // adds a given array to the end of the target array
+            ObjectMerge, // merges a given object with the target objects
+            Remove, // removes the target element(s)
+            Replace, // replaces the target with a given value
         }
 
         public class Instruction
@@ -66,75 +67,108 @@ namespace ModTek
 
             public void Process(JObject root)
             {
-                var token = root.SelectToken(JSONPath);
-                if (token == null)
+                var tokens = root.SelectTokens(JSONPath).ToList();
+                if (!tokens.Any())
                 {
                     throw new Exception("JSONPath does not point to anything");
                 }
 
+                if (ProcessTokens(tokens))
+                {
+                    return;
+                }
+
+                if (tokens.Count > 1)
+                {
+                    throw new Exception("JSONPath can't point to more than one token outside of the Remove action");
+                }
+
+                if (ProcessToken(tokens[0]))
+                {
+                    return;
+                }
+
+                throw new Exception("Action is unknown");
+            }
+
+            private bool ProcessTokens(List<JToken> tokens)
+            {
+                if (Action == Action.Remove)
+                {
+                    foreach (var token in tokens)
+                    {
+                        if (token.Parent is JProperty)
+                        {
+                            token.Parent.Remove();
+                        }
+                        else
+                        {
+                            token.Remove();
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            private bool ProcessToken(JToken token)
+            {
                 if (Action == Action.Replace)
                 {
                     token.Replace(Value);
+                    return true;
                 }
-                else if (Action == Action.Remove)
+
+                if (Action == Action.ArrayAdd)
                 {
-                    if (token.Parent is JProperty)
-                    {
-                        token.Parent.Remove();
-                    }
-                    else
-                    {
-                        token.Remove();
-                    }
-                }
-                else if (Action == Action.Add)
-                {
-                    if (token is JArray a)
-                    {
-                        a.Add(Value);
-                    }
-                    else
+                    if (!(token is JArray a))
                     {
                         throw new Exception("JSONPath needs to point an array");
                     }
+
+                    a.Add(Value);
+                    return true;
                 }
-                else if (Action == Action.AddAfter)
+
+                if (Action == Action.ArrayAddAfter)
                 {
                     token.AddAfterSelf(Value);
+                    return true;
                 }
-                else if (Action == Action.AddBefore)
+
+                if (Action == Action.ArrayAddBefore)
                 {
                     token.AddBeforeSelf(Value);
+                    return true;
                 }
-                else if (Action == Action.Merge)
+
+                if (Action == Action.ObjectMerge)
                 {
-                    if (token is JObject o1 && Value is JObject o2)
-                    {
-                        // same behavior as partial json merging
-                        o1.Merge(o2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
-                    }
-                    else
+                    if (!(token is JObject o1) || !(Value is JObject o2))
                     {
                         throw new Exception("JSONPath has to point to an object and Value has to be an object");
                     }
+
+                    // same behavior as partial json merging
+                    o1.Merge(o2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                    return true;
                 }
-                else if (Action == Action.Concat)
+
+                if (Action == Action.ArrayConcat)
                 {
-                    if (token is JArray a1 && Value is JArray a2)
-                    {
-                        a1.Merge(a2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
-                    }
-                    else
+                    if (!(token is JArray a1) || !(Value is JArray a2))
                     {
                         throw new Exception("JSONPath has to point to an array and Value has to be an array");
                     }
+
+                    a1.Merge(a2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
+                    return true;
                 }
-                else
-                {
-                    throw new Exception("Action is unknown");
-                }
+
+                return false;
             }
         }
-
     }
 }

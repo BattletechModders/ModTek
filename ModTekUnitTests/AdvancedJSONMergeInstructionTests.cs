@@ -109,7 +109,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2[0]"",
-    ""Action"": ""AddBefore"",
+    ""Action"": ""ArrayAddBefore"",
     ""Value"": ""newvalue""
 }
 ");
@@ -125,7 +125,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2[0]"",
-    ""Action"": ""AddAfter"",
+    ""Action"": ""ArrayAddAfter"",
     ""Value"": ""newvalue""
 }
 ");
@@ -142,7 +142,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2[0]"",
-    ""Action"": ""AddBefore"",
+    ""Action"": ""ArrayAddBefore"",
     ""Value"": [""newvalue1"", ""newvalue2""]
 }
 ");
@@ -159,7 +159,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2"",
-    ""Action"": ""Add"",
+    ""Action"": ""ArrayAdd"",
     ""Value"": [""newvalue1"", ""newvalue2""]
 }
 ");
@@ -176,7 +176,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2"",
-    ""Action"": ""Concat"",
+    ""Action"": ""ArrayConcat"",
     ""Value"": [""newvalue1"", ""newvalue2""]
 }
 ");
@@ -192,7 +192,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$"",
-    ""Action"": ""Merge"",
+    ""Action"": ""ObjectMerge"",
     ""Value"": { ""newobjectkey"": ""newvalue"" }
 }
 ");
@@ -206,7 +206,7 @@ namespace ModTekUnitTests
             ProcessInstructionJSON(@"
 {
     ""JSONPath"": ""$.objectkey2[1]"",
-    ""Action"": ""Merge"",
+    ""Action"": ""ObjectMerge"",
     ""Value"": { ""newobjectkey"": ""newvalue"" }
 }
 ");
