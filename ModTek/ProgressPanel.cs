@@ -53,11 +53,25 @@ namespace ModTek
                 this.WorkList.AddLast(work);
             }
 
+            static double lost = 0;
             IEnumerator RunWorkList()
             {
                 foreach (var workFunc in WorkList) {
                     IEnumerator<ProgressReport> workEnumerator = workFunc.Invoke();
-                    while (workEnumerator.MoveNext())
+                   
+                    bool Next()
+                    {
+                        var sw = Stopwatch.StartNew();
+                        var didWork = false;
+                        var desiredFrameTime = 33.0;  // 30 fps - Steals a bit of cpu time from unity renderer
+
+                        // We want to work for the full duration of a frame, not one item per frame.
+                        while ((didWork = workEnumerator.MoveNext()) && sw.Elapsed.TotalMilliseconds < desiredFrameTime) { }
+
+                        return didWork;
+                    }
+
+                    while (Next())
                     {
                         ProgressReport report = workEnumerator.Current;
                         this.Slider.value = report.Progress;
