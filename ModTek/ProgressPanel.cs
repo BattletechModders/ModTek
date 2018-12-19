@@ -52,8 +52,7 @@ namespace ModTek
             {
                 this.WorkList.AddLast(work);
             }
-
-            static double lost = 0;
+            
             IEnumerator RunWorkList()
             {
                 foreach (var workFunc in WorkList) {
