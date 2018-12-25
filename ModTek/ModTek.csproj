@@ -42,6 +42,7 @@
     <Reference Include="0Harmony" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdvancedJSONMerger.cs" />
     <Compile Include="IManifestEntry.cs" />
     <Compile Include="IModDef.cs" />
     <Compile Include="Logger.cs" />

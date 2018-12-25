@@ -56,10 +56,10 @@ namespace ModTek
     {
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(ModTek.ModDBPath))
+            if (string.IsNullOrEmpty(ModTek.ModMDDBPath))
                 return;
 
-            __result = ModTek.ModDBPath;
+            __result = ModTek.ModMDDBPath;
         }
     }
 
