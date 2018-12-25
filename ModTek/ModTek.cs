@@ -776,8 +776,7 @@ namespace ModTek
 
         internal static string ResolvePath(string path)
         {
-            path = path.Replace("$Mods", ModsDirectory);
-            //path = path.Replace("$StreamingAssets", StreamingAssetsDirectory);
+            path = path.Replace("{{Mods}}", ModsDirectory);
 
             if (!Path.IsPathRooted(path))
             {

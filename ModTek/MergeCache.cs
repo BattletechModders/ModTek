@@ -137,17 +137,17 @@ namespace ModTek
                             try
                             {
                                 AdvancedJSONMerger.ProcessInstructionsJObject(parentJObj, mergeJObj);
+                                continue;
                             }
                             catch (Exception e)
                             {
-                                Log($"\tMod advanced merge JSON at path {mergePath} has errors preventing any merges!");
+                                Log($"\tMod advanced merge JSON at path {mergePath} has errors preventing advanced json merges!");
                                 Log($"\t\t{e.Message}");
                             }
                         }
-                        else
-                        {
-                            parentJObj.Merge(mergeJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
-                        }
+
+                        // assume standard merging
+                        parentJObj.Merge(mergeJObj, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
                     }
 
                     // write the merged onto file to disk
