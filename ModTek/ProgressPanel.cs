@@ -55,16 +55,19 @@ namespace ModTek
             
             IEnumerator RunWorkList()
             {
+                var sw = new Stopwatch();
                 foreach (var workFunc in WorkList) {
                     IEnumerator<ProgressReport> workEnumerator = workFunc.Invoke();
                    
                     bool Next()
                     {
-                        var sw = Stopwatch.StartNew();
                         var didWork = false;
                         var desiredFrameTime = 33.0;  // 30 fps - Steals a bit of cpu time from unity renderer
 
+                        sw.Restart();
+
                         // We want to work for the full duration of a frame, not one item per frame.
+                        // Enumerator is checked first because we always want it to run at least once.
                         while ((didWork = workEnumerator.MoveNext()) && sw.Elapsed.TotalMilliseconds < desiredFrameTime) { }
 
                         return didWork;
