@@ -1,5 +1,5 @@
 # ModTek has moved!
-Visit [it's new home](https://github.com/janxious/ModTek) to get the latest and greatest!
+Visit [its new home](https://github.com/janxious/ModTek) to get the latest and greatest!
 
 
 # ModTek
