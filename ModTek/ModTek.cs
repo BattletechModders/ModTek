@@ -142,6 +142,7 @@ namespace ModTek
             else
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
+                Logger.CloseStream();
             }
 
             stopwatch.Stop();
