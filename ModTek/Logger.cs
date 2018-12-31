@@ -18,6 +18,14 @@ namespace ModTek
             return LogStream;
         }
 
+        internal static void CloseStream()
+        {
+            if (LogStream == null)
+                return;
+            LogStream.Dispose();
+            LogStream = null;
+        }
+
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
@@ -39,5 +47,7 @@ namespace ModTek
 
             stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
+
+
     }
 }
