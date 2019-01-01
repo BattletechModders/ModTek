@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ReferencePath>..\..\..\..\Library\Application Support\Steam\steamapps\common\BATTLETECH\BattleTech.app\Contents\Resources\Data\Managed</ReferencePath>
+  </PropertyGroup>
+</Project>

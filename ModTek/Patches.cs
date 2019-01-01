@@ -51,15 +51,15 @@ namespace ModTek
     }
 
     [HarmonyPatch(typeof(MetadataDatabase))]
-    [HarmonyPatch("MDD_DB_PATH", PropertyMethod.Getter)]
+    [HarmonyPatch("MDD_DB_PATH", MethodType.Getter)]
     public static class MetadataDatabase_MDD_DB_PATH_Patch
     {
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(ModTek.ModDBPath))
+            if (string.IsNullOrEmpty(ModTek.ModMDDBPath))
                 return;
 
-            __result = ModTek.ModDBPath;
+            __result = ModTek.ModMDDBPath;
         }
     }
 
@@ -90,7 +90,7 @@ namespace ModTek
     [HarmonyPatch(typeof(AVPVideoPlayer), "PlayVideo")]
     public static class AVPVideoPlayer_PlayVideo_Patch
     {
-        public static bool Prefix(AVPVideoPlayer __instance, string video, AVPVideoPlayer.Language language, Action<string> onComplete = null)
+        public static bool Prefix(AVPVideoPlayer __instance, string video, Language language, Action<string> onComplete = null)
         {
             if (!ModTek.ModVideos.ContainsKey(video))
                 return true;
@@ -138,18 +138,59 @@ namespace ModTek
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        public static void Postfix(VersionManifest __result)
+        public static bool Prefix(ref VersionManifest __result)
         {
-            ModTek.AddModEntries(__result);
+            // Return the cached manifest if it exists -- otherwise call the method as normal
+            if (ModTek.cachedManifest != null)
+            {
+                __result = ModTek.cachedManifest;
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 
-    [HarmonyPatch(typeof(DataManager), new[] { typeof(MessageCenter) })]
-    public static class DataManager_CTOR_Patch
+    // Flashpoint (and presumably all future DLC) modify the manifest later
+    // Rather than trying to maintain a valid manifest, it's easier to just
+    //   intercept the asset lookups, and provide a modtek asset if necessary
+    [HarmonyPatch(typeof(BattleTechResourceLocator), "EntryByID")]
+    public static class BattleTechResourceLocator_EntryByID_Patch
     {
-        public static void Prefix()
+        public static void Postfix(string id, ref VersionManifestEntry __result)
         {
-            ModTek.LoadMods();
+            if (ModTek.modtekOverrides != null && ModTek.modtekOverrides.TryGetValue(id, out var entry))
+            {
+                __result = entry;
+            }
+        }
+    }
+
+    // This will disable activateAfterInit from functioning for the Start() on the "Main" game object which activates the BattleTechGame object
+    // This stops the main game object from loading immediately -- so work can be done beforehand
+    [HarmonyPatch(typeof(ActivateAfterInit), "Start")]
+    public static class ActivateAfterInit_Start_Patch
+    {
+        public static bool Prefix(ActivateAfterInit __instance)
+        {
+            Traverse trav = Traverse.Create(__instance);
+            if (ActivateAfterInit.ActivateAfter.Start.Equals(trav.Field("activateAfter").GetValue<ActivateAfterInit.ActivateAfter>()))
+            {
+                GameObject[] gameObjects = trav.Field("activationSet").GetValue<GameObject[]>();
+                foreach (var gameObject in gameObjects)
+                {
+                    if ("BattleTechGame".Equals(gameObject.name))
+                    {
+                        // Don't activate through this call!
+                        return false;
+                    }
+                }
+            }
+            // Call the method
+            return true;
         }
     }
 }
+
