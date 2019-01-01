@@ -1,3 +1,5 @@
+using BattleTech;
+
 namespace ModTek
 {
     public interface IManifestEntry
@@ -11,5 +13,7 @@ namespace ModTek
         bool AddToDB { get; set; }
         bool ShouldMergeJSON { get; set; }
         string AddToAddendum { get; set; }
+
+        VersionManifestEntry GetVersionManifestEntry();
     }
 }
