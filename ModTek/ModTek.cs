@@ -154,9 +154,8 @@ namespace ModTek
         private static void PropagateConflictsForward(Dictionary<string, ModDef> modDefs)
         {
             // conflicts are a unidirectional edge, so make them one in ModDefs
-            foreach (var modDefKvp in modDefs)
+            foreach (var modDef in modDefs.Values)
             {
-                var modDef = modDefKvp.Value;
                 if (modDef.ConflictsWith.Count == 0)
                     continue;
 
@@ -164,6 +163,22 @@ namespace ModTek
                 {
                     if (modDefs.ContainsKey(conflict))
                         modDefs[conflict].ConflictsWith.Add(modDef.Name);
+                }
+            }
+        }
+
+        private static void FillInOptionalDependencies(Dictionary<string, ModDef> modDefs)
+        {
+            // add optional dependencies if they are present
+            foreach (var modDef in modDefs.Values)
+            {
+                if (modDef.OptionalDependencies.Count == 0)
+                    continue;
+
+                foreach (var optDep in modDef.OptionalDependencies)
+                {
+                    if (modDefs.ContainsKey(optDep))
+                        modDef.DependsOn.Add(optDep);
                 }
             }
         }
@@ -203,6 +218,9 @@ namespace ModTek
             var cachedOrder = LoadLoadOrder(LoadOrderPath);
             var loadOrder = new List<string>();
             var loaded = new HashSet<string>();
+
+            PropagateConflictsForward(modDefsCopy);
+            FillInOptionalDependencies(modDefsCopy);
 
             // load the order specified in the file
             foreach (var modName in cachedOrder)
@@ -410,7 +428,6 @@ namespace ModTek
                 modDefs.Add(modDef.Name, modDef);
             }
 
-            PropagateConflictsForward(modDefs);
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
 
             int modLoaded = 0;
@@ -787,7 +804,7 @@ namespace ModTek
             return normalizedPath;
         }
 
-        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) { 
+        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) {
 
             stopwatch.Start();
 
