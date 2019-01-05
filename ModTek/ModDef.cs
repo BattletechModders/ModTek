@@ -34,7 +34,7 @@ namespace ModTek
         // load order
         public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
-        public HashSet<string> OptionalDependencies { get; set; } = new HashSet<string>();
+        public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
 
         // adding and running code
         public string DLL { get; set; }

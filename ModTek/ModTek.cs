@@ -172,10 +172,10 @@ namespace ModTek
             // add optional dependencies if they are present
             foreach (var modDef in modDefs.Values)
             {
-                if (modDef.OptionalDependencies.Count == 0)
+                if (modDef.OptionallyDependsOn.Count == 0)
                     continue;
 
-                foreach (var optDep in modDef.OptionalDependencies)
+                foreach (var optDep in modDef.OptionallyDependsOn)
                 {
                     if (modDefs.ContainsKey(optDep))
                         modDef.DependsOn.Add(optDep);
