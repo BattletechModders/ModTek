@@ -144,6 +144,7 @@ namespace ModTek
             else
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
+                Logger.CloseStream();
             }
 
             stopwatch.Stop();
@@ -1063,6 +1064,8 @@ namespace ModTek
             {
                 Logger.Log("Failed to build overrides {0}", e);
             }
+
+            Logger.CloseStream();
 
             yield break;
         }

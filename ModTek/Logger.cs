@@ -9,24 +9,45 @@ namespace ModTek
         // logging
         internal static string LogPath { get; set; }
 
+        internal static StreamWriter LogStream;
+
+        internal static StreamWriter GetStream()
+        {
+            if (LogStream == null && !string.IsNullOrEmpty(LogPath))
+                LogStream = File.AppendText(LogPath);
+            return LogStream;
+        }
+
+        internal static void CloseStream()
+        {
+            if (LogStream == null)
+                return;
+            LogStream.Dispose();
+            LogStream = null;
+        }
+
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
             if (string.IsNullOrEmpty(LogPath)) return;
-            using (var logWriter = File.AppendText(LogPath))
-            {
-                logWriter.WriteLine(message, formatObjects);
-            }
+
+            var stream = GetStream();
+            if (stream == null) return;
+            
+            stream.WriteLine(message, formatObjects);
         }
 
         [StringFormatMethod("message")]
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
             if (string.IsNullOrEmpty(LogPath)) return;
-            using (var logWriter = File.AppendText(LogPath))
-            {
-                logWriter.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
-            }
+
+            var stream = GetStream();
+            if (stream == null) return;
+
+            stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
+
+
     }
 }
