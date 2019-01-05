@@ -17,8 +17,6 @@ using UnityEngine;
 
 namespace ModTek
 {
-    using static Logger;
-
     [HarmonyPatch(typeof(VersionInfo), "GetReleaseVersion")]
     public static class VersionInfo_GetReleaseVersion_Patch
     {
@@ -142,8 +140,6 @@ namespace ModTek
         {
             if (ModTek.ManifestEntries.Count > 0)
             {
-                LogWithDate($"BattleTechResourceLocator.RefreshTypedEntries -- adding to dictionaries");
-
                 foreach(var entry in ModTek.ManifestEntries)
                 {
                     var versionManifestEntry = entry.GetVersionManifestEntry();
@@ -156,8 +152,6 @@ namespace ModTek
                             ___baseManifest.Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
                         ___baseManifest[resourceType][entry.Id] = versionManifestEntry;
-
-                        Log($"\tAdded BattleTechResourceLocator.baseManifest[{resourceType}][{entry.Id}]");
                     }
                     else
                     {
@@ -166,8 +160,6 @@ namespace ModTek
                             ___contentPacksManifest.Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
                         ___contentPacksManifest[resourceType][entry.Id] = versionManifestEntry;
-
-                        Log($"\tAdded BattleTechResourceLocator.contentPacksManifest[{resourceType}][{entry.Id}]");
                     }
 
                     if (!string.IsNullOrEmpty(entry.AddToAddendum))
@@ -184,12 +176,8 @@ namespace ModTek
 
                             ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
                         }
-
-                        Log($"\tAdded BattleTechResourceLocator.addendumsManifest[{entry.AddToAddendum}][{resourceType}][{entry.Id}]");
                     }
                 }
-
-                Log("");
             }
         }
     }
