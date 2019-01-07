@@ -1,16 +1,12 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/janxious/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/Mpstark/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
-
-## Clarification
-
-This is a fork of Mpstark's great work here: https://github.com/Mpstark/ModTek. Many of the links point to wiki articles from that repo but the releases in this repo are the ones to use.
+ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/BattletechModders/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
 ## Installing
 
-[A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/janxious/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
+[A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/BattletechModders/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
 
-ModTek requires [BTML](https://github.com/janxious/BattleTechModLoader).
+ModTek requires [BTML](https://github.com/BattletechModders/BattleTechModLoader).
 
 If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving `ModTek.dll` into the `BATTLETECH\Mods\` folder. BTML will now load ModTek.
 
@@ -41,7 +37,7 @@ Because ModTek is a BTML mod and doesn't change any game files, all you have to 
 
 ## A Brief Primer on Developing ModTek Mods
 
-It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.](https://github.com/janxious/ModTek/wiki/The-mod.json-format)
+It all begins with a `mod.json` file in the root of your mods subdirectory. This is the only non-optional part of ModTek. Contained within is metadata that determines how your mod is loaded, what order it is loaded in, and an optional settings block for configuring your mod (which is only applicable for mods that include a DLL). Further documentation for the `mod.json` format [is here.](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format)
 
 Here's an example `mod.json`:
 
@@ -69,7 +65,7 @@ Here's an example `mod.json`:
 }
 ```
 
-The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/janxious/ModTek/wiki/The-mod.json-format).
+The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format).
 
 If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
 
@@ -108,46 +104,48 @@ Advanced JSON Merging adds several ways to surgically manipulate existing JSONs 
 To use Advanced JSON Merging, add a manifest to your `mod.json` and add an "AdvancedJSONMerge" type entry to it. All jsons found under Path will be assumed to be AdvancedJSONMerge instruction files.
 
 Example Manifest with Advanced JSON Merging entry.
+
 ```JSON
 "Manifest": [
-	{
-		"Type": "AdvancedJSONMerge",
-		"Path": "advanced",
-		"ShouldMergeJSON": false
-	}
+    {
+        "Type": "AdvancedJSONMerge",
+        "Path": "advanced",
+        "ShouldMergeJSON": false
+    }
 ]
 ```
 
 Example Advanced JSON Merging instructions json `advanced/blackknight_changes.json`
 
 Removes all heat sinks from the mech and then adds in back two heat sinks in the center torso.
+
 ```JSON
 {
-	"TargetFile": "data/mech/mechdef_blackknight_BL-6-KNT.json",
-	"Instructions": [
-		{
-			"JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",
-			"Action": "Remove"
-		},
-		{
-			"JSONPath": "inventory",
-			"Action": "ArrayConcat",
-			"Value": [
-				{
-					"MountedLocation": "CenterTorso",
-					"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-					"ComponentDefType": "Upgrade",
-					"DamageLevel": "Functional"
-				},
-				{
-					"MountedLocation": "CenterTorso",
-					"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-					"ComponentDefType": "Upgrade",
-					"DamageLevel": "Functional"
-				}
-			]
-		}
-	]
+    "TargetFile": "data/mech/mechdef_blackknight_BL-6-KNT.json",
+    "Instructions": [
+        {
+            "JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",
+            "Action": "Remove"
+        },
+        {
+            "JSONPath": "inventory",
+            "Action": "ArrayConcat",
+            "Value": [
+                {
+                    "MountedLocation": "CenterTorso",
+                    "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+                    "ComponentDefType": "Upgrade",
+                    "DamageLevel": "Functional"
+                },
+                {
+                    "MountedLocation": "CenterTorso",
+                    "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+                    "ComponentDefType": "Upgrade",
+                    "DamageLevel": "Functional"
+                }
+            ]
+        }
+    ]
 }
 ```
 
@@ -161,109 +159,117 @@ One can also find lots of solutions to problems on [stackoverflow](https://stack
 The sources of ModTek contain unit tests with some examples on how to use Actions.
 
 `ArrayAdd` adds a given value to the end of the target array.
+
 ```JSON
 {
-	"JSONPath": "inventory",
-	"Action": "ArrayAdd",
-	"Value": {
-		"MountedLocation": "CenterTorso",
-		"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-		"ComponentDefType": "Upgrade",
-		"DamageLevel": "Functional"
-	}
+    "JSONPath": "inventory",
+    "Action": "ArrayAdd",
+    "Value": {
+        "MountedLocation": "CenterTorso",
+        "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+        "ComponentDefType": "Upgrade",
+        "DamageLevel": "Functional"
+    }
 }
 ```
 
 `ArrayAddAfter` adds a given value after the target element in the array.
+
 ```JSON
 {
-	"JSONPath": "inventory[0]",
-	"Action": "ArrayAddAfter",
-	"Value": {
-		"MountedLocation": "CenterTorso",
-		"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-		"ComponentDefType": "Upgrade",
-		"DamageLevel": "Functional"
-	}
+    "JSONPath": "inventory[0]",
+    "Action": "ArrayAddAfter",
+    "Value": {
+        "MountedLocation": "CenterTorso",
+        "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+        "ComponentDefType": "Upgrade",
+        "DamageLevel": "Functional"
+    }
 }
 ```
 
 `ArrayAddBefore` adds a given value before the target element in the array.
 `inventory[-1:]` references the last element of the inventory array.
 Example adds a component to the second last position of the inventory.
+
 ```JSON
 {
-	"JSONPath": "inventory[-1:]",
-	"Action": "ArrayAddBefore",
-	"Value": {
-		"MountedLocation": "CenterTorso",
-		"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-		"ComponentDefType": "Upgrade",
-		"DamageLevel": "Functional"
-	}
+    "JSONPath": "inventory[-1:]",
+    "Action": "ArrayAddBefore",
+    "Value": {
+        "MountedLocation": "CenterTorso",
+        "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+        "ComponentDefType": "Upgrade",
+        "DamageLevel": "Functional"
+    }
 }
 ```
 
 `ArrayConcat` adds a given array to the end of the target array.
 Allows to add multiple elements quickly without having to "ArrayAdd" them individually.
+
 ```JSON
 {
-	"JSONPath": "inventory",
-	"Action": "ArrayConcat",
-	"Value": [
-		{
-			"MountedLocation": "CenterTorso",
-			"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-			"ComponentDefType": "Upgrade",
-			"DamageLevel": "Functional"
-		},
-		{
-			"MountedLocation": "CenterTorso",
-			"ComponentDefID": "Gear_HeatSink_Generic_Standard",
-			"ComponentDefType": "Upgrade",
-			"DamageLevel": "Functional"
-		}
-	]
+    "JSONPath": "inventory",
+    "Action": "ArrayConcat",
+    "Value": [
+        {
+            "MountedLocation": "CenterTorso",
+            "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+            "ComponentDefType": "Upgrade",
+            "DamageLevel": "Functional"
+        },
+        {
+            "MountedLocation": "CenterTorso",
+            "ComponentDefID": "Gear_HeatSink_Generic_Standard",
+            "ComponentDefType": "Upgrade",
+            "DamageLevel": "Functional"
+        }
+    ]
 }
 ```
 
 `ObjectMerge` merges a given object with the target objects.
 Example selects the head location and sets new armor values.
+
 ```JSON
 {
-	"JSONPath": "Locations[?(@.Location == 'Head')]",
-	"Action": "ObjectMerge",
-	"Value": {
-		"CurrentArmor": 100,
-		"AssignedArmor": 100
-	}
+    "JSONPath": "Locations[?(@.Location == 'Head')]",
+    "Action": "ObjectMerge",
+    "Value": {
+        "CurrentArmor": 100,
+        "AssignedArmor": 100
+    }
 }
 ```
 
 `Remove` removes the target element(s).
 Example removes all components from inventory that are heat sinks.
+
 ```JSON
 {
-	"JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",
-	"Action": "Remove"
+    "JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",
+    "Action": "Remove"
 }
 ```
 
 `Replace` replaces the target with a given value.
 Example replaces the mech tags with a new list of tags.
+
 ```JSON
 {
-	"JSONPath": "MechTags/items",
-	"Action": "Replace",
-	"Value": [
-		"unit_mech",
-		"unit_heavy",
-		"unit_role_brawler"
-	]
+    "JSONPath": "MechTags/items",
+    "Action": "Replace",
+    "Value": [
+        "unit_mech",
+        "unit_heavy",
+        "unit_role_brawler"
+    ]
 }
 ```
 
 ## Building It
+
 In the project folder there is an example project user file (e.g. `ModTek.csproj.user.example`). You can make a copy of that file and rename it without the `.example` ending and then update it to point to your BTG Managed DLL folder.
 
 ## License

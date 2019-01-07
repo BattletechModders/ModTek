@@ -6,27 +6,44 @@ namespace ModTek
 {
     internal static class Logger
     {
-        // logging
         internal static string LogPath { get; set; }
+        private static StreamWriter LogStream;
+
+        private static StreamWriter GetOrCreateStream()
+        {
+            if (LogStream == null && !string.IsNullOrEmpty(LogPath))
+                LogStream = File.AppendText(LogPath);
+
+            return LogStream;
+        }
+
+        internal static void CloseStream()
+        {
+            if (LogStream == null)
+                return;
+
+            LogStream.Dispose();
+            LogStream = null;
+        }
 
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
-            if (string.IsNullOrEmpty(LogPath)) return;
-            using (var logWriter = File.AppendText(LogPath))
-            {
-                logWriter.WriteLine(message, formatObjects);
-            }
+            var stream = GetOrCreateStream();
+            if (stream == null)
+                return;
+
+            stream.WriteLine(message, formatObjects);
         }
 
         [StringFormatMethod("message")]
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
-            if (string.IsNullOrEmpty(LogPath)) return;
-            using (var logWriter = File.AppendText(LogPath))
-            {
-                logWriter.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
-            }
+            var stream = GetOrCreateStream();
+            if (stream == null)
+                return;
+
+            stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
     }
 }

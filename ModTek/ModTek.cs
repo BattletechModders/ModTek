@@ -139,6 +139,7 @@ namespace ModTek
             else
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
+                Logger.CloseStream();
             }
 
             stopwatch.Stop();
@@ -1024,7 +1025,8 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-
+          
+            Logger.CloseStream();
             yield break;
         }
     }
