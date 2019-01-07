@@ -19,6 +19,7 @@ namespace ModTek
 
         HashSet<string> DependsOn { get; set; }
         HashSet<string> ConflictsWith { get; set; }
+        HashSet<string> OptionallyDependsOn { get; set; }
 
         string DLL { get; set; }
         string DLLEntryPoint { get; set; }
