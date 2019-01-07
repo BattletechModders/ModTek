@@ -22,12 +22,7 @@ namespace ModTek
 
     public static class ModTek
     {
-        public static VersionManifest cachedManifest = null;
-
-        // Lookup for all manifest entries that modtek adds
-        public static Dictionary<string, VersionManifestEntry> modtekOverrides = null;
-
-        private static bool hasLoadedMods; //defaults to false
+        public static VersionManifest CachedManifest = null;
 
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
@@ -50,11 +45,11 @@ namespace ModTek
         private static Dictionary<string, DateTime> dbCache;
 
         // things that we added to the VersionManifest, so we don't have to duplicate work when loaded again
-        private static List<ModDef.ManifestEntry> modEntries;
+        internal static List<ModDef.ManifestEntry> ManifestEntries;
 
-        // TODO: remove modManifest
+        // TODO: remove me!
         // pre-loaded mod entries in modName buckets
-        private static Dictionary<string, List<ModDef.ManifestEntry>> modManifest = new Dictionary<string, List<ModDef.ManifestEntry>>();
+        private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
 
         // Game paths/directories
         public static string GameDirectory { get; private set; }
@@ -244,6 +239,7 @@ namespace ModTek
             return loadOrder;
         }
 
+
         // LOADING MODS
         private static void LoadMod(ModDef modDef)
         {
@@ -343,22 +339,16 @@ namespace ModTek
             foreach (var addition in potentialAdditions)
                 Log($"\tNew Entry: {addition.Path.Replace(ModsDirectory, "")}");
 
-            modManifest[modDef.Name] = potentialAdditions;
+            entriesByMod[modDef.Name] = potentialAdditions;
         }
 
         internal static void LoadMods()
         {
-            ProgressPanel.SubmitWork(ModTek.LoadMoadsLoop);
+            ProgressPanel.SubmitWork(LoadMoadsLoop);
         }
 
         internal static IEnumerator<ProgressReport> LoadMoadsLoop()
         {
-            // Only want to run this function once -- it could get submitted a few times
-            if (hasLoadedMods)
-            {
-                yield break;
-            }
-
             stopwatch.Start();
 
             string sliderText = "Loading Mods";
@@ -373,7 +363,6 @@ namespace ModTek
 
             if (modDirectories.Length == 0)
             {
-                hasLoadedMods = true;
                 Log("No ModTek-compatable mods found.");
                 yield break;
             }
@@ -451,8 +440,6 @@ namespace ModTek
             // write out load order
             File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
 
-            hasLoadedMods = true;
-
             yield break;
         }
 
@@ -518,6 +505,7 @@ namespace ModTek
         {
             return ignoreList.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
+
 
         // JSON HANDLING
         /// <summary>
@@ -674,22 +662,20 @@ namespace ModTek
 
 
         // ADDING TO VERSION MANIFEST
-        private static bool AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
+        private static void AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
         {
             if (modEntry.Path == null)
-                return false;
+                return;
 
             VersionManifestAddendum addendum = null;
             if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
             {
                 addendum = manifest.GetAddendumByName(modEntry.AddToAddendum);
 
-                // create the addendum if it doesn't exist
                 if (addendum == null)
                 {
-                    Log($"\t\tCreated addendum: {modEntry.AddToAddendum}");
-                    addendum = new VersionManifestAddendum(modEntry.AddToAddendum);
-                    manifest.ApplyAddendum(addendum);
+                    Log($"\t\tCannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
+                    return;
                 }
             }
 
@@ -706,16 +692,13 @@ namespace ModTek
 
             // add to addendum instead of adding to manifest
             if (addendum != null)
-            {
                 Log($"\t\tAddOrUpdate => {modEntry.Id} ({modEntry.Type}) to addendum {addendum.Name}");
-                addendum.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
-                return true;
-            }
+            else
+                Log($"\t\tAddOrUpdate => {modEntry.Id} ({modEntry.Type})");
 
             // not added to addendum, not added to jsonmerges
-            Log($"\t\tAddOrUpdate => {modEntry.Id} ({modEntry.Type})");
-            manifest.AddOrUpdate(modEntry.Id, modEntry.Path, modEntry.Type, DateTime.Now, modEntry.AssetBundleName, modEntry.AssetBundlePersistent);
-            return true;
+            ManifestEntries.Add(modEntry);
+            return;
         }
 
         private static bool AddModEntryToDB(MetadataDatabase db, string path, string typeStr)
@@ -760,12 +743,12 @@ namespace ModTek
         internal static void BuildCachedManifest()
         {
             // First load the default battletech manifest, then it'll get appended to
-            VersionManifest vanillaManifest = VersionManifestUtilities.LoadDefaultManifest();
+            CachedManifest = VersionManifestUtilities.LoadDefaultManifest();
 
             // Wrapper to be able to submit a parameterless work function
             IEnumerator<ProgressReport> NestedFunc()
             {
-                IEnumerator<ProgressReport> reports = BuildCachedManifestLoop(vanillaManifest);
+                IEnumerator<ProgressReport> reports = BuildCachedManifestLoop(CachedManifest);
                 while (reports.MoveNext())
                 {
                     yield return reports.Current;
@@ -788,7 +771,7 @@ namespace ModTek
             return normalizedPath;
         }
 
-        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) { 
+        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) {
 
             stopwatch.Start();
 
@@ -802,15 +785,15 @@ namespace ModTek
             LogWithDate("Setting up mod manifests...");
 
             var jsonMerges = new Dictionary<string, List<string>>();
-            modEntries = new List<ModDef.ManifestEntry>();
+            ManifestEntries = new List<ModDef.ManifestEntry>();
             int modCount = 0;
 
-            var manifestMods = modLoadOrder.Where(name => modManifest.ContainsKey(name)).ToList();
+            var manifestMods = modLoadOrder.Where(name => entriesByMod.ContainsKey(name)).ToList();
             foreach (var modName in manifestMods)
             {
                 Log($"\t{modName}:");
                 yield return new ProgressReport((float)modCount++/(float)manifestMods.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
-                foreach (var modEntry in modManifest[modName])
+                foreach (var modEntry in entriesByMod[modName])
                 {
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
@@ -850,8 +833,7 @@ namespace ModTek
                             var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
 
-                            if (AddModEntry(manifest, subModEntry))
-                                modEntries.Add(subModEntry);
+                            AddModEntry(manifest, subModEntry);
                         }
 
                         continue;
@@ -900,29 +882,30 @@ namespace ModTek
                             continue;
                         }
 
-                        if (!jsonMerges.ContainsKey(matchingEntry.FilePath))
-                            jsonMerges[matchingEntry.FilePath] = new List<string>();
+                        var matchingPath = Path.GetFullPath(matchingEntry.FilePath);
 
-                        if (jsonMerges[matchingEntry.FilePath].Contains(modEntry.Path))
+                        if (!jsonMerges.ContainsKey(matchingPath))
+                            jsonMerges[matchingPath] = new List<string>();
+
+                        if (jsonMerges[matchingPath].Contains(modEntry.Path))
                             continue;
 
                         // this assumes that .json can only have a single type
                         modEntry.Type = matchingEntry.Type;
 
-                        if (!typeCache.ContainsKey(matchingEntry.FilePath))
+                        if (!typeCache.ContainsKey(matchingPath))
                         {
-                            typeCache[matchingEntry.FilePath] = new List<string>();
-                            typeCache[matchingEntry.FilePath].Add(modEntry.Type);
+                            typeCache[matchingPath] = new List<string>();
+                            typeCache[matchingPath].Add(modEntry.Type);
                         }
 
                         Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
 
-                        jsonMerges[matchingEntry.FilePath].Add(modEntry.Path);
+                        jsonMerges[matchingPath].Add(modEntry.Path);
                         continue;
                     }
 
-                    if (AddModEntry(manifest, modEntry))
-                        modEntries.Add(modEntry);
+                    AddModEntry(manifest, modEntry);
                 }
             }
 
@@ -945,13 +928,11 @@ namespace ModTek
                     continue;
 
                 var cacheEntry = new ModDef.ManifestEntry(cachePath);
-
                 cacheEntry.ShouldMergeJSON = false;
                 cacheEntry.Type = typeCache[jsonMerge.Key][0]; // this assumes only one type for each json file
                 cacheEntry.Id = InferIDFromFile(cachePath);
 
-                if (AddModEntry(manifest, cacheEntry))
-                    modEntries.Add(cacheEntry);
+                AddModEntry(manifest, cacheEntry);
             }
 
             yield return new ProgressReport(100.0f, "Merge Cache", "Writing Merge Cache to disk");
@@ -1027,11 +1008,11 @@ namespace ModTek
             yield return new ProgressReport(0.0f, dbText, "");
             using (var metadataDatabase = new MetadataDatabase())
             {
-                foreach (var modEntry in modEntries)
+                foreach (var modEntry in ManifestEntries)
                 {
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                     {
-                        yield return new ProgressReport((float)addCount / (float)modEntries.Count, dbText, string.Format("Added {0}", modEntry.Path));
+                        yield return new ProgressReport((float)addCount / (float)ManifestEntries.Count, dbText, string.Format("Added {0}", modEntry.Path));
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     }
                     addCount++;
@@ -1044,29 +1025,8 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-
-            // Cache the completed manifest
-            ModTek.cachedManifest = manifest;
-
-            try
-            {
-                if (manifest != null && ModTek.modEntries != null)
-                {
-                    ModTek.modtekOverrides = manifest.Entries.Where(e => ModTek.modEntries.Any(m => e.Id == m.Id))
-                        // ToDictionary expects distinct keys, so take the last entry of each Id
-                        .GroupBy(ks => ks.Id)
-                        .Select(v => v.Last())
-                        .ToDictionary(ks => ks.Id);
-                }
-                Logger.Log("Built {0} modtek overrides", ModTek.modtekOverrides.Count());
-            }
-            catch (Exception e)
-            {
-                Logger.Log("Failed to build overrides {0}", e);
-            }
-
+          
             Logger.CloseStream();
-
             yield break;
         }
     }

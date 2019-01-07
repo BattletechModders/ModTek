@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using BattleTech;
@@ -63,30 +64,6 @@ namespace ModTek
         }
     }
 
-    [HarmonyPatch]
-    public static class DataManager_Texture2DLoadRequest_OnLoaded_Patch
-    {
-        public static MethodBase TargetMethod()
-        {
-            var type = Traverse.Create(typeof(DataManager)).Type("Texture2DLoadRequest").GetValue<Type>();
-            return type.GetMethod("OnLoaded");
-        }
-
-        public static void Postfix(object __instance)
-        {
-            var resourceId = Traverse.Create(__instance).Field("resourceId").GetValue<string>();
-
-            if (!ModTek.ModTexture2Ds.Contains(resourceId))
-                return;
-
-            var resource = Traverse.Create(__instance).Field("resource").GetValue<Texture2D>();
-            var dataManager = Traverse.Create(__instance).Field("dataManager").GetValue<DataManager>();
-            var textureManager = Traverse.Create(dataManager).Property("TextureManager").GetValue<TextureManager>();
-
-            textureManager.InsertTexture(resourceId, resource);
-        }
-    }
-
     [HarmonyPatch(typeof(AVPVideoPlayer), "PlayVideo")]
     public static class AVPVideoPlayer_PlayVideo_Patch
     {
@@ -141,9 +118,9 @@ namespace ModTek
         public static bool Prefix(ref VersionManifest __result)
         {
             // Return the cached manifest if it exists -- otherwise call the method as normal
-            if (ModTek.cachedManifest != null)
+            if (ModTek.CachedManifest != null)
             {
-                __result = ModTek.cachedManifest;
+                __result = ModTek.CachedManifest;
                 return false;
             }
             else
@@ -153,17 +130,54 @@ namespace ModTek
         }
     }
 
-    // Flashpoint (and presumably all future DLC) modify the manifest later
-    // Rather than trying to maintain a valid manifest, it's easier to just
-    //   intercept the asset lookups, and provide a modtek asset if necessary
-    [HarmonyPatch(typeof(BattleTechResourceLocator), "EntryByID")]
-    public static class BattleTechResourceLocator_EntryByID_Patch
+    [HarmonyPatch(typeof(BattleTechResourceLocator), "RefreshTypedEntries")]
+    public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
     {
-        public static void Postfix(string id, ref VersionManifestEntry __result)
+        public static void Postfix(ContentPackIndex ___contentPackIndex,
+            Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___baseManifest,
+            Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___contentPacksManifest,
+            Dictionary<VersionManifestAddendum, Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>> ___addendumsManifest)
         {
-            if (ModTek.modtekOverrides != null && ModTek.modtekOverrides.TryGetValue(id, out var entry))
+            if (ModTek.ManifestEntries.Count > 0)
             {
-                __result = entry;
+                foreach(var entry in ModTek.ManifestEntries)
+                {
+                    var versionManifestEntry = entry.GetVersionManifestEntry();
+                    var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
+
+                    if (___contentPackIndex == null || ___contentPackIndex.IsResourceOwned(entry.Id))
+                    {
+                        // add to baseManifest
+                        if (!___baseManifest.ContainsKey(resourceType))
+                            ___baseManifest.Add(resourceType, new Dictionary<string, VersionManifestEntry>());
+
+                        ___baseManifest[resourceType][entry.Id] = versionManifestEntry;
+                    }
+                    else
+                    {
+                        // add to contentPackManifest
+                        if (!___contentPacksManifest.ContainsKey(resourceType))
+                            ___contentPacksManifest.Add(resourceType, new Dictionary<string, VersionManifestEntry>());
+
+                        ___contentPacksManifest[resourceType][entry.Id] = versionManifestEntry;
+                    }
+
+                    if (!string.IsNullOrEmpty(entry.AddToAddendum))
+                    {
+                        // add to addendumsManifest
+                        var addendum = ModTek.CachedManifest.GetAddendumByName(entry.AddToAddendum);
+                        if (addendum != null)
+                        {
+                            if (!___addendumsManifest.ContainsKey(addendum))
+                                ___addendumsManifest.Add(addendum, new Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>());
+
+                            if (!___addendumsManifest[addendum].ContainsKey(resourceType))
+                                ___addendumsManifest[addendum].Add(resourceType, new Dictionary<string, VersionManifestEntry>());
+
+                            ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
+                        }
+                    }
+                }
             }
         }
     }

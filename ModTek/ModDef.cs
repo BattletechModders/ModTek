@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using BattleTech;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -99,6 +100,16 @@ namespace ModTek
             public string Id { get; set; }
             public string AssetBundleName { get; set; }
             public bool? AssetBundlePersistent { get; set; }
+
+            private VersionManifestEntry versionManifestEntry;
+
+            public VersionManifestEntry GetVersionManifestEntry()
+            {
+                if (versionManifestEntry == null)
+                    versionManifestEntry = new VersionManifestEntry(Id, Path, Type, DateTime.Now, "1", AssetBundleName, AssetBundlePersistent);
+
+                return versionManifestEntry;
+            }
         }
     }
 }
