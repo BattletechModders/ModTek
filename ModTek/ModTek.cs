@@ -125,6 +125,10 @@ namespace ModTek
             jsonMergeCache = LoadOrCreateMergeCache(MergeCachePath);
             typeCache = LoadOrCreateTypeCache(TypeCachePath);
 
+            UpdateCacheToRelativePath(dbCache);
+            UpdateCacheToRelativePath(typeCache);
+            jsonMergeCache.UpdateToRelativePaths();
+
             // First step in setting up the progress panel
             if (ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
@@ -605,6 +609,35 @@ namespace ModTek
 
 
         // CACHES
+        internal static void WriteJsonFile(string path, object obj)
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(obj, Formatting.Indented));
+        }
+
+        internal static void UpdateCacheToRelativePath<T>(Dictionary<string, T> cache)
+        {
+            var toRemove = new List<string>();
+            var toAdd = new Dictionary<string, T>();
+
+            foreach (var path in cache.Keys)
+            {
+                if (Path.IsPathRooted(path))
+                {
+                    var relativePath = GetRelativePath(path, GameDirectory);
+                    toAdd[relativePath] = cache[path];
+                    toRemove.Add(path);
+                }
+            }
+
+            foreach (var addKVP in toAdd)
+                cache.Add(addKVP.Key, addKVP.Value);
+
+            foreach (var path in toRemove)
+                cache.Remove(path);
+        }
+
+
+        // MERGE CACHE
         internal static MergeCache LoadOrCreateMergeCache(string path)
         {
             MergeCache mergeCache;
@@ -630,6 +663,8 @@ namespace ModTek
             return mergeCache;
         }
 
+
+        // TYPE CACHE
         internal static Dictionary<string, List<string>> LoadOrCreateTypeCache(string path)
         {
             Dictionary<string, List<string>> cache;
@@ -661,14 +696,6 @@ namespace ModTek
 
             if (typeCache.ContainsKey(relativePath))
                 return typeCache[relativePath];
-
-            if (typeCache.ContainsKey(absolutePath))
-            {
-                // found a cache path at an absolute path, make sure to clean it up
-                typeCache[relativePath] = typeCache[absolutePath];
-                typeCache.Remove(absolutePath);
-                return typeCache[relativePath];
-            }
 
             return null;
         }
@@ -711,6 +738,8 @@ namespace ModTek
             typeCache[GetRelativePath(absolutePath, GameDirectory)] = new List<string> { type };
         }
 
+
+        // DB CACHE
         internal static Dictionary<string, DateTime> LoadOrCreateDBCache(string path)
         {
             Dictionary<string, DateTime> cache;
@@ -740,11 +769,6 @@ namespace ModTek
             Log("Copying over DB and building new DB Cache.");
             cache = new Dictionary<string, DateTime>();
             return cache;
-        }
-
-        internal static void WriteJsonFile(string path, object obj)
-        {
-            File.WriteAllText(path, JsonConvert.SerializeObject(obj, Formatting.Indented));
         }
 
 
@@ -794,6 +818,7 @@ namespace ModTek
                 return false;
 
             var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), typeStr);
+            var relativePath = GetRelativePath(absolutePath, GameDirectory);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
             {
@@ -806,15 +831,6 @@ namespace ModTek
                 case BattleTechResourceType.MechDef:
                 case BattleTechResourceType.PilotDef:
                 case BattleTechResourceType.WeaponDef:
-                    var relativePath = GetRelativePath(absolutePath, GameDirectory);
-
-                    // had a previous to 0.5.0 absolute path in dbcache
-                    if (dbCache.ContainsKey(absolutePath))
-                    {
-                        dbCache[relativePath] = dbCache[absolutePath];
-                        dbCache.Remove(absolutePath);
-                    }
-
                     if (!dbCache.ContainsKey(relativePath) || dbCache[relativePath] != File.GetLastWriteTimeUtc(absolutePath))
                     {
                         try

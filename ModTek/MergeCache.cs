@@ -23,18 +23,6 @@ namespace ModTek
             originalPath = Path.GetFullPath(originalPath);
             var relativePath = ModTek.GetRelativePath(originalPath, ModTek.GameDirectory);
 
-            // remove old entries using absolute path
-            if (CachedEntries.ContainsKey(originalPath))
-            {
-                CachedEntries[relativePath] = CachedEntries[originalPath];
-                CachedEntries.Remove(originalPath);
-
-                // clean up old entries absolute path in merges and cachepath
-                CachedEntries[relativePath].CachePath = ModTek.GetRelativePath(CachedEntries[relativePath].CachePath, ModTek.GameDirectory);
-                foreach (var merge in CachedEntries[relativePath].Merges)
-                    merge.Path = ModTek.GetRelativePath(merge.Path, ModTek.GameDirectory);
-            }
-
             if (!CachedEntries.ContainsKey(relativePath) || !CachedEntries[relativePath].MatchesPaths(originalPath, mergePaths))
             {
                 // create new cache entry; substring is to get rid of the path seperator -.-
@@ -83,6 +71,36 @@ namespace ModTek
             }
 
             File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
+
+        /// <summary>
+        /// Updates all absolute path'd cache entries to use a relative path instead
+        /// </summary>
+        public void UpdateToRelativePaths()
+        {
+            var toRemove = new List<string>();
+            var toAdd = new Dictionary<string, CacheEntry>();
+
+            foreach (var path in CachedEntries.Keys)
+            {
+                if (Path.IsPathRooted(path))
+                {
+                    var relativePath = ModTek.GetRelativePath(path, ModTek.GameDirectory);
+
+                    toAdd[relativePath] = CachedEntries[path];
+                    toRemove.Add(path);
+
+                    toAdd[relativePath].CachePath = ModTek.GetRelativePath(toAdd[relativePath].CachePath, ModTek.GameDirectory);
+                    foreach (var merge in toAdd[relativePath].Merges)
+                        merge.Path = ModTek.GetRelativePath(merge.Path, ModTek.GameDirectory);
+                }
+            }
+
+            foreach (var addKVP in toAdd)
+                CachedEntries.Add(addKVP.Key, addKVP.Value);
+
+            foreach (var path in toRemove)
+                CachedEntries.Remove(path);
         }
 
         internal class CacheEntry
