@@ -17,7 +17,7 @@ namespace ModTek
             return LogStream;
         }
 
-        internal static void CloseStream()
+        internal static void CloseLogStream()
         {
             if (LogStream == null)
                 return;

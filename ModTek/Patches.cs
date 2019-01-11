@@ -118,9 +118,9 @@ namespace ModTek
         public static bool Prefix(ref VersionManifest __result)
         {
             // Return the cached manifest if it exists -- otherwise call the method as normal
-            if (ModTek.CachedManifest != null)
+            if (ModTek.CachedVersionManifest != null)
             {
-                __result = ModTek.CachedManifest;
+                __result = ModTek.CachedVersionManifest;
                 return false;
             }
             else
@@ -138,9 +138,9 @@ namespace ModTek
             Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___contentPacksManifest,
             Dictionary<VersionManifestAddendum, Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>> ___addendumsManifest)
         {
-            if (ModTek.ManifestEntries.Count > 0)
+            if (ModTek.BTRLEntries.Count > 0)
             {
-                foreach(var entry in ModTek.ManifestEntries)
+                foreach(var entry in ModTek.BTRLEntries)
                 {
                     var versionManifestEntry = entry.GetVersionManifestEntry();
                     var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
@@ -165,7 +165,7 @@ namespace ModTek
                     if (!string.IsNullOrEmpty(entry.AddToAddendum))
                     {
                         // add to addendumsManifest
-                        var addendum = ModTek.CachedManifest.GetAddendumByName(entry.AddToAddendum);
+                        var addendum = ModTek.CachedVersionManifest.GetAddendumByName(entry.AddToAddendum);
                         if (addendum != null)
                         {
                             if (!___addendumsManifest.ContainsKey(addendum))

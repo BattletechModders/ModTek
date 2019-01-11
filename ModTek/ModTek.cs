@@ -22,7 +22,13 @@ namespace ModTek
 
     public static class ModTek
     {
-        public static VersionManifest CachedManifest = null;
+        private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
+
+        // game paths/directories
+        public static string GameDirectory { get; private set; }
+        public static string ModsDirectory { get; private set; }
+        public static string StreamingAssetsDirectory { get; private set; }
+        public static string MDDBPath { get; private set; }
 
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
@@ -38,25 +44,6 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
 
-        // files that are read and written to (located in .modtek)
-        private static List<string> modLoadOrder;
-        private static MergeCache jsonMergeCache;
-        private static Dictionary<string, List<string>> typeCache;
-        private static Dictionary<string, DateTime> dbCache;
-
-        // things that we added to the VersionManifest, so we don't have to duplicate work when loaded again
-        internal static List<ModDef.ManifestEntry> ManifestEntries;
-
-        // TODO: remove me!
-        // pre-loaded mod entries in modName buckets
-        private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
-
-        // Game paths/directories
-        public static string GameDirectory { get; private set; }
-        public static string ModsDirectory { get; private set; }
-        public static string StreamingAssetsDirectory { get; private set; }
-        public static string MDDBPath { get; private set; }
-
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
         internal static string CacheDirectory { get; private set; }
@@ -68,12 +55,20 @@ namespace ModTek
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
 
-        // non-VersionManifest additions
+        // files that are read and written to (located in .modtek)
+        private static List<string> modLoadOrder;
+        private static MergeCache jsonMergeCache;
+        private static Dictionary<string, List<string>> typeCache;
+        private static Dictionary<string, DateTime> dbCache;
+
+        internal static VersionManifest CachedVersionManifest = null;
+        internal static List<ModDef.ManifestEntry> BTRLEntries = new List<ModDef.ManifestEntry>();
+
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
-        // for timing our loading impact
+        private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
 
@@ -120,6 +115,13 @@ namespace ModTek
                 logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
             }
 
+            // load progress bar
+            if (!ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            {
+                Log("Failed to load progress bar.  Skipping mod loading completely.");
+                CloseLogStream();
+            }
+
             // create all of the caches
             dbCache = LoadOrCreateDBCache(DBCachePath);
             jsonMergeCache = LoadOrCreateMergeCache(MergeCachePath);
@@ -129,24 +131,310 @@ namespace ModTek
             UpdateCacheToRelativePath(typeCache);
             jsonMergeCache.UpdateToRelativePaths();
 
-            // First step in setting up the progress panel
-            if (ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
-            {
-                // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
-                var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-                harmony.PatchAll(Assembly.GetExecutingAssembly());
+            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
+            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-                LoadMods();
-
-                BuildCachedManifest();
-            }
-            else
-            {
-                Log("Failed to load progress bar.  Skipping mod loading completely.");
-                Logger.CloseStream();
-            }
+            LoadMods();
+            BuildModManifestEntries();
 
             stopwatch.Stop();
+        }
+
+
+        // UTIL
+        private static string InferIDFromFile(string path)
+        {
+            // if not json, return the file name without the extension, as this is what HBS uses
+            var ext = Path.GetExtension(path);
+            if (ext == null || ext.ToLower() != ".json" || !File.Exists(path))
+                return Path.GetFileNameWithoutExtension(path);
+
+            // read the json and get ID out of it if able to
+            return InferIDFromJObject(ParseGameJSON(File.ReadAllText(path))) ?? Path.GetFileNameWithoutExtension(path);
+        }
+
+        private static void PrintHarmonySummary(string path)
+        {
+            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+
+            var patchedMethods = harmony.GetPatchedMethods().ToArray();
+            if (patchedMethods.Length == 0)
+                return;
+
+            using (var writer = File.CreateText(path))
+            {
+                writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
+
+                foreach (var method in patchedMethods)
+                {
+                    var info = harmony.GetPatchInfo(method);
+
+                    if (info == null || method.ReflectedType == null)
+                        continue;
+
+                    writer.WriteLine($"{method.ReflectedType.FullName}.{method.Name}:");
+
+                    // prefixes
+                    if (info.Prefixes.Count != 0)
+                        writer.WriteLine("\tPrefixes:");
+                    foreach (var patch in info.Prefixes)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    // transpilers
+                    if (info.Transpilers.Count != 0)
+                        writer.WriteLine("\tTranspilers:");
+                    foreach (var patch in info.Transpilers)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    // postfixes
+                    if (info.Postfixes.Count != 0)
+                        writer.WriteLine("\tPostfixes:");
+                    foreach (var patch in info.Postfixes)
+                        writer.WriteLine($"\t\t{patch.owner}");
+
+                    writer.WriteLine("");
+                }
+            }
+        }
+
+        private static bool FileIsOnDenyList(string filePath)
+        {
+            return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        public static string ResolvePath(string path, string rootPathToUse)
+        {
+            path = path.Replace("{{Mods}}", ModsDirectory);
+
+            if (!Path.IsPathRooted(path))
+                path = Path.Combine(rootPathToUse, path);
+
+            return Path.GetFullPath(path);
+        }
+
+        public static string GetRelativePath(string path, string rootPath)
+        {
+            if (!Path.IsPathRooted(path))
+                return path;
+
+            rootPath = Path.GetFullPath(rootPath);
+            if (rootPath.Last() != Path.DirectorySeparatorChar)
+                rootPath += Path.DirectorySeparatorChar;
+
+            var pathUri = new Uri(Path.GetFullPath(path), UriKind.Absolute);
+            var rootUri = new Uri(rootPath, UriKind.Absolute);
+
+            if (pathUri.Scheme != rootUri.Scheme)
+                return path;
+
+            var relativeUri = rootUri.MakeRelativeUri(pathUri);
+            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+            return relativePath;
+        }
+
+        /// <summary>
+        ///     Create JObject from string, removing comments and adding commas first.
+        /// </summary>
+        /// <param name="jsonText">JSON contained in a string</param>
+        /// <returns>JObject parsed from jsonText, null if invalid</returns>
+        internal static JObject ParseGameJSON(string jsonText)
+        {
+            // because StripHBSCommentsFromJSON is private, use Harmony to call the method
+            var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", jsonText).GetValue<string>();
+
+            if (commentsStripped == null)
+                throw new Exception("StripHBSCommentsFromJSON returned null.");
+
+            // add missing commas, this only fixes if there is a newline
+            var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
+            var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
+
+            return JObject.Parse(commasAdded);
+        }
+
+        internal static JObject ParseGameJSONFile(string path)
+        {
+            return ParseGameJSON(File.ReadAllText(path));
+        }
+
+        private static string InferIDFromJObject(JObject jObj)
+        {
+            if (jObj == null)
+                return null;
+
+            // go through the different kinds of id storage in JSONS
+            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
+            foreach (var jPath in jPaths)
+            {
+                var id = (string)jObj.SelectToken(jPath);
+                if (id != null)
+                    return id;
+            }
+
+            return null;
+        }
+
+
+        // CACHES
+        internal static void WriteJsonFile(string path, object obj)
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(obj, Formatting.Indented));
+        }
+
+        internal static void UpdateCacheToRelativePath<T>(Dictionary<string, T> cache)
+        {
+            var toRemove = new List<string>();
+            var toAdd = new Dictionary<string, T>();
+
+            foreach (var path in cache.Keys)
+            {
+                if (Path.IsPathRooted(path))
+                {
+                    var relativePath = GetRelativePath(path, GameDirectory);
+                    toAdd[relativePath] = cache[path];
+                    toRemove.Add(path);
+                }
+            }
+
+            foreach (var addKVP in toAdd)
+                cache.Add(addKVP.Key, addKVP.Value);
+
+            foreach (var path in toRemove)
+                cache.Remove(path);
+        }
+
+        internal static MergeCache LoadOrCreateMergeCache(string path)
+        {
+            MergeCache mergeCache;
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    mergeCache = JsonConvert.DeserializeObject<MergeCache>(File.ReadAllText(path));
+                    Log("Loaded merge cache.");
+                    return mergeCache;
+                }
+                catch (Exception e)
+                {
+                    Log("Loading merge cache failed -- will rebuild it.");
+                    Log($"\t{e.Message}");
+                }
+            }
+
+            // create a new one if it doesn't exist or couldn't be added'
+            Log("Building new Merge Cache.");
+            mergeCache = new MergeCache();
+            return mergeCache;
+        }
+
+        internal static Dictionary<string, List<string>> LoadOrCreateTypeCache(string path)
+        {
+            Dictionary<string, List<string>> cache;
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    cache = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(File.ReadAllText(path));
+                    Log("Loaded type cache.");
+                    return cache;
+                }
+                catch (Exception e)
+                {
+                    Log("Loading type cache failed -- will rebuild it.");
+                    Log($"\t{e.Message}");
+                }
+            }
+
+            // create a new one if it doesn't exist or couldn't be added
+            Log("Building new Type Cache.");
+            cache = new Dictionary<string, List<string>>();
+            return cache;
+        }
+
+        internal static List<string> GetTypesFromCache(string absolutePath)
+        {
+            var relativePath = GetRelativePath(absolutePath, GameDirectory);
+
+            if (typeCache.ContainsKey(relativePath))
+                return typeCache[relativePath];
+
+            return null;
+        }
+
+        internal static List<string> GetTypesFromCacheOrManifest(VersionManifest manifest, string absolutePath)
+        {
+            var types = GetTypesFromCache(absolutePath);
+            if (types != null)
+                return types;
+
+            // get the type from the manifest
+            var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == absolutePath);
+
+            if (matchingEntries == null || matchingEntries.Count == 0)
+                return null;
+
+            types = new List<string>();
+
+            foreach (var existingEntry in matchingEntries)
+                types.Add(existingEntry.Type);
+
+            var relativePath = GetRelativePath(absolutePath, GameDirectory);
+            typeCache[relativePath] = types;
+            return typeCache[relativePath];
+        }
+
+        internal static void TryAddTypeToCache(string absolutePath, string type)
+        {
+            var types = GetTypesFromCache(absolutePath);
+            if (types != null && types.Contains(type))
+                return;
+
+            if (types != null && !types.Contains(type))
+            {
+                types.Add(type);
+                return;
+            }
+
+            // add the new entry
+            typeCache[GetRelativePath(absolutePath, GameDirectory)] = new List<string> { type };
+        }
+
+        internal static Dictionary<string, DateTime> LoadOrCreateDBCache(string path)
+        {
+            Dictionary<string, DateTime> cache;
+
+            if (File.Exists(path) && File.Exists(ModMDDBPath))
+            {
+                try
+                {
+                    cache = JsonConvert.DeserializeObject<Dictionary<string, DateTime>>(File.ReadAllText(path));
+                    Log("Loaded db cache.");
+                    return cache;
+                }
+                catch (Exception e)
+                {
+                    Log("Loading db cache failed -- will rebuild it.");
+                    Log($"\t{e.Message}");
+                }
+            }
+
+            // delete mod db if it exists the cache does not
+            if (File.Exists(ModMDDBPath))
+                File.Delete(ModMDDBPath);
+
+            File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModMDDBPath);
+
+            // create a new one if it doesn't exist or couldn't be added
+            Log("Copying over DB and building new DB Cache.");
+            cache = new Dictionary<string, DateTime>();
+            return cache;
         }
 
 
@@ -188,6 +476,7 @@ namespace ModTek
             List<string> order;
 
             if (File.Exists(path))
+            {
                 try
                 {
                     order = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
@@ -199,6 +488,7 @@ namespace ModTek
                     Log("Loading cached load order failed, rebuilding it.");
                     Log($"\t{e.Message}");
                 }
+            }
 
             // create a new one if it doesn't exist or couldn't be added
             Log("Building new load order!");
@@ -262,12 +552,10 @@ namespace ModTek
         }
 
 
-        // LOADING MODS
+        // READING mod.json AND INIT MODS
         private static void LoadMod(ModDef modDef)
         {
             var potentialAdditions = new List<ModDef.ManifestEntry>();
-
-            Log($"Loading {modDef.Name} {modDef.Version}");
 
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
@@ -348,8 +636,6 @@ namespace ModTek
                     }
                 }
 
-                Log($"\tUsing BTML to load dll {Path.GetFileName(dllPath)} with entry path {typeName ?? "NoNameSpecified"}.{methodName}");
-
                 BTModLoader.LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
@@ -358,9 +644,7 @@ namespace ModTek
                 return;
 
             // actually add the additions, since we successfully got through loading the other stuff
-            foreach (var addition in potentialAdditions)
-                Log($"\tNew Entry: {addition.Path.Replace(ModsDirectory, "")}");
-
+            Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
             entriesByMod[modDef.Name] = potentialAdditions;
         }
 
@@ -373,11 +657,10 @@ namespace ModTek
         {
             stopwatch.Start();
 
-            string sliderText = "Loading Mods";
-
             Log("");
-            LogWithDate("Pre-loading mods...");
-            yield return new ProgressReport(0, sliderText, "Pre-loading mods...");
+            LogWithDate("Initializing mods");
+            Log("");
+            yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
             var modDirectories = Directory.GetDirectories(ModsDirectory)
@@ -422,18 +705,20 @@ namespace ModTek
                 modDefs.Add(modDef.Name, modDef);
             }
 
+            Log("");
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
+            foreach (var modName in willNotLoad)
+            {
+                Log($"Will not load {modName} because it's lacking a dependancy or a conflict loaded before it.");
+            }
+            Log("");
 
-            int modLoaded = 0;
             // lists guarentee order
+            var modLoaded = 0;
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
-                yield return new ProgressReport(
-                    (float)modLoaded++/(float)modLoadOrder.Count,
-                    sliderText,
-                    string.Format("Loading Mod: {0} {1}", modDef.Name, modDef.Version)
-                );
+                yield return new ProgressReport(modLoaded++ / ((float)modLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}");
                 try
                 {
                     LoadMod(modDef);
@@ -445,334 +730,15 @@ namespace ModTek
                 }
             }
 
-            foreach (var modDef in willNotLoad)
-            {
-                Log($"Will not load {modDef}. It's lacking a dependancy or a conflict loaded before it.");
-            }
-
-            stopwatch.Stop();
-            Log("");
-            LogWithDate($"Done pre-load mods. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-            Log("----------\n");
-
-            // write out harmony summary
             PrintHarmonySummary(HarmonySummaryPath);
-
-            // write out load order
-            File.WriteAllText(LoadOrderPath, JsonConvert.SerializeObject(modLoadOrder, Formatting.Indented));
+            WriteJsonFile(LoadOrderPath, modLoadOrder);
+            stopwatch.Stop();
 
             yield break;
         }
 
-        private static string InferIDFromFile(string path)
-        {
-            // if not json, return the file name without the extension, as this is what HBS uses
-            var ext = Path.GetExtension(path);
-            if (ext == null || ext.ToLower() != ".json" || !File.Exists(path))
-                return Path.GetFileNameWithoutExtension(path);
 
-            // read the json and get ID out of it if able to
-            return InferIDFromJObject(ParseGameJSON(File.ReadAllText(path))) ?? Path.GetFileNameWithoutExtension(path);
-        }
-
-        private static void PrintHarmonySummary(string path)
-        {
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-
-            var patchedMethods = harmony.GetPatchedMethods().ToArray();
-            if (patchedMethods.Length == 0)
-                return;
-
-            using (var writer = File.CreateText(path))
-            {
-                writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
-
-                foreach (var method in patchedMethods)
-                {
-                    var info = harmony.GetPatchInfo(method);
-
-                    if (info == null || method.ReflectedType == null)
-                        continue;
-
-                    writer.WriteLine($"{method.ReflectedType.FullName}.{method.Name}:");
-
-                    // prefixes
-                    if (info.Prefixes.Count != 0)
-                        writer.WriteLine("\tPrefixes:");
-                    foreach (var patch in info.Prefixes)
-                        writer.WriteLine($"\t\t{patch.owner}");
-
-                    // transpilers
-                    if (info.Transpilers.Count != 0)
-                        writer.WriteLine("\tTranspilers:");
-                    foreach (var patch in info.Transpilers)
-                        writer.WriteLine($"\t\t{patch.owner}");
-
-                    // postfixes
-                    if (info.Postfixes.Count != 0)
-                        writer.WriteLine("\tPostfixes:");
-                    foreach (var patch in info.Postfixes)
-                        writer.WriteLine($"\t\t{patch.owner}");
-
-                    writer.WriteLine("");
-                }
-            }
-        }
-
-        // this is a very rudimentary version of an .ignore list for filetypes
-        // I have added it to remove my most common problems. PRs welcome.
-        private static readonly string[] ignoreList = { ".DS_STORE", "~", ".nomedia" };
-        private static bool FileIsOnDenyList(string filePath)
-        {
-            return ignoreList.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-
-        // PATHING
-        public static string ResolvePath(string path, string rootPathToUse)
-        {
-            path = path.Replace("{{Mods}}", ModsDirectory);
-
-            if (!Path.IsPathRooted(path))
-                path = Path.Combine(rootPathToUse, path);
-
-            return Path.GetFullPath(path);
-        }
-
-        public static string GetRelativePath(string path, string rootPath)
-        {
-            if (!Path.IsPathRooted(path))
-                return path;
-
-            rootPath = Path.GetFullPath(rootPath);
-            if (rootPath.Last() != Path.DirectorySeparatorChar)
-                rootPath += Path.DirectorySeparatorChar;
-
-            var pathUri = new Uri(Path.GetFullPath(path), UriKind.Absolute);
-            var rootUri = new Uri(rootPath, UriKind.Absolute);
-
-            if (pathUri.Scheme != rootUri.Scheme)
-                return path;
-
-            var relativeUri = rootUri.MakeRelativeUri(pathUri);
-            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
-
-            if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
-                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-
-            return relativePath;
-        }
-
-
-        // JSON HANDLING
-        /// <summary>
-        ///     Create JObject from string, removing comments and adding commas first.
-        /// </summary>
-        /// <param name="jsonText">JSON contained in a string</param>
-        /// <returns>JObject parsed from jsonText, null if invalid</returns>
-        internal static JObject ParseGameJSON(string jsonText)
-        {
-            // because StripHBSCommentsFromJSON is private, use Harmony to call the method
-            var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", jsonText).GetValue() as string;
-
-            if (commentsStripped == null)
-                throw new Exception("StripHBSCommentsFromJSON returned null.");
-
-            // add missing commas, this only fixes if there is a newline
-            var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
-            var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
-
-            return JObject.Parse(commasAdded);
-        }
-
-        internal static JObject ParseGameJSONFile(string path)
-        {
-            return ParseGameJSON(File.ReadAllText(path));
-        }
-
-        private static string InferIDFromJObject(JObject jObj)
-        {
-            if (jObj == null)
-                return null;
-
-            // go through the different kinds of id storage in JSONS
-            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-            foreach (var jPath in jPaths)
-            {
-                var id = (string)jObj.SelectToken(jPath);
-                if (id != null)
-                    return id;
-            }
-
-            return null;
-        }
-
-
-        // CACHES
-        internal static void WriteJsonFile(string path, object obj)
-        {
-            File.WriteAllText(path, JsonConvert.SerializeObject(obj, Formatting.Indented));
-        }
-
-        internal static void UpdateCacheToRelativePath<T>(Dictionary<string, T> cache)
-        {
-            var toRemove = new List<string>();
-            var toAdd = new Dictionary<string, T>();
-
-            foreach (var path in cache.Keys)
-            {
-                if (Path.IsPathRooted(path))
-                {
-                    var relativePath = GetRelativePath(path, GameDirectory);
-                    toAdd[relativePath] = cache[path];
-                    toRemove.Add(path);
-                }
-            }
-
-            foreach (var addKVP in toAdd)
-                cache.Add(addKVP.Key, addKVP.Value);
-
-            foreach (var path in toRemove)
-                cache.Remove(path);
-        }
-
-
-        // MERGE CACHE
-        internal static MergeCache LoadOrCreateMergeCache(string path)
-        {
-            MergeCache mergeCache;
-
-            if (File.Exists(path))
-            {
-                try
-                {
-                    mergeCache = JsonConvert.DeserializeObject<MergeCache>(File.ReadAllText(path));
-                    Log("Loaded merge cache.");
-                    return mergeCache;
-                }
-                catch (Exception e)
-                {
-                    Log("Loading merge cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
-                }
-            }
-
-            // create a new one if it doesn't exist or couldn't be added'
-            Log("Building new Merge Cache.");
-            mergeCache = new MergeCache();
-            return mergeCache;
-        }
-
-
-        // TYPE CACHE
-        internal static Dictionary<string, List<string>> LoadOrCreateTypeCache(string path)
-        {
-            Dictionary<string, List<string>> cache;
-
-            if (File.Exists(path))
-            {
-                try
-                {
-                    cache = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(File.ReadAllText(path));
-                    Log("Loaded type cache.");
-                    return cache;
-                }
-                catch (Exception e)
-                {
-                    Log("Loading type cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
-                }
-            }
-
-            // create a new one if it doesn't exist or couldn't be added
-            Log("Building new Type Cache.");
-            cache = new Dictionary<string, List<string>>();
-            return cache;
-        }
-
-        internal static List<string> GetTypesFromCache(string absolutePath)
-        {
-            var relativePath = GetRelativePath(absolutePath, GameDirectory);
-
-            if (typeCache.ContainsKey(relativePath))
-                return typeCache[relativePath];
-
-            return null;
-        }
-
-        internal static List<string> GetTypesFromCacheOrManifest(VersionManifest manifest, string absolutePath)
-        {
-            var types = GetTypesFromCache(absolutePath);
-            if (types != null)
-                return types;
-
-            // get the type from the manifest
-            var matchingEntries = manifest.FindAll(x => Path.GetFullPath(x.FilePath) == absolutePath);
-
-            if (matchingEntries == null || matchingEntries.Count == 0)
-                return null;
-
-            types = new List<string>();
-
-            foreach (var existingEntry in matchingEntries)
-                types.Add(existingEntry.Type);
-
-            var relativePath = GetRelativePath(absolutePath, GameDirectory);
-            typeCache[relativePath] = types;
-            return typeCache[relativePath];
-        }
-
-        internal static void TryAddTypeToCache(string absolutePath, string type)
-        {
-            var types = GetTypesFromCache(absolutePath);
-            if (types != null && types.Contains(type))
-                return;
-
-            if (types != null && !types.Contains(type))
-            {
-                types.Add(type);
-                return;
-            }
-
-            // add the new entry
-            typeCache[GetRelativePath(absolutePath, GameDirectory)] = new List<string> { type };
-        }
-
-
-        // DB CACHE
-        internal static Dictionary<string, DateTime> LoadOrCreateDBCache(string path)
-        {
-            Dictionary<string, DateTime> cache;
-
-            if (File.Exists(path) && File.Exists(ModMDDBPath))
-            {
-                try
-                {
-                    cache = JsonConvert.DeserializeObject<Dictionary<string, DateTime>>(File.ReadAllText(path));
-                    Log("Loaded db cache.");
-                    return cache;
-                }
-                catch (Exception e)
-                {
-                    Log("Loading db cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
-                }
-            }
-
-            // delete mod db if it exists the cache does not
-            if (File.Exists(ModMDDBPath))
-                File.Delete(ModMDDBPath);
-
-            File.Copy(Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME), ModMDDBPath);
-
-            // create a new one if it doesn't exist or couldn't be added
-            Log("Copying over DB and building new DB Cache.");
-            cache = new Dictionary<string, DateTime>();
-            return cache;
-        }
-
-
-        // ADDING TO VERSION MANIFEST
+        // ADDING MOD CONTENT TO THE GAME
         private static void AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
         {
             if (modEntry.Path == null)
@@ -785,7 +751,7 @@ namespace ModTek
 
                 if (addendum == null)
                 {
-                    Log($"\t\tCannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
+                    Log($"\tCannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
                     return;
                 }
             }
@@ -803,12 +769,12 @@ namespace ModTek
 
             // add to addendum instead of adding to manifest
             if (addendum != null)
-                Log($"\t\tAddOrUpdate => {modEntry.Id} ({modEntry.Type}) to addendum {addendum.Name}");
+                Log($"\tAdd/Replace: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
             else
-                Log($"\t\tAddOrUpdate => {modEntry.Id} ({modEntry.Type})");
+                Log($"\tAdd/Replace: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
             // not added to addendum, not added to jsonmerges
-            ManifestEntries.Add(modEntry);
+            BTRLEntries.Add(modEntry);
             return;
         }
 
@@ -852,46 +818,32 @@ namespace ModTek
             return false;
         }
 
-        internal static void BuildCachedManifest()
+        internal static void BuildModManifestEntries()
         {
-            // First load the default battletech manifest, then it'll get appended to
-            CachedManifest = VersionManifestUtilities.LoadDefaultManifest();
-
-            // Wrapper to be able to submit a parameterless work function
-            IEnumerator<ProgressReport> NestedFunc()
-            {
-                IEnumerator<ProgressReport> reports = BuildCachedManifestLoop(CachedManifest);
-                while (reports.MoveNext())
-                {
-                    yield return reports.Current;
-                }
-            }
-
-            ProgressPanel.SubmitWork(NestedFunc);
+            CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
+            ProgressPanel.SubmitWork(BuildModManifestEntriesLoop);
         }
 
-        internal static IEnumerator<ProgressReport> BuildCachedManifestLoop(VersionManifest manifest) {
-
+        internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
+        {
             stopwatch.Start();
 
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 yield break;
 
-            string loadingModText = "Loading Mod Manifests";
-            yield return new ProgressReport(0.0f, loadingModText, "Setting up mod manifests...");
-
-            LogWithDate("Setting up mod manifests...");
+            Log("");
+            LogWithDate("Setting up BTRL Entries");
 
             var jsonMerges = new Dictionary<string, List<string>>();
-            ManifestEntries = new List<ModDef.ManifestEntry>();
-            int modCount = 0;
-
+            var modCount = 0;
             var manifestMods = modLoadOrder.Where(name => entriesByMod.ContainsKey(name)).ToList();
+
             foreach (var modName in manifestMods)
             {
-                Log($"\t{modName}:");
-                yield return new ProgressReport((float)modCount++/(float)manifestMods.Count, loadingModText, string.Format("Loading manifest for {0}", modName));
+                Log($"{modName}:");
+                yield return new ProgressReport(modCount++ / ((float)manifestMods.Count), "Loading Mods", $"{modName}");
+
                 foreach (var modEntry in entriesByMod[modName])
                 {
                     // type being null means we have to figure out the type from the path (StreamingAssets)
@@ -901,27 +853,27 @@ namespace ModTek
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relPath));
 
-                        var types = GetTypesFromCacheOrManifest(manifest, fakeStreamingAssetsPath);
-
+                        var types = GetTypesFromCacheOrManifest(CachedVersionManifest, fakeStreamingAssetsPath);
                         if (types == null)
                         {
-                            Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
+                            Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                             continue;
                         }
 
+                        // this is getting merged later and then added to the BTRL entries then
                         if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
                         {
                             if (!jsonMerges.ContainsKey(fakeStreamingAssetsPath))
                                 jsonMerges[fakeStreamingAssetsPath] = new List<string>();
 
-                            if (jsonMerges[fakeStreamingAssetsPath].Contains(modEntry.Path))
+                            if (jsonMerges[fakeStreamingAssetsPath].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
                             // this assumes that .json can only have a single type
                             // typeCache will always contain this path
                             modEntry.Type = GetTypesFromCache(fakeStreamingAssetsPath)[0];
 
-                            Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
+                            Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
                             jsonMerges[fakeStreamingAssetsPath].Add(modEntry.Path);
                             continue;
@@ -931,8 +883,7 @@ namespace ModTek
                         {
                             var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
-
-                            AddModEntry(manifest, subModEntry);
+                            AddModEntry(CachedVersionManifest, subModEntry);
                         }
 
                         continue;
@@ -946,7 +897,7 @@ namespace ModTek
                             var fileName = Path.GetFileName(modEntry.Path);
                             if (fileName != null && File.Exists(modEntry.Path))
                             {
-                                Log($"\t\tVideo => {fileName}");
+                                Log($"\tVideo: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
                                 ModVideos.Add(fileName, modEntry.Path);
                             }
                             continue;
@@ -956,15 +907,15 @@ namespace ModTek
 
                             // need to add the types of the file to the typeCache, so that they can be used later
                             // this actually returns the type, but we don't actually care about that right now
-                            GetTypesFromCacheOrManifest(manifest, targetFile);
+                            GetTypesFromCacheOrManifest(CachedVersionManifest, targetFile);
 
                             if (!jsonMerges.ContainsKey(targetFile))
                                 jsonMerges[targetFile] = new List<string>();
 
-                            if (jsonMerges[targetFile].Contains(modEntry.Path))
+                            if (jsonMerges[targetFile].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
-                            Log($"\t\tAdvancedJSONMerge => {modEntry.Id} ({modEntry.Type})");
+                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
                             jsonMerges[targetFile].Add(modEntry.Path);
                             continue;
                     }
@@ -973,11 +924,11 @@ namespace ModTek
                     if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
                         // have to find the original path for the manifest entry that we're merging onto
-                        var matchingEntry = manifest.Find(x => x.Id == modEntry.Id);
+                        var matchingEntry = CachedVersionManifest.Find(x => x.Id == modEntry.Id);
 
                         if (matchingEntry == null)
                         {
-                            Log($"\t\tCould not find an existing VersionManifest entry for {modEntry.Id}!");
+                            Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}!");
                             continue;
                         }
 
@@ -986,7 +937,7 @@ namespace ModTek
                         if (!jsonMerges.ContainsKey(matchingPath))
                             jsonMerges[matchingPath] = new List<string>();
 
-                        if (jsonMerges[matchingPath].Contains(modEntry.Path))
+                        if (jsonMerges[matchingPath].Contains(modEntry.Path)) // TODO: is this necessary?
                             continue;
 
                         // this assumes that .json can only have a single type
@@ -994,67 +945,71 @@ namespace ModTek
 
                         TryAddTypeToCache(matchingPath, modEntry.Type);
 
-                        Log($"\t\tMerge => {modEntry.Id} ({modEntry.Type})");
+                        Log($"\tMerge => {modEntry.Id} ({modEntry.Type})");
 
                         jsonMerges[matchingPath].Add(modEntry.Path);
                         continue;
                     }
 
-                    AddModEntry(manifest, modEntry);
+                    AddModEntry(CachedVersionManifest, modEntry);
                 }
             }
 
-            yield return new ProgressReport(100.0f, "JSON", "Writing JSON file to disk");
-
-            // write type cache to disk
             WriteJsonFile(TypeCachePath, typeCache);
 
             // perform merges into cache
+            Log("");
             LogWithDate("Doing merges...");
-            yield return new ProgressReport(0.0f, "Merges", "Doing Merges...");
-            int mergeCount = 0;
-            foreach (var jsonMergeKVP in jsonMerges)
+            yield return new ProgressReport(1, "Merges", "Loading Cached Merges...");
+
+            var mergeCount = 0;
+            foreach (var originalPath in jsonMerges.Keys)
             {
-                yield return new ProgressReport((float)mergeCount++/jsonMerges.Count, "Merges", string.Format("Merging {0}", jsonMergeKVP.Key));
-                var cachePath = jsonMergeCache.GetOrCreateCachedEntry(jsonMergeKVP.Key, jsonMergeKVP.Value);
+                var mergePaths = jsonMerges[originalPath];
+
+                if (!jsonMergeCache.HasCachedEntry(originalPath, mergePaths))
+                    yield return new ProgressReport(mergeCount++ / ((float)jsonMerges.Count), "Merges", $"Merging {originalPath}");
+
+                var cachePath = jsonMergeCache.GetOrCreateCachedEntry(originalPath, mergePaths);
 
                 // something went wrong (the parent json prob had errors)
                 if (cachePath == null)
                     continue;
 
-                var cacheEntry = new ModDef.ManifestEntry(cachePath);
-                cacheEntry.ShouldMergeJSON = false;
-                cacheEntry.Type = GetTypesFromCache(jsonMergeKVP.Key)[0]; // this assumes only one type for each json file
-                cacheEntry.Id = InferIDFromFile(cachePath);
+                var cacheEntry = new ModDef.ManifestEntry(cachePath)
+                {
+                    ShouldMergeJSON = false,
+                    Type = GetTypesFromCache(originalPath)[0], // this assumes only one type for each json file
+                    Id = InferIDFromFile(cachePath)
+                };
 
-                AddModEntry(manifest, cacheEntry);
+                AddModEntry(CachedVersionManifest, cacheEntry);
             }
 
-            yield return new ProgressReport(100.0f, "Merge Cache", "Writing Merge Cache to disk");
-
-            // write merge cache to disk
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
+            Log("");
             LogWithDate("Adding to DB...");
+            yield return new ProgressReport(1, "Syncing Database", "");
 
             // check if files removed from DB cache
             var rebuildDB = false;
             var replacementEntries = new List<VersionManifestEntry>();
             var removeEntries = new List<string>();
-
-            string dbText = "Syncing Database";
-            yield return new ProgressReport(0.0f, dbText, "");
             foreach (var path in dbCache.Keys)
             {
                 var absolutePath = ResolvePath(path, GameDirectory);
-                if (ManifestEntries.Exists(x => x.Path == absolutePath))
+
+                // check if the file in the db cache is still used
+                if (BTRLEntries.Exists(x => x.Path == absolutePath))
                     continue;
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
 
-                // file is missing, check if another entry exists with same filename in manifest
+                // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = manifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+                var existingEntry = BTRLEntries.Find(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
+                    ?? CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
 
                 if (existingEntry == null)
                 {
@@ -1068,8 +1023,6 @@ namespace ModTek
             }
 
             // add removed entries replacements to db
-            dbText = "Cleaning Database";
-            yield return new ProgressReport(100.0f, dbText, "");
             if (!rebuildDB)
             {
                 // remove old entries
@@ -1097,16 +1050,14 @@ namespace ModTek
             }
 
             // add needed files to db
-            dbText = "Populating Database";
-            int addCount = 0;
-            yield return new ProgressReport(0.0f, dbText, "");
+            var addCount = 0;
             using (var metadataDatabase = new MetadataDatabase())
             {
-                foreach (var modEntry in ManifestEntries)
+                foreach (var modEntry in BTRLEntries)
                 {
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                     {
-                        yield return new ProgressReport((float)addCount / (float)ManifestEntries.Count, dbText, string.Format("Added {0}", modEntry.Path));
+                        yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", $"Added {modEntry.Path}");
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     }
                     addCount++;
@@ -1119,8 +1070,8 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+            CloseLogStream();
 
-            Logger.CloseStream();
             yield break;
         }
     }
