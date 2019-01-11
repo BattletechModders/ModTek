@@ -637,11 +637,12 @@ namespace ModTek
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
             }
 
+            Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
+
             if (potentialAdditions.Count <= 0)
                 return;
 
             // actually add the additions, since we successfully got through loading the other stuff
-            Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
             entriesByMod[modDef.Name] = potentialAdditions;
         }
 
