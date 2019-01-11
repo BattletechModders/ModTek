@@ -144,17 +144,6 @@ namespace ModTek
 
 
         // UTIL
-        private static string InferIDFromFile(string path)
-        {
-            // if not json, return the file name without the extension, as this is what HBS uses
-            var ext = Path.GetExtension(path);
-            if (ext == null || ext.ToLower() != ".json" || !File.Exists(path))
-                return Path.GetFileNameWithoutExtension(path);
-
-            // read the json and get ID out of it if able to
-            return InferIDFromJObject(ParseGameJSON(File.ReadAllText(path))) ?? Path.GetFileNameWithoutExtension(path);
-        }
-
         private static void PrintHarmonySummary(string path)
         {
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -238,15 +227,10 @@ namespace ModTek
             return relativePath;
         }
 
-        /// <summary>
-        ///     Create JObject from string, removing comments and adding commas first.
-        /// </summary>
-        /// <param name="jsonText">JSON contained in a string</param>
-        /// <returns>JObject parsed from jsonText, null if invalid</returns>
-        internal static JObject ParseGameJSON(string jsonText)
+        internal static JObject ParseGameJSONFile(string path)
         {
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
-            var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", jsonText).GetValue<string>();
+            var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", File.ReadAllText(path)).GetValue<string>();
 
             if (commentsStripped == null)
                 throw new Exception("StripHBSCommentsFromJSON returned null.");
@@ -256,11 +240,6 @@ namespace ModTek
             var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
 
             return JObject.Parse(commasAdded);
-        }
-
-        internal static JObject ParseGameJSONFile(string path)
-        {
-            return ParseGameJSON(File.ReadAllText(path));
         }
 
         private static string InferIDFromJObject(JObject jObj)
@@ -278,6 +257,17 @@ namespace ModTek
             }
 
             return null;
+        }
+
+        private static string InferIDFromFile(string path)
+        {
+            // if not json, return the file name without the extension, as this is what HBS uses
+            var ext = Path.GetExtension(path);
+            if (ext == null || ext.ToLower() != ".json" || !File.Exists(path))
+                return Path.GetFileNameWithoutExtension(path);
+
+            // read the json and get ID out of it if able to
+            return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
         }
 
 
@@ -954,7 +944,7 @@ namespace ModTek
 
                         TryAddTypeToCache(matchingPath, modEntry.Type);
 
-                        Log($"\tMerge => {modEntry.Id} ({modEntry.Type})");
+                        Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
                         jsonMerges[matchingPath].Add(modEntry.Path);
                         continue;

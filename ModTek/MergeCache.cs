@@ -162,7 +162,7 @@ namespace ModTek
                 JObject parentJObj;
                 try
                 {
-                    parentJObj = ModTek.ParseGameJSON(File.ReadAllText(originalPath));
+                    parentJObj = ModTek.ParseGameJSONFile(originalPath);
                 }
                 catch (Exception e)
                 {
