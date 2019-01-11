@@ -2,8 +2,8 @@ using Harmony;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +30,8 @@ namespace ModTek
 
         public class ProgressBarLoadingBehavior : MonoBehaviour
         {
+            private static readonly int FRAME_TIME = 50; // around 20fps
+
             public Text SliderText { get; set; }
             public Text LoadingText { get; set; }
             public Slider Slider { get; set; }
@@ -49,16 +51,24 @@ namespace ModTek
 
             private IEnumerator RunWorkList()
             {
+                var sw = new Stopwatch();
+                sw.Start();
                 foreach (var workFunc in WorkList)
                 {
                     var workEnumerator = workFunc.Invoke();
                     while (workEnumerator.MoveNext())
                     {
-                        var report = workEnumerator.Current;
-                        Slider.value = report.Progress;
-                        SliderText.text = report.SliderText;
-                        LoadingText.text = report.LoadingText;
-                        yield return null;
+                        if (sw.ElapsedMilliseconds > FRAME_TIME)
+                        {
+                            var report = workEnumerator.Current;
+                            Slider.value = report.Progress;
+                            SliderText.text = report.SliderText;
+                            LoadingText.text = report.LoadingText;
+
+                            sw.Reset();
+                            sw.Start();
+                            yield return null;
+                        }
                     }
                     yield return null;
                 }
