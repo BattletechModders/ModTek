@@ -69,6 +69,7 @@ namespace ModTek
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
         private static bool BuiltNewTypeCache = false;
+        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
@@ -193,7 +194,7 @@ namespace ModTek
             return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        public static string ResolvePath(string path, string rootPathToUse)
+        internal static string ResolvePath(string path, string rootPathToUse)
         {
             path = path.Replace("{{Mods}}", ModsDirectory);
 
@@ -203,7 +204,7 @@ namespace ModTek
             return Path.GetFullPath(path);
         }
 
-        public static string GetRelativePath(string path, string rootPath)
+        internal static string GetRelativePath(string path, string rootPath)
         {
             if (!Path.IsPathRooted(path))
                 return path;
@@ -229,6 +230,9 @@ namespace ModTek
 
         internal static JObject ParseGameJSONFile(string path)
         {
+            if (cachedJObjects.ContainsKey(path))
+                return cachedJObjects[path];
+
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
             var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", File.ReadAllText(path)).GetValue<string>();
 
@@ -239,7 +243,8 @@ namespace ModTek
             var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
             var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
 
-            return JObject.Parse(commasAdded);
+            cachedJObjects[path] = JObject.Parse(commasAdded);
+            return cachedJObjects[path];
         }
 
         private static string InferIDFromJObject(JObject jObj)
