@@ -68,6 +68,7 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
+        private static bool BuiltNewTypeCache = false;
         private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
@@ -354,6 +355,7 @@ namespace ModTek
 
             // create a new one if it doesn't exist or couldn't be added
             Log("Building new Type Cache.");
+            BuiltNewTypeCache = true;
             cache = new Dictionary<string, List<string>>();
             return cache;
         }
@@ -658,8 +660,6 @@ namespace ModTek
             stopwatch.Start();
 
             Log("");
-            LogWithDate("Initializing mods");
-            Log("");
             yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
@@ -833,19 +833,28 @@ namespace ModTek
                 yield break;
 
             Log("");
-            LogWithDate("Setting up BTRL Entries");
 
             var jsonMerges = new Dictionary<string, List<string>>();
-            var modCount = 0;
             var manifestMods = modLoadOrder.Where(name => entriesByMod.ContainsKey(name)).ToList();
+
+            var entryCount = 0;
+            var numEntries = 0;
+            entriesByMod.Do(entries => numEntries += entries.Value.Count);
 
             foreach (var modName in manifestMods)
             {
                 Log($"{modName}:");
-                yield return new ProgressReport(modCount++ / ((float)manifestMods.Count), "Loading Mods", $"{modName}");
+
+                if (!BuiltNewTypeCache)
+                    yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading Mods", modName);
 
                 foreach (var modEntry in entriesByMod[modName])
                 {
+                    if (BuiltNewTypeCache)
+                        yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading {modName}", modEntry.Id);
+
+                    entryCount++;
+
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
                     {
@@ -960,7 +969,7 @@ namespace ModTek
             // perform merges into cache
             Log("");
             LogWithDate("Doing merges...");
-            yield return new ProgressReport(1, "Merges", "Loading Cached Merges...");
+            yield return new ProgressReport(1, "Merging", "");
 
             var mergeCount = 0;
             foreach (var originalPath in jsonMerges.Keys)
@@ -968,7 +977,7 @@ namespace ModTek
                 var mergePaths = jsonMerges[originalPath];
 
                 if (!jsonMergeCache.HasCachedEntry(originalPath, mergePaths))
-                    yield return new ProgressReport(mergeCount++ / ((float)jsonMerges.Count), "Merges", $"Merging {originalPath}");
+                    yield return new ProgressReport(mergeCount++ / ((float)jsonMerges.Count), "Merging", Path.GetFileNameWithoutExtension(originalPath));
 
                 var cachePath = jsonMergeCache.GetOrCreateCachedEntry(originalPath, mergePaths);
 
@@ -989,7 +998,7 @@ namespace ModTek
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
             Log("");
-            LogWithDate("Adding to DB...");
+            Log("Syncing Database");
             yield return new ProgressReport(1, "Syncing Database", "");
 
             // check if files removed from DB cache
@@ -1057,7 +1066,7 @@ namespace ModTek
                 {
                     if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
                     {
-                        yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", $"Added {modEntry.Path}");
+                        yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
                         Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     }
                     addCount++;
