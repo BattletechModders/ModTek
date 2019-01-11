@@ -21,17 +21,18 @@ namespace ModTek
         public string GetOrCreateCachedEntry(string originalPath, List<string> mergePaths)
         {
             originalPath = Path.GetFullPath(originalPath);
+            var relativePath = ModTek.GetRelativePath(originalPath, ModTek.GameDirectory);
 
-            if (!CachedEntries.ContainsKey(originalPath) || !CachedEntries[originalPath].MatchesPaths(originalPath, mergePaths))
+            if (!CachedEntries.ContainsKey(relativePath) || !CachedEntries[relativePath].MatchesPaths(originalPath, mergePaths))
             {
                 // create new cache entry; substring is to get rid of the path seperator -.-
-                var cachePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, originalPath.Replace(ModTek.GameDirectory, "").Substring(1)));
-                var cachedEntry = new CacheEntry(cachePath, originalPath, mergePaths);
+                var cachedAbsolutePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, originalPath.Replace(ModTek.GameDirectory, "").Substring(1)));
+                var cachedEntry = new CacheEntry(cachedAbsolutePath, originalPath, mergePaths);
 
                 if (cachedEntry.HasErrors)
                     return null;
 
-                CachedEntries[originalPath] = cachedEntry;
+                CachedEntries[relativePath] = cachedEntry;
 
                 Log($"\tMerge performed: {Path.GetFileName(originalPath)}. Now cached.");
             }
@@ -40,8 +41,8 @@ namespace ModTek
                 Log($"\tLoaded cached merge: {Path.GetFileName(originalPath)}.");
             }
 
-            CachedEntries[originalPath].CacheHit = true;
-            return CachedEntries[originalPath].CachePath;
+            CachedEntries[relativePath].CacheHit = true;
+            return CachedEntries[relativePath].CacheAbsolutePath;
         }
 
         /// <summary>
@@ -52,19 +53,19 @@ namespace ModTek
         {
             // remove all of the cache that we didn't use
             var unusedMergePaths = new List<string>();
-            foreach (var cachedEntry in CachedEntries)
-                if (!cachedEntry.Value.CacheHit)
-                    unusedMergePaths.Add(cachedEntry.Key);
+            foreach (var cachedEntryKVP in CachedEntries)
+                if (!cachedEntryKVP.Value.CacheHit)
+                    unusedMergePaths.Add(cachedEntryKVP.Key);
 
             foreach (var unusedMergePath in unusedMergePaths)
             {
-                var cachePath = CachedEntries[unusedMergePath].CachePath;
+                var cacheAbsolutePath = CachedEntries[unusedMergePath].CacheAbsolutePath;
                 CachedEntries.Remove(unusedMergePath);
 
-                if (File.Exists(cachePath))
-                    File.Delete(cachePath);
+                if (File.Exists(cacheAbsolutePath))
+                    File.Delete(cacheAbsolutePath);
 
-                var directory = Path.GetDirectoryName(cachePath);
+                var directory = Path.GetDirectoryName(cacheAbsolutePath);
                 if (directory != null && Directory.GetFiles(directory).Length == 0)
                     Directory.Delete(directory);
             }
@@ -72,22 +73,68 @@ namespace ModTek
             File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
 
+        /// <summary>
+        /// Updates all absolute path'd cache entries to use a relative path instead
+        /// </summary>
+        public void UpdateToRelativePaths()
+        {
+            var toRemove = new List<string>();
+            var toAdd = new Dictionary<string, CacheEntry>();
+
+            foreach (var path in CachedEntries.Keys)
+            {
+                if (Path.IsPathRooted(path))
+                {
+                    var relativePath = ModTek.GetRelativePath(path, ModTek.GameDirectory);
+
+                    toAdd[relativePath] = CachedEntries[path];
+                    toRemove.Add(path);
+
+                    toAdd[relativePath].CachePath = ModTek.GetRelativePath(toAdd[relativePath].CachePath, ModTek.GameDirectory);
+                    foreach (var merge in toAdd[relativePath].Merges)
+                        merge.Path = ModTek.GetRelativePath(merge.Path, ModTek.GameDirectory);
+                }
+            }
+
+            foreach (var addKVP in toAdd)
+                CachedEntries.Add(addKVP.Key, addKVP.Value);
+
+            foreach (var path in toRemove)
+                CachedEntries.Remove(path);
+        }
+
         internal class CacheEntry
         {
+            public string CachePath { get; set; }
+            public DateTime OriginalTime { get; set; }
+            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
+
+            [JsonIgnore] internal string CacheAbsolutePath
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(_cacheAbsolutePath))
+                        _cacheAbsolutePath = ModTek.ResolvePath(CachePath, ModTek.GameDirectory);
+
+                    return _cacheAbsolutePath;
+                }
+            }
+            [JsonIgnore] private string _cacheAbsolutePath;
             [JsonIgnore] internal bool CacheHit; // default is false
             [JsonIgnore] internal string ContainingDirectory;
             [JsonIgnore] internal bool HasErrors; // default is false
+
 
             [JsonConstructor]
             public CacheEntry()
             {
             }
 
-            public CacheEntry(string path, string originalPath, List<string> mergePaths)
+            public CacheEntry(string absolutePath, string originalPath, List<string> mergePaths)
             {
-                CachePath = path;
-                ContainingDirectory = Path.GetDirectoryName(path);
-                OriginalPath = originalPath;
+                _cacheAbsolutePath = absolutePath;
+                CachePath = ModTek.GetRelativePath(absolutePath, ModTek.GameDirectory);
+                ContainingDirectory = Path.GetDirectoryName(absolutePath);
                 OriginalTime = File.GetLastWriteTimeUtc(originalPath);
 
                 if (string.IsNullOrEmpty(ContainingDirectory))
@@ -111,11 +158,11 @@ namespace ModTek
                 }
 
                 foreach (var mergePath in mergePaths)
-                    Merges.Add(new PathTimeTuple(mergePath, File.GetLastWriteTimeUtc(mergePath)));
+                    Merges.Add(new PathTimeTuple(ModTek.GetRelativePath(mergePath, ModTek.GameDirectory), File.GetLastWriteTimeUtc(mergePath)));
 
                 Directory.CreateDirectory(ContainingDirectory);
 
-                using (var writer = File.CreateText(path))
+                using (var writer = File.CreateText(absolutePath))
                 {
                     // merge all of the merges
                     foreach (var mergePath in mergePaths)
@@ -160,19 +207,14 @@ namespace ModTek
                 }
             }
 
-            public string CachePath { get; set; }
-            public string OriginalPath { get; set; }
-            public DateTime OriginalTime { get; set; }
-            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
-
             internal bool MatchesPaths(string originalPath, List<string> mergePaths)
             {
                 // must have an existing cached json
-                if (!File.Exists(CachePath))
+                if (!File.Exists(CacheAbsolutePath))
                     return false;
 
                 // must have the same original file
-                if (OriginalPath != originalPath || File.GetLastWriteTimeUtc(originalPath) != OriginalTime)
+                if (File.GetLastWriteTimeUtc(originalPath) != OriginalTime)
                     return false;
 
                 // must match number of merges
@@ -182,12 +224,12 @@ namespace ModTek
                 // if all paths match with write times, we match
                 for (var index = 0; index < mergePaths.Count; index++)
                 {
-                    var mergePath = mergePaths[index];
-                    var mergeTime = File.GetLastWriteTimeUtc(mergePath);
-                    var cachedMergePath = Merges[index].Path;
+                    var mergeAbsolutePath = mergePaths[index];
+                    var mergeTime = File.GetLastWriteTimeUtc(mergeAbsolutePath);
+                    var cachedMergeAboslutePath = ModTek.ResolvePath(Merges[index].Path, ModTek.GameDirectory);
                     var cachedMergeTime = Merges[index].Time;
 
-                    if (mergePath != cachedMergePath || mergeTime != cachedMergeTime)
+                    if (mergeAbsolutePath != cachedMergeAboslutePath || mergeTime != cachedMergeTime)
                         return false;
                 }
 
