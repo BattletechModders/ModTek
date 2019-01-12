@@ -274,6 +274,11 @@ namespace ModTek
             return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
         }
 
+        private static VersionManifestEntry GetEntryFromCachedOrBTRLEntries(string id)
+        {
+            return BTRLEntries.Find(x => x.Id == id)?.GetVersionManifestEntry() ?? CachedVersionManifest.Find(x => x.Id == id);
+        }
+
 
         // CACHES
         internal static void WriteJsonFile(string path, object obj)
@@ -952,7 +957,7 @@ namespace ModTek
                     if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
                         // have to find the original path for the manifest entry that we're merging onto
-                        var matchingEntry = CachedVersionManifest.Find(x => x.Id == modEntry.Id);
+                        var matchingEntry = GetEntryFromCachedOrBTRLEntries(modEntry.Id);
 
                         if (matchingEntry == null)
                         {
@@ -998,9 +1003,7 @@ namespace ModTek
             var mergeCount = 0;
             foreach (var id in jsonMerges.Keys)
             {
-                var existingEntry = BTRLEntries.Find(x => x.Id == id)?.GetVersionManifestEntry()
-                    ?? CachedVersionManifest.Find(x => x.Id == id);
-
+                var existingEntry = GetEntryFromCachedOrBTRLEntries(id);
                 if (existingEntry == null)
                 {
                     Log($"\tHave merges for {id} but cannot find an original file! Skipping.");

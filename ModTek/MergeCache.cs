@@ -27,8 +27,7 @@ namespace ModTek
 
             if (!CachedEntries.ContainsKey(relativePath) || !CachedEntries[relativePath].MatchesPaths(absolutePath, mergePaths))
             {
-                // create new cache entry; substring is to get rid of the path seperator -.-
-                var cachedAbsolutePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, absolutePath.Replace(ModTek.GameDirectory, "").Substring(1)));
+                var cachedAbsolutePath = Path.GetFullPath(Path.Combine(ModTek.CacheDirectory, relativePath));
                 var cachedEntry = new CacheEntry(cachedAbsolutePath, absolutePath, mergePaths);
 
                 if (cachedEntry.HasErrors)
@@ -145,12 +144,12 @@ namespace ModTek
             {
             }
 
-            public CacheEntry(string absolutePath, string originalPath, List<string> mergePaths)
+            public CacheEntry(string cacheAbsolutePath, string originalAbsolutePath, List<string> mergePaths)
             {
-                _cacheAbsolutePath = absolutePath;
-                CachePath = ModTek.GetRelativePath(absolutePath, ModTek.GameDirectory);
-                ContainingDirectory = Path.GetDirectoryName(absolutePath);
-                OriginalTime = File.GetLastWriteTimeUtc(originalPath);
+                _cacheAbsolutePath = cacheAbsolutePath;
+                CachePath = ModTek.GetRelativePath(cacheAbsolutePath, ModTek.GameDirectory);
+                ContainingDirectory = Path.GetDirectoryName(cacheAbsolutePath);
+                OriginalTime = File.GetLastWriteTimeUtc(originalAbsolutePath);
 
                 if (string.IsNullOrEmpty(ContainingDirectory))
                 {
@@ -162,11 +161,11 @@ namespace ModTek
                 JObject parentJObj;
                 try
                 {
-                    parentJObj = ModTek.ParseGameJSONFile(originalPath);
+                    parentJObj = ModTek.ParseGameJSONFile(originalAbsolutePath);
                 }
                 catch (Exception e)
                 {
-                    Log($"\tParent JSON at path {originalPath} has errors preventing any merges!");
+                    Log($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!");
                     Log($"\t\t{e.Message}");
                     HasErrors = true;
                     return;
@@ -177,7 +176,7 @@ namespace ModTek
 
                 Directory.CreateDirectory(ContainingDirectory);
 
-                using (var writer = File.CreateText(absolutePath))
+                using (var writer = File.CreateText(cacheAbsolutePath))
                 {
                     // merge all of the merges
                     foreach (var mergePath in mergePaths)
@@ -189,7 +188,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            Log($"\tMod merge JSON at path {originalPath} has errors preventing any merges!");
+                            Log($"\tMod merge JSON at path {originalAbsolutePath} has errors preventing any merges!");
                             Log($"\t\t{e.Message}");
                             continue;
                         }
