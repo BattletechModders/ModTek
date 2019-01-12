@@ -68,7 +68,6 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
-        private static bool BuiltNewTypeCache = false;
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
@@ -350,7 +349,6 @@ namespace ModTek
 
             // create a new one if it doesn't exist or couldn't be added
             Log("Building new Type Cache.");
-            BuiltNewTypeCache = true;
             cache = new Dictionary<string, List<string>>();
             return cache;
         }
@@ -841,15 +839,9 @@ namespace ModTek
             {
                 Log($"{modName}:");
 
-                if (!BuiltNewTypeCache)
-                    yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading Mods", modName);
-
                 foreach (var modEntry in entriesByMod[modName])
                 {
-                    if (BuiltNewTypeCache)
-                        yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading {modName}", modEntry.Id);
-
-                    entryCount++;
+                    yield return new ProgressReport(entryCount++ / ((float)numEntries), $"Loading {modName}", modEntry.Id);
 
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
