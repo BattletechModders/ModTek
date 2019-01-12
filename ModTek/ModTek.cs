@@ -276,7 +276,7 @@ namespace ModTek
 
         private static VersionManifestEntry GetEntryFromCachedOrBTRLEntries(string id)
         {
-            return BTRLEntries.Find(x => x.Id == id)?.GetVersionManifestEntry() ?? CachedVersionManifest.Find(x => x.Id == id);
+            return BTRLEntries.FindLast(x => x.Id == id)?.GetVersionManifestEntry() ?? CachedVersionManifest.Find(x => x.Id == id);
         }
 
 
@@ -1054,7 +1054,7 @@ namespace ModTek
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = BTRLEntries.Find(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
+                var existingEntry = BTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
                     ?? CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
 
                 if (existingEntry == null)
