@@ -390,9 +390,8 @@ namespace ModTek
             if (types != null)
                 return types;
 
-            // get the type from the manifest
+            // get the types from the manifest
             var matchingEntries = manifest.FindAll(x => x.Id == id);
-
             if (matchingEntries == null || matchingEntries.Count == 0)
                 return null;
 
@@ -869,9 +868,13 @@ namespace ModTek
                         // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relPath));
+                        if (!File.Exists(fakeStreamingAssetsPath))
+                        {
+                            Log($"\tCould not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
+                            continue;
+                        }
 
-                        var id = InferIDFromFile(fakeStreamingAssetsPath);
-                        var types = GetTypesFromCacheOrManifest(CachedVersionManifest, id);
+                        var types = GetTypesFromCacheOrManifest(CachedVersionManifest, modEntry.Id);
                         if (types == null)
                         {
                             Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
@@ -881,19 +884,19 @@ namespace ModTek
                         // this is getting merged later and then added to the BTRL entries then
                         if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
                         {
-                            if (!jsonMerges.ContainsKey(fakeStreamingAssetsPath))
-                                jsonMerges[fakeStreamingAssetsPath] = new List<string>();
+                            if (!jsonMerges.ContainsKey(modEntry.Id))
+                                jsonMerges[modEntry.Id] = new List<string>();
 
-                            if (jsonMerges[fakeStreamingAssetsPath].Contains(modEntry.Path)) // TODO: is this necessary?
+                            if (jsonMerges[modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
                             // this assumes that .json can only have a single type
                             // typeCache will always contain this path
-                            modEntry.Type = GetTypesFromCache(id)[0];
+                            modEntry.Type = GetTypesFromCache(modEntry.Id)[0];
 
                             Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
-                            jsonMerges[fakeStreamingAssetsPath].Add(modEntry.Path);
+                            jsonMerges[modEntry.Id].Add(modEntry.Path);
                             continue;
                         }
 
@@ -902,6 +905,13 @@ namespace ModTek
                             var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(CachedVersionManifest, subModEntry);
+
+                            // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
+                            if (jsonMerges.ContainsKey(modEntry.Id))
+                            {
+                                jsonMerges.Remove(modEntry.Id);
+                                Log($"\t\tHad merges for {modEntry.Id} but had to toss, since original file is being replaced");
+                            }
                         }
 
                         continue;
@@ -925,17 +935,16 @@ namespace ModTek
 
                             // need to add the types of the file to the typeCache, so that they can be used later
                             // this actually returns the type, but we don't actually care about that right now
-                            var id = InferIDFromFile(targetFile);
-                            GetTypesFromCacheOrManifest(CachedVersionManifest, id);
+                            GetTypesFromCacheOrManifest(CachedVersionManifest, modEntry.Id);
 
-                            if (!jsonMerges.ContainsKey(targetFile))
-                                jsonMerges[targetFile] = new List<string>();
+                            if (!jsonMerges.ContainsKey(modEntry.Id))
+                                jsonMerges[modEntry.Id] = new List<string>();
 
-                            if (jsonMerges[targetFile].Contains(modEntry.Path)) // TODO: is this necessary?
+                            if (jsonMerges[modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
                             Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
-                            jsonMerges[targetFile].Add(modEntry.Path);
+                            jsonMerges[modEntry.Id].Add(modEntry.Path);
                             continue;
                     }
 
@@ -953,10 +962,10 @@ namespace ModTek
 
                         var matchingPath = Path.GetFullPath(matchingEntry.FilePath);
 
-                        if (!jsonMerges.ContainsKey(matchingPath))
-                            jsonMerges[matchingPath] = new List<string>();
+                        if (!jsonMerges.ContainsKey(modEntry.Id))
+                            jsonMerges[modEntry.Id] = new List<string>();
 
-                        if (jsonMerges[matchingPath].Contains(modEntry.Path)) // TODO: is this necessary?
+                        if (jsonMerges[modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
                             continue;
 
                         Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
@@ -964,11 +973,18 @@ namespace ModTek
                         // this assumes that .json can only have a single type
                         modEntry.Type = matchingEntry.Type;
                         TryAddTypeToCache(modEntry.Id, modEntry.Type);
-                        jsonMerges[matchingPath].Add(modEntry.Path);
+                        jsonMerges[modEntry.Id].Add(modEntry.Path);
                         continue;
                     }
 
                     AddModEntry(CachedVersionManifest, modEntry);
+
+                    // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
+                    if (jsonMerges.ContainsKey(modEntry.Id))
+                    {
+                        jsonMerges.Remove(modEntry.Id);
+                        Log($"\t\tHad merges for {modEntry.Id} but had to toss, since original file is being replaced");
+                    }
                 }
             }
 
@@ -980,12 +996,22 @@ namespace ModTek
             yield return new ProgressReport(1, "Merging", "");
 
             var mergeCount = 0;
-            foreach (var originalPath in jsonMerges.Keys)
+            foreach (var id in jsonMerges.Keys)
             {
-                var mergePaths = jsonMerges[originalPath];
+                var existingEntry = BTRLEntries.Find(x => x.Id == id)?.GetVersionManifestEntry()
+                    ?? CachedVersionManifest.Find(x => x.Id == id);
+
+                if (existingEntry == null)
+                {
+                    Log($"\tHave merges for {id} but cannot find an original file! Skipping.");
+                    continue;
+                }
+
+                var originalPath = Path.GetFullPath(existingEntry.FilePath);
+                var mergePaths = jsonMerges[id];
 
                 if (!jsonMergeCache.HasCachedEntry(originalPath, mergePaths))
-                    yield return new ProgressReport(mergeCount++ / ((float)jsonMerges.Count), "Merging", Path.GetFileNameWithoutExtension(originalPath));
+                    yield return new ProgressReport(mergeCount++ / ((float)jsonMerges.Count), "Merging", id);
 
                 var cachePath = jsonMergeCache.GetOrCreateCachedEntry(originalPath, mergePaths);
 
@@ -993,7 +1019,6 @@ namespace ModTek
                 if (cachePath == null)
                     continue;
 
-                var id = InferIDFromFile(cachePath);
                 var cacheEntry = new ModDef.ManifestEntry(cachePath)
                 {
                     ShouldMergeJSON = false,
