@@ -195,8 +195,6 @@ namespace ModTek
 
         internal static string ResolvePath(string path, string rootPathToUse)
         {
-            path = path.Replace("{{Mods}}", ModsDirectory);
-
             if (!Path.IsPathRooted(path))
                 path = Path.Combine(rootPathToUse, path);
 
@@ -937,11 +935,11 @@ namespace ModTek
                             continue;
                         case "AdvancedJSONMerge":
                             var targetFileRelative = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
-                            var targetFile = ResolvePath(targetFileRelative, StreamingAssetsDirectory);
+                            var targetFile = ResolvePath(targetFileRelative, GameDirectory);
+                            var id = InferIDFromFile(targetFile);
 
                             // need to add the types of the file to the typeCache, so that they can be used later
-                            // this actually returns the type, but we don't actually care about that right now
-                            var id = InferIDFromFile(targetFile);
+                            // if merging onto a file added by another mod, the type is already in the cache
                             var types = GetTypesFromCacheOrManifest(CachedVersionManifest, id);
 
                             if (!jsonMerges.ContainsKey(id))
