@@ -71,6 +71,9 @@ namespace ModTek
                 if (!cachedEntryKVP.Value.CacheHit)
                     unusedMergePaths.Add(cachedEntryKVP.Key);
 
+            if (unusedMergePaths.Count > 0)
+                Log($"");
+
             foreach (var unusedMergePath in unusedMergePaths)
             {
                 var cacheAbsolutePath = CachedEntries[unusedMergePath].CacheAbsolutePath;
@@ -79,9 +82,15 @@ namespace ModTek
                 if (File.Exists(cacheAbsolutePath))
                     File.Delete(cacheAbsolutePath);
 
+                Log($"Old Merge Deleted: {cacheAbsolutePath}");
+
                 var directory = Path.GetDirectoryName(cacheAbsolutePath);
-                if (directory != null && Directory.GetFiles(directory).Length == 0)
+                while (Directory.Exists(directory) && Directory.GetDirectories(directory).Length == 0 && Directory.GetFiles(directory).Length == 0 && Path.GetFullPath(directory) != ModTek.CacheDirectory)
+                {
                     Directory.Delete(directory);
+                    Log($"Old Merge folder deleted: {directory}");
+                    directory = Path.GetFullPath(Path.Combine(directory, ".."));
+                }
             }
 
             File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
