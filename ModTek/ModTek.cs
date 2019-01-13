@@ -940,16 +940,17 @@ namespace ModTek
 
                             // need to add the types of the file to the typeCache, so that they can be used later
                             // this actually returns the type, but we don't actually care about that right now
-                            GetTypesFromCacheOrManifest(CachedVersionManifest, modEntry.Id);
+                            var id = InferIDFromFile(targetFile);
+                            var types = GetTypesFromCacheOrManifest(CachedVersionManifest, id);
 
-                            if (!jsonMerges.ContainsKey(modEntry.Id))
-                                jsonMerges[modEntry.Id] = new List<string>();
+                            if (!jsonMerges.ContainsKey(id))
+                                jsonMerges[id] = new List<string>();
 
-                            if (jsonMerges[modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
+                            if (jsonMerges[id].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
-                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
-                            jsonMerges[modEntry.Id].Add(modEntry.Path);
+                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({types[0]})");
+                            jsonMerges[id].Add(modEntry.Path);
                             continue;
                     }
 
