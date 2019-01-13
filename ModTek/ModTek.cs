@@ -934,9 +934,7 @@ namespace ModTek
                             }
                             continue;
                         case "AdvancedJSONMerge":
-                            var targetFileRelative = AdvancedJSONMerger.GetTargetFile(modEntry.Path);
-                            var targetFile = ResolvePath(targetFileRelative, GameDirectory);
-                            var id = InferIDFromFile(targetFile);
+                            var id = AdvancedJSONMerger.GetTargetID(modEntry.Path);
 
                             // need to add the types of the file to the typeCache, so that they can be used later
                             // if merging onto a file added by another mod, the type is already in the cache

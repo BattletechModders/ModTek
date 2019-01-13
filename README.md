@@ -120,7 +120,7 @@ Removes all heat sinks from the mech and then adds in back two heat sinks in the
 
 ```JSON
 {
-    "TargetFile": "BattleTech_Data/StreamingAssets/data/mech/mechdef_blackknight_BL-6-KNT.json",
+    "TargetID": "mechdef_blackknight_BL-6-KNT",
     "Instructions": [
         {
             "JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",

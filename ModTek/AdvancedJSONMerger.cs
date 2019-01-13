@@ -10,15 +10,15 @@ namespace ModTek
 {
     public static class AdvancedJSONMerger
     {
-        public static string GetTargetFile(string modEntryPath)
+        public static string GetTargetID(string modEntryPath)
         {
             var merge = ModTek.ParseGameJSONFile(modEntryPath);
-            return merge["TargetFile"].ToString();
+            return merge["TargetID"].ToString();
         }
 
         public static bool IsAdvancedJSONMerge(JObject merge)
         {
-            return merge["TargetFile"] != null;
+            return merge["TargetID"] != null;
         }
 
         public static void ProcessInstructionsJObject(JObject target, JObject merge)
@@ -36,7 +36,7 @@ namespace ModTek
         private class MergeFile
         {
             [JsonProperty(Required = Required.Always)]
-            public string TargetFile;
+            public string TargetID;
 
             [JsonProperty(Required = Required.Always)]
             public List<Instruction> Instructions;
