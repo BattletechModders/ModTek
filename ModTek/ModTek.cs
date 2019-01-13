@@ -983,6 +983,7 @@ namespace ModTek
                     }
 
                     AddModEntry(CachedVersionManifest, modEntry);
+                    TryAddTypeToCache(modEntry.Id, modEntry.Type);
 
                     // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
                     if (jsonMerges.ContainsKey(modEntry.Id))
