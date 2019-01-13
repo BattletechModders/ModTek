@@ -109,8 +109,7 @@ Example Manifest with Advanced JSON Merging entry.
 "Manifest": [
     {
         "Type": "AdvancedJSONMerge",
-        "Path": "advanced",
-        "ShouldMergeJSON": false
+        "Path": "advanced"
     }
 ]
 ```
@@ -121,7 +120,7 @@ Removes all heat sinks from the mech and then adds in back two heat sinks in the
 
 ```JSON
 {
-    "TargetFile": "data/mech/mechdef_blackknight_BL-6-KNT.json",
+    "TargetFile": "BattleTech_Data/StreamingAssets/data/mech/mechdef_blackknight_BL-6-KNT.json",
     "Instructions": [
         {
             "JSONPath": "inventory[?(@.ComponentDefID == 'Gear_HeatSink_Generic_Standard')]",

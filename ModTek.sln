@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek", "ModTek\ModTek.csp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{07E5D5B5-E51C-4CD8-8FA9-8241FAF6440F}"
 	ProjectSection(SolutionItems) = preProject
-		Readme.md = Readme.md
+		README.md = README.md
 		UNLICENSE = UNLICENSE
 	EndProjectSection
 EndProject
