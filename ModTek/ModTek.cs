@@ -315,7 +315,7 @@ namespace ModTek
             {
                 var id = Path.GetFileNameWithoutExtension(path);
 
-                if (id == path)
+                if (id == path || toAdd.ContainsKey(id) || cache.ContainsKey(id))
                     continue;
 
                 toAdd[id] = cache[path];
