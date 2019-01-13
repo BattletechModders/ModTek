@@ -815,12 +815,13 @@ namespace ModTek
                 case BattleTechResourceType.MechDef:
                 case BattleTechResourceType.PilotDef:
                 case BattleTechResourceType.WeaponDef:
-                    if (!dbCache.ContainsKey(relativePath) || dbCache[relativePath] != File.GetLastWriteTimeUtc(absolutePath))
+                    var writeTime = File.GetLastWriteTimeUtc(absolutePath);
+                    if (!dbCache.ContainsKey(relativePath) || dbCache[relativePath] != writeTime)
                     {
                         try
                         {
                             VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, absolutePath, db);
-                            dbCache[relativePath] = File.GetLastWriteTimeUtc(absolutePath);
+                            dbCache[relativePath] = writeTime;
                             return true;
                         }
                         catch (Exception e)
