@@ -13,12 +13,12 @@ namespace ModTek
         public static string GetTargetID(string modEntryPath)
         {
             var merge = ModTek.ParseGameJSONFile(modEntryPath);
-            return merge["TargetID"].ToString();
+            return merge[nameof(MergeFile.TargetID)].ToString();
         }
 
         public static bool IsAdvancedJSONMerge(JObject merge)
         {
-            return merge["TargetID"] != null;
+            return merge[nameof(MergeFile.TargetID)] != null;
         }
 
         public static void ProcessInstructionsJObject(JObject target, JObject merge)
