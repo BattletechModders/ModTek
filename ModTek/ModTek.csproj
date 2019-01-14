@@ -55,9 +55,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedJSONMerger.cs" />
-    <Compile Include="IManifestEntry.cs" />
-    <Compile Include="IModDef.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="ModEntry.cs" />
     <Compile Include="MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />

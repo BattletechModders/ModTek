@@ -62,14 +62,14 @@ namespace ModTek
         private static Dictionary<string, DateTime> dbCache;
 
         internal static VersionManifest CachedVersionManifest = null;
-        internal static List<ModDef.ManifestEntry> BTRLEntries = new List<ModDef.ManifestEntry>();
+        internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
 
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
-        private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
+        private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
 
@@ -572,11 +572,11 @@ namespace ModTek
         // READING mod.json AND INIT MODS
         private static void LoadMod(ModDef modDef)
         {
-            var potentialAdditions = new List<ModDef.ManifestEntry>();
+            var potentialAdditions = new List<ModEntry>();
 
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
-                modDef.Manifest.Add(new ModDef.ManifestEntry("StreamingAssets", true));
+                modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
 
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
             foreach (var entry in modDef.Manifest)
@@ -608,7 +608,7 @@ namespace ModTek
                     var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
                     foreach (var filePath in files)
                     {
-                        var childModDef = new ModDef.ManifestEntry(entry, Path.GetFullPath(filePath), InferIDFromFile(filePath));
+                        var childModDef = new ModEntry(entry, Path.GetFullPath(filePath), InferIDFromFile(filePath));
                         potentialAdditions.Add(childModDef);
                     }
                 }
@@ -755,7 +755,7 @@ namespace ModTek
 
 
         // ADDING MOD CONTENT TO THE GAME
-        private static void AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
+        private static void AddModEntry(VersionManifest manifest, ModEntry modEntry)
         {
             if (modEntry.Path == null)
                 return;
@@ -906,7 +906,7 @@ namespace ModTek
 
                         foreach (var type in types)
                         {
-                            var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
+                            var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(CachedVersionManifest, subModEntry);
 
@@ -1021,7 +1021,7 @@ namespace ModTek
                 if (cachePath == null)
                     continue;
 
-                var cacheEntry = new ModDef.ManifestEntry(cachePath)
+                var cacheEntry = new ModEntry(cachePath)
                 {
                     ShouldMergeJSON = false,
                     Type = GetTypesFromCache(id)[0], // this assumes only one type for each json file
