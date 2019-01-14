@@ -743,6 +743,13 @@ namespace ModTek
                     continue;
                 }
 
+                if (modDef.GameVersions.Count > 0 && !modDef.GameVersions.Exists(x => VersionInfo.ProductVersion.StartsWith(x)))
+                {
+                    Log($"Will not load {modDef.Name} because it specifies a game version that this isn't.");
+                    FailedToLoadMods.Add(modDef.Name);
+                    continue;
+                }
+
                 modDefs.Add(modDef.Name, modDef);
             }
 
@@ -751,6 +758,7 @@ namespace ModTek
             foreach (var modName in willNotLoad)
             {
                 Log($"Will not load {modName} because it's lacking a dependancy or a conflict loaded before it.");
+                FailedToLoadMods.Add(modName);
             }
             Log("");
 
