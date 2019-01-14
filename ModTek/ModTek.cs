@@ -638,7 +638,8 @@ namespace ModTek
                         Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}");
                         Log(e.ToString());
                         return false;
-                    }                }
+                    }
+                }
                 else if (modEntry.Path != "StreamingAssets")
                 {
                     // path is not streamingassets and it's missing

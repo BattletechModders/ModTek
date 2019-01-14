@@ -56,8 +56,29 @@ namespace ModTek
                 foreach (var workFunc in WorkList)
                 {
                     var workEnumerator = workFunc.Invoke();
-                    while (workEnumerator.MoveNext())
+                    bool didWork;
+
+                    do
                     {
+                        try
+                        {
+                            didWork = workEnumerator.MoveNext();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.FlushLogStream();
+                            Logger.Log($"");
+                            Logger.Log($"Uncaught ModTek exception!");
+                            Logger.Log(e.ToString());
+                            Logger.FlushLogStream();
+
+                            Slider.value = 1.0f;
+                            SliderText.text = "ModTek Died!";
+                            LoadingText.text = "See Mods/.modtek/ModTek.log";
+
+                            yield break;
+                        }
+
                         if (sw.ElapsedMilliseconds > FRAME_TIME)
                         {
                             var report = workEnumerator.Current;
@@ -70,6 +91,8 @@ namespace ModTek
                             yield return null;
                         }
                     }
+                    while (didWork);
+
                     yield return null;
                 }
 
@@ -77,10 +100,6 @@ namespace ModTek
                 SliderText.text = "Game now loading";
                 LoadingText.text = "";
                 yield return null;
-
-                // TODO: why was this here
-                // Let Finished stay on the screen for a moment
-                // Thread.Sleep(1000);
 
                 FinishAction.Invoke();
                 yield break;
