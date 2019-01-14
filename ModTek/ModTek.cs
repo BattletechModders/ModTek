@@ -67,6 +67,7 @@ namespace ModTek
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
+        internal static HashSet<string> FailedToLoadMods = new HashSet<string>();
 
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
@@ -754,12 +755,12 @@ namespace ModTek
 
             // lists guarentee order
             var modLoaded = 0;
-            var failedToLoad = new HashSet<string>();
+
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
 
-                if (modDef.DependsOn.Intersect(failedToLoad).Count() > 0)
+                if (modDef.DependsOn.Intersect(FailedToLoadMods).Count() > 0)
                 {
                     Log($"Skipping load of {modName} because one of its dependancies failed to load.");
                     continue;
@@ -770,13 +771,13 @@ namespace ModTek
                 try
                 {
                     if (!LoadMod(modDef))
-                        failedToLoad.Add(modName);
+                        FailedToLoadMods.Add(modName);
                 }
                 catch (Exception e)
                 {
                     Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
                     Log(e.ToString());
-                    failedToLoad.Add(modName);
+                    FailedToLoadMods.Add(modName);
                 }
             }
 

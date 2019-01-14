@@ -30,6 +30,9 @@
     <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
       <Private>False</Private>
     </Reference>
@@ -64,6 +67,7 @@
     <Compile Include="Patches\AssetBundleManager.cs" />
     <Compile Include="Patches\AVPVideoPlayer.cs" />
     <Compile Include="Patches\BattleTechResourceLocator.cs" />
+    <Compile Include="Patches\MainMenu.cs" />
     <Compile Include="Patches\MetadataDatabase.cs" />
     <Compile Include="Patches\SimGame_MDDExtensions.cs" />
     <Compile Include="Patches\VersionInfo.cs" />
