@@ -61,7 +61,14 @@
     <Compile Include="MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
-    <Compile Include="Patches.cs" />
+    <Compile Include="Patches\ActivateAfterInit.cs" />
+    <Compile Include="Patches\AssetBundleManager.cs" />
+    <Compile Include="Patches\AVPVideoPlayer.cs" />
+    <Compile Include="Patches\BattleTechResourceLocator.cs" />
+    <Compile Include="Patches\MetadataDatabase.cs" />
+    <Compile Include="Patches\SimGame_MDDExtensions.cs" />
+    <Compile Include="Patches\VersionInfo.cs" />
+    <Compile Include="Patches\VersionManifestUtilities.cs" />
     <Compile Include="ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
