@@ -26,6 +26,14 @@ namespace ModTek
             LogStream = null;
         }
 
+        internal static void FlushLogStream()
+        {
+            if (LogStream == null)
+                return;
+
+            LogStream.Flush();
+        }
+
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
