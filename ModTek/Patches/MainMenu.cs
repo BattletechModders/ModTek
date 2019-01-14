@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace ModTek
 {
+    /// <summary>
+    /// Adds popup message with all of the mods that failed to load if any.
+    /// </summary>
     [HarmonyPatch(typeof(MainMenu), "Init")]
     public static class MainMenu_Init_Patch
     {
