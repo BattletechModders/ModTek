@@ -570,7 +570,7 @@ namespace ModTek
 
 
         // READING mod.json AND INIT MODS
-        private static void LoadMod(ModDef modDef)
+        private static bool LoadMod(ModDef modDef)
         {
             var potentialAdditions = new List<ModEntry>();
 
@@ -587,7 +587,7 @@ namespace ModTek
                     if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
                         Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
-                        return;
+                        return false ;
                     }
 
                     modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
@@ -598,7 +598,7 @@ namespace ModTek
                 if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
                     Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
-                    return;
+                    return false;
                 }
 
                 var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, modEntry.Path));
@@ -618,7 +618,7 @@ namespace ModTek
                         {
                             Log($"\tCanceling {modDef.Name} load!");
                             Log($"\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}: {e.Message}");
-                            return;
+                            return false;
                         }
                     }
                 }
@@ -635,7 +635,7 @@ namespace ModTek
                     {
                         Log($"\tCanceling {modDef.Name} load!");
                         Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}: {e.Message}");
-                        return;
+                        return false;
                     }                }
                 else if (modEntry.Path != "StreamingAssets")
                 {
@@ -655,7 +655,7 @@ namespace ModTek
                 if (!File.Exists(dllPath))
                 {
                     Log($"\t{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
-                    return;
+                    return false;
                 }
 
                 if (modDef.DLLEntryPoint != null)
@@ -679,10 +679,11 @@ namespace ModTek
             Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
 
             if (potentialAdditions.Count <= 0)
-                return;
+                return true;
 
             // actually add the additions, since we successfully got through loading the other stuff
             entriesByMod[modDef.Name] = potentialAdditions;
+            return true;
         }
 
         internal static void LoadMods()
@@ -750,18 +751,29 @@ namespace ModTek
 
             // lists guarentee order
             var modLoaded = 0;
+            var failedToLoad = new HashSet<string>();
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
+
+                if (modDef.DependsOn.Intersect(failedToLoad).Count() > 0)
+                {
+                    Log($"Skipping load of {modName} because one of its dependancies failed to load.");
+                    continue;
+                }
+
                 yield return new ProgressReport(modLoaded++ / ((float)modLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}");
+
                 try
                 {
-                    LoadMod(modDef);
+                    if (!LoadMod(modDef))
+                        failedToLoad.Add(modName);
                 }
                 catch (Exception e)
                 {
                     Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
                     Log($"\t{e.Message}");
+                    failedToLoad.Add(modName);
                 }
             }
 
