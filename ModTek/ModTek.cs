@@ -725,6 +725,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
+                    FailedToLoadMods.Add(GetRelativePath(modDefPath, modDirectory));
                     Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
                     Log(e.ToString());
                     continue;
@@ -763,6 +764,7 @@ namespace ModTek
                 if (modDef.DependsOn.Intersect(FailedToLoadMods).Count() > 0)
                 {
                     Log($"Skipping load of {modName} because one of its dependancies failed to load.");
+                    FailedToLoadMods.Add(modName);
                     continue;
                 }
 
