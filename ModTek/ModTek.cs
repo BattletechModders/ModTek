@@ -579,50 +579,69 @@ namespace ModTek
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
 
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
-            foreach (var entry in modDef.Manifest)
+            foreach (var modEntry in modDef.Manifest)
             {
                 // handle prefabs; they have potential internal path to assetbundle
-                if (entry.Type == "Prefab" && !string.IsNullOrEmpty(entry.AssetBundleName))
+                if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
                 {
-                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == entry.AssetBundleName))
+                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
                         Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
                         return;
                     }
 
-                    entry.Id = Path.GetFileNameWithoutExtension(entry.Path);
-                    if (!FileIsOnDenyList(entry.Path)) potentialAdditions.Add(entry);
+                    modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    if (!FileIsOnDenyList(modEntry.Path)) potentialAdditions.Add(modEntry);
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(entry.Path) && string.IsNullOrEmpty(entry.Type) && entry.Path != "StreamingAssets")
+                if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
                     Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
                     return;
                 }
 
-                var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, entry.Path));
+                var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, modEntry.Path));
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
                     var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
                     foreach (var filePath in files)
                     {
-                        var childModDef = new ModEntry(entry, Path.GetFullPath(filePath), InferIDFromFile(filePath));
-                        potentialAdditions.Add(childModDef);
+                        var path = Path.GetFullPath(filePath);
+                        try
+                        {
+                            var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
+                            potentialAdditions.Add(childModEntry);
+                        }
+                        catch(Exception e)
+                        {
+                            Log($"\tCanceling {modDef.Name} load!");
+                            Log($"\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}: {e.Message}");
+                            return;
+                        }
                     }
                 }
                 else if (File.Exists(entryPath) && !FileIsOnDenyList(entryPath))
                 {
                     // path is a file, add the single entry
-                    entry.Id = entry.Id ?? InferIDFromFile(entryPath);
-                    entry.Path = entryPath;
-                    potentialAdditions.Add(entry);
-                }
-                else if (entry.Path != "StreamingAssets")
+                    try
+                    {
+                        modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
+                        modEntry.Path = entryPath;
+                        potentialAdditions.Add(modEntry);
+                    }
+                    catch (Exception e)
+                    {
+                        Log($"\tCanceling {modDef.Name} load!");
+                        Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}: {e.Message}");
+                        return;
+                    }                }
+                else if (modEntry.Path != "StreamingAssets")
                 {
                     // path is not streamingassets and it's missing
-                    Log($"\tMissing Entry: Manifest specifies file/directory of {entry.Type} at path {entry.Path}, but it's not there. Continuing to load.");
+                    Log($"\tMissing Entry: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+                    continue;
                 }
             }
 
