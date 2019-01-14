@@ -344,7 +344,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log("Loading merge cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                 }
             }
 
@@ -369,7 +369,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log("Loading type cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                 }
             }
 
@@ -438,7 +438,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log("Loading db cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                 }
             }
 
@@ -503,7 +503,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log("Loading cached load order failed, rebuilding it.");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                 }
             }
 
@@ -617,7 +617,8 @@ namespace ModTek
                         catch(Exception e)
                         {
                             Log($"\tCanceling {modDef.Name} load!");
-                            Log($"\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}: {e.Message}");
+                            Log($"\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}");
+                            Log(e.ToString());
                             return false;
                         }
                     }
@@ -634,7 +635,8 @@ namespace ModTek
                     catch (Exception e)
                     {
                         Log($"\tCanceling {modDef.Name} load!");
-                        Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}: {e.Message}");
+                        Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}");
+                        Log(e.ToString());
                         return false;
                     }                }
                 else if (modEntry.Path != "StreamingAssets")
@@ -722,7 +724,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                     continue;
                 }
 
@@ -772,7 +774,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
-                    Log($"\t{e.Message}");
+                    Log(e.ToString());
                     failedToLoad.Add(modName);
                 }
             }
@@ -856,7 +858,7 @@ namespace ModTek
                         catch (Exception e)
                         {
                             Log($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:");
-                            Log($"\t\t{e.Message}");
+                            Log(e.ToString());
                             return false;
                         }
                     }

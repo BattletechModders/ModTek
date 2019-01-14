@@ -175,7 +175,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!");
-                    Log($"\t\t{e.Message}");
+                    Log(e.ToString());
                     HasErrors = true;
                     return;
                 }
@@ -198,7 +198,7 @@ namespace ModTek
                         catch (Exception e)
                         {
                             Log($"\tMod merge JSON at path {originalAbsolutePath} has errors preventing any merges!");
-                            Log($"\t\t{e.Message}");
+                            Log(e.ToString());
                             continue;
                         }
 
@@ -212,7 +212,7 @@ namespace ModTek
                             catch (Exception e)
                             {
                                 Log($"\tMod advanced merge JSON at path {mergePath} has errors preventing advanced json merges!");
-                                Log($"\t\t{e.Message}");
+                                Log(e.ToString());
                             }
                         }
 
