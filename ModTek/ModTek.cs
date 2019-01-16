@@ -62,14 +62,15 @@ namespace ModTek
         private static Dictionary<string, DateTime> dbCache;
 
         internal static VersionManifest CachedVersionManifest = null;
-        internal static List<ModDef.ManifestEntry> BTRLEntries = new List<ModDef.ManifestEntry>();
+        internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
 
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
+        internal static HashSet<string> FailedToLoadMods = new HashSet<string>();
 
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
-        private static Dictionary<string, List<ModDef.ManifestEntry>> entriesByMod = new Dictionary<string, List<ModDef.ManifestEntry>>();
+        private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
 
@@ -343,8 +344,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading merge cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    LogException("Loading merge cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -368,8 +368,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading type cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    LogException("Loading type cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -437,8 +436,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading db cache failed -- will rebuild it.");
-                    Log($"\t{e.Message}");
+                    LogException("Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -502,8 +500,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading cached load order failed, rebuilding it.");
-                    Log($"\t{e.Message}");
+                    LogException("Loading cached load order failed, rebuilding it.", e);
                 }
             }
 
@@ -570,59 +567,77 @@ namespace ModTek
 
 
         // READING mod.json AND INIT MODS
-        private static void LoadMod(ModDef modDef)
+        private static bool LoadMod(ModDef modDef)
         {
-            var potentialAdditions = new List<ModDef.ManifestEntry>();
+            var potentialAdditions = new List<ModEntry>();
 
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
-                modDef.Manifest.Add(new ModDef.ManifestEntry("StreamingAssets", true));
+                modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
 
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
-            foreach (var entry in modDef.Manifest)
+            foreach (var modEntry in modDef.Manifest)
             {
                 // handle prefabs; they have potential internal path to assetbundle
-                if (entry.Type == "Prefab" && !string.IsNullOrEmpty(entry.AssetBundleName))
+                if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
                 {
-                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == entry.AssetBundleName))
+                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
                         Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
-                        return;
+                        return false ;
                     }
 
-                    entry.Id = Path.GetFileNameWithoutExtension(entry.Path);
-                    if (!FileIsOnDenyList(entry.Path)) potentialAdditions.Add(entry);
+                    modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    if (!FileIsOnDenyList(modEntry.Path)) potentialAdditions.Add(modEntry);
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(entry.Path) && string.IsNullOrEmpty(entry.Type) && entry.Path != "StreamingAssets")
+                if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
                     Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
-                    return;
+                    return false;
                 }
 
-                var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, entry.Path));
+                var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, modEntry.Path));
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
                     var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
                     foreach (var filePath in files)
                     {
-                        var childModDef = new ModDef.ManifestEntry(entry, Path.GetFullPath(filePath), InferIDFromFile(filePath));
-                        potentialAdditions.Add(childModDef);
+                        var path = Path.GetFullPath(filePath);
+                        try
+                        {
+                            var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
+                            potentialAdditions.Add(childModEntry);
+                        }
+                        catch(Exception e)
+                        {
+                            LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}", e);
+                            return false;
+                        }
                     }
                 }
                 else if (File.Exists(entryPath) && !FileIsOnDenyList(entryPath))
                 {
                     // path is a file, add the single entry
-                    entry.Id = entry.Id ?? InferIDFromFile(entryPath);
-                    entry.Path = entryPath;
-                    potentialAdditions.Add(entry);
+                    try
+                    {
+                        modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
+                        modEntry.Path = entryPath;
+                        potentialAdditions.Add(modEntry);
+                    }
+                    catch (Exception e)
+                    {
+                        LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}", e);
+                        return false;
+                    }
                 }
-                else if (entry.Path != "StreamingAssets")
+                else if (modEntry.Path != "StreamingAssets")
                 {
                     // path is not streamingassets and it's missing
-                    Log($"\tMissing Entry: Manifest specifies file/directory of {entry.Type} at path {entry.Path}, but it's not there. Continuing to load.");
+                    Log($"\tMissing Entry: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+                    continue;
                 }
             }
 
@@ -636,7 +651,7 @@ namespace ModTek
                 if (!File.Exists(dllPath))
                 {
                     Log($"\t{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
-                    return;
+                    return false;
                 }
 
                 if (modDef.DLLEntryPoint != null)
@@ -660,10 +675,11 @@ namespace ModTek
             Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
 
             if (potentialAdditions.Count <= 0)
-                return;
+                return true;
 
             // actually add the additions, since we successfully got through loading the other stuff
             entriesByMod[modDef.Name] = potentialAdditions;
+            return true;
         }
 
         internal static void LoadMods()
@@ -701,8 +717,8 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
-                    Log($"\t{e.Message}");
+                    FailedToLoadMods.Add(GetRelativePath(modDefPath, modDirectory));
+                    LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
 
@@ -718,6 +734,42 @@ namespace ModTek
                     continue;
                 }
 
+                // check game version vs. specific version or against min/max
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(modDef.BattleTechVersion))
+                {
+                    Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
+                    FailedToLoadMods.Add(modDef.Name);
+                    continue;
+                }
+                else
+                {
+                    var btgVersion = new Version(VersionInfo.ProductVersion);
+
+                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
+                    {
+                        var minVersion = new Version(modDef.BattleTechVersionMin);
+
+                        if (btgVersion < minVersion)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                            continue;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
+                    {
+                        var maxVersion = new Version(modDef.BattleTechVersionMax);
+
+                        if (btgVersion > maxVersion)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                            continue;
+                        }
+                    }
+                }
+
                 modDefs.Add(modDef.Name, modDef);
             }
 
@@ -726,23 +778,35 @@ namespace ModTek
             foreach (var modName in willNotLoad)
             {
                 Log($"Will not load {modName} because it's lacking a dependancy or a conflict loaded before it.");
+                FailedToLoadMods.Add(modName);
             }
             Log("");
 
             // lists guarentee order
             var modLoaded = 0;
+
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
+
+                if (modDef.DependsOn.Intersect(FailedToLoadMods).Count() > 0)
+                {
+                    Log($"Skipping load of {modName} because one of its dependancies failed to load.");
+                    FailedToLoadMods.Add(modName);
+                    continue;
+                }
+
                 yield return new ProgressReport(modLoaded++ / ((float)modLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}");
+
                 try
                 {
-                    LoadMod(modDef);
+                    if (!LoadMod(modDef))
+                        FailedToLoadMods.Add(modName);
                 }
                 catch (Exception e)
                 {
-                    Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
-                    Log($"\t{e.Message}");
+                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    FailedToLoadMods.Add(modName);
                 }
             }
 
@@ -755,7 +819,7 @@ namespace ModTek
 
 
         // ADDING MOD CONTENT TO THE GAME
-        private static void AddModEntry(VersionManifest manifest, ModDef.ManifestEntry modEntry)
+        private static void AddModEntry(VersionManifest manifest, ModEntry modEntry)
         {
             if (modEntry.Path == null)
                 return;
@@ -824,8 +888,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            Log($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:");
-                            Log($"\t\t{e.Message}");
+                            LogException($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
                             return false;
                         }
                     }
@@ -906,7 +969,7 @@ namespace ModTek
 
                         foreach (var type in types)
                         {
-                            var subModEntry = new ModDef.ManifestEntry(modEntry, modEntry.Path, modEntry.Id);
+                            var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(CachedVersionManifest, subModEntry);
 
@@ -1021,7 +1084,7 @@ namespace ModTek
                 if (cachePath == null)
                     continue;
 
-                var cacheEntry = new ModDef.ManifestEntry(cachePath)
+                var cacheEntry = new ModEntry(cachePath)
                 {
                     ShouldMergeJSON = false,
                     Type = GetTypesFromCache(id)[0], // this assumes only one type for each json file

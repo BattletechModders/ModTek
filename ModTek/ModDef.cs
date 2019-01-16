@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using BattleTech;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
-    public class ModDef : IModDef
+    public class ModDef
     {
         // this path will be set at runtime by ModTek
         [JsonIgnore]
@@ -27,6 +26,9 @@ namespace ModTek
         // versioning
         public string Version { get; set; }
         public DateTime? PackagedOn { get; set; }
+        public string BattleTechVersionMin { get; set; }
+        public string BattleTechVersionMax { get; set; }
+        public string BattleTechVersion { get; set; }
 
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
@@ -46,7 +48,7 @@ namespace ModTek
         public bool LoadImplicitManifest { get; set; } = true;
 
         // manifest, for including any kind of things to add to the game's manifest
-        public List<ManifestEntry> Manifest { get; set; } = new List<ManifestEntry>();
+        public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
@@ -62,55 +64,6 @@ namespace ModTek
             var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
             return modDef;
-        }
-
-        public class ManifestEntry : IManifestEntry
-        {
-            [JsonConstructor]
-            public ManifestEntry(string path, bool shouldMergeJSON = false)
-            {
-                Path = path;
-                ShouldMergeJSON = shouldMergeJSON;
-            }
-
-            public ManifestEntry(ManifestEntry parent, string path, string id)
-            {
-                Path = path;
-                Id = id;
-
-                Type = parent.Type;
-                AssetBundleName = parent.AssetBundleName;
-                AssetBundlePersistent = parent.AssetBundlePersistent;
-                ShouldMergeJSON = parent.ShouldMergeJSON;
-                AddToAddendum = parent.AddToAddendum;
-                AddToDB = parent.AddToDB;
-            }
-
-            [JsonProperty(Required = Required.Always)]
-            public string Path { get; set; }
-
-            [DefaultValue(false)]
-            public bool ShouldMergeJSON { get; set; } // defaults to false
-
-            [DefaultValue(true)]
-            public bool AddToDB { get; set; } = true;
-
-            public string AddToAddendum { get; set; }
-
-            public string Type { get; set; }
-            public string Id { get; set; }
-            public string AssetBundleName { get; set; }
-            public bool? AssetBundlePersistent { get; set; }
-
-            private VersionManifestEntry versionManifestEntry;
-
-            public VersionManifestEntry GetVersionManifestEntry()
-            {
-                if (versionManifestEntry == null)
-                    versionManifestEntry = new VersionManifestEntry(Id, Path, Type, DateTime.Now, "1", AssetBundleName, AssetBundlePersistent);
-
-                return versionManifestEntry;
-            }
         }
     }
 }

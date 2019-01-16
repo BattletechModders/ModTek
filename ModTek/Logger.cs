@@ -26,6 +26,23 @@ namespace ModTek
             LogStream = null;
         }
 
+        internal static void FlushLogStream()
+        {
+            if (LogStream == null)
+                return;
+
+            LogStream.Flush();
+        }
+
+        internal static void Log(string message)
+        {
+            var stream = GetOrCreateStream();
+            if (stream == null)
+                return;
+
+            stream.WriteLine(message);
+        }
+
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
@@ -44,6 +61,17 @@ namespace ModTek
                 return;
 
             stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
+        }
+
+        internal static void LogException(string message, Exception e)
+        {
+            var stream = GetOrCreateStream();
+            if (stream == null)
+                return;
+
+            stream.WriteLine(message);
+            stream.WriteLine(e.ToString());
+            FlushLogStream();
         }
     }
 }

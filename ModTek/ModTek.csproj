@@ -30,6 +30,9 @@
     <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
       <Private>False</Private>
     </Reference>
@@ -55,13 +58,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedJSONMerger.cs" />
-    <Compile Include="IManifestEntry.cs" />
-    <Compile Include="IModDef.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="ModEntry.cs" />
     <Compile Include="MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
-    <Compile Include="Patches.cs" />
+    <Compile Include="Patches\ActivateAfterInit.cs" />
+    <Compile Include="Patches\AssetBundleManager.cs" />
+    <Compile Include="Patches\AVPVideoPlayer.cs" />
+    <Compile Include="Patches\BattleTechResourceLocator.cs" />
+    <Compile Include="Patches\MainMenu.cs" />
+    <Compile Include="Patches\MetadataDatabase.cs" />
+    <Compile Include="Patches\SimGame_MDDExtensions.cs" />
+    <Compile Include="Patches\VersionInfo.cs" />
+    <Compile Include="Patches\VersionManifestUtilities.cs" />
     <Compile Include="ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

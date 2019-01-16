@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +7,13 @@ using Newtonsoft.Json.Linq;
 
 namespace ModTek
 {
+    using static ModTek;
+
     public static class AdvancedJSONMerger
     {
         public static string GetTargetID(string modEntryPath)
         {
-            var merge = ModTek.ParseGameJSONFile(modEntryPath);
+            var merge = ParseGameJSONFile(modEntryPath);
             return merge[nameof(MergeFile.TargetID)].ToString();
         }
 
