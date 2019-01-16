@@ -121,7 +121,7 @@ namespace ModTek
             if (!ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
-                CloseLogStream();
+                Cleanup();
             }
 
             // create all of the caches
@@ -141,6 +141,21 @@ namespace ModTek
             BuildModManifestEntries();
 
             stopwatch.Stop();
+        }
+
+        public static void Cleanup()
+        {
+            CloseLogStream();
+
+            modLoadOrder = null;
+            jsonMergeCache = null;
+            typeCache = null;
+            dbCache = null;
+
+            cachedJObjects = null;
+            entriesByMod = null;
+
+            stopwatch = null;
         }
 
 
@@ -1178,7 +1193,7 @@ namespace ModTek
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-            CloseLogStream();
+            Cleanup();
 
             yield break;
         }

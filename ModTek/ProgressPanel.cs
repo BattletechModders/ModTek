@@ -75,7 +75,7 @@ namespace ModTek
                             SliderText.text = "ModTek Died!";
                             LoadingText.text = $"See \"{GetRelativePath(LogPath, GameDirectory)}\"";
 
-                            CloseLogStream();
+                            Cleanup();
 
                             yield break;
                         }
