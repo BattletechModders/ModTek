@@ -62,5 +62,16 @@ namespace ModTek
 
             stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
+
+        internal static void LogException(string message, Exception e)
+        {
+            var stream = GetOrCreateStream();
+            if (stream == null)
+                return;
+
+            stream.WriteLine(message);
+            stream.WriteLine(e.ToString());
+            FlushLogStream();
+        }
     }
 }

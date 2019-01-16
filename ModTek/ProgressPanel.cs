@@ -9,6 +9,9 @@ using UnityEngine.UI;
 
 namespace ModTek
 {
+    using static ModTek;
+    using static Logger;
+
     internal struct ProgressReport
     {
         public float Progress { get; set; }
@@ -66,15 +69,13 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            Logger.FlushLogStream();
-                            Logger.Log($"");
-                            Logger.Log($"Uncaught ModTek exception!");
-                            Logger.Log(e.ToString());
-                            Logger.FlushLogStream();
+                            LogException($"\nUncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
-                            LoadingText.text = "See Mods/.modtek/ModTek.log";
+                            LoadingText.text = $"See \"{GetRelativePath(LogPath, GameDirectory)}\"";
+
+                            CloseLogStream();
 
                             yield break;
                         }
@@ -121,21 +122,21 @@ namespace ModTek
             var panelTitleText = GameObject.Find("ProgressBar_Title")?.GetComponent<Text>();
             if (panelTitleText == null)
             {
-                Logger.LogWithDate("Error loading ProgressBar_Title");
+                LogWithDate("Error loading ProgressBar_Title");
                 return false;
             }
 
             var sliderText = GameObject.Find("ProgressBar_Slider_Text")?.GetComponent<Text>();
             if (sliderText == null)
             {
-                Logger.LogWithDate("Error loading ProgressBar_Slider_Text");
+                LogWithDate("Error loading ProgressBar_Slider_Text");
                 return false;
             }
 
             var loadingText = GameObject.Find("ProgressBar_Loading_Text")?.GetComponent<Text>();
             if (loadingText == null)
             {
-                Logger.LogWithDate("Error loading ProgressBar_Loading_Text");
+                LogWithDate("Error loading ProgressBar_Loading_Text");
                 return false;
             }
 
@@ -143,7 +144,7 @@ namespace ModTek
             var slider = sliderGameObject?.GetComponent<Slider>();
             if (sliderGameObject == null)
             {
-                Logger.LogWithDate("Error loading ProgressBar_Slider");
+                LogWithDate("Error loading ProgressBar_Slider");
                 return false;
             }
 

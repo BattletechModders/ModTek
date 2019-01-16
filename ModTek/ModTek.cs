@@ -344,8 +344,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading merge cache failed -- will rebuild it.");
-                    Log(e.ToString());
+                    LogException("Loading merge cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -369,8 +368,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading type cache failed -- will rebuild it.");
-                    Log(e.ToString());
+                    LogException("Loading type cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -438,8 +436,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading db cache failed -- will rebuild it.");
-                    Log(e.ToString());
+                    LogException("Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -503,8 +500,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log("Loading cached load order failed, rebuilding it.");
-                    Log(e.ToString());
+                    LogException("Loading cached load order failed, rebuilding it.", e);
                 }
             }
 
@@ -617,9 +613,7 @@ namespace ModTek
                         }
                         catch(Exception e)
                         {
-                            Log($"\tCanceling {modDef.Name} load!");
-                            Log($"\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}");
-                            Log(e.ToString());
+                            LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}", e);
                             return false;
                         }
                     }
@@ -635,9 +629,7 @@ namespace ModTek
                     }
                     catch (Exception e)
                     {
-                        Log($"\tCanceling {modDef.Name} load!");
-                        Log($"\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}");
-                        Log(e.ToString());
+                        LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}", e);
                         return false;
                     }
                 }
@@ -726,8 +718,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     FailedToLoadMods.Add(GetRelativePath(modDefPath, modDirectory));
-                    Log($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}");
-                    Log(e.ToString());
+                    LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
 
@@ -743,11 +734,40 @@ namespace ModTek
                     continue;
                 }
 
-                if (modDef.GameVersions.Count > 0 && !modDef.GameVersions.Exists(x => VersionInfo.ProductVersion.StartsWith(x)))
+                // check game version vs. specific version or against min/max
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(modDef.BattleTechVersion))
                 {
-                    Log($"Will not load {modDef.Name} because it specifies a game version that this isn't.");
+                    Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
                     FailedToLoadMods.Add(modDef.Name);
                     continue;
+                }
+                else
+                {
+                    var btgVersion = new Version(VersionInfo.ProductVersion);
+
+                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
+                    {
+                        var minVersion = new Version(modDef.BattleTechVersionMin);
+
+                        if (btgVersion < minVersion)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                            continue;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
+                    {
+                        var maxVersion = new Version(modDef.BattleTechVersionMax);
+
+                        if (btgVersion > maxVersion)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                            continue;
+                        }
+                    }
                 }
 
                 modDefs.Add(modDef.Name, modDef);
@@ -785,8 +805,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!");
-                    Log(e.ToString());
+                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
                 }
             }
@@ -869,8 +888,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            Log($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:");
-                            Log(e.ToString());
+                            LogException($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
                             return false;
                         }
                     }

@@ -26,7 +26,9 @@ namespace ModTek
         // versioning
         public string Version { get; set; }
         public DateTime? PackagedOn { get; set; }
-        public List<string> GameVersions { get; set; } = new List<string>();
+        public string BattleTechVersionMin { get; set; }
+        public string BattleTechVersionMax { get; set; }
+        public string BattleTechVersion { get; set; }
 
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
