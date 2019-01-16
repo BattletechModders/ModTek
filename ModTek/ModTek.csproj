@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedJSONMerger.cs" />
+    <Compile Include="LoadingCurtainErrorText.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="MergeCache.cs" />
@@ -67,6 +68,8 @@
     <Compile Include="Patches\AssetBundleManager.cs" />
     <Compile Include="Patches\AVPVideoPlayer.cs" />
     <Compile Include="Patches\BattleTechResourceLocator.cs" />
+    <Compile Include="Patches\DataManager.cs" />
+    <Compile Include="Patches\LoadingCurtain.cs" />
     <Compile Include="Patches\MainMenu.cs" />
     <Compile Include="Patches\MetadataDatabase.cs" />
     <Compile Include="Patches\SimGame_MDDExtensions.cs" />
