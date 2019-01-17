@@ -138,14 +138,16 @@ namespace ModTek
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            stopwatch.Stop();
-
             LoadMods();
             BuildModManifestEntries();
         }
 
         public static void Cleanup()
         {
+            stopwatch.Stop();
+            Log("");
+            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+
             CloseLogStream();
 
             modLoadOrder = null;
@@ -704,8 +706,6 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> LoadMoadsLoop()
         {
-            stopwatch.Start();
-
             Log("");
             yield return new ProgressReport(1, "Initializing Mods", "");
 
@@ -827,7 +827,6 @@ namespace ModTek
 
             PrintHarmonySummary(HarmonySummaryPath);
             WriteJsonFile(LoadOrderPath, modLoadOrder);
-            stopwatch.Stop();
 
             yield break;
         }
@@ -921,8 +920,6 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
         {
-            stopwatch.Start();
-
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 yield break;
@@ -1190,9 +1187,6 @@ namespace ModTek
             // write db/type cache to disk
             WriteJsonFile(DBCachePath, dbCache);
 
-            stopwatch.Stop();
-            Log("");
-            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
             Cleanup();
 
             yield break;
