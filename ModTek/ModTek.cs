@@ -63,6 +63,9 @@ namespace ModTek
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
 
+        // measure loadtime impact
+        private static Stopwatch stopwatch = new Stopwatch();
+
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest = null;
         internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
@@ -76,6 +79,8 @@ namespace ModTek
         [UsedImplicitly]
         public static void Init()
         {
+            stopwatch.Start();
+
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
             if (manifestDirectory == null)
@@ -133,6 +138,8 @@ namespace ModTek
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
+            stopwatch.Stop();
+
             LoadMods();
             BuildModManifestEntries();
         }
@@ -147,6 +154,8 @@ namespace ModTek
             dbCache = null;
             cachedJObjects = null;
             entriesByMod = null;
+
+            stopwatch = null;
         }
 
 
@@ -695,8 +704,7 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> LoadMoadsLoop()
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+            stopwatch.Start();
 
             Log("");
             yield return new ProgressReport(1, "Initializing Mods", "");
@@ -819,7 +827,7 @@ namespace ModTek
 
             PrintHarmonySummary(HarmonySummaryPath);
             WriteJsonFile(LoadOrderPath, modLoadOrder);
-            stopWatch.Stop();
+            stopwatch.Stop();
 
             yield break;
         }
@@ -913,8 +921,7 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+            stopwatch.Start();
 
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
@@ -1183,9 +1190,9 @@ namespace ModTek
             // write db/type cache to disk
             WriteJsonFile(DBCachePath, dbCache);
 
-            stopWatch.Stop();
+            stopwatch.Stop();
             Log("");
-            LogWithDate($"Done. Elapsed running time: {stopWatch.Elapsed.TotalSeconds} seconds\n");
+            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
             Cleanup();
 
             yield break;
