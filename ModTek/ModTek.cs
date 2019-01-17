@@ -897,7 +897,11 @@ namespace ModTek
                         try
                         {
                             VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, absolutePath, db);
-                            dbCache[relativePath] = writeTime;
+
+                            // don't write game files to the dbCache, since they're assumed to be default in the db
+                            if (!absolutePath.Contains(StreamingAssetsDirectory))
+                                dbCache[relativePath] = writeTime;
+
                             return true;
                         }
                         catch (Exception e)
@@ -1160,7 +1164,7 @@ namespace ModTek
                     foreach (var replacementEntry in replacementEntries)
                     {
                         if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
-                            Log($"\t\tReplaced DB entry with an existing entry in path: {Path.GetFullPath(replacementEntry.FilePath)}");
+                            Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
                     }
                 }
             }
