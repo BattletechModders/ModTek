@@ -55,23 +55,24 @@ namespace ModTek
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
 
-        // files that are read and written to (located in .modtek)
+        // internal structures
         private static List<string> modLoadOrder;
         private static MergeCache jsonMergeCache;
         private static Dictionary<string, List<string>> typeCache;
         private static Dictionary<string, DateTime> dbCache;
+        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
+        private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
 
+        // measure loadtime impact
+        private static Stopwatch stopwatch = new Stopwatch();
+
+        // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest = null;
         internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
-
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
-        internal static HashSet<string> FailedToLoadMods = new HashSet<string>();
-
-        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
-        private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
-        private static Stopwatch stopwatch = new Stopwatch();
+        internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
 
 
         // INITIALIZATION (called by BTML)
@@ -121,7 +122,7 @@ namespace ModTek
             if (!ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
-                CloseLogStream();
+                Cleanup();
             }
 
             // create all of the caches
@@ -139,8 +140,24 @@ namespace ModTek
 
             LoadMods();
             BuildModManifestEntries();
+        }
 
+        public static void Cleanup()
+        {
             stopwatch.Stop();
+            Log("");
+            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+
+            CloseLogStream();
+
+            modLoadOrder = null;
+            jsonMergeCache = null;
+            typeCache = null;
+            dbCache = null;
+            cachedJObjects = null;
+            entriesByMod = null;
+
+            stopwatch = null;
         }
 
 
@@ -689,8 +706,6 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> LoadMoadsLoop()
         {
-            stopwatch.Start();
-
             Log("");
             yield return new ProgressReport(1, "Initializing Mods", "");
 
@@ -812,7 +827,6 @@ namespace ModTek
 
             PrintHarmonySummary(HarmonySummaryPath);
             WriteJsonFile(LoadOrderPath, modLoadOrder);
-            stopwatch.Stop();
 
             yield break;
         }
@@ -906,8 +920,6 @@ namespace ModTek
 
         internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
         {
-            stopwatch.Start();
-
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
                 yield break;
@@ -1175,10 +1187,7 @@ namespace ModTek
             // write db/type cache to disk
             WriteJsonFile(DBCachePath, dbCache);
 
-            stopwatch.Stop();
-            Log("");
-            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-            CloseLogStream();
+            Cleanup();
 
             yield break;
         }
