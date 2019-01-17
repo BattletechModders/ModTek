@@ -197,7 +197,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            LogException($"\tMod merge JSON at path {originalAbsolutePath} has errors preventing any merges!", e);
+                            LogException($"\tMod merge JSON at path {GetRelativePath(mergePath, GameDirectory)} has errors preventing its merge!", e);
                             continue;
                         }
 
@@ -210,7 +210,8 @@ namespace ModTek
                             }
                             catch (Exception e)
                             {
-                                LogException($"\tMod advanced merge JSON at path {mergePath} has errors preventing advanced json merges!", e);
+                                LogException($"\tMod advanced merge JSON at path {GetRelativePath(mergePath, GameDirectory)} has errors preventing merge!", e);
+                                continue;
                             }
                         }
 

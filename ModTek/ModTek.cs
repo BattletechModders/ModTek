@@ -1015,6 +1015,12 @@ namespace ModTek
                             // if merging onto a file added by another mod, the type is already in the cache
                             var types = GetTypesFromCacheOrManifest(CachedVersionManifest, id);
 
+                            if (types == null || types.Count == 0)
+                            {
+                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" has ID that doesn't match anything! Skipping this merge");
+                                continue;
+                            }
+
                             if (!jsonMerges.ContainsKey(id))
                                 jsonMerges[id] = new List<string>();
 
