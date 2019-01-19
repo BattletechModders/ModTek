@@ -27,4 +27,16 @@ namespace ModTek
             LoadingCurtainErrorText.Clear();
         }
     }
+
+    /// <summary>
+    /// Clear the LoadingCurtainErrorText when loading curtain hides using ExtraWaitFadeIn
+    /// </summary>
+    [HarmonyPatch(typeof(LoadingCurtain), "ExtraWaitFadeIn")]
+    public static class LoadingCurtain_ExtraWaitFadeIn_Patch
+    {
+        public static void Postfix()
+        {
+            LoadingCurtainErrorText.Clear();
+        }
+    }
 }
