@@ -24,12 +24,13 @@ namespace ModTek
                 return;
 
             tmProText.text = "";
+            Message = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
-                Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+                Message += $"\"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
             else
-                Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"output_log.txt\"\n";
+                Message += $"\"output_log.txt\"\n";
         }
 
         public static void Setup(GameObject parent)
