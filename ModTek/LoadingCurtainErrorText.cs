@@ -39,7 +39,7 @@ namespace ModTek
 
             parentLoadingCurtain = parent;
 
-            textGameObject = new GameObject();
+            textGameObject = new GameObject("ModTek_LoadingCurtainErrorText");
             var rectTransform = textGameObject.AddComponent<RectTransform>();
             textGameObject.transform.SetParent(parentLoadingCurtain.transform);
 
