@@ -1,6 +1,3 @@
-using BattleTech;
-using HBS.Logging;
-using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
@@ -25,9 +22,9 @@ namespace ModTek
         {
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
-                Message = $"[ModTek] For more info check \"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+                Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
             else
-                Message = $"[ModTek] For more info check \"output_log.txt\"\n";
+                Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"output_log.txt\"\n";
 
             if (parent == null || parentLoadingCurtain == parent)
                 return;
@@ -38,7 +35,7 @@ namespace ModTek
             var rectTransform = textGameObject.AddComponent<RectTransform>();
             textGameObject.transform.SetParent(parentLoadingCurtain.transform);
 
-            rectTransform.sizeDelta = new Vector2(1000, 250);
+            rectTransform.sizeDelta = new Vector2(1980, 250);
             rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             rectTransform.anchoredPosition = new Vector2(0, -200);
@@ -46,8 +43,7 @@ namespace ModTek
             tmProText = textGameObject.AddComponent<TextMeshProUGUI>();
             tmProText.enableWordWrapping = true;
             tmProText.alignment = TextAlignmentOptions.Top;
-            tmProText.extraPadding = true;
-            tmProText.fontSize = 20;
+            tmProText.fontSize = 18;
         }
     }
 }

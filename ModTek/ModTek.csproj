@@ -68,7 +68,7 @@
     <Compile Include="Patches\AssetBundleManager.cs" />
     <Compile Include="Patches\AVPVideoPlayer.cs" />
     <Compile Include="Patches\BattleTechResourceLocator.cs" />
-    <Compile Include="Patches\DataManager.cs" />
+    <Compile Include="Patches\Logger.cs" />
     <Compile Include="Patches\LoadingCurtain.cs" />
     <Compile Include="Patches\MainMenu.cs" />
     <Compile Include="Patches\MetadataDatabase.cs" />
