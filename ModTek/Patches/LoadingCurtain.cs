@@ -15,4 +15,16 @@ namespace ModTek
             LoadingCurtainErrorText.Setup(activeInstance.gameObject);
         }
     }
+
+    /// <summary>
+    /// Clear the LoadingCurtainErrorText when loading curtain hides
+    /// </summary>
+    [HarmonyPatch(typeof(LoadingCurtain), "Hide")]
+    public static class LoadingCurtain_Hide_Patch
+    {
+        public static void Postfix()
+        {
+            LoadingCurtainErrorText.Clear();
+        }
+    }
 }

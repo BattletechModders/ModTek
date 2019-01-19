@@ -18,14 +18,22 @@ namespace ModTek
             tmProText.text = Message;
         }
 
-        public static void Setup(GameObject parent)
+        public static void Clear()
         {
+            if (tmProText == null)
+                return;
+
+            tmProText.text = "";
+
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
                 Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
             else
                 Message = $"[ModTek] Detected errors, might not be fatal -- For more info check \"output_log.txt\"\n";
+        }
 
+        public static void Setup(GameObject parent)
+        {
             if (parent == null || parentLoadingCurtain == parent)
                 return;
 
@@ -44,6 +52,8 @@ namespace ModTek
             tmProText.enableWordWrapping = true;
             tmProText.alignment = TextAlignmentOptions.Top;
             tmProText.fontSize = 18;
+
+            Clear();
         }
     }
 }
