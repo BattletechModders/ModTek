@@ -471,22 +471,6 @@ namespace ModTek
 
 
         // LOAD ORDER
-        private static void PropagateConflictsForward(Dictionary<string, ModDef> modDefs)
-        {
-            // conflicts are a unidirectional edge, so make them one in ModDefs
-            foreach (var modDef in modDefs.Values)
-            {
-                if (modDef.ConflictsWith.Count == 0)
-                    continue;
-
-                foreach (var conflict in modDef.ConflictsWith)
-                {
-                    if (modDefs.ContainsKey(conflict))
-                        modDefs[conflict].ConflictsWith.Add(modDef.Name);
-                }
-            }
-        }
-
         private static void FillInOptionalDependencies(Dictionary<string, ModDef> modDefs)
         {
             // add optional dependencies if they are present
@@ -527,38 +511,47 @@ namespace ModTek
             return order;
         }
 
-        private static bool AreDependanciesResolved(ModDef modDef, HashSet<string> loaded)
-        {
-            return !(modDef.DependsOn.Count != 0 && modDef.DependsOn.Intersect(loaded).Count() != modDef.DependsOn.Count
-                || modDef.ConflictsWith.Count != 0 && modDef.ConflictsWith.Intersect(loaded).Any());
-        }
-
         private static List<string> GetLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded)
         {
             var modDefsCopy = new Dictionary<string, ModDef>(modDefs);
             var cachedOrder = LoadLoadOrder(LoadOrderPath);
             var loadOrder = new List<string>();
-            var loaded = new HashSet<string>();
 
-            PropagateConflictsForward(modDefsCopy);
+            // remove all mods that have a conflict
+            var tryToLoad = modDefs.Keys.ToList();
+            var hasConflicts = new List<string>();
+            foreach (var modDef in modDefs.Values)
+            {
+                if (modDef.HasConflicts(tryToLoad))
+                {
+                    modDefsCopy.Remove(modDef.Name);
+                    hasConflicts.Add(modDef.Name);
+                }
+            }
+
             FillInOptionalDependencies(modDefsCopy);
 
             // load the order specified in the file
             foreach (var modName in cachedOrder)
             {
-                if (!modDefs.ContainsKey(modName) || !AreDependanciesResolved(modDefs[modName], loaded)) continue;
+                if (!modDefsCopy.ContainsKey(modName)
+                    || !modDefsCopy[modName].AreDependanciesResolved(loadOrder))
+                    continue;
 
                 modDefsCopy.Remove(modName);
                 loadOrder.Add(modName);
-                loaded.Add(modName);
             }
 
             // everything that is left in the copy hasn't been loaded before
-            unloaded = modDefsCopy.Keys.OrderByDescending(x => x).ToList();
+            unloaded = new List<string>();
+            unloaded.AddRange(modDefsCopy.Keys.OrderByDescending(x => x).ToList());
 
             // there is nothing left to load
-            if (unloaded.Count == 0)
+            if (modDefsCopy.Count == 0)
+            {
+                unloaded.AddRange(hasConflicts);
                 return loadOrder;
+            }
 
             // this is the remainder that haven't been loaded before
             int removedThisPass;
@@ -570,15 +563,16 @@ namespace ModTek
                 {
                     var modDef = modDefs[unloaded[i]];
 
-                    if (!AreDependanciesResolved(modDef, loaded)) continue;
+                    if (!modDef.AreDependanciesResolved(loadOrder))
+                        continue;
 
                     unloaded.RemoveAt(i);
                     loadOrder.Add(modDef.Name);
-                    loaded.Add(modDef.Name);
                     removedThisPass++;
                 }
             } while (removedThisPass > 0 && unloaded.Count > 0);
 
+            unloaded.AddRange(hasConflicts);
             return loadOrder;
         }
 
@@ -732,7 +726,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    FailedToLoadMods.Add(GetRelativePath(modDefPath, modDirectory));
+                    FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
                     LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
@@ -792,7 +786,7 @@ namespace ModTek
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
             foreach (var modName in willNotLoad)
             {
-                Log($"Will not load {modName} because it's lacking a dependancy or a conflict loaded before it.");
+                Log($"Will not load {modName} because it's lacking a dependancy or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
             Log("");
