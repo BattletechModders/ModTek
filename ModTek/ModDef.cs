@@ -40,6 +40,9 @@ namespace ModTek
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
         public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
 
+        [DefaultValue(true)]
+        public bool ShowFailedLoadPopup { get; set; } = true;
+
         // adding and running code
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
