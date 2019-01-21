@@ -748,7 +748,7 @@ namespace ModTek
                 {
                     Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
 
-                    if (modDef.IgnoreLoadFailure)
+                    if (!modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modDef.Name);
 
                     continue;
@@ -765,7 +765,7 @@ namespace ModTek
                         {
                             Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
 
-                            if (modDef.IgnoreLoadFailure)
+                            if (!modDef.IgnoreLoadFailure)
                                 FailedToLoadMods.Add(modDef.Name);
 
                             continue;
@@ -780,7 +780,7 @@ namespace ModTek
                         {
                             Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
 
-                            if (modDef.IgnoreLoadFailure)
+                            if (!modDef.IgnoreLoadFailure)
                                 FailedToLoadMods.Add(modDef.Name);
 
                             continue;
@@ -797,7 +797,7 @@ namespace ModTek
             {
                 Log($"Will not load {modName} because it's lacking a dependancy or has a conflict.");
 
-                if (modDefs[modName].IgnoreLoadFailure)
+                if (!modDefs[modName].IgnoreLoadFailure)
                     FailedToLoadMods.Add(modName);
             }
             Log("");
@@ -813,7 +813,7 @@ namespace ModTek
                 {
                     Log($"Skipping load of {modName} because one of its dependancies failed to load.");
 
-                    if (modDef.IgnoreLoadFailure)
+                    if (!modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modName);
 
                     continue;
@@ -823,14 +823,14 @@ namespace ModTek
 
                 try
                 {
-                    if (!LoadMod(modDef) && modDef.IgnoreLoadFailure)
+                    if (!LoadMod(modDef) && !modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modName);
                 }
                 catch (Exception e)
                 {
                     LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
 
-                    if (modDef.IgnoreLoadFailure)
+                    if (!modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modName);
                 }
             }
