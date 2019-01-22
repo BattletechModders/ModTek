@@ -52,6 +52,9 @@ namespace ModTek
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
+        [DefaultValue(false)]
+        public bool EnableAssemblyVersionCheck { get; set; } = false;
+
         // changing implicit loading behavior
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;

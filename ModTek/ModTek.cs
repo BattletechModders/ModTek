@@ -144,6 +144,8 @@ namespace ModTek
             UpdatePathCacheToID(typeCache);
             jsonMergeCache.UpdateToRelativePaths();
 
+            SetupAssemblyVersionCheckSkipper();
+
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -690,8 +692,13 @@ namespace ModTek
                     }
                 }
 
-                BTModLoader.LoadDLL(dllPath, methodName, typeName,
+                var assembly = BTModLoader.LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
+
+                if (!modDef.EnableAssemblyVersionCheck)
+                {
+                    AssemblyNamesWithoutVersionCheck.Add(assembly.GetName().Name, assembly);
+                }
             }
 
             Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
@@ -702,6 +709,23 @@ namespace ModTek
             // actually add the additions, since we successfully got through loading the other stuff
             entriesByMod[modDef.Name] = potentialAdditions;
             return true;
+        }
+
+        internal static Dictionary<string, Assembly> AssemblyNamesWithoutVersionCheck = new Dictionary<string, Assembly>();
+
+        internal static void SetupAssemblyVersionCheckSkipper()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var resolvingName = new AssemblyName(args.Name);
+                if (!AssemblyNamesWithoutVersionCheck.TryGetValue(resolvingName.Name, out var assembly))
+                {
+                    return null;
+                }
+
+                Log($"assembly resolve \"{args.Name}\" with \"{assembly.FullName}\"");
+                return assembly;
+            };
         }
 
         internal static void LoadMods()
