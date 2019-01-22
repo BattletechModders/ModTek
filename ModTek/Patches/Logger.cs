@@ -25,7 +25,7 @@ namespace ModTek.Patches
             }
             else if (!LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
             {
-                GenericPopupBuilder.Create("ModTek Error Popup", logString)
+                GenericPopupBuilder.Create("ModTek Detected Error", logString)
                     .AddButton("Continue")
                     .Render();
             }
