@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -39,6 +40,9 @@ namespace ModTek
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
         public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
 
+        [DefaultValue(false)]
+        public bool IgnoreLoadFailure { get; set; } = false;
+
         // adding and running code
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
@@ -64,6 +68,16 @@ namespace ModTek
             var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
             return modDef;
+        }
+
+        public bool AreDependanciesResolved(List<string> loaded)
+        {
+            return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
+        }
+
+        public bool HasConflicts(List<string> otherMods)
+        {
+            return ConflictsWith.Intersect(otherMods).Any();
         }
     }
 }
