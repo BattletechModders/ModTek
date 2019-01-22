@@ -26,6 +26,8 @@ namespace ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
 
+        public static bool HasLoaded { get; private set; }
+
         // game paths/directories
         public static string GameDirectory { get; private set; }
         public static string ModsDirectory { get; private set; }
@@ -154,6 +156,8 @@ namespace ModTek
 
         public static void Cleanup()
         {
+            HasLoaded = true;
+
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
