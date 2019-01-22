@@ -2,7 +2,10 @@ using BattleTech.UI;
 using Harmony;
 using UnityEngine;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the logger to spit out errors to the loading screen curtain
@@ -14,7 +17,7 @@ namespace ModTek
         {
             if (LoadingCurtain.IsVisible
                 && (type == LogType.Error || type == LogType.Exception)
-                && (!ModTek.Config.UseErrorWhiteList || ModTek.Config.ErrorWhitelist.Exists(x => logString.StartsWith(x))))
+                && (!ModTek.Config.UseErrorWhiteList || ModTek.Config.ErrorWhitelist.Exists(logString.StartsWith)))
                 LoadingCurtainErrorText.AddMessage(logString);
         }
     }

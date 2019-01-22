@@ -1,11 +1,14 @@
 using BattleTech;
 using Harmony;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the LoadDefaultManifest to use the cached manifest that is built at ModTek load instead of rebuilding it
-    /// This is primarily a performance optization
+    /// This is primarily a performance optimization
     /// </summary>
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch

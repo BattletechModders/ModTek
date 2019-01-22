@@ -1,7 +1,10 @@
 using Harmony;
 using UnityEngine;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Disable activateAfterInit from functioning for the Start() on the "Main" game object which activates the BattleTechGame object
@@ -12,10 +15,10 @@ namespace ModTek
     {
         public static bool Prefix(ActivateAfterInit __instance)
         {
-            var trav = Traverse.Create(__instance);
-            if (ActivateAfterInit.ActivateAfter.Start.Equals(trav.Field("activateAfter").GetValue<ActivateAfterInit.ActivateAfter>()))
+            var traverse = Traverse.Create(__instance);
+            if (ActivateAfterInit.ActivateAfter.Start.Equals(traverse.Field("activateAfter").GetValue<ActivateAfterInit.ActivateAfter>()))
             {
-                var gameObjects = trav.Field("activationSet").GetValue<GameObject[]>();
+                var gameObjects = traverse.Field("activationSet").GetValue<GameObject[]>();
                 foreach (var gameObject in gameObjects)
                 {
                     if ("BattleTechGame".Equals(gameObject.name))

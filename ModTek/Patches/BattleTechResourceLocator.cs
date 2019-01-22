@@ -1,10 +1,13 @@
+using System;
+using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
-using System;
-using System.Collections.Generic;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch RefreshTypedEntries to add mod resources directly to its internal dictionary
@@ -40,20 +43,20 @@ namespace ModTek
                     ___contentPacksManifest[resourceType][entry.Id] = versionManifestEntry;
                 }
 
-                if (!string.IsNullOrEmpty(entry.AddToAddendum))
+                if (string.IsNullOrEmpty(entry.AddToAddendum))
+                    continue;
+
+                // add to addendumsManifest
+                var addendum = ModTek.CachedVersionManifest.GetAddendumByName(entry.AddToAddendum);
+                if (addendum != null)
                 {
-                    // add to addendumsManifest
-                    var addendum = ModTek.CachedVersionManifest.GetAddendumByName(entry.AddToAddendum);
-                    if (addendum != null)
-                    {
-                        if (!___addendumsManifest.ContainsKey(addendum))
-                            ___addendumsManifest.Add(addendum, new Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>());
+                    if (!___addendumsManifest.ContainsKey(addendum))
+                        ___addendumsManifest.Add(addendum, new Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>());
 
-                        if (!___addendumsManifest[addendum].ContainsKey(resourceType))
-                            ___addendumsManifest[addendum].Add(resourceType, new Dictionary<string, VersionManifestEntry>());
+                    if (!___addendumsManifest[addendum].ContainsKey(resourceType))
+                        ___addendumsManifest[addendum].Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
-                        ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
-                    }
+                    ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
                 }
             }
         }

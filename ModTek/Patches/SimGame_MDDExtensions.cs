@@ -1,8 +1,11 @@
+using System.IO;
 using BattleTech.Data;
 using Harmony;
-using System.IO;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the UpdateContract MDD to fix it so that the fileID instead of the path that is passed to it

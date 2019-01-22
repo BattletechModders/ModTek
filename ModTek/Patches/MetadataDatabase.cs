@@ -1,7 +1,10 @@
 using BattleTech.Data;
 using Harmony;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the MDDB path to direct to the one in the .modtek path

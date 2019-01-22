@@ -14,6 +14,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace ModTek
@@ -65,13 +67,13 @@ namespace ModTek
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
 
-        // measure loadtime impact
+        // measure load-time impact
         private static Stopwatch stopwatch = new Stopwatch();
 
         internal static Configuration Config;
 
         // the end result of loading mods, these are used to push into game data through patches
-        internal static VersionManifest CachedVersionManifest = null;
+        internal static VersionManifest CachedVersionManifest;
         internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
@@ -117,7 +119,7 @@ namespace ModTek
             Directory.CreateDirectory(CacheDirectory);
             Directory.CreateDirectory(DatabaseDirectory);
 
-            // create log file, overwritting if it's already there
+            // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
             {
                 logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
@@ -275,7 +277,7 @@ namespace ModTek
             if (jObj == null)
                 return null;
 
-            // go through the different kinds of id storage in JSONS
+            // go through the different kinds of id storage in JSONs
             string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
             foreach (var jPath in jPaths)
             {
@@ -341,7 +343,7 @@ namespace ModTek
             {
                 var id = Path.GetFileNameWithoutExtension(path);
 
-                if (id == path || toAdd.ContainsKey(id) || cache.ContainsKey(id))
+                if (id == null || id == path || toAdd.ContainsKey(id) || cache.ContainsKey(id))
                     continue;
 
                 toAdd[id] = cache[path];
@@ -542,7 +544,7 @@ namespace ModTek
             // load the order specified in the file
             foreach (var modName in cachedOrder)
             {
-                if (!modDefsCopy.ContainsKey(modName) || !modDefsCopy[modName].AreDependanciesResolved(loadOrder))
+                if (!modDefsCopy.ContainsKey(modName) || !modDefsCopy[modName].AreDependenciesResolved(loadOrder))
                     continue;
 
                 modDefsCopy.Remove(modName);
@@ -570,7 +572,7 @@ namespace ModTek
                 {
                     var modDef = modDefs[unloaded[i]];
 
-                    if (!modDef.AreDependanciesResolved(loadOrder))
+                    if (!modDef.AreDependenciesResolved(loadOrder))
                         continue;
 
                     unloaded.RemoveAt(i);
@@ -656,9 +658,8 @@ namespace ModTek
                 }
                 else if (modEntry.Path != "StreamingAssets")
                 {
-                    // path is not streamingassets and it's missing
+                    // path is not StreamingAssets and it's missing
                     Log($"\tMissing Entry: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
-                    continue;
                 }
             }
 
@@ -705,10 +706,10 @@ namespace ModTek
 
         internal static void LoadMods()
         {
-            ProgressPanel.SubmitWork(LoadMoadsLoop);
+            ProgressPanel.SubmitWork(LoadModsLoop);
         }
 
-        internal static IEnumerator<ProgressReport> LoadMoadsLoop()
+        internal static IEnumerator<ProgressReport> LoadModsLoop()
         {
             Log("");
             yield return new ProgressReport(1, "Initializing Mods", "");
@@ -719,7 +720,7 @@ namespace ModTek
 
             if (modDirectories.Length == 0)
             {
-                Log("No ModTek-compatable mods found.");
+                Log("No ModTek-compatible mods found.");
                 yield break;
             }
 
@@ -810,24 +811,24 @@ namespace ModTek
             {
                 if (!modDefs[modName].IgnoreLoadFailure)
                 {
-                    Log($"Will not load {modName} because it's lacking a dependancy or has a conflict.");
+                    Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
                     FailedToLoadMods.Add(modName);
                 }
             }
             Log("");
 
-            // lists guarentee order
+            // lists guarantee order
             var modLoaded = 0;
 
             foreach (var modName in modLoadOrder)
             {
                 var modDef = modDefs[modName];
 
-                if (modDef.DependsOn.Intersect(FailedToLoadMods).Count() > 0)
+                if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
                 {
                     if (!modDef.IgnoreLoadFailure)
                     {
-                        Log($"Skipping load of {modName} because one of its dependancies failed to load.");
+                        Log($"Skipping load of {modName} because one of its dependencies failed to load.");
                         FailedToLoadMods.Add(modName);
                     }
 
@@ -853,8 +854,6 @@ namespace ModTek
 
             PrintHarmonySummary(HarmonySummaryPath);
             WriteJsonFile(LoadOrderPath, modLoadOrder);
-
-            yield break;
         }
 
 
@@ -893,9 +892,8 @@ namespace ModTek
             else
                 Log($"\tAdd/Replace: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
-            // not added to addendum, not added to jsonmerges
+            // not added to addendum, not added to JSONMerges
             BTRLEntries.Add(modEntry);
-            return;
         }
 
         private static bool AddModEntryToDB(MetadataDatabase db, string absolutePath, string typeStr)
@@ -974,7 +972,7 @@ namespace ModTek
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
                     {
-                        // TODO: + 16 is a little bizzare looking, it's the length of the substring + 1 because we want to get rid of it and the \
+                        // TODO: + 16 is a little bizarre looking, it's the length of the substring + 1 because we want to get rid of it and the \
                         var relPath = modEntry.Path.Substring(modEntry.Path.LastIndexOf("StreamingAssets", StringComparison.Ordinal) + 16);
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relPath));
                         if (!File.Exists(fakeStreamingAssetsPath))
@@ -1062,7 +1060,7 @@ namespace ModTek
                             continue;
                     }
 
-                    // non-streamingassets json merges
+                    // non-StreamingAssets json merges
                     if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
                         // have to find the original path for the manifest entry that we're merging onto
@@ -1073,8 +1071,6 @@ namespace ModTek
                             Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}!");
                             continue;
                         }
-
-                        var matchingPath = Path.GetFullPath(matchingEntry.FilePath);
 
                         if (!jsonMerges.ContainsKey(modEntry.Id))
                             jsonMerges[modEntry.Id] = new List<string>();
@@ -1222,8 +1218,6 @@ namespace ModTek
             WriteJsonFile(ConfigPath, Config);
 
             Cleanup();
-
-            yield break;
         }
     }
 }

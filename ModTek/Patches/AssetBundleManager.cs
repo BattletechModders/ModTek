@@ -1,7 +1,10 @@
 using BattleTech.Assetbundles;
 using Harmony;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch AssetBundleNameToFilepath to load asset bundles from mod paths

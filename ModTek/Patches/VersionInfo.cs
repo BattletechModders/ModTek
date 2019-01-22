@@ -1,7 +1,10 @@
-using Harmony;
 using System.Reflection;
+using Harmony;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the GetReleaseVersion method to tack on the ModTek version to the game version in the main menu

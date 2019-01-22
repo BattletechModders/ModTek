@@ -6,16 +6,16 @@ namespace ModTek
 {
     public static class LoadingCurtainErrorText
     {
-        public static GameObject textGameObject;
-        public static TextMeshProUGUI tmProText;
+        private static GameObject textGameObject;
+        private static TextMeshProUGUI tmProText;
 
-        private static string Message;
+        private static string currentMessage;
         private static GameObject parentLoadingCurtain;
 
         public static void AddMessage(string message)
         {
-            Message += message + "\n";
-            tmProText.text = Message;
+            currentMessage += message + "\n";
+            tmProText.text = currentMessage;
         }
 
         public static void Clear()
@@ -24,13 +24,13 @@ namespace ModTek
                 return;
 
             tmProText.text = "";
-            Message = "[ModTek] Detected errors (might not be important!) -- For more info check ";
+            currentMessage = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
-                Message += $"\"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+                currentMessage += $"\"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
             else
-                Message += $"\"output_log.txt\"\n";
+                currentMessage += $"\"output_log.txt\"\n";
         }
 
         public static void Setup(GameObject parent)

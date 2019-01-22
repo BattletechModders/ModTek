@@ -6,6 +6,10 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
+
 namespace ModTek
 {
     public class ModDef
@@ -70,12 +74,12 @@ namespace ModTek
             return modDef;
         }
 
-        public bool AreDependanciesResolved(List<string> loaded)
+        public bool AreDependenciesResolved(IEnumerable<string> loaded)
         {
             return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
 
-        public bool HasConflicts(List<string> otherMods)
+        public bool HasConflicts(IEnumerable<string> otherMods)
         {
             return ConflictsWith.Intersect(otherMods).Any();
         }

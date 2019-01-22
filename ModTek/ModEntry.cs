@@ -47,10 +47,7 @@ namespace ModTek
 
         public VersionManifestEntry GetVersionManifestEntry()
         {
-            if (versionManifestEntry == null)
-                versionManifestEntry = new VersionManifestEntry(Id, Path, Type, DateTime.Now, "1", AssetBundleName, AssetBundlePersistent);
-
-            return versionManifestEntry;
+            return versionManifestEntry ?? (versionManifestEntry = new VersionManifestEntry(Id, Path, Type, DateTime.Now, "1", AssetBundleName, AssetBundlePersistent));
         }
     }
 }

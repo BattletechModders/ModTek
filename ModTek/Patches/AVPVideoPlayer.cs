@@ -1,11 +1,14 @@
+using System;
 using BattleTech.Rendering;
 using BattleTech.Save;
 using BattleTech.UI;
 using Harmony;
 using RenderHeads.Media.AVProVideo;
-using System;
 
-namespace ModTek
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch PlayVideo to allow for videos from mods to be played

@@ -34,6 +34,7 @@ namespace ModTek
         }
 
         // unused, this level is parsed manually
+#pragma warning disable CS0649
         private class MergeFile
         {
             [JsonProperty(Required = Required.Always)]
@@ -42,6 +43,7 @@ namespace ModTek
             [JsonProperty(Required = Required.Always)]
             public List<Instruction> Instructions;
         }
+#pragma warning restore
 
         public enum Action
         {

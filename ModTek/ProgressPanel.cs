@@ -14,9 +14,9 @@ namespace ModTek
 
     internal struct ProgressReport
     {
-        public float Progress { get; set; }
-        public string SliderText { get; set; }
-        public string LoadingText { get; set; }
+        public float Progress { get; }
+        public string SliderText { get; }
+        public string LoadingText { get; }
 
         public ProgressReport(float progress, string sliderText, string loadingText)
         {
@@ -28,12 +28,12 @@ namespace ModTek
 
     internal static class ProgressPanel
     {
-        public const string ASSET_BUNDLE_NAME = "modtekassetbundle";
-        private static ProgressBarLoadingBehavior LoadingBehavior;
+        private const string ASSET_BUNDLE_NAME = "modtekassetbundle";
+        private static ProgressBarLoadingBehavior loadingBehavior;
 
         public class ProgressBarLoadingBehavior : MonoBehaviour
         {
-            private static readonly int FRAME_TIME = 50; // around 20fps
+            private const int FRAME_TIME = 50; // around 20fps
 
             public Text SliderText { get; set; }
             public Text LoadingText { get; set; }
@@ -42,12 +42,12 @@ namespace ModTek
 
             private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
 
-            void Start()
+            private void Start()
             {
                 StartCoroutine(RunWorkList());
             }
 
-            public void SubmitWork(Func<IEnumerator<ProgressReport>> work)
+            public void AddWork(Func<IEnumerator<ProgressReport>> work)
             {
                 WorkList.AddLast(work);
             }
@@ -69,7 +69,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            LogException($"\nUncaught ModTek exception!", e);
+                            LogException("\nUncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
@@ -80,17 +80,17 @@ namespace ModTek
                             yield break;
                         }
 
-                        if (sw.ElapsedMilliseconds > FRAME_TIME)
-                        {
-                            var report = workEnumerator.Current;
-                            Slider.value = report.Progress;
-                            SliderText.text = report.SliderText;
-                            LoadingText.text = report.LoadingText;
+                        if (sw.ElapsedMilliseconds <= FRAME_TIME)
+                            continue;
 
-                            sw.Reset();
-                            sw.Start();
-                            yield return null;
-                        }
+                        var report = workEnumerator.Current;
+                        Slider.value = report.Progress;
+                        SliderText.text = report.SliderText;
+                        LoadingText.text = report.LoadingText;
+
+                        sw.Reset();
+                        sw.Start();
+                        yield return null;
                     }
                     while (didWork);
 
@@ -103,7 +103,6 @@ namespace ModTek
                 yield return null;
 
                 FinishAction.Invoke();
-                yield break;
             }
         }
 
@@ -112,52 +111,34 @@ namespace ModTek
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDirectory, ASSET_BUNDLE_NAME));
             if (assetBundle == null)
             {
-                string message = $"Error loading asset bundle {ASSET_BUNDLE_NAME}";
+                Log($"Error loading asset bundle {ASSET_BUNDLE_NAME}");
                 return false;
             }
 
             var canvasPrefab = assetBundle.LoadAsset<GameObject>("ProgressBar_Canvas");
-            var canvasGameObject = GameObject.Instantiate(canvasPrefab);
-
+            var canvasGameObject = UnityEngine.Object.Instantiate(canvasPrefab);
             var panelTitleText = GameObject.Find("ProgressBar_Title")?.GetComponent<Text>();
-            if (panelTitleText == null)
-            {
-                LogWithDate("Error loading ProgressBar_Title");
-                return false;
-            }
-
             var sliderText = GameObject.Find("ProgressBar_Slider_Text")?.GetComponent<Text>();
-            if (sliderText == null)
-            {
-                LogWithDate("Error loading ProgressBar_Slider_Text");
-                return false;
-            }
-
             var loadingText = GameObject.Find("ProgressBar_Loading_Text")?.GetComponent<Text>();
-            if (loadingText == null)
-            {
-                LogWithDate("Error loading ProgressBar_Loading_Text");
-                return false;
-            }
-
             var sliderGameObject = GameObject.Find("ProgressBar_Slider");
-            var slider = sliderGameObject?.GetComponent<Slider>();
-            if (sliderGameObject == null)
+
+            if (panelTitleText == null || sliderText == null || loadingText == null || sliderGameObject == null)
             {
-                LogWithDate("Error loading ProgressBar_Slider");
+                Log("Error loading a GameObject from asset bundle");
                 return false;
             }
 
+            var slider = sliderGameObject.GetComponent<Slider>();
             panelTitleText.text = panelTitle;
 
-            LoadingBehavior = sliderGameObject.AddComponent<ProgressBarLoadingBehavior>();
-            LoadingBehavior.SliderText = sliderText;
-            LoadingBehavior.LoadingText = loadingText;
-            LoadingBehavior.Slider = slider;
-            LoadingBehavior.FinishAction = () =>
+            loadingBehavior = sliderGameObject.AddComponent<ProgressBarLoadingBehavior>();
+            loadingBehavior.SliderText = sliderText;
+            loadingBehavior.LoadingText = loadingText;
+            loadingBehavior.Slider = slider;
+            loadingBehavior.FinishAction = () =>
             {
                 assetBundle.Unload(true);
-                GameObject.Destroy(canvasGameObject);
+                UnityEngine.Object.Destroy(canvasGameObject);
                 TriggerGameLoading();
             };
 
@@ -166,7 +147,7 @@ namespace ModTek
 
         internal static void SubmitWork(Func<IEnumerator<ProgressReport>> workFunc)
         {
-            LoadingBehavior.SubmitWork(workFunc);
+            loadingBehavior.AddWork(workFunc);
         }
 
         private static void TriggerGameLoading()

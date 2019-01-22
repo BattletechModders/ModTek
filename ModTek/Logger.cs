@@ -7,60 +7,45 @@ namespace ModTek
     internal static class Logger
     {
         internal static string LogPath { get; set; }
-        private static StreamWriter LogStream;
+        private static StreamWriter logStream;
 
         private static StreamWriter GetOrCreateStream()
         {
-            if (LogStream == null && !string.IsNullOrEmpty(LogPath))
-                LogStream = File.AppendText(LogPath);
+            if (logStream == null && !string.IsNullOrEmpty(LogPath))
+                logStream = File.AppendText(LogPath);
 
-            return LogStream;
+            return logStream;
         }
 
         internal static void CloseLogStream()
         {
-            if (LogStream == null)
-                return;
-
-            LogStream.Dispose();
-            LogStream = null;
+            logStream?.Dispose();
+            logStream = null;
         }
 
         internal static void FlushLogStream()
         {
-            if (LogStream == null)
-                return;
-
-            LogStream.Flush();
+            logStream?.Flush();
         }
 
         internal static void Log(string message)
         {
             var stream = GetOrCreateStream();
-            if (stream == null)
-                return;
-
-            stream.WriteLine(message);
+            stream?.WriteLine(message);
         }
 
         [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
             var stream = GetOrCreateStream();
-            if (stream == null)
-                return;
-
-            stream.WriteLine(message, formatObjects);
+            stream?.WriteLine(message, formatObjects);
         }
 
         [StringFormatMethod("message")]
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
             var stream = GetOrCreateStream();
-            if (stream == null)
-                return;
-
-            stream.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
+            stream?.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
 
         internal static void LogException(string message, Exception e)

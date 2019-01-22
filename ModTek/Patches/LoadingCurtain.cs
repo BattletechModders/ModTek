@@ -1,7 +1,10 @@
 using BattleTech.UI;
 using Harmony;
 
-namespace ModTek
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InconsistentNaming
+
+namespace ModTek.Patches
 {
     /// <summary>
     /// Patch the LoadingCurtain to add error text.
