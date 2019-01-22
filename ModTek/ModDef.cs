@@ -72,8 +72,7 @@ namespace ModTek
 
         public bool AreDependanciesResolved(List<string> loaded)
         {
-            return DependsOn.Count == 0
-                || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
+            return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
 
         public bool HasConflicts(List<string> otherMods)
