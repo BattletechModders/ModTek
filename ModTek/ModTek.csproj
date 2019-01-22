@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedJSONMerger.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="LoadingCurtainErrorText.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ModEntry.cs" />

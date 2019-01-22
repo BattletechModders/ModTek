@@ -12,7 +12,9 @@ namespace ModTek
     {
         public static void Postfix(string logString, string stackTrace, LogType type)
         {
-            if ((type == LogType.Error || type == LogType.Exception) && LoadingCurtain.IsVisible)
+            if (LoadingCurtain.IsVisible
+                && (type == LogType.Error || type == LogType.Exception)
+                && (!ModTek.Config.UseErrorWhiteList || ModTek.Config.ErrorWhitelist.Exists(x => logString.StartsWith(x))))
                 LoadingCurtainErrorText.AddMessage(logString);
         }
     }
