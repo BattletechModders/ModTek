@@ -43,6 +43,7 @@ namespace ModTek
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
+        private const string CONFIG_FILE_NAME = "config.json";
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -54,6 +55,7 @@ namespace ModTek
         internal static string DBCachePath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
+        internal static string ConfigPath { get; private set; }
 
         // internal structures
         private static List<string> modLoadOrder;
@@ -65,6 +67,8 @@ namespace ModTek
 
         // measure loadtime impact
         private static Stopwatch stopwatch = new Stopwatch();
+
+        internal static Configuration Config;
 
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest = null;
@@ -107,6 +111,7 @@ namespace ModTek
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
+            ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
@@ -124,6 +129,9 @@ namespace ModTek
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
                 Cleanup();
             }
+
+            // read config
+            Config = Configuration.FromFile(ConfigPath);
 
             // create all of the caches
             dbCache = LoadOrCreateDBCache(DBCachePath);
@@ -1077,8 +1085,6 @@ namespace ModTek
                 }
             }
 
-            WriteJsonFile(TypeCachePath, typeCache);
-
             // perform merges into cache
             Log("");
             LogWithDate("Doing merges...");
@@ -1115,8 +1121,6 @@ namespace ModTek
 
                 AddModEntry(CachedVersionManifest, cacheEntry);
             }
-
-            jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
 
             Log("");
             Log("Syncing Database");
@@ -1194,8 +1198,10 @@ namespace ModTek
                 }
             }
 
-            // write db/type cache to disk
+            jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
+            WriteJsonFile(TypeCachePath, typeCache);
             WriteJsonFile(DBCachePath, dbCache);
+            WriteJsonFile(ConfigPath, Config);
 
             Cleanup();
 
