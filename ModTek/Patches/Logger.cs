@@ -15,10 +15,20 @@ namespace ModTek.Patches
     {
         public static void Postfix(string logString, string stackTrace, LogType type)
         {
-            if (LoadingCurtain.IsVisible
-                && (type == LogType.Error || type == LogType.Exception)
-                && (!ModTek.Config.UseErrorWhiteList || ModTek.Config.ErrorWhitelist.Exists(logString.StartsWith)))
+            if (!ModTek.HasLoaded || type != LogType.Error && type != LogType.Exception
+                || ModTek.Config.UseErrorWhiteList && !ModTek.Config.ErrorWhitelist.Exists(logString.StartsWith))
+                return;
+
+            if (LoadingCurtain.IsVisible && ModTek.Config.ShowLoadingScreenErrors)
+            {
                 LoadingCurtainErrorText.AddMessage(logString);
+            }
+            else if (!LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
+            {
+                GenericPopupBuilder.Create("ModTek Error Popup", logString)
+                    .AddButton("Continue")
+                    .Render();
+            }
         }
     }
 }
