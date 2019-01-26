@@ -79,6 +79,7 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
+        internal static Dictionary<string, Assembly> ModResolveAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by BTML)
@@ -144,7 +145,7 @@ namespace ModTek
             UpdatePathCacheToID(typeCache);
             jsonMergeCache.UpdateToRelativePaths();
 
-            SetupAssemblyVersionCheckSkipper();
+            SetupAssemblyResolveHandler();
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -695,10 +696,14 @@ namespace ModTek
                 var assembly = BTModLoader.LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
 
-                if (!modDef.EnableAssemblyVersionCheck)
+                if (assembly == null)
                 {
-                    AssemblyNamesWithoutVersionCheck.Add(assembly.GetName().Name, assembly);
+                    Log($"\t{modDef.Name}: Failed to load mod assembly at path {dllPath}. Check BTML log!");
+                    return false;
                 }
+
+                if (!modDef.EnableAssemblyVersionCheck)
+                    ModResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
             Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
@@ -711,20 +716,12 @@ namespace ModTek
             return true;
         }
 
-        internal static Dictionary<string, Assembly> AssemblyNamesWithoutVersionCheck = new Dictionary<string, Assembly>();
-
-        internal static void SetupAssemblyVersionCheckSkipper()
+        internal static void SetupAssemblyResolveHandler()
         {
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var resolvingName = new AssemblyName(args.Name);
-                if (!AssemblyNamesWithoutVersionCheck.TryGetValue(resolvingName.Name, out var assembly))
-                {
-                    return null;
-                }
-
-                Log($"assembly resolve \"{args.Name}\" with \"{assembly.FullName}\"");
-                return assembly;
+                return !ModResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
             };
         }
 
