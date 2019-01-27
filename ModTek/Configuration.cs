@@ -7,6 +7,8 @@ namespace ModTek
 {
     public class Configuration
     {
+        public bool ShowLoadingScreenErrors = true;
+        public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
 
