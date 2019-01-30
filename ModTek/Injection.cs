@@ -12,7 +12,7 @@ namespace ModTek
             try
             {
                 var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory(),
-                    Path.Combine(Path.Combine("..", "..") , Path.Combine("Mods", "ModTek.dll")));
+                    Path.Combine(Path.Combine("..", "..") , Path.Combine("Mods", Path.Combine("ModTek", "ModTek.dll"))));
 
                 if (File.Exists(path))
                 {

@@ -40,6 +40,11 @@ namespace ModTekInjector
         private const string GAME_VERSION_TYPE = "VersionInfo";
         private const string GAME_VERSION_CONST = "CURRENT_VERSION_NUMBER";
 
+        private static readonly List<string> MANAGED_DIRECTORY_SEEK_LIST = new List<string>
+        {
+            "../../BattleTech_Data/Managed"
+        };
+
         private const int FACTION_ENUM_STARTING_ID = 5000;
         private const FieldAttributes ENUM_ATTRIBUTES = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault;
 
@@ -278,12 +283,7 @@ namespace ModTekInjector
             }
 
             var currentDirectory = Directory.GetCurrentDirectory();
-            var seekList = new List<string>
-            {
-                "../BattleTech_Data/Managed"
-            };
-
-            foreach (var seek in seekList)
+            foreach (var seek in MANAGED_DIRECTORY_SEEK_LIST)
             {
                 var seekPath = Path.Combine(currentDirectory, seek);
                 if (File.Exists(Path.Combine(seekPath, GAME_DLL_FILE_NAME)))
