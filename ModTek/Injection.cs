@@ -11,12 +11,16 @@ namespace ModTek
         {
             try
             {
-                Assembly.LoadFrom(
-                        Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                            "../../Mods/ModTek.dll"))
-                    .GetType("ModTek.ModTek")
-                    .GetMethod("Init", BindingFlags.Public | BindingFlags.Static)
-                    ?.Invoke(null, null);
+                var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory(),
+                    Path.Combine(Path.Combine("..", "..") , Path.Combine("Mods", "ModTek.dll")));
+
+                if (File.Exists(path))
+                {
+                    Assembly.LoadFrom(path)
+                        .GetType("ModTek.ModTek")
+                        .GetMethod("Init", BindingFlags.Public | BindingFlags.Static)
+                        ?.Invoke(null, null);
+                }
             }
             catch
             {
