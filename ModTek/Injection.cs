@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Reflection;
 
@@ -10,19 +9,12 @@ namespace ModTek
     {
         public static void LoadModTek()
         {
-            try
-            {
-                Assembly.LoadFrom(
-                        Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                            "../../Mods/ModTek.dll"))
-                    .GetType("ModTek.ModTek")
-                    .GetMethod("Init", BindingFlags.Public | BindingFlags.Static)
-                    ?.Invoke(null, null);
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
+            Assembly.LoadFrom(
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                    "../../Mods/ModTek.dll"))
+                .GetType("ModTek.ModTek")
+                .GetMethod("Init", BindingFlags.Public | BindingFlags.Static)
+                ?.Invoke(null, null);
         }
     }
 }
