@@ -54,22 +54,22 @@ namespace ModTekInjector
             {
                 "d|detect",
                 "Detect if the game assembly is already injected",
-                v => OptionsIn.Detecting = v != null
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Detect
             },
             {
                 "g|gameversion",
                 "Print the game version number",
-                v => OptionsIn.GameVersion = v != null
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.GameVersion
             },
             {
                 "h|?|help",
                 "Print this useful help message",
-                v => OptionsIn.Helping = v != null
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Help
             },
             {
                 "i|install",
-                "Inject ModTek without doing anything else",
-                v => OptionsIn.Installing = v != null
+                "Inject ModTek into game assembly (this is the default behavior)",
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Install
             },
             {
                 "manageddir=",
@@ -94,17 +94,12 @@ namespace ModTekInjector
             {
                 "r|restore",
                 "Restore non-injected backup game assembly",
-                v => OptionsIn.Restoring = v != null
-            },
-            {
-                "u|update",
-                "Try to update to the latest ModTek injection (this is the default behaviour)",
-                v => OptionsIn.Updating = v != null
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Restore
             },
             {
                 "v|version",
                 "Print the ModTekInjector version number",
-                v => OptionsIn.Versioning = v != null
+                v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Version
             },
             {
                 "factionsPath=",
@@ -119,6 +114,7 @@ namespace ModTekInjector
         {
             try
             {
+                // parse options
                 try
                 {
                     Options.Parse(args);
@@ -129,33 +125,28 @@ namespace ModTekInjector
                     return RC_BAD_OPTIONS;
                 }
 
-                if (OptionsIn.Helping)
+                // handle operations that don't require reading the assembly
+                switch (OptionsIn.PerformOperation)
                 {
-                    SayHelp(Options);
-                    return RC_NORMAL;
+                    case ReceivedOptions.Operation.Help:
+                        SayHelp(Options);
+                        return RC_NORMAL;
+
+                    case ReceivedOptions.Operation.Version:
+                        SayVersion();
+                        return RC_NORMAL;
                 }
 
-                if (OptionsIn.Versioning)
+                // find managed directory, setup assembly resolver to look there
+                var managedDirectory = GetManagedDirectoryPath(OptionsIn.ManagedDir);
+                if (managedDirectory == null)
                 {
-                    SayVersion();
-                    return RC_NORMAL;
+                    SayManagedDirMissingError(OptionsIn.ManagedDir);
+                    return RC_BAD_MANAGED_DIRECTORY_PROVIDED;
                 }
-
-                var managedDirectory = Directory.GetCurrentDirectory();
-                if (!string.IsNullOrEmpty(OptionsIn.ManagedDir))
-                {
-                    if (!Directory.Exists(OptionsIn.ManagedDir))
-                    {
-                        SayManagedDirMissingError(OptionsIn.ManagedDir);
-                        return RC_BAD_MANAGED_DIRECTORY_PROVIDED;
-                    }
-
-                    managedDirectory = Path.GetFullPath(OptionsIn.ManagedDir);
-                }
-
-                // look for missing assemblies in the managed folder
                 managedAssemblyResolver = new ManagedAssemblyResolver(managedDirectory);
 
+                // setup paths to DLLs and backups
                 var gameDLLPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME);
                 var gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + BACKUP_FILE_EXT);
                 var modTekDLLPath = Path.Combine(Directory.GetCurrentDirectory(), MODTEK_DLL_FILE_NAME);
@@ -172,110 +163,84 @@ namespace ModTekInjector
                     return RC_MISSING_MODTEK_ASSEMBLY;
                 }
 
-                var factionsPath = "";
-                if (!string.IsNullOrEmpty(OptionsIn.FactionsPath))
+                // setup factionsPath
+                var factionsPath = GetFactionPath(OptionsIn.FactionsPath);
+                if (!string.IsNullOrEmpty(OptionsIn.FactionsPath) && !File.Exists(factionsPath))
                 {
-                    factionsPath = OptionsIn.FactionsPath;
-                    if (!Path.IsPathRooted(factionsPath))
-                        factionsPath = Path.Combine(managedDirectory, factionsPath);
-
-                    if (!File.Exists(factionsPath))
-                    {
-                        SayFactionsFileMissing(factionsPath);
-                        return RC_MISSING_FACTION_FILE;
-                    }
+                    SayFactionsFileMissing(factionsPath);
+                    return RC_MISSING_FACTION_FILE;
                 }
 
-                bool btmlInjected;
-                bool modTekInjected;
-                bool anyInjected;
+                SayHeader();
+
+                // read the assembly for game version and injected status
+                bool btmlInjected, modTekInjected, anyInjected;
+                string gameVersion;
                 using (var game = ModuleDefinition.ReadModule(gameDLLPath))
                 {
-                    if (OptionsIn.GameVersion)
-                    {
-                        SayGameVersion(GetGameVersion(game));
-                        return RC_NORMAL;
-                    }
-
-                    if (!string.IsNullOrEmpty(OptionsIn.RequiredGameVersion))
-                    {
-                        var gameVersion = GetGameVersion(game);
-                        if (gameVersion != OptionsIn.RequiredGameVersion)
-                        {
-                            SayRequiredGameVersion(gameVersion, OptionsIn.RequiredGameVersion);
-                            SayRequiredGameVersionMismatchMessage(OptionsIn.RequiredGameVersionMismatchMessage);
-                            PromptForKey(OptionsIn.RequireKeyPress);
-                            return RC_REQUIRED_GAME_VERSION_MISMATCH;
-                        }
-                    }
-
+                    gameVersion = GetGameVersion(game);
                     btmlInjected = IsBTMLInjected(game);
                     modTekInjected = IsModTekInjected(game);
                     anyInjected = btmlInjected || modTekInjected;
                 }
 
-                if (OptionsIn.Detecting)
+                // check game version vs. required game version if given
+                if (!string.IsNullOrEmpty(OptionsIn.RequiredGameVersion) && gameVersion != OptionsIn.RequiredGameVersion)
                 {
-                    SayInjectedStatus(btmlInjected, modTekInjected);
-                    return RC_NORMAL;
-                }
-
-                SayHeader();
-
-                if (OptionsIn.Restoring)
-                {
-                    if (anyInjected)
-                        Restore(gameDLLPath, gameDLLBackupPath);
-                    else
-                        SayAlreadyRestored();
-
+                    SayRequiredGameVersion(gameVersion, OptionsIn.RequiredGameVersion);
+                    SayRequiredGameVersionMismatchMessage(OptionsIn.RequiredGameVersionMismatchMessage);
                     PromptForKey(OptionsIn.RequireKeyPress);
-                    return RC_NORMAL;
+                    return RC_REQUIRED_GAME_VERSION_MISMATCH;
                 }
 
-                if (OptionsIn.Installing)
+                // handle operations that require reading the assembly
+                switch (OptionsIn.PerformOperation)
                 {
-                    if (!anyInjected)
-                    {
-                        Backup(gameDLLPath, gameDLLBackupPath);
-                        Inject(gameDLLPath, modTekDLLPath, factionsPath);
-                    }
-                    else
-                    {
-                        SayAlreadyInjected(modTekInjected);
-                    }
+                    case ReceivedOptions.Operation.Detect:
+                        SayInjectedStatus(btmlInjected, modTekInjected);
+                        return RC_NORMAL;
 
-                    PromptForKey(OptionsIn.RequireKeyPress);
-                    return RC_NORMAL;
-                }
+                    case ReceivedOptions.Operation.GameVersion:
+                        SayGameVersion(gameVersion);
+                        return RC_NORMAL;
 
-                if (OptionsIn.Updating)
-                {
-                    if (btmlInjected)
-                    {
-                        SayUpdatingFromBTML();
-                        Restore(gameDLLPath, gameDLLBackupPath);
-                        Inject(gameDLLPath, modTekDLLPath, factionsPath);
-                    }
-                    else if (modTekInjected)
-                    {
-                        if (PromptForUpdateYesNo(OptionsIn.RequireKeyPress))
-                        {
+                    case ReceivedOptions.Operation.Restore:
+                        if (anyInjected)
                             Restore(gameDLLPath, gameDLLBackupPath);
-                            Inject(gameDLLPath, modTekDLLPath, factionsPath);
-                        }
                         else
-                        {
-                            SayUpdateCanceled();
-                        }
-                    }
-                    else
-                    {
-                        Inject(gameDLLPath, modTekDLLPath, factionsPath);
-                    }
+                            SayAlreadyRestored();
 
-                    PromptForKey(OptionsIn.RequireKeyPress);
-                    return RC_NORMAL;
+                        PromptForKey(OptionsIn.RequireKeyPress);
+                        return RC_NORMAL;
+
+                    case ReceivedOptions.Operation.Install:
+                        if (btmlInjected)
+                        {
+                            SayUpdatingFromBTML();
+                            Restore(gameDLLPath, gameDLLBackupPath);
+                            gameDLLBackupPath = null;
+                        }
+                        else if (modTekInjected)
+                        {
+                            SayAlreadyInjected();
+
+                            if (PromptForYesNo(OptionsIn.RequireKeyPress))
+                            {
+                                Restore(gameDLLPath, gameDLLBackupPath);
+                                gameDLLBackupPath = null;
+                            }
+                            else
+                            {
+                                SayUpdateCanceled();
+                                return RC_NORMAL;
+                            }
+                        }
+
+                        // have restored a non-injected assembly or have a non injected assembly at this point
+                        // if backups restored, path to backup nullified, so not backed up again
+                        Inject(gameDLLPath, modTekDLLPath, gameDLLBackupPath, factionsPath);
+                        PromptForKey(OptionsIn.RequireKeyPress);
+                        return RC_NORMAL;
                 }
             }
             catch (BackupFileNotFound e)
@@ -299,20 +264,43 @@ namespace ModTekInjector
         }
 
 
-        // UTIL
-        private static string GetGameVersion(ModuleDefinition game)
+        // PATHS
+        private static string GetManagedDirectoryPath(string optionIn)
         {
-            foreach (var type in game.Types)
-            {
-                if (type.FullName != GAME_VERSION_TYPE)
-                    continue;
+            if (!string.IsNullOrEmpty(optionIn) && File.Exists(Path.Combine(optionIn, GAME_DLL_FILE_NAME)))
+                return Path.GetFullPath(optionIn);
 
-                var fieldInfo = type.Fields.First(x => x.IsLiteral && !x.IsInitOnly && x.Name == GAME_VERSION_CONST);
-                if (fieldInfo != null)
-                    return fieldInfo.Constant.ToString();
-            }
+            if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), GAME_DLL_FILE_NAME)))
+                return Directory.GetCurrentDirectory();
 
             return null;
+        }
+
+        private static string GetFactionPath(string optionIn)
+        {
+            if (string.IsNullOrEmpty(optionIn))
+                return null;
+
+            var factionsPath = optionIn;
+            if (!Path.IsPathRooted(factionsPath))
+                factionsPath = Path.Combine(Directory.GetCurrentDirectory(), factionsPath);
+
+            return factionsPath;
+        }
+
+
+        // UTIL
+        private static string GetInjectorVersion()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            return fvi.FileVersion;
+        }
+
+        private static string GetGameVersion(ModuleDefinition game)
+        {
+            var gameVersionType = game.GetType(GAME_VERSION_TYPE);
+            return gameVersionType?.Fields.First(x => x.IsLiteral && !x.IsInitOnly && x.Name == GAME_VERSION_CONST)?.Constant.ToString();
         }
 
         private static MethodDefinition CopyMethod(TypeDefinition copyToTypedef, MethodDefinition sourceMethod)
@@ -483,13 +471,17 @@ namespace ModTekInjector
             return false;
         }
 
-        private static void Inject(string hookFilePath, string injectFilePath, string factionsFilePath)
+        private static void Inject(string hookFilePath, string injectFilePath, string backupFilePath, string factionsFilePath)
         {
-            WriteLine($"Injecting {Path.GetFileName(hookFilePath)} with {INJECT_TYPE}.{INJECT_METHOD} at {HOOK_TYPE}.{HOOK_METHOD}");
+            // backup before doing anything else
+            if (!string.IsNullOrEmpty(backupFilePath))
+                Backup(hookFilePath, backupFilePath);
 
             using (var game = ModuleDefinition.ReadModule(hookFilePath, new ReaderParameters { ReadWrite = true, AssemblyResolver = managedAssemblyResolver }))
             using (var injecting = ModuleDefinition.ReadModule(injectFilePath))
             {
+                WriteLine($"Injecting {Path.GetFileName(hookFilePath)} with {INJECT_TYPE}.{INJECT_METHOD} at {HOOK_TYPE}.{HOOK_METHOD}");
+
                 var success = InjectLoadFunction(game, injecting);
                 success &= InjectFunctionCall(game);
 
@@ -515,7 +507,7 @@ namespace ModTekInjector
             var injectedMethod = game.GetType(HOOK_TYPE).Methods.Single(x => x.Name == INJECT_METHOD);
             var hookedMethod = game.GetType(HOOK_TYPE).Methods.First(x => x.Name == HOOK_METHOD);
 
-            // If the return type is an iterator -- need to go searching for its MoveNext method which contains the actual code you'll want to inject
+            // if the return type is an iterator -- need to go searching for its MoveNext method which contains the actual code you'll want to inject
             if (hookedMethod.ReturnType.Name.Equals("IEnumerator"))
             {
                 var nestedIterator = game.GetType(HOOK_TYPE).NestedTypes.First(x =>
@@ -524,27 +516,24 @@ namespace ModTekInjector
             }
 
             // As of BattleTech v1.1 the Start() iterator method of BattleTech.Main has this at the end
-            //
             //  ...
-            //
-            //      Serializer.PrepareSerializer();
-            //      this.activate.enabled = true;
-            //      yield break;
-            //
-            //  }
-            //
+            //  Serializer.PrepareSerializer();
+            //  this.activate.enabled = true;
+            //  yield break;
+            //}
 
-            // We want to inject after the PrepareSerializer call -- so search for that call in the CIL
+            // we want to inject after the PrepareSerializer call -- so search for that call in the CIL
             var targetInstruction = -1;
             for (var i = 0; i < hookedMethod.Body.Instructions.Count; i++)
             {
                 var instruction = hookedMethod.Body.Instructions[i];
-                if (instruction.OpCode.Code.Equals(Code.Call) && instruction.OpCode.OperandType.Equals(OperandType.InlineMethod))
-                {
-                    var methodReference = (MethodReference)instruction.Operand;
-                    if (methodReference.Name.Contains("PrepareSerializer"))
-                        targetInstruction = i;
-                }
+
+                if (!instruction.OpCode.Code.Equals(Code.Call) || !instruction.OpCode.OperandType.Equals(OperandType.InlineMethod))
+                    continue;
+
+                var methodReference = (MethodReference)instruction.Operand;
+                if (methodReference.Name.Contains("PrepareSerializer"))
+                    targetInstruction = i;
             }
 
             if (targetInstruction == -1)
@@ -601,6 +590,9 @@ namespace ModTekInjector
 
         private static bool InjectNewFactions(ModuleDefinition game, string path)
         {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+
             Write("Injecting factions... ");
 
             var factions = ReadFactions(path);
@@ -636,20 +628,18 @@ namespace ModTekInjector
 
 
         // CONSOLE UTIL
-        private static string GetProductVersion()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            return fvi.FileVersion;
-        }
-
-        private static bool PromptForUpdateYesNo(bool requireKeyPress)
+        private static bool PromptForYesNo(bool requireKeyPress)
         {
             if (!requireKeyPress)
                 return true;
 
-            WriteLine("ModTek injection detected. Would you like to re-inject? (y/n)");
-            return ReadKey().Key == ConsoleKey.Y;
+            Write("(y/n): ");
+
+            var yes = ReadKey().Key == ConsoleKey.Y;
+
+            WriteLine();
+
+            return yes;
         }
 
         private static void PromptForKey(bool requireKeyPress)
@@ -670,8 +660,6 @@ namespace ModTekInjector
 
         private static void SayInjectedStatus(bool btmlInjected, bool modTekInjected)
         {
-            SayHeader();
-
             if (btmlInjected)
                 WriteLine("BTML Injected");
 
@@ -709,7 +697,7 @@ namespace ModTekInjector
 
         private static void SayVersion()
         {
-            WriteLine(GetProductVersion());
+            WriteLine(GetInjectorVersion());
         }
 
         private static void SayOptionException(OptionException e)
@@ -766,11 +754,9 @@ namespace ModTekInjector
             WriteLine("You may need to reinstall or use Steam/GOG's file verification function if you have no other backup.");
         }
 
-        private static void SayAlreadyInjected(bool isModTekInjection)
+        private static void SayAlreadyInjected()
         {
-            WriteLine(isModTekInjection
-                ? $"ERROR: {GAME_DLL_FILE_NAME} already ModTek injected."
-                : $"ERROR: {GAME_DLL_FILE_NAME} injected with BattleTechModLoader (BTML).  Please revert the file and re-run injector!");
+            Write("ModTek already injected. Would you like to re-inject: ");
         }
 
         private static void SayAlreadyRestored()

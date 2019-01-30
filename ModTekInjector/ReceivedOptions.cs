@@ -6,17 +6,21 @@ namespace ModTekInjector
      */
     internal class ReceivedOptions
     {
+        public enum Operation
+        {
+            Help,
+            Detect,
+            GameVersion,
+            Version,
+            Restore,
+            Install,
+        }
+
         public bool RequireKeyPress = true;
-        public bool Detecting = false;
         public string RequiredGameVersion = string.Empty;
         public string RequiredGameVersionMismatchMessage = string.Empty;
         public string ManagedDir = "../BattleTech_Data/Managed";
-        public bool GameVersion = false;
-        public bool Helping = false;
-        public bool Installing = false;
-        public bool Restoring = false;
-        public bool Updating = true;
-        public bool Versioning = false;
         public string FactionsPath = string.Empty;
+        public Operation PerformOperation = Operation.Install;
     }
 }
