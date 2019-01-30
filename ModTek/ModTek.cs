@@ -36,7 +36,8 @@ namespace ModTek
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MOD_JSON_NAME = "mod.json";
-        private const string MODTEK_DIRECTORY_NAME = ".modtek";
+        private const string MODTEK_DIRECTORY_NAME = "ModTek";
+        private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
         private const string MERGE_CACHE_FILE_NAME = "merge_cache.json";
         private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
@@ -50,6 +51,7 @@ namespace ModTek
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
+        internal static string TempModTekDirectory { get; private set; }
         internal static string CacheDirectory { get; private set; }
         internal static string DatabaseDirectory { get; private set; }
         internal static string MergeCachePath { get; private set; }
@@ -107,17 +109,18 @@ namespace ModTek
             MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
 
             ModTekDirectory = Path.Combine(ModsDirectory, MODTEK_DIRECTORY_NAME);
-            CacheDirectory = Path.Combine(ModTekDirectory, CACHE_DIRECTORY_NAME);
-            DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
+            TempModTekDirectory = Path.Combine(ModsDirectory, TEMP_MODTEK_DIRECTORY_NAME);
+            CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
+            DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
 
-            LogPath = Path.Combine(ModTekDirectory, LOG_NAME);
-            HarmonySummaryPath = Path.Combine(ModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
-            LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
+            LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
+            HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
+            LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
-            ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
+            ConfigPath = Path.Combine(TempModTekDirectory, CONFIG_FILE_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
@@ -130,7 +133,7 @@ namespace ModTek
             }
 
             // load progress bar
-            if (!ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
                 Cleanup();
