@@ -82,7 +82,7 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
-        internal static Dictionary<string, Assembly> ModResolveAssemblies = new Dictionary<string, Assembly>();
+        internal static Dictionary<string, Assembly> ResolveAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by BTML)
@@ -149,6 +149,7 @@ namespace ModTek
             jsonMergeCache.UpdateToRelativePaths();
 
             SetupAssemblyResolveHandler();
+            ResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -806,7 +807,7 @@ namespace ModTek
                 }
 
                 if (!modDef.EnableAssemblyVersionCheck)
-                    ModResolveAssemblies.Add(assembly.GetName().Name, assembly);
+                    ResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
             if (potentialAdditions.Count <= 0)
@@ -824,7 +825,7 @@ namespace ModTek
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var resolvingName = new AssemblyName(args.Name);
-                return !ModResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+                return !ResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
             };
         }
 
