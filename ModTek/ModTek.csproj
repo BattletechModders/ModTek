@@ -50,9 +50,6 @@
     <Reference Include="UnityEngine.UI">
       <Private>False</Private>
     </Reference>
-    <Reference Include="BattleTechModLoader">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="0Harmony">
       <Private>False</Private>
     </Reference>
@@ -66,6 +63,7 @@
     <Compile Include="MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
+    <Compile Include="Injection.cs" />
     <Compile Include="Patches\ActivateAfterInit.cs" />
     <Compile Include="Patches\AssetBundleManager.cs" />
     <Compile Include="Patches\AVPVideoPlayer.cs" />
