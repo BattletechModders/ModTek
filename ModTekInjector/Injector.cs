@@ -267,13 +267,15 @@ namespace ModTekInjector
         // PATHS
         private static string GetManagedDirectoryPath(string optionIn)
         {
-            if (!string.IsNullOrEmpty(optionIn) && File.Exists(Path.Combine(optionIn, GAME_DLL_FILE_NAME)))
-                return Path.GetFullPath(optionIn);
+            if (string.IsNullOrEmpty(optionIn))
+                return File.Exists(Path.Combine(Directory.GetCurrentDirectory(), GAME_DLL_FILE_NAME)) ? Directory.GetCurrentDirectory() : null;
 
-            if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), GAME_DLL_FILE_NAME)))
-                return Directory.GetCurrentDirectory();
+            var path = optionIn;
 
-            return null;
+            if (!Path.IsPathRooted(optionIn))
+                path = Path.Combine(Directory.GetCurrentDirectory(), optionIn);
+
+            return File.Exists(Path.Combine(path, GAME_DLL_FILE_NAME)) ? Path.GetFullPath(path) : null;
         }
 
         private static string GetFactionPath(string optionIn)
