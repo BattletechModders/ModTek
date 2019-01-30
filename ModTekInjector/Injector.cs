@@ -430,7 +430,13 @@ namespace ModTekInjector
         // INJECTION
         private static bool IsBTMLInjected(ModuleDefinition game)
         {
-            foreach (var type in game.Types)
+            var searchTypes = new List<TypeDefinition>
+            {
+                game.GetType("BattleTech.Main"),
+                game.GetType("BattleTech.GameInstance")
+            };
+
+            foreach (var type in searchTypes)
             {
                 // check if btml is attached to any method
                 foreach (var methodDefinition in type.Methods)
