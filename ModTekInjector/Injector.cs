@@ -72,9 +72,9 @@ namespace ModTekInjector
                 v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Install
             },
             {
-                "manageddir=",
+                "m=|manageddir=",
                 "specify managed dir where BattleTech's Assembly-CSharp.dll is located",
-                v => OptionsIn.ManagedDir = v
+                v => OptionsIn.ManagedDirectory = v
             },
             {
                 "y|nokeypress",
@@ -102,7 +102,7 @@ namespace ModTekInjector
                 v => OptionsIn.PerformOperation = ReceivedOptions.Operation.Version
             },
             {
-                "factionsPath=",
+                "f=|factions=",
                 "Specify a zip file with factions to inject",
                 v => OptionsIn.FactionsPath = v
             }
@@ -138,10 +138,10 @@ namespace ModTekInjector
                 }
 
                 // find managed directory, setup assembly resolver to look there
-                var managedDirectory = GetManagedDirectoryPath(OptionsIn.ManagedDir);
+                var managedDirectory = GetManagedDirectoryPath(OptionsIn.ManagedDirectory);
                 if (managedDirectory == null)
                 {
-                    SayManagedDirMissingError(OptionsIn.ManagedDir);
+                    SayManagedDirMissingError(OptionsIn.ManagedDirectory);
                     return RC_BAD_MANAGED_DIRECTORY_PROVIDED;
                 }
                 managedAssemblyResolver = new ManagedAssemblyResolver(managedDirectory);
@@ -153,7 +153,7 @@ namespace ModTekInjector
 
                 if (!File.Exists(gameDLLPath))
                 {
-                    SayGameAssemblyMissingError(OptionsIn.ManagedDir);
+                    SayGameAssemblyMissingError(OptionsIn.ManagedDirectory);
                     return RC_BAD_MANAGED_DIRECTORY_PROVIDED;
                 }
 
@@ -267,15 +267,30 @@ namespace ModTekInjector
         // PATHS
         private static string GetManagedDirectoryPath(string optionIn)
         {
-            if (string.IsNullOrEmpty(optionIn))
-                return File.Exists(Path.Combine(Directory.GetCurrentDirectory(), GAME_DLL_FILE_NAME)) ? Directory.GetCurrentDirectory() : null;
+            if (!string.IsNullOrEmpty(optionIn))
+            {
+                var path = optionIn;
 
-            var path = optionIn;
+                if (!Path.IsPathRooted(optionIn))
+                    path = Path.Combine(Directory.GetCurrentDirectory(), optionIn);
 
-            if (!Path.IsPathRooted(optionIn))
-                path = Path.Combine(Directory.GetCurrentDirectory(), optionIn);
+                return File.Exists(Path.Combine(path, GAME_DLL_FILE_NAME)) ? Path.GetFullPath(path) : null;
+            }
 
-            return File.Exists(Path.Combine(path, GAME_DLL_FILE_NAME)) ? Path.GetFullPath(path) : null;
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var seekList = new List<string>
+            {
+                "../BattleTech_Data/Managed"
+            };
+
+            foreach (var seek in seekList)
+            {
+                var seekPath = Path.Combine(currentDirectory, seek);
+                if (File.Exists(Path.Combine(seekPath, GAME_DLL_FILE_NAME)))
+                    return seekPath;
+            }
+
+            return null;
         }
 
         private static string GetFactionPath(string optionIn)

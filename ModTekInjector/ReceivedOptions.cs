@@ -19,7 +19,7 @@ namespace ModTekInjector
         public bool RequireKeyPress = true;
         public string RequiredGameVersion = string.Empty;
         public string RequiredGameVersionMismatchMessage = string.Empty;
-        public string ManagedDir = "../BattleTech_Data/Managed";
+        public string ManagedDirectory = string.Empty;
         public string FactionsPath = string.Empty;
         public Operation PerformOperation = Operation.Install;
     }
