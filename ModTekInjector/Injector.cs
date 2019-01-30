@@ -11,7 +11,6 @@ using Mono.Options;
 using Newtonsoft.Json;
 using static System.Console;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodAttributes = Mono.Cecil.MethodAttributes;
 
 namespace ModTekInjector
 {
@@ -316,6 +315,131 @@ namespace ModTekInjector
             return null;
         }
 
+        private static MethodDefinition CopyMethod(TypeDefinition copyToTypedef, MethodDefinition sourceMethod)
+        {
+            // adapted from: https://groups.google.com/forum/#!msg/mono-cecil/uoMLJEZrQ1Q/ewthqjEk-jEJ
+            // create a new MethodDefinition; all the content of sourceMethod will be copied to this new MethodDefinition
+            var targetModule = copyToTypedef.Module;
+            var newMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, targetModule.ImportReference(sourceMethod.ReturnType));
+
+            // copy the parameters
+            foreach (var parameter in sourceMethod.Parameters)
+            {
+                var newParameter = new ParameterDefinition(parameter.Name, parameter.Attributes, targetModule.ImportReference(parameter.ParameterType));
+                newMethod.Parameters.Add(newParameter);
+            }
+
+            // copy the body
+            var newBody = newMethod.Body;
+            var oldBody = sourceMethod.Body;
+            newBody.InitLocals = oldBody.InitLocals;
+
+            // copy the local variable definition
+            foreach (var variable in oldBody.Variables)
+            {
+                //var nv = new VariableDefinition(v.VariableType.Name, targetModule.ImportReference(v.VariableType));
+                newBody.Variables.Add(new VariableDefinition(targetModule.ImportReference(variable.VariableType)));
+            }
+
+            // copy the IL; we only need to take care of reference and method definitions
+            var newInstructions = newBody.Instructions;
+            foreach (var instruction in oldBody.Instructions)
+            {
+                var operand = instruction.Operand;
+
+                switch (operand)
+                {
+                    case MethodDefinition method:
+                        // for any methodDef that this method calls, we will copy it
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, CopyMethod(copyToTypedef, method)));
+                        continue;
+                    case FieldReference field:
+                        // for member reference, import it
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, targetModule.ImportReference(field)));
+                        continue;
+                    case TypeReference type:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, targetModule.ImportReference(type)));
+                        continue;
+                    case MethodReference method:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, targetModule.ImportReference(method)));
+                        continue;
+                    case byte b:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, b));
+                        continue;
+                    case double d:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, d));
+                        continue;
+                    case float f:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, f));
+                        continue;
+                    case int i:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, i));
+                        continue;
+                    case long l:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, l));
+                        continue;
+                    case sbyte sb:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, sb));
+                        continue;
+                    case string str:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, str));
+                        continue;
+                    case CallSite callSite:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, callSite));
+                        continue;
+                    case Instruction instruct:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, instruct));
+                        continue;
+                    case Instruction[] instructArray:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, instructArray));
+                        continue;
+                    case ParameterDefinition parameter:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, new ParameterDefinition(parameter.Name, parameter.Attributes, targetModule.ImportReference(parameter.ParameterType))));
+                        continue;
+                    case VariableDefinition variableDefinition:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode, new VariableDefinition(targetModule.ImportReference(variableDefinition.VariableType))));
+                        continue;
+                    case null:
+                        newInstructions.Add(Instruction.Create(instruction.OpCode));
+                        continue;
+                    default:
+                        WriteLine($"UNHANDLED OPERAND -- {instruction.OpCode} {instruction.Operand}");
+                        break;
+                }
+            }
+
+            // copy the exception handler blocks
+            foreach (var oldExceptionHandler in oldBody.ExceptionHandlers)
+            {
+                var newExceptionHandler = new ExceptionHandler(oldExceptionHandler.HandlerType);
+                newExceptionHandler.CatchType = targetModule.ImportReference(oldExceptionHandler.CatchType);
+
+                // we need to setup neh.Start and End; these are instructions; we need to locate it in the source by index
+                if (oldExceptionHandler.TryStart != null)
+                    newExceptionHandler.TryStart = newInstructions[oldBody.Instructions.IndexOf(oldExceptionHandler.TryStart)];
+
+                if (oldExceptionHandler.TryEnd != null)
+                    newExceptionHandler.TryEnd = newInstructions[oldBody.Instructions.IndexOf(oldExceptionHandler.TryEnd)];
+
+                if (oldExceptionHandler.FilterStart != null)
+                    newExceptionHandler.FilterStart = newInstructions[oldBody.Instructions.IndexOf(oldExceptionHandler.FilterStart)];
+
+                if (oldExceptionHandler.HandlerStart != null)
+                    newExceptionHandler.HandlerStart = newInstructions[oldBody.Instructions.IndexOf(oldExceptionHandler.HandlerStart)];
+
+                if (oldExceptionHandler.HandlerEnd != null)
+                    newExceptionHandler.HandlerEnd = newInstructions[oldBody.Instructions.IndexOf(oldExceptionHandler.HandlerEnd)];
+
+                newBody.ExceptionHandlers.Add(newExceptionHandler);
+            }
+
+            // add this method to the target typedef
+            copyToTypedef.Methods.Add(newMethod);
+            newMethod.DeclaringType = copyToTypedef;
+
+            return newMethod;
+        }
+
 
         // INJECTION
         private static bool IsBTMLInjected(ModuleDefinition game)
@@ -383,24 +507,7 @@ namespace ModTekInjector
 
         private static bool InjectLoadFunction(ModuleDefinition game, ModuleDefinition injecting)
         {
-            var type = game.GetType(HOOK_TYPE);
-            var copyMethodBody = injecting.GetType(INJECT_TYPE).Methods.Single(x => x.Name == INJECT_METHOD);
-            var injectedMethod = new MethodDefinition(INJECT_METHOD, MethodAttributes.Private | MethodAttributes.Static, game.ImportReference(typeof(void)));
-
-            foreach (var instruction in copyMethodBody.Body.Instructions)
-            {
-                if (instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Callvirt)
-                {
-                    injectedMethod.Body.GetILProcessor().Append(Instruction.Create(instruction.OpCode, game.ImportReference((MethodReference)instruction.Operand)));
-                }
-                else
-                {
-                    injectedMethod.Body.GetILProcessor().Append(instruction);
-                }
-            }
-
-            type.Methods.Add(injectedMethod);
-
+            CopyMethod(game.GetType(HOOK_TYPE), injecting.GetType(INJECT_TYPE).Methods.Single(x => x.Name == INJECT_METHOD));
             return true;
         }
 
