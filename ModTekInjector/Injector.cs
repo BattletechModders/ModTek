@@ -42,7 +42,8 @@ namespace ModTekInjector
 
         private static readonly List<string> MANAGED_DIRECTORY_SEEK_LIST = new List<string>
         {
-            "../../BattleTech_Data/Managed"
+            "../../BattleTech_Data/Managed",
+            "../../Data/Managed"
         };
 
         private const int FACTION_ENUM_STARTING_ID = 5000;
