@@ -325,8 +325,7 @@ namespace ModTekInjector
             // copy the parameters
             foreach (var parameter in sourceMethod.Parameters)
             {
-                var newParameter = new ParameterDefinition(parameter.Name, parameter.Attributes, targetModule.ImportReference(parameter.ParameterType));
-                newMethod.Parameters.Add(newParameter);
+                newMethod.Parameters.Add(new ParameterDefinition(parameter.Name, parameter.Attributes, targetModule.ImportReference(parameter.ParameterType)));
             }
 
             // copy the body
@@ -337,7 +336,6 @@ namespace ModTekInjector
             // copy the local variable definition
             foreach (var variable in oldBody.Variables)
             {
-                //var nv = new VariableDefinition(v.VariableType.Name, targetModule.ImportReference(v.VariableType));
                 newBody.Variables.Add(new VariableDefinition(targetModule.ImportReference(variable.VariableType)));
             }
 
