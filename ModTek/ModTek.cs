@@ -1,6 +1,5 @@
 using BattleTech;
 using BattleTech.Data;
-using BattleTechModLoader;
 using Harmony;
 using HBS.Util;
 using JetBrains.Annotations;
@@ -37,7 +36,8 @@ namespace ModTek
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MOD_JSON_NAME = "mod.json";
-        private const string MODTEK_DIRECTORY_NAME = ".modtek";
+        private const string MODTEK_DIRECTORY_NAME = "ModTek";
+        private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
         private const string MERGE_CACHE_FILE_NAME = "merge_cache.json";
         private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
@@ -51,6 +51,7 @@ namespace ModTek
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
+        internal static string TempModTekDirectory { get; private set; }
         internal static string CacheDirectory { get; private set; }
         internal static string DatabaseDirectory { get; private set; }
         internal static string MergeCachePath { get; private set; }
@@ -74,6 +75,8 @@ namespace ModTek
 
         internal static Configuration Config;
 
+        private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
+
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest;
         internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
@@ -81,7 +84,7 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
-        internal static Dictionary<string, Assembly> ModResolveAssemblies = new Dictionary<string, Assembly>();
+        internal static Dictionary<string, Assembly> ResolveAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by BTML)
@@ -106,17 +109,18 @@ namespace ModTek
             MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
 
             ModTekDirectory = Path.Combine(ModsDirectory, MODTEK_DIRECTORY_NAME);
-            CacheDirectory = Path.Combine(ModTekDirectory, CACHE_DIRECTORY_NAME);
-            DatabaseDirectory = Path.Combine(ModTekDirectory, DATABASE_DIRECTORY_NAME);
+            TempModTekDirectory = Path.Combine(ModsDirectory, TEMP_MODTEK_DIRECTORY_NAME);
+            CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
+            DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
 
-            LogPath = Path.Combine(ModTekDirectory, LOG_NAME);
-            HarmonySummaryPath = Path.Combine(ModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
-            LoadOrderPath = Path.Combine(ModTekDirectory, LOAD_ORDER_FILE_NAME);
+            LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
+            HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
+            LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
-            ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
+            ConfigPath = Path.Combine(TempModTekDirectory, CONFIG_FILE_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
@@ -129,7 +133,7 @@ namespace ModTek
             }
 
             // load progress bar
-            if (!ProgressPanel.Initialize(ModsDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
                 Cleanup();
@@ -148,6 +152,7 @@ namespace ModTek
             jsonMergeCache.UpdateToRelativePaths();
 
             SetupAssemblyResolveHandler();
+            ResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -175,6 +180,102 @@ namespace ModTek
             entriesByMod = null;
 
             stopwatch = null;
+        }
+
+
+        // DLL LOADING
+        public static Assembly LoadDLL(string path, string methodName = "Init", string typeName = null,
+            object[] parameters = null, BindingFlags bFlags = PUBLIC_STATIC_BINDING_FLAGS)
+        {
+            var fileName = Path.GetFileName(path);
+
+            if (!File.Exists(path))
+            {
+                Log($"\tFailed to load {fileName} at path {path}, because it doesn't exist at that path.");
+                return null;
+            }
+
+            try
+            {
+                var assembly = Assembly.LoadFrom(path);
+                var name = assembly.GetName();
+                var version = name.Version;
+                var types = new List<Type>();
+
+                // if methodName is null, don't try to run an entry point
+                if (methodName == null)
+                    return assembly;
+
+                // find the type/s with our entry point/s
+                if (typeName == null)
+                {
+                    types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, bFlags) != null));
+                }
+                else
+                {
+                    types.Add(assembly.GetType(typeName));
+                }
+
+                if (types.Count == 0)
+                {
+                    Log($"\t{fileName} (v{version}): Failed to find specified entry point: {typeName ?? "NotSpecified"}.{methodName}");
+                    return null;
+                }
+
+                // run each entry point
+                foreach (var type in types)
+                {
+                    var entryMethod = type.GetMethod(methodName, bFlags);
+                    var methodParams = entryMethod?.GetParameters();
+
+                    if (methodParams == null)
+                        continue;
+
+                    if (methodParams.Length == 0)
+                    {
+                        Log($"\t{fileName} (v{version}): Found and called entry point \"{entryMethod}\" in type \"{type.FullName}\"");
+                        entryMethod.Invoke(null, null);
+                        continue;
+                    }
+
+                    // match up the passed in params with the method's params, if they match, call the method
+                    if (parameters != null && methodParams.Length == parameters.Length
+                        && !methodParams.Where((info, i) => parameters[i]?.GetType() != info.ParameterType).Any())
+                    {
+                        Log($"\t{fileName} (v{version}): Found and called entry point \"{entryMethod}\" in type \"{type.FullName}\"");
+                        entryMethod.Invoke(null, parameters);
+                        continue;
+                    }
+
+                    // failed to call entry method of parameter mismatch
+                    // diagnosing problems of this type is pretty hard
+                    Log($"\t{fileName} (v{version}): Provided params don't match {type.Name}.{entryMethod.Name}");
+                    Log("\t\tPassed in Params:");
+                    if (parameters != null)
+                    {
+                        foreach (var parameter in parameters)
+                            Log($"\t\t\t{parameter.GetType()}");
+                    }
+                    else
+                    {
+                        Log("\t\t\t'parameters' is null");
+                    }
+
+                    if (methodParams.Length != 0)
+                    {
+                        Log("\t\tMethod Params:");
+                        foreach (var prm in methodParams)
+                            Log($"\t\t\t{prm.ParameterType}");
+                    }
+                }
+
+                return assembly;
+            }
+            catch (Exception e)
+            {
+                LogException($"\t{fileName}: While loading a dll, an exception occured", e);
+                return null;
+            }
         }
 
 
@@ -598,6 +699,8 @@ namespace ModTek
         {
             var potentialAdditions = new List<ModEntry>();
 
+            Log($"{modDef.Name} {modDef.Version}");
+
             // load out of the manifest
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
@@ -697,7 +800,7 @@ namespace ModTek
                     }
                 }
 
-                var assembly = BTModLoader.LoadDLL(dllPath, methodName, typeName,
+                var assembly = LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
 
                 if (assembly == null)
@@ -707,13 +810,13 @@ namespace ModTek
                 }
 
                 if (!modDef.EnableAssemblyVersionCheck)
-                    ModResolveAssemblies.Add(assembly.GetName().Name, assembly);
+                    ResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
-
-            Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
 
             if (potentialAdditions.Count <= 0)
                 return true;
+
+            Log($"\t{potentialAdditions.Count} entries");
 
             // actually add the additions, since we successfully got through loading the other stuff
             entriesByMod[modDef.Name] = potentialAdditions;
@@ -725,7 +828,7 @@ namespace ModTek
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var resolvingName = new AssemblyName(args.Name);
-                return !ModResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+                return !ResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
             };
         }
 
@@ -975,7 +1078,10 @@ namespace ModTek
         {
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
+            {
+                Cleanup();
                 yield break;
+            }
 
             Log("");
 
@@ -1202,13 +1308,10 @@ namespace ModTek
                 foreach (var removeEntry in removeEntries)
                     dbCache.Remove(removeEntry);
 
-                using (var metadataDatabase = new MetadataDatabase())
+                foreach (var replacementEntry in replacementEntries)
                 {
-                    foreach (var replacementEntry in replacementEntries)
-                    {
-                        if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
-                            Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
-                    }
+                    if (AddModEntryToDB(MetadataDatabase.Instance, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                        Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
                 }
             }
 
@@ -1224,17 +1327,14 @@ namespace ModTek
 
             // add needed files to db
             var addCount = 0;
-            using (var metadataDatabase = new MetadataDatabase())
+            foreach (var modEntry in BTRLEntries)
             {
-                foreach (var modEntry in BTRLEntries)
+                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, modEntry.Path, modEntry.Type))
                 {
-                    if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
-                    {
-                        yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
-                        Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
-                    }
-                    addCount++;
+                    yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
+                    Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                 }
+                addCount++;
             }
 
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));
