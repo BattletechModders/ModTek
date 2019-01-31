@@ -81,6 +81,7 @@ namespace ModTek
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
+        internal static Dictionary<string, Assembly> ModResolveAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by BTML)
@@ -145,6 +146,8 @@ namespace ModTek
             UpdateAbsCacheToRelativePath(dbCache);
             UpdatePathCacheToID(typeCache);
             jsonMergeCache.UpdateToRelativePaths();
+
+            SetupAssemblyResolveHandler();
 
             // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
             var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
@@ -694,8 +697,17 @@ namespace ModTek
                     }
                 }
 
-                BTModLoader.LoadDLL(dllPath, methodName, typeName,
+                var assembly = BTModLoader.LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
+
+                if (assembly == null)
+                {
+                    Log($"\t{modDef.Name}: Failed to load mod assembly at path {dllPath}. Check BTML log!");
+                    return false;
+                }
+
+                if (!modDef.EnableAssemblyVersionCheck)
+                    ModResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
             Log($"{modDef.Name} {modDef.Version} : {potentialAdditions.Count} entries : {modDef.DLL ?? "No DLL"}");
@@ -706,6 +718,15 @@ namespace ModTek
             // actually add the additions, since we successfully got through loading the other stuff
             entriesByMod[modDef.Name] = potentialAdditions;
             return true;
+        }
+
+        internal static void SetupAssemblyResolveHandler()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var resolvingName = new AssemblyName(args.Name);
+                return !ModResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+            };
         }
 
         internal static void LoadMods()
