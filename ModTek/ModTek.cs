@@ -387,14 +387,7 @@ namespace ModTek
 
             // go through the different kinds of id storage in JSONs
             string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-            foreach (var jPath in jPaths)
-            {
-                var id = (string)jObj.SelectToken(jPath);
-                if (id != null)
-                    return id;
-            }
-
-            return null;
+            return jPaths.Select(jPath => (string) jObj.SelectToken(jPath)).FirstOrDefault(id => id != null);
         }
 
         private static string InferIDFromFile(string path)
@@ -427,12 +420,12 @@ namespace ModTek
 
             foreach (var path in cache.Keys)
             {
-                if (Path.IsPathRooted(path))
-                {
-                    var relativePath = GetRelativePath(path, GameDirectory);
-                    toAdd[relativePath] = cache[path];
-                    toRemove.Add(path);
-                }
+                if (!Path.IsPathRooted(path))
+                    continue;
+
+                var relativePath = GetRelativePath(path, GameDirectory);
+                toAdd[relativePath] = cache[path];
+                toRemove.Add(path);
             }
 
             foreach (var addKVP in toAdd)
@@ -515,10 +508,7 @@ namespace ModTek
 
         internal static List<string> GetTypesFromCache(string id)
         {
-            if (typeCache.ContainsKey(id))
-                return typeCache[id];
-
-            return null;
+            return typeCache.ContainsKey(id) ? typeCache[id] : null;
         }
 
         internal static List<string> GetTypesFromCacheOrManifest(VersionManifest manifest, string id)
@@ -640,11 +630,11 @@ namespace ModTek
             var hasConflicts = new List<string>();
             foreach (var modDef in modDefs.Values)
             {
-                if (modDef.HasConflicts(tryToLoad))
-                {
-                    modDefsCopy.Remove(modDef.Name);
-                    hasConflicts.Add(modDef.Name);
-                }
+                if (!modDef.HasConflicts(tryToLoad))
+                    continue;
+
+                modDefsCopy.Remove(modDef.Name);
+                hasConflicts.Add(modDef.Name);
             }
 
             FillInOptionalDependencies(modDefsCopy);
@@ -893,40 +883,38 @@ namespace ModTek
 
                     continue;
                 }
-                else
+
+                var btgVersion = new Version(VersionInfo.ProductVersion);
+
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
                 {
-                    var btgVersion = new Version(VersionInfo.ProductVersion);
+                    var minVersion = new Version(modDef.BattleTechVersionMin);
 
-                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
+                    if (btgVersion < minVersion)
                     {
-                        var minVersion = new Version(modDef.BattleTechVersionMin);
-
-                        if (btgVersion < minVersion)
+                        if (!modDef.IgnoreLoadFailure)
                         {
-                            if (!modDef.IgnoreLoadFailure)
-                            {
-                                Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
-                                FailedToLoadMods.Add(modDef.Name);
-                            }
-
-                            continue;
+                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
                         }
+
+                        continue;
                     }
+                }
 
-                    if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
+                {
+                    var maxVersion = new Version(modDef.BattleTechVersionMax);
+
+                    if (btgVersion > maxVersion)
                     {
-                        var maxVersion = new Version(modDef.BattleTechVersionMax);
-
-                        if (btgVersion > maxVersion)
+                        if (!modDef.IgnoreLoadFailure)
                         {
-                            if (!modDef.IgnoreLoadFailure)
-                            {
-                                Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
-                                FailedToLoadMods.Add(modDef.Name);
-                            }
-
-                            continue;
+                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
                         }
+
+                        continue;
                     }
                 }
 
@@ -937,11 +925,11 @@ namespace ModTek
             modLoadOrder = GetLoadOrder(modDefs, out var willNotLoad);
             foreach (var modName in willNotLoad)
             {
-                if (!modDefs[modName].IgnoreLoadFailure)
-                {
-                    Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
-                    FailedToLoadMods.Add(modName);
-                }
+                if (modDefs[modName].IgnoreLoadFailure)
+                    continue;
+
+                Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
+                FailedToLoadMods.Add(modName);
             }
             Log("");
 
@@ -972,11 +960,11 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
-                        FailedToLoadMods.Add(modName);
-                    }
+                    if (modDef.IgnoreLoadFailure)
+                        continue;
+
+                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    FailedToLoadMods.Add(modName);
                 }
             }
 
