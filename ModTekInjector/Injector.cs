@@ -496,6 +496,21 @@ namespace ModTekInjector
             return newMethod;
         }
 
+        private static bool IsMethodCalledInMethod(MethodDefinition methodDefinition, string methodSignature)
+        {
+            if (methodDefinition.Body == null)
+                return false;
+
+            foreach (var instruction in methodDefinition.Body.Instructions)
+            {
+                if (instruction.OpCode.Equals(OpCodes.Call) &&
+                    instruction.Operand.ToString().Equals(methodSignature))
+                    return true;
+            }
+
+            return false;
+        }
+
 
         // INJECTION
         private static bool IsBTMLInjected(ModuleDefinition game)
@@ -530,21 +545,6 @@ namespace ModTekInjector
         private static bool IsModTekInjected(ModuleDefinition game)
         {
             return game.GetType(HOOK_TYPE).Methods.Any(x => x.Name == INJECT_METHOD);
-        }
-
-        private static bool IsMethodCalledInMethod(MethodDefinition methodDefinition, string methodSignature)
-        {
-            if (methodDefinition.Body == null)
-                return false;
-
-            foreach (var instruction in methodDefinition.Body.Instructions)
-            {
-                if (instruction.OpCode.Equals(OpCodes.Call) &&
-                    instruction.Operand.ToString().Equals(methodSignature))
-                    return true;
-            }
-
-            return false;
         }
 
         private static void Inject(string hookFilePath, string injectFilePath, string factionsFilePath)
