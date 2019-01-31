@@ -1078,7 +1078,10 @@ namespace ModTek
         {
             // there are no mods loaded, just return
             if (modLoadOrder == null || modLoadOrder.Count == 0)
+            {
+                Cleanup();
                 yield break;
+            }
 
             Log("");
 
@@ -1305,13 +1308,10 @@ namespace ModTek
                 foreach (var removeEntry in removeEntries)
                     dbCache.Remove(removeEntry);
 
-                using (var metadataDatabase = new MetadataDatabase())
+                foreach (var replacementEntry in replacementEntries)
                 {
-                    foreach (var replacementEntry in replacementEntries)
-                    {
-                        if (AddModEntryToDB(metadataDatabase, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
-                            Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
-                    }
+                    if (AddModEntryToDB(MetadataDatabase.Instance, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                        Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
                 }
             }
 
@@ -1327,17 +1327,14 @@ namespace ModTek
 
             // add needed files to db
             var addCount = 0;
-            using (var metadataDatabase = new MetadataDatabase())
+            foreach (var modEntry in BTRLEntries)
             {
-                foreach (var modEntry in BTRLEntries)
+                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, modEntry.Path, modEntry.Type))
                 {
-                    if (modEntry.AddToDB && AddModEntryToDB(metadataDatabase, modEntry.Path, modEntry.Type))
-                    {
-                        yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
-                        Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
-                    }
-                    addCount++;
+                    yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
+                    Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                 }
+                addCount++;
             }
 
             jsonMergeCache.WriteCacheToDisk(Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME));

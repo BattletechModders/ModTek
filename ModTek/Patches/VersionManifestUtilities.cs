@@ -15,15 +15,11 @@ namespace ModTek.Patches
     {
         public static bool Prefix(ref VersionManifest __result)
         {
-            if (ModTek.CachedVersionManifest != null)
-            {
-                __result = ModTek.CachedVersionManifest;
-                return false;
-            }
-            else
-            {
+            if (ModTek.CachedVersionManifest == null)
                 return true;
-            }
+
+            __result = ModTek.CachedVersionManifest;
+            return false;
         }
     }
 }
