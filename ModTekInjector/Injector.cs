@@ -146,6 +146,8 @@ namespace ModTekInjector
                         return RC_NORMAL;
                 }
 
+                SayHeader();
+
                 // find managed directory, setup assembly resolver to look there
                 var managedDirectory = GetManagedDirectoryPath(OptionsIn.ManagedDirectory);
                 if (managedDirectory == null)
@@ -181,7 +183,17 @@ namespace ModTekInjector
                     return RC_MISSING_FACTION_FILE;
                 }
 
-                SayHeader();
+                if (string.IsNullOrEmpty(factionsPath) && OptionsIn.RequireKeyPress)
+                {
+                    var path = GetSingleZipFilePath(Directory.GetCurrentDirectory());
+
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        SayMaybeInjectFactionZip(path);
+                        if (PromptForYesNo(OptionsIn.RequireKeyPress))
+                            factionsPath = path;
+                    }
+                }
 
                 // read the assembly for game version and injected status
                 bool btmlInjected, modTekInjected, anyInjected;
@@ -287,14 +299,14 @@ namespace ModTekInjector
 
 
         // PATHS / FILES
-        private static string GetManagedDirectoryPath(string optionIn)
+        private static string GetManagedDirectoryPath(string pathIn)
         {
-            if (!string.IsNullOrEmpty(optionIn))
+            if (!string.IsNullOrEmpty(pathIn))
             {
-                var path = optionIn;
+                var path = pathIn;
 
-                if (!Path.IsPathRooted(optionIn))
-                    path = Path.Combine(Directory.GetCurrentDirectory(), optionIn);
+                if (!Path.IsPathRooted(pathIn))
+                    path = Path.Combine(Directory.GetCurrentDirectory(), pathIn);
 
                 return File.Exists(Path.Combine(path, GAME_DLL_FILE_NAME)) ? Path.GetFullPath(path) : null;
             }
@@ -310,12 +322,12 @@ namespace ModTekInjector
             return null;
         }
 
-        private static string GetFactionPath(string optionIn)
+        private static string GetFactionPath(string pathIn)
         {
-            if (string.IsNullOrEmpty(optionIn))
+            if (string.IsNullOrEmpty(pathIn))
                 return null;
 
-            var factionsPath = optionIn;
+            var factionsPath = pathIn;
             if (!Path.IsPathRooted(factionsPath))
                 factionsPath = Path.Combine(Directory.GetCurrentDirectory(), factionsPath);
 
@@ -356,6 +368,12 @@ namespace ModTekInjector
                 if (File.Exists(path))
                     File.Delete(path);
             }
+        }
+
+        private static string GetSingleZipFilePath(string directory)
+        {
+            var paths = Directory.GetFiles(directory).Where(file => Path.GetExtension(file).ToLowerInvariant() == ".zip").ToList();
+            return paths.Count == 1 ? paths[0] : null;
         }
 
 
@@ -803,6 +821,11 @@ namespace ModTekInjector
             SayHeader();
             WriteLine($"ERROR: Could not find the ModTek assembly {MODTEK_DLL_FILE_NAME} at '{modTekPath}'.\n" +
                 $"Is {MODTEK_DLL_FILE_NAME} in the correct place? It should be in the same directory as this injector executable.");
+        }
+
+        private static void SayMaybeInjectFactionZip(string path)
+        {
+            Write($"Found {Path.GetFileName(path)}, which could be a factions zip. Did you want to inject the factions in this zip? ");
         }
 
         private static void SayFactionsFileMissing(string factionsPath)
