@@ -46,7 +46,7 @@ namespace ModTekInjector
             "../../Data/Managed"
         };
 
-        private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> { "0Harmony.dll", "BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll" };
+        private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> { "0Harmony.dll", "BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll", "rt-factions.zip" };
         private static readonly List<string> MOD_DIRECTORY_OLD_FILES = new List<string> { "ModTek.dll", "modtekassetbundle", "BTModLoader.log" };
 
         private const int FACTION_ENUM_STARTING_ID = 5000;
