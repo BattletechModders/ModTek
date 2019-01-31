@@ -46,6 +46,9 @@ namespace ModTekInjector
             "../../Data/Managed"
         };
 
+        private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> { "0Harmony.dll", "BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll" };
+        private static readonly List<string> MOD_DIRECTORY_OLD_FILES = new List<string> { "ModTek.dll", "modtekassetbundle", "BTModLoader.log" };
+
         private const int FACTION_ENUM_STARTING_ID = 5000;
         private const FieldAttributes ENUM_ATTRIBUTES = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault;
 
@@ -156,6 +159,7 @@ namespace ModTekInjector
                 var gameDLLPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME);
                 var gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + BACKUP_FILE_EXT);
                 var modTekDLLPath = Path.Combine(Directory.GetCurrentDirectory(), MODTEK_DLL_FILE_NAME);
+                var modDirectory = Path.Combine(Directory.GetCurrentDirectory(), "..");
 
                 if (!File.Exists(gameDLLPath))
                 {
@@ -244,7 +248,19 @@ namespace ModTekInjector
 
                         // have restored a non-injected assembly or have a non injected assembly at this point
                         // if backups restored, path to backup nullified, so not backed up again
-                        Inject(gameDLLPath, modTekDLLPath, gameDLLBackupPath, factionsPath);
+                        if (!string.IsNullOrEmpty(gameDLLBackupPath))
+                            Backup(gameDLLPath, gameDLLBackupPath);
+
+                        Inject(gameDLLPath, modTekDLLPath, factionsPath);
+
+                        if (HasOldFiles(modDirectory, managedDirectory))
+                        {
+                            SayHasOldFiles();
+
+                            if (PromptForYesNo(OptionsIn.RequireKeyPress))
+                                DeleteOldFiles(modDirectory, managedDirectory);
+                        }
+
                         PromptForKey(OptionsIn.RequireKeyPress);
                         return RC_NORMAL;
                 }
@@ -270,7 +286,7 @@ namespace ModTekInjector
         }
 
 
-        // PATHS
+        // PATHS / FILES
         private static string GetManagedDirectoryPath(string optionIn)
         {
             if (!string.IsNullOrEmpty(optionIn))
@@ -304,6 +320,42 @@ namespace ModTekInjector
                 factionsPath = Path.Combine(Directory.GetCurrentDirectory(), factionsPath);
 
             return factionsPath;
+        }
+
+        private static bool HasOldFiles(string modDirectory, string managedDirectory)
+        {
+            foreach (var oldFile in MOD_DIRECTORY_OLD_FILES)
+            {
+                var path = Path.Combine(modDirectory, oldFile);
+                if (File.Exists(path))
+                    return true;
+            }
+
+            foreach (var oldFile in MANAGED_DIRECTORY_OLD_FILES)
+            {
+                var path = Path.Combine(managedDirectory, oldFile);
+                if (File.Exists(path))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void DeleteOldFiles(string modDirectory, string managedDirectory)
+        {
+            foreach (var oldFile in MOD_DIRECTORY_OLD_FILES)
+            {
+                var path = Path.Combine(modDirectory, oldFile);
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+
+            foreach (var oldFile in MANAGED_DIRECTORY_OLD_FILES)
+            {
+                var path = Path.Combine(managedDirectory, oldFile);
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
         }
 
 
@@ -495,12 +547,8 @@ namespace ModTekInjector
             return false;
         }
 
-        private static void Inject(string hookFilePath, string injectFilePath, string backupFilePath, string factionsFilePath)
+        private static void Inject(string hookFilePath, string injectFilePath, string factionsFilePath)
         {
-            // backup before doing anything else
-            if (!string.IsNullOrEmpty(backupFilePath))
-                Backup(hookFilePath, backupFilePath);
-
             using (var game = ModuleDefinition.ReadModule(hookFilePath, new ReaderParameters { ReadWrite = true, AssemblyResolver = managedAssemblyResolver }))
             using (var injecting = ModuleDefinition.ReadModule(injectFilePath))
             {
@@ -768,6 +816,11 @@ namespace ModTekInjector
             WriteLine("ModTek Injector");
             WriteLine("---------------");
             WriteLine();
+        }
+
+        private static void SayHasOldFiles()
+        {
+            Write("Would you like to remove old files from previous ModTek/BTML versions? ");
         }
 
         private static void SayHowToRecoverMissingBackup(string backupFileName)
