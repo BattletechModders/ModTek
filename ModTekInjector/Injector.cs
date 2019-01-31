@@ -723,7 +723,7 @@ namespace ModTekInjector
             if (!requireKeyPress)
                 return true;
 
-            Write("(y/n): ");
+            Write("(y/N): ");
 
             var yes = ReadKey().Key == ConsoleKey.Y;
 
