@@ -673,6 +673,7 @@ namespace ModTekInjector
 
             WriteLine("Press any key to continue.");
             ReadKey();
+            WriteLine();
         }
 
 
@@ -704,13 +705,14 @@ namespace ModTekInjector
 
         private static void SayGameVersion(string version)
         {
-            WriteLine(version);
+            WriteLine($"Game Version: {version}");
         }
 
         private static void SayRequiredGameVersion(string version, string expectedVersion)
         {
-            WriteLine($"Expected BTG v{expectedVersion}");
-            WriteLine($"Actual BTG v{version}");
+            WriteLine("Version mismatch!");
+            WriteLine($"Expected BattleTech Version: {expectedVersion}");
+            WriteLine($"Actual BattleTech Version: {version}");
         }
 
         private static void SayRequiredGameVersionMismatchMessage(string msg)
@@ -721,7 +723,7 @@ namespace ModTekInjector
 
         private static void SayVersion()
         {
-            WriteLine(GetInjectorVersion());
+            WriteLine($"Injector Version: {GetInjectorVersion()}");
         }
 
         private static void SayOptionException(OptionException e)
@@ -732,42 +734,46 @@ namespace ModTekInjector
             WriteLine("Try `ModTekInjector.exe --help' for more information.");
         }
 
-        private static void SayManagedDirMissingError(string givenManagedDir)
+        private static void SayManagedDirMissingError(string managedDir)
         {
             SayHeader();
-            WriteLine($"ERROR: We could not find the directory '{givenManagedDir}'. Are you sure it exists?");
+
+            WriteLine(!string.IsNullOrEmpty(managedDir)
+                ? $"ERROR: Could not find the directory '{managedDir}'. Are you sure it exists?"
+                : "ERROR: Could not find managed directory from current location. Is the injector in the correct location?");
         }
 
-        private static void SayGameAssemblyMissingError(string givenManagedDir)
+        private static void SayGameAssemblyMissingError(string managedDir)
         {
             SayHeader();
-            WriteLine($"ERROR: We could not find the BTG assembly {GAME_DLL_FILE_NAME} in directory '{givenManagedDir}'.\n" +
+            WriteLine($"ERROR: Could not find the BTG assembly {GAME_DLL_FILE_NAME} in directory '{managedDir}'.\n" +
                 "Are you sure that is the correct directory?");
         }
 
-        private static void SayModTekAssemblyMissingError(string expectedModLoaderAssemblyPath)
+        private static void SayModTekAssemblyMissingError(string modTekPath)
         {
             SayHeader();
-            WriteLine($"ERROR: We could not find the BTG assembly {MODTEK_DLL_FILE_NAME} at '{expectedModLoaderAssemblyPath}'.\n" +
+            WriteLine($"ERROR: Could not find the ModTek assembly {MODTEK_DLL_FILE_NAME} at '{modTekPath}'.\n" +
                 $"Is {MODTEK_DLL_FILE_NAME} in the correct place? It should be in the same directory as this injector executable.");
         }
 
-        private static void SayFactionsFileMissing(string factionsFilePath)
+        private static void SayFactionsFileMissing(string factionsPath)
         {
             SayHeader();
-            WriteLine($"ERROR: We could not find the provided factions zip at '{factionsFilePath}'");
+            WriteLine($"ERROR: Could not find the provided factions zip at '{factionsPath}'");
         }
 
         private static void SayHeader()
         {
             WriteLine("ModTek Injector");
             WriteLine("---------------");
+            WriteLine();
         }
 
         private static void SayHowToRecoverMissingBackup(string backupFileName)
         {
             WriteLine("----------------------------");
-            WriteLine($"The backup game assembly file must be in the directory with the injector for /restore to work. The backup file should be named \"{backupFileName}\".");
+            WriteLine($"Could not find assembly backup file. The backup file should be named \"{backupFileName}\", and should be in the managed folder");
             WriteLine("You may need to reinstall or use Steam/GOG's file verification function if you have no other backup.");
         }
 
@@ -785,12 +791,12 @@ namespace ModTekInjector
 
         private static void SayAlreadyRestored()
         {
-            WriteLine($"{GAME_DLL_FILE_NAME} already restored.");
+            WriteLine($"{GAME_DLL_FILE_NAME} is not injected, not restoring from backup.");
         }
 
         private static void SayUpdateCanceled()
         {
-            WriteLine($"{GAME_DLL_FILE_NAME} update cancelled.");
+            WriteLine($"{GAME_DLL_FILE_NAME} not changed.");
         }
 
         private static void SayException(Exception e)
