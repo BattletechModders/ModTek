@@ -1,20 +1,22 @@
 # ModTek
 
-ModTek is a modding system for HBS's BATTLETECH PC game based on [BTML](https://github.com/BattletechModders/BattleTechModLoader) that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup (initialized by BTML) and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a modding system for HBS's BATTLETECH PC that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
 ## Installing
 
-[A step-by-step install guide for BTML + ModTek + ModTek mods.](https://github.com/BattletechModders/ModTek/wiki/The-Drop-Dead-Simple-Guide-to-Installing-BTML-&-ModTek-&-ModTek-mods)
+ModTek 0.6.0 integrates BTML so installing is even easier than it used to be.
 
-ModTek requires [BTML](https://github.com/BattletechModders/BattleTechModLoader).
-
-If the `BATTLETECH\Mods\` directory doesn't exist, create it. Install via moving `ModTek.dll` into the `BATTLETECH\Mods\` folder. BTML will now load ModTek.
+* If the `BATTLETECH\Mods\` directory doesn't exist, create it.
+* Move the entire ModTek folder from the release download into the `BATTLETECH\Mods\` folder
+* You should now have a `BATTLETECH\Mods\ModTek\` folder
+* Run the injector program (`ModTekInjector.exe`) in that folder
+* DO NOT move anything from the `BATTLETECH\Mods\ModTek\` folder, it is self-contained.
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 
 ## Handling Game Updates
 
-Because ModTek is a BTML mod and doesn't change any game files, all you have to do to get your ModTek mods working again after an update is to re-run `BattleTechModLoaderInjector.exe`, which will re-inject BTML into the game. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
+Generally, updates can be dealt with by re-running `ModTekInjector.exe` -- though sometimes ModTek will have to if certain game API's change. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
 
 ## Anatomy of a ModTek Mod
 
