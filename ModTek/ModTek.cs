@@ -1260,7 +1260,8 @@ namespace ModTek
             yield return new ProgressReport(1, "Syncing Database", "");
 
             // check if files removed from DB cache
-            var rebuildDB = false;
+            var shouldWriteDB = false;
+            var shouldRebuildDB = false;
             var replacementEntries = new List<VersionManifestEntry>();
             var removeEntries = new List<string>();
             foreach (var path in dbCache.Keys)
@@ -1281,7 +1282,7 @@ namespace ModTek
                 if (existingEntry == null)
                 {
                     Log("\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
-                    rebuildDB = true;
+                    shouldRebuildDB = true;
                     break;
                 }
 
@@ -1290,7 +1291,7 @@ namespace ModTek
             }
 
             // add removed entries replacements to db
-            if (!rebuildDB)
+            if (!shouldRebuildDB)
             {
                 // remove old entries
                 foreach (var removeEntry in removeEntries)
@@ -1299,12 +1300,15 @@ namespace ModTek
                 foreach (var replacementEntry in replacementEntries)
                 {
                     if (AddModEntryToDB(MetadataDatabase.Instance, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                    {
                         Log($"\t\tReplaced DB entry with an existing entry in path: {GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
+                        shouldWriteDB = true;
+                    }
                 }
             }
 
             // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
-            if (rebuildDB)
+            if (shouldRebuildDB)
             {
                 if (File.Exists(ModMDDBPath))
                     File.Delete(ModMDDBPath);
@@ -1321,6 +1325,7 @@ namespace ModTek
                 {
                     yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
                     Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    shouldWriteDB = true;
                 }
                 addCount++;
             }
@@ -1329,6 +1334,12 @@ namespace ModTek
             WriteJsonFile(TypeCachePath, typeCache);
             WriteJsonFile(DBCachePath, dbCache);
             WriteJsonFile(ConfigPath, Config);
+
+            if (shouldWriteDB)
+            {
+                yield return new ProgressReport(1, "Writing Database", "");
+                MetadataDatabase.Instance.WriteInMemoryDBToDisk();
+            }
 
             Cleanup();
         }
