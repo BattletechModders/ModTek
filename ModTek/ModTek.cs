@@ -126,14 +126,16 @@ namespace ModTek
             Directory.CreateDirectory(CacheDirectory);
             Directory.CreateDirectory(DatabaseDirectory);
 
+            var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+
             // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
             {
-                logWriter.WriteLine($"ModTek v{Assembly.GetExecutingAssembly().GetName().Version} -- {DateTime.Now}");
+                logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
 
             // load progress bar
-            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{Assembly.GetExecutingAssembly().GetName().Version}"))
+            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
             {
                 Log("Failed to load progress bar.  Skipping mod loading completely.");
                 Cleanup();
