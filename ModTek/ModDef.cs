@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -48,6 +49,8 @@ namespace ModTek
         public bool IgnoreLoadFailure { get; set; } = false;
 
         // adding and running code
+        [JsonIgnore]
+        public Assembly Assembly { get; set; }
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 

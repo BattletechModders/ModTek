@@ -84,7 +84,6 @@ namespace ModTek
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
-        internal static Dictionary<string, Assembly> ModAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by injected code)
@@ -500,7 +499,7 @@ namespace ModTek
                     return false;
                 }
 
-                ModAssemblies.Add(modDef.Name, assembly);
+                modDef.Assembly = assembly;
 
                 if (!modDef.EnableAssemblyVersionCheck)
                     TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
