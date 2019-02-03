@@ -166,7 +166,7 @@ namespace ModTek
             }
 
             LoadMods();
-            BuildModManifestEntries();
+            HandleModEntries();
         }
 
         public static void Finish()
@@ -778,13 +778,13 @@ namespace ModTek
             return false;
         }
 
-        internal static void BuildModManifestEntries()
+        internal static void HandleModEntries()
         {
             CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
-            ProgressPanel.SubmitWork(BuildModManifestEntriesLoop);
+            ProgressPanel.SubmitWork(HandleModEntriesLoop);
         }
 
-        internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
+        internal static IEnumerator<ProgressReport> HandleModEntriesLoop()
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
@@ -807,7 +807,7 @@ namespace ModTek
             Log("");
 
             var jsonMerges = new Dictionary<string, List<string>>();
-            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name)).ToList();
+            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0).ToList();
 
             var entryCount = 0;
             var numEntries = 0;
