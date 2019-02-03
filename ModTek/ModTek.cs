@@ -169,9 +169,11 @@ namespace ModTek
             HandleModEntries();
         }
 
-        public static void Finish()
+        internal static void Finish()
         {
             HasLoaded = true;
+
+            CallFinishedLoadMethods();
 
             PrintHarmonySummary(HarmonySummaryPath);
             LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
@@ -321,7 +323,7 @@ namespace ModTek
         }
 
 
-        // READING mod.json AND INIT MODS
+        // READING MODDEFs AND LOAD/INIT MODS
         private static bool LoadMod(ModDef modDef)
         {
             Log($"{modDef.Name} {modDef.Version}");
@@ -1075,6 +1077,42 @@ namespace ModTek
             }
 
             Finish();
+        }
+
+        internal static void CallFinishedLoadMethods()
+        {
+            Log("");
+            Log("Calling FinishedLoading:");
+            var assemblyMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null).ToList();
+            foreach (var assemblyMod in assemblyMods)
+            {
+                var modDef = ModDefs[assemblyMod];
+                var assembly = modDef.Assembly;
+                var methods = AssemblyUtil.FindMethods(assembly, "FinishedLoading");
+
+                if (methods == null || methods.Length == 0)
+                    continue;
+
+                var paramsDictionary = new Dictionary<string, object>
+                {
+                    { "loadOrder", new List<string>(ModLoadOrder) },
+                };
+
+                if (modDef.CustomResourceTypes.Count > 0)
+                {
+                    var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
+                    foreach (var resourceType in modDef.CustomResourceTypes)
+                        customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
+
+                    paramsDictionary.Add("customResources", customResources);
+                }
+
+                foreach (var method in methods)
+                {
+                    Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
+                    AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary);
+                }
+            }
         }
     }
 }
