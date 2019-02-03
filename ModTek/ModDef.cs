@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,7 +20,6 @@ namespace ModTek
         [JsonIgnore]
         public string Directory { get; set; }
 
-        // name will probably have to be unique
         [JsonProperty(Required = Required.Always)]
         public string Name { get; set; }
 
@@ -49,6 +49,8 @@ namespace ModTek
         public bool IgnoreLoadFailure { get; set; } = false;
 
         // adding and running code
+        [JsonIgnore]
+        public Assembly Assembly { get; set; }
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
@@ -59,6 +61,9 @@ namespace ModTek
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;
 
+        // custom resources types that will be passed into FinishedLoading method
+        public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
+
         // manifest, for including any kind of things to add to the game's manifest
         public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 
@@ -67,10 +72,8 @@ namespace ModTek
         public JObject Settings { get; set; } = new JObject();
 
         /// <summary>
-        ///     Creates a ModDef from a path to a mod.json
+        /// Creates a ModDef from a path to a mod.json
         /// </summary>
-        /// <param name="path">Path to mod.json</param>
-        /// <returns>A ModDef representing the mod.json</returns>
         public static ModDef CreateFromPath(string path)
         {
             var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
@@ -78,11 +81,17 @@ namespace ModTek
             return modDef;
         }
 
+        /// <summary>
+        /// Checks if all dependencies are present in param loaded
+        /// </summary>
         public bool AreDependenciesResolved(IEnumerable<string> loaded)
         {
             return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
 
+        /// <summary>
+        /// Checks against provided list of mods to see if any of them conflict
+        /// </summary>
         public bool HasConflicts(IEnumerable<string> otherMods)
         {
             return ConflictsWith.Intersect(otherMods).Any();

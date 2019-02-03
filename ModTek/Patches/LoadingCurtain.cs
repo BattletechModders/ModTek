@@ -1,5 +1,6 @@
 using BattleTech.UI;
 using Harmony;
+using ModTek.UI;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming

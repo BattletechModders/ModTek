@@ -1,18 +1,16 @@
-using Harmony;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Harmony;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = ModTek.Util.Logger;
 
-namespace ModTek
+namespace ModTek.UI
 {
-    using static ModTek;
-    using static Logger;
-
     internal struct ProgressReport
     {
         public float Progress { get; }
@@ -73,13 +71,13 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            LogException("\nUncaught ModTek exception!", e);
+                            Logger.LogException("\nUncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
-                            LoadingText.text = $"See \"{GetRelativePath(LogPath, GameDirectory)}\"";
+                            LoadingText.text = $"See \"{ModTek.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\"";
 
-                            Cleanup();
+                            ModTek.Finish();
 
                             yield break;
                         }
@@ -116,7 +114,7 @@ namespace ModTek
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDirectory, ASSET_BUNDLE_NAME));
             if (assetBundle == null)
             {
-                Log($"Error loading asset bundle {ASSET_BUNDLE_NAME}");
+                Logger.Log($"Error loading asset bundle {ASSET_BUNDLE_NAME}");
                 return false;
             }
 
@@ -129,7 +127,7 @@ namespace ModTek
 
             if (panelTitleText == null || sliderText == null || loadingText == null || sliderGameObject == null)
             {
-                Log("Error loading a GameObject from asset bundle");
+                Logger.Log("Error loading a GameObject from asset bundle");
                 return false;
             }
 

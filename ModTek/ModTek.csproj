@@ -56,12 +56,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdvancedJSONMerger.cs" />
+    <Compile Include="Caches\DBCache.cs" />
+    <Compile Include="Caches\TypeCache.cs" />
+    <Compile Include="Util\AssemblyUtil.cs" />
+    <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
-    <Compile Include="LoadingCurtainErrorText.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="UI\LoadingCurtainErrorText.cs" />
+    <Compile Include="Util\LoadOrder.cs" />
+    <Compile Include="Util\Logger.cs" />
     <Compile Include="ModEntry.cs" />
-    <Compile Include="MergeCache.cs" />
+    <Compile Include="Caches\MergeCache.cs" />
     <Compile Include="ModDef.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Injection.cs" />
@@ -77,7 +81,7 @@
     <Compile Include="Patches\SimGame_MDDExtensions.cs" />
     <Compile Include="Patches\VersionInfo.cs" />
     <Compile Include="Patches\VersionManifestUtilities.cs" />
-    <Compile Include="ProgressPanel.cs" />
+    <Compile Include="UI\ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
