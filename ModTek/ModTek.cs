@@ -72,9 +72,9 @@ namespace ModTek
         private static Stopwatch stopwatch = new Stopwatch();
 
         // internal structures
-        internal static Dictionary<string, ModDef> ModDefs;
-        internal static List<string> ModLoadOrder;
         internal static Configuration Config;
+        internal static List<string> ModLoadOrder;
+        internal static Dictionary<string, ModDef> ModDefs = new Dictionary<string, ModDef>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
 
         // the end result of loading mods, these are used to push into game data through patches
@@ -501,12 +501,10 @@ namespace ModTek
                     TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
-            if (potentialAdditions.Count <= 0)
-                return true;
+            if (potentialAdditions.Count > 0)
+                Log($"\t{potentialAdditions.Count} entries");
 
-            Log($"\t{potentialAdditions.Count} entries");
-
-            // replace the manifest with our additionals since we successfully got through loading the other stuff
+            // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             modDef.Manifest = potentialAdditions;
             return true;
         }
@@ -540,7 +538,6 @@ namespace ModTek
             }
 
             // create ModDef objects for each mod.json file
-            ModDefs = new Dictionary<string, ModDef>();
             foreach (var modDirectory in modDirectories)
             {
                 ModDef modDef;
