@@ -421,7 +421,7 @@ namespace ModTek
 
                 if (!File.Exists(dllPath))
                 {
-                    Log($"\t{modDef.Name} has a DLL specified ({dllPath}), but it's missing! Aborting load.");
+                    Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
                     return false;
                 }
 
@@ -439,12 +439,60 @@ namespace ModTek
                     }
                 }
 
-                var assembly = AssemblyUtil.LoadDLL(dllPath, methodName, typeName,
-                    new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
-
+                var assembly = AssemblyUtil.LoadDLL(dllPath);
                 if (assembly == null)
                 {
-                    Log($"\t{modDef.Name}: Failed to load mod assembly at path {dllPath}. Check BTML log!");
+                    Log($"\tFailed to load mod assembly at path {dllPath}.");
+                    return false;
+                }
+
+                var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
+                if (methods == null || methods.Length == 0)
+                {
+                    Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                    return false;
+                }
+
+                foreach (var method in methods)
+                {
+                    var directory = modDef.Directory;
+                    var settings = modDef.Settings.ToString(Formatting.None);
+
+                    var parameterDictionary = new Dictionary<string, object>
+                    {
+                        { "modDir", directory },
+                        { "directory", directory },
+                        { "modSettings", settings },
+                        { "settings", settings }
+                    };
+
+                    try
+                    {
+                        if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
+                        {
+                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary");
+                            continue;
+                        }
+
+                        if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
+                        {
+                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter (string, string)");
+                            continue;
+                        }
+
+                        if (AssemblyUtil.InvokeMethodByParameterTypes(method, null))
+                        {
+                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using no parameters");
+                            continue;
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        LogException($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                        return false;
+                    }
+
+                    Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                     return false;
                 }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace ModTek.Util
 {
@@ -13,8 +12,7 @@ namespace ModTek.Util
     {
         private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
 
-        public static Assembly LoadDLL(string path, string methodName = "Init", string typeName = null,
-            object[] parameters = null, BindingFlags bFlags = PUBLIC_STATIC_BINDING_FLAGS)
+        public static Assembly LoadDLL(string path)
         {
             var fileName = Path.GetFileName(path);
 
@@ -27,84 +25,83 @@ namespace ModTek.Util
             try
             {
                 var assembly = Assembly.LoadFrom(path);
-                var name = assembly.GetName();
-                var version = name.Version;
-                var types = new List<Type>();
-
-                // if methodName is null, don't try to run an entry point
-                if (methodName == null)
-                    return assembly;
-
-                // find the type/s with our entry point/s
-                if (typeName == null)
-                {
-                    types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, bFlags) != null));
-                }
-                else
-                {
-                    types.Add(assembly.GetType(typeName));
-                }
-
-                if (types.Count == 0)
-                {
-                    Log($"\t{fileName} (v{version}): Failed to find specified entry point: {typeName ?? "NotSpecified"}.{methodName}");
-                    return null;
-                }
-
-                // run each entry point
-                foreach (var type in types)
-                {
-                    var entryMethod = type.GetMethod(methodName, bFlags);
-                    var methodParams = entryMethod?.GetParameters();
-
-                    if (methodParams == null)
-                        continue;
-
-                    if (methodParams.Length == 0)
-                    {
-                        Log($"\t{fileName} (v{version}): Found and called entry point \"{entryMethod}\" in type \"{type.FullName}\"");
-                        entryMethod.Invoke(null, null);
-                        continue;
-                    }
-
-                    // match up the passed in params with the method's params, if they match, call the method
-                    if (parameters != null && methodParams.Length == parameters.Length
-                        && !methodParams.Where((info, i) => parameters[i]?.GetType() != info.ParameterType).Any())
-                    {
-                        Log($"\t{fileName} (v{version}): Found and called entry point \"{entryMethod}\" in type \"{type.FullName}\"");
-                        entryMethod.Invoke(null, parameters);
-                        continue;
-                    }
-
-                    // failed to call entry method of parameter mismatch
-                    // diagnosing problems of this type is pretty hard
-                    Log($"\t{fileName} (v{version}): Provided params don't match {type.Name}.{entryMethod.Name}");
-                    Log("\t\tPassed in Params:");
-                    if (parameters != null)
-                    {
-                        foreach (var parameter in parameters)
-                            Log($"\t\t\t{parameter.GetType()}");
-                    }
-                    else
-                    {
-                        Log("\t\t\t'parameters' is null");
-                    }
-
-                    if (methodParams.Length != 0)
-                    {
-                        Log("\t\tMethod Params:");
-                        foreach (var prm in methodParams)
-                            Log($"\t\t\t{prm.ParameterType}");
-                    }
-                }
-
+                Log($"\tLoaded assembly {assembly.GetName().Name} (v{assembly.GetName().Version})");
                 return assembly;
             }
             catch (Exception e)
             {
-                LogException($"\t{fileName}: While loading a dll, an exception occured", e);
+                LogException($"\t{fileName}: While loading a .dll, an exception occured", e);
                 return null;
             }
+        }
+
+        public static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
+        {
+            // find types with our method on them
+            var types = new List<Type>();
+            if (typeName == null)
+                types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
+            else
+                types.Add(assembly.GetType(typeName));
+
+            if (types.Count == 0)
+                return null;
+
+            var methods = new List<MethodInfo>();
+            foreach (var type in types)
+            {
+                var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
+                methods.Add(method);
+            }
+
+            return methods.ToArray();
+        }
+
+        public static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)
+        {
+            var parameterList = new List<object>();
+            var methodParameters = method.GetParameters();
+
+            if (methodParameters.Length == 0)
+                return false;
+
+            foreach (var parameter in methodParameters)
+            {
+                var name = parameter.Name;
+                if (!paramsDictionary.ContainsKey(name) || paramsDictionary[name].GetType() != parameter.ParameterType)
+                    return false;
+
+                parameterList.Add(paramsDictionary[name]);
+            }
+
+            method.Invoke(null, parameterList.ToArray());
+            return true;
+        }
+
+        public static bool InvokeMethodByParameterTypes(MethodInfo method, object[] parameters)
+        {
+            var methodParameters = method.GetParameters();
+
+            if (parameters == null)
+            {
+                if (methodParameters.Length != 0)
+                    return false;
+
+                method.Invoke(null, null);
+                return true;
+            }
+
+            if (parameters.Length != methodParameters.Length)
+                return false;
+
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].GetType() != methodParameters[i].ParameterType)
+                    return false;
+            }
+
+            method.Invoke(null, parameters);
+            return true;
         }
     }
 }
