@@ -144,8 +144,13 @@ namespace ModTek
             // read config
             Config = Configuration.FromFile(ConfigPath);
 
-            SetupAssemblyResolveHandler();
+            // setup assembly resolver
             TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var resolvingName = new AssemblyName(args.Name);
+                return !TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+            };
 
             try
             {
@@ -507,15 +512,6 @@ namespace ModTek
             // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             modDef.Manifest = potentialAdditions;
             return true;
-        }
-
-        internal static void SetupAssemblyResolveHandler()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                var resolvingName = new AssemblyName(args.Name);
-                return !TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
-            };
         }
 
         internal static void LoadMods()
