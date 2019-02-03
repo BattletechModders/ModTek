@@ -59,6 +59,9 @@ namespace ModTek
         [DefaultValue(true)]
         public bool LoadImplicitManifest { get; set; } = true;
 
+        // custom resources types that will be passed into FinishedLoading method
+        public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
+
         // manifest, for including any kind of things to add to the game's manifest
         public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 

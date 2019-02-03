@@ -24,6 +24,8 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge" };
+        private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static bool HasLoaded { get; private set; }
 
@@ -80,11 +82,13 @@ namespace ModTek
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest;
         internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
+        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static HashSet<string> ModTexture2Ds { get; } = new HashSet<string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
         internal static HashSet<string> FailedToLoadMods { get; }  = new HashSet<string>();
-        internal static Dictionary<string, Assembly> ResolveAssemblies = new Dictionary<string, Assembly>();
+        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
+        internal static Dictionary<string, Assembly> ModAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by BTML)
@@ -154,7 +158,7 @@ namespace ModTek
             jsonMergeCache.UpdateToRelativePaths();
 
             SetupAssemblyResolveHandler();
-            ResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
+            TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
 
             try
             {
@@ -410,9 +414,14 @@ namespace ModTek
             return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
         }
 
-        private static VersionManifestEntry GetEntryFromCachedOrBTRLEntries(string id)
+        private static VersionManifestEntry GetEntryByID(string id)
         {
-            return BTRLEntries.FindLast(x => x.Id == id)?.GetVersionManifestEntry() ?? CachedVersionManifest.Find(x => x.Id == id);
+            var containingCustomType = CustomResources.Where(pair => pair.Value.ContainsKey(id)).ToArray();
+            if (containingCustomType.Any())
+                return containingCustomType.Last().Value[id];
+
+            return BTRLEntries.FindLast(x => x.Id == id)?.GetVersionManifestEntry()
+                ?? CachedVersionManifest.Find(x => x.Id == id);
         }
 
 
@@ -704,6 +713,19 @@ namespace ModTek
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
 
+            // read in custom resource types
+            foreach (var customResourceType in modDef.CustomResourceTypes)
+            {
+                if (VANILLA_TYPES.Contains(customResourceType) || MODTEK_TYPES.Contains(customResourceType))
+                {
+                    Log($"\t{modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    continue;
+                }
+
+                if (!CustomResources.ContainsKey(customResourceType))
+                    CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
+            }
+
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
             foreach (var modEntry in modDef.Manifest)
             {
@@ -727,6 +749,15 @@ namespace ModTek
                 if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
                     Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
+                    return false;
+                }
+
+                if (!string.IsNullOrEmpty(modEntry.Type)
+                    && !VANILLA_TYPES.Contains(modEntry.Type)
+                    && !MODTEK_TYPES.Contains(modEntry.Type)
+                    && !CustomResources.ContainsKey(modEntry.Type))
+                {
+                    Log($"\t{modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
                     return false;
                 }
 
@@ -808,8 +839,10 @@ namespace ModTek
                     return false;
                 }
 
+                ModAssemblies.Add(modDef.Name, assembly);
+
                 if (!modDef.EnableAssemblyVersionCheck)
-                    ResolveAssemblies.Add(assembly.GetName().Name, assembly);
+                    TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
             if (potentialAdditions.Count <= 0)
@@ -827,7 +860,7 @@ namespace ModTek
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var resolvingName = new AssemblyName(args.Name);
-                return !ResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+                return !TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
             };
         }
 
@@ -983,15 +1016,23 @@ namespace ModTek
 
 
         // ADDING MOD CONTENT TO THE GAME
-        private static void AddModEntry(VersionManifest manifest, ModEntry modEntry)
+        private static void AddModEntry(ModEntry modEntry)
         {
             if (modEntry.Path == null)
                 return;
 
+            // custom type
+            if (CustomResources.ContainsKey(modEntry.Type))
+            {
+                Log($"\tAdd/Replace (CustomResource): \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+                CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
+                return;
+            }
+
             VersionManifestAddendum addendum = null;
             if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
             {
-                addendum = manifest.GetAddendumByName(modEntry.AddToAddendum);
+                addendum = CachedVersionManifest.GetAddendumByName(modEntry.AddToAddendum);
 
                 if (addendum == null)
                 {
@@ -1017,7 +1058,7 @@ namespace ModTek
             else
                 Log($"\tAdd/Replace: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
-            // not added to addendum, not added to JSONMerges
+            // entries in BTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
             BTRLEntries.Add(modEntry);
         }
 
@@ -1140,7 +1181,7 @@ namespace ModTek
                         {
                             var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
-                            AddModEntry(CachedVersionManifest, subModEntry);
+                            AddModEntry(subModEntry);
 
                             // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
                             if (jsonMerges.ContainsKey(modEntry.Id))
@@ -1193,7 +1234,7 @@ namespace ModTek
                     if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                     {
                         // have to find the original path for the manifest entry that we're merging onto
-                        var matchingEntry = GetEntryFromCachedOrBTRLEntries(modEntry.Id);
+                        var matchingEntry = GetEntryByID(modEntry.Id);
 
                         if (matchingEntry == null)
                         {
@@ -1207,16 +1248,16 @@ namespace ModTek
                         if (jsonMerges[modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
                             continue;
 
-                        Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
-
                         // this assumes that .json can only have a single type
                         modEntry.Type = matchingEntry.Type;
                         TryAddTypeToCache(modEntry.Id, modEntry.Type);
+
+                        Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
                         jsonMerges[modEntry.Id].Add(modEntry.Path);
                         continue;
                     }
 
-                    AddModEntry(CachedVersionManifest, modEntry);
+                    AddModEntry(modEntry);
                     TryAddTypeToCache(modEntry.Id, modEntry.Type);
 
                     // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
@@ -1236,7 +1277,7 @@ namespace ModTek
             var mergeCount = 0;
             foreach (var id in jsonMerges.Keys)
             {
-                var existingEntry = GetEntryFromCachedOrBTRLEntries(id);
+                var existingEntry = GetEntryByID(id);
                 if (existingEntry == null)
                 {
                     Log($"\tHave merges for {id} but cannot find an original file! Skipping.");
@@ -1262,7 +1303,7 @@ namespace ModTek
                     Id = id
                 };
 
-                AddModEntry(CachedVersionManifest, cacheEntry);
+                AddModEntry(cacheEntry);
             }
 
             Log("");
