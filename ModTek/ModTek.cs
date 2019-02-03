@@ -491,9 +491,12 @@ namespace ModTek
                 var parameterDictionary = new Dictionary<string, object>
                 {
                     { "modDir", directory },
+                    { "modDirectory", directory },
                     { "directory", directory },
                     { "modSettings", settings },
-                    { "settings", settings }
+                    { "settings", settings },
+                    { "settingsJson", settings },
+                    { "settingsJSON", settings }
                 };
 
                 try
