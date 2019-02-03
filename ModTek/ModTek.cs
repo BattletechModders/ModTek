@@ -154,9 +154,16 @@ namespace ModTek
             SetupAssemblyResolveHandler();
             ResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
 
-            // init harmony and patch the stuff that comes with ModTek (contained in Patches.cs)
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            try
+            {
+                HarmonyInstance.Create("io.github.mpstark.ModTek").PatchAll(Assembly.GetExecutingAssembly());
+            }
+            catch (Exception e)
+            {
+                LogException("PATCHING FAILED!", e);
+                CloseLogStream();
+                return;
+            }
 
             LoadMods();
             BuildModManifestEntries();
@@ -951,7 +958,7 @@ namespace ModTek
                     continue;
                 }
 
-                yield return new ProgressReport(modLoaded++ / ((float)modLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}");
+                yield return new ProgressReport(modLoaded++ / ((float)modLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
                 try
                 {
@@ -1083,6 +1090,7 @@ namespace ModTek
             foreach (var modName in manifestMods)
             {
                 Log($"{modName}:");
+                yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading {modName}", "", true);
 
                 foreach (var modEntry in entriesByMod[modName])
                 {
@@ -1221,7 +1229,7 @@ namespace ModTek
             // perform merges into cache
             Log("");
             LogWithDate("Doing merges...");
-            yield return new ProgressReport(1, "Merging", "");
+            yield return new ProgressReport(1, "Merging", "", true);
 
             var mergeCount = 0;
             foreach (var id in jsonMerges.Keys)
@@ -1257,7 +1265,13 @@ namespace ModTek
 
             Log("");
             Log("Syncing Database");
-            yield return new ProgressReport(1, "Syncing Database", "");
+            yield return new ProgressReport(1, "Syncing Database", "", true);
+
+            // since DB instance is read at type init, before we patch the file location
+            // need re-init the mddb to read from the proper modded location
+            var mddbTraverse = Traverse.Create(typeof(MetadataDatabase));
+            mddbTraverse.Field("instance").SetValue(null);
+            mddbTraverse.Method("InitInstance").GetValue();
 
             // check if files removed from DB cache
             var shouldWriteDB = false;
@@ -1337,7 +1351,7 @@ namespace ModTek
 
             if (shouldWriteDB)
             {
-                yield return new ProgressReport(1, "Writing Database", "");
+                yield return new ProgressReport(1, "Writing Database", "", true);
                 MetadataDatabase.Instance.WriteInMemoryDBToDisk();
             }
 

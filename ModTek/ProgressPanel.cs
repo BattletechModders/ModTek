@@ -18,12 +18,14 @@ namespace ModTek
         public float Progress { get; }
         public string SliderText { get; }
         public string LoadingText { get; }
+        public bool ForceFrame { get; }
 
-        public ProgressReport(float progress, string sliderText, string loadingText)
+        public ProgressReport(float progress, string sliderText, string loadingText, bool forceFrame = false)
         {
             Progress = progress;
             SliderText = sliderText;
             LoadingText = loadingText;
+            ForceFrame = forceFrame;
         }
     }
 
@@ -82,10 +84,11 @@ namespace ModTek
                             yield break;
                         }
 
-                        if (sw.ElapsedMilliseconds <= FRAME_TIME)
+                        var report = workEnumerator.Current;
+
+                        if (sw.ElapsedMilliseconds <= FRAME_TIME && !report.ForceFrame)
                             continue;
 
-                        var report = workEnumerator.Current;
                         Slider.value = report.Progress;
                         SliderText.text = report.SliderText;
                         LoadingText.text = report.LoadingText;
