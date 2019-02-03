@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using JetBrains.Annotations;
 
-namespace ModTek
+namespace ModTek.Util
 {
     internal static class Logger
     {

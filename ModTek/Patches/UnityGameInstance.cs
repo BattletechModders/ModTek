@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using BattleTech;
 using Harmony;
+using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

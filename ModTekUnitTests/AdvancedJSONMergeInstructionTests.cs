@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ModTek;
+using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -215,7 +215,7 @@ namespace ModTekUnitTests
 
         private void ProcessInstructionJSON(string json)
         {
-            var instruction = JsonConvert.DeserializeObject<AdvancedJSONMerger.Instruction>(json);
+            var instruction = JsonConvert.DeserializeObject<JSONMerger.AdvancedMergeInstruction>(json);
             instruction.Process(root);
         }
     }

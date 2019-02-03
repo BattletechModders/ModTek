@@ -2,7 +2,7 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 
-namespace ModTek
+namespace ModTek.UI
 {
     public static class LoadingCurtainErrorText
     {
