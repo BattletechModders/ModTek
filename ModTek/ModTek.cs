@@ -1109,8 +1109,10 @@ namespace ModTek
 
                 foreach (var method in methods)
                 {
-                    Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
-                    AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary);
+                    if (AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                        Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
+                    else
+                        Log($"\t{modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
         }
