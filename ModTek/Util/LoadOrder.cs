@@ -73,6 +73,9 @@ namespace ModTek.Util
 
         public static void ToFile(List<string> order, string path)
         {
+            if (order == null)
+                return;
+
             File.WriteAllText(path, JsonConvert.SerializeObject(order, Formatting.Indented));
         }
 

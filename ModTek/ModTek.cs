@@ -90,6 +90,9 @@ namespace ModTek
         [UsedImplicitly]
         public static void Init()
         {
+            if (HasLoaded)
+                return;
+
             stopwatch.Start();
 
             // if the manifest directory is null, there is something seriously wrong
@@ -172,7 +175,7 @@ namespace ModTek
 
             PrintHarmonySummary(HarmonySummaryPath);
             LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
-            Config.ToFile(ConfigPath);
+            Config?.ToFile(ConfigPath);
 
             stopwatch.Stop();
             Log("");
