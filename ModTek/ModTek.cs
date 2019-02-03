@@ -505,19 +505,13 @@ namespace ModTek
                 {
                     if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
                     {
-                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary");
+                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary (or null parameters)");
                         continue;
                     }
 
                     if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
                     {
                         Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter (string, string)");
-                        continue;
-                    }
-
-                    if (AssemblyUtil.InvokeMethodByParameterTypes(method, null))
-                    {
-                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using no parameters");
                         continue;
                     }
                 }
@@ -1087,8 +1081,7 @@ namespace ModTek
             foreach (var assemblyMod in assemblyMods)
             {
                 var modDef = ModDefs[assemblyMod];
-                var assembly = modDef.Assembly;
-                var methods = AssemblyUtil.FindMethods(assembly, "FinishedLoading");
+                var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
 
                 if (methods == null || methods.Length == 0)
                     continue;

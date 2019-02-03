@@ -63,7 +63,10 @@ namespace ModTek.Util
             var methodParameters = method.GetParameters();
 
             if (methodParameters.Length == 0)
-                return false;
+            {
+                method.Invoke(null, null);
+                return true;
+            }
 
             foreach (var parameter in methodParameters)
             {
