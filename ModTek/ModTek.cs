@@ -69,11 +69,11 @@ namespace ModTek
 
         // internal temp structures
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
-        private static Dictionary<string, List<ModEntry>> entriesByMod = new Dictionary<string, List<ModEntry>>();
         private static Stopwatch stopwatch = new Stopwatch();
 
         // internal structures
-        private static List<string> loadOrder;
+        internal static Dictionary<string, ModDef> ModDefs;
+        internal static List<string> ModLoadOrder;
         internal static Configuration Config;
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
 
@@ -173,7 +173,6 @@ namespace ModTek
             CloseLogStream();
 
             cachedJObjects = null;
-            entriesByMod = null;
             stopwatch = null;
         }
 
@@ -507,8 +506,8 @@ namespace ModTek
 
             Log($"\t{potentialAdditions.Count} entries");
 
-            // actually add the additions, since we successfully got through loading the other stuff
-            entriesByMod[modDef.Name] = potentialAdditions;
+            // replace the manifest with our additionals since we successfully got through loading the other stuff
+            modDef.Manifest = potentialAdditions;
             return true;
         }
 
@@ -541,7 +540,7 @@ namespace ModTek
             }
 
             // create ModDef objects for each mod.json file
-            var modDefs = new Dictionary<string, ModDef>();
+            ModDefs = new Dictionary<string, ModDef>();
             foreach (var modDirectory in modDirectories)
             {
                 ModDef modDef;
@@ -564,7 +563,7 @@ namespace ModTek
                     continue;
                 }
 
-                if (modDefs.ContainsKey(modDef.Name))
+                if (ModDefs.ContainsKey(modDef.Name))
                 {
                     Log($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
                     continue;
@@ -616,13 +615,15 @@ namespace ModTek
                     }
                 }
 
-                modDefs.Add(modDef.Name, modDef);
+                ModDefs.Add(modDef.Name, modDef);
             }
 
-            loadOrder = LoadOrder.CreateLoadOrder(modDefs, out var willNotLoad, LoadOrder.FromFile(LoadOrderPath));
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var willNotLoad, LoadOrder.FromFile(LoadOrderPath));
             foreach (var modName in willNotLoad)
             {
-                if (modDefs[modName].IgnoreLoadFailure)
+                ModDefs.Remove(modName);
+
+                if (ModDefs[modName].IgnoreLoadFailure)
                     continue;
 
                 Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
@@ -633,30 +634,37 @@ namespace ModTek
             // lists guarantee order
             var modLoaded = 0;
 
-            foreach (var modName in loadOrder)
+            foreach (var modName in ModLoadOrder)
             {
-                var modDef = modDefs[modName];
+                var modDef = ModDefs[modName];
 
                 if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
                 {
+                    ModDefs.Remove(modName);
                     if (!modDef.IgnoreLoadFailure)
                     {
                         Log($"Skipping load of {modName} because one of its dependencies failed to load.");
                         FailedToLoadMods.Add(modName);
                     }
-
                     continue;
                 }
 
-                yield return new ProgressReport(modLoaded++ / ((float)loadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+                yield return new ProgressReport(modLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
                 try
                 {
-                    if (!LoadMod(modDef) && !modDef.IgnoreLoadFailure)
-                        FailedToLoadMods.Add(modName);
+                    if (!LoadMod(modDef))
+                    {
+                        ModDefs.Remove(modName);
+
+                        if (!modDef.IgnoreLoadFailure)
+                            FailedToLoadMods.Add(modName);
+                    }
                 }
                 catch (Exception e)
                 {
+                    ModDefs.Remove(modName);
+
                     if (modDef.IgnoreLoadFailure)
                         continue;
 
@@ -666,7 +674,7 @@ namespace ModTek
             }
 
             PrintHarmonySummary(HarmonySummaryPath);
-            LoadOrder.ToFile(loadOrder, LoadOrderPath);
+            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
         }
 
 
@@ -767,7 +775,7 @@ namespace ModTek
         internal static IEnumerator<ProgressReport> BuildModManifestEntriesLoop()
         {
             // there are no mods loaded, just return
-            if (loadOrder == null || loadOrder.Count == 0)
+            if (ModLoadOrder == null || ModLoadOrder.Count == 0)
             {
                 Finish();
                 yield break;
@@ -787,18 +795,18 @@ namespace ModTek
             Log("");
 
             var jsonMerges = new Dictionary<string, List<string>>();
-            var manifestMods = loadOrder.Where(name => entriesByMod.ContainsKey(name)).ToList();
+            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name)).ToList();
 
             var entryCount = 0;
             var numEntries = 0;
-            entriesByMod.Do(entries => numEntries += entries.Value.Count);
+            ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
             foreach (var modName in manifestMods)
             {
                 Log($"{modName}:");
                 yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading {modName}", "", true);
 
-                foreach (var modEntry in entriesByMod[modName])
+                foreach (var modEntry in ModDefs[modName].Manifest)
                 {
                     yield return new ProgressReport(entryCount++ / ((float)numEntries), $"Loading {modName}", modEntry.Id);
 
