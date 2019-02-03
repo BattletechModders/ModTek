@@ -58,7 +58,7 @@
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
-    <Compile Include="Util\AssemblyLoader.cs" />
+    <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />

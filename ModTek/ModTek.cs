@@ -439,7 +439,7 @@ namespace ModTek
                     }
                 }
 
-                var assembly = AssemblyLoader.LoadDLL(dllPath, methodName, typeName,
+                var assembly = AssemblyUtil.LoadDLL(dllPath, methodName, typeName,
                     new object[] { modDef.Directory, modDef.Settings.ToString(Formatting.None) });
 
                 if (assembly == null)

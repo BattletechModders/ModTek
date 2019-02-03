@@ -9,7 +9,7 @@ namespace ModTek.Util
 {
     using static Logger;
 
-    internal static class AssemblyLoader
+    internal static class AssemblyUtil
     {
         private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
 
