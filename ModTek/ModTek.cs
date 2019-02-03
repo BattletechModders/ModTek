@@ -170,6 +170,10 @@ namespace ModTek
         {
             HasLoaded = true;
 
+            PrintHarmonySummary(HarmonySummaryPath);
+            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
+            Config.ToFile(ConfigPath);
+
             stopwatch.Stop();
             Log("");
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
@@ -317,13 +321,7 @@ namespace ModTek
         // READING mod.json AND INIT MODS
         private static bool LoadMod(ModDef modDef)
         {
-            var potentialAdditions = new List<ModEntry>();
-
             Log($"{modDef.Name} {modDef.Version}");
-
-            // load out of the manifest
-            if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
-                modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
 
             // read in custom resource types
             foreach (var customResourceType in modDef.CustomResourceTypes)
@@ -338,22 +336,46 @@ namespace ModTek
                     CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
             }
 
+            // expand the manifest (parses all JSON as well)
+            var expandedManifest = ExpandManifest(modDef);
+            if (expandedManifest == null)
+                return false;
+
+            // load the mod assembly
+            if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
+                return false;
+
+            // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
+            if (expandedManifest.Count > 0)
+                Log($"\t{expandedManifest.Count} entries");
+
+            modDef.Manifest = expandedManifest;
+            return true;
+        }
+
+        private static List<ModEntry> ExpandManifest(ModDef modDef)
+        {
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
+            var expandedManifest = new List<ModEntry>();
+
+            if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
+                modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
+
             foreach (var modEntry in modDef.Manifest)
             {
                 // handle prefabs; they have potential internal path to assetbundle
                 if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
                 {
-                    if (!potentialAdditions.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
+                    if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
                         Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
-                        return false ;
+                        return null;
                     }
 
                     modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
 
                     if (!FileIsOnDenyList(modEntry.Path))
-                        potentialAdditions.Add(modEntry);
+                        expandedManifest.Add(modEntry);
 
                     continue;
                 }
@@ -361,7 +383,7 @@ namespace ModTek
                 if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
                     Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
-                    return false;
+                    return null;
                 }
 
                 if (!string.IsNullOrEmpty(modEntry.Type)
@@ -370,7 +392,7 @@ namespace ModTek
                     && !CustomResources.ContainsKey(modEntry.Type))
                 {
                     Log($"\t{modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
-                    return false;
+                    return null;
                 }
 
                 var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, modEntry.Path));
@@ -384,12 +406,12 @@ namespace ModTek
                         try
                         {
                             var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
-                            potentialAdditions.Add(childModEntry);
+                            expandedManifest.Add(childModEntry);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}", e);
-                            return false;
+                            return null;
                         }
                     }
                 }
@@ -400,12 +422,12 @@ namespace ModTek
                     {
                         modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
                         modEntry.Path = entryPath;
-                        potentialAdditions.Add(modEntry);
+                        expandedManifest.Add(modEntry);
                     }
                     catch (Exception e)
                     {
                         LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}", e);
-                        return false;
+                        return null;
                     }
                 }
                 else if (modEntry.Path != "StreamingAssets")
@@ -415,101 +437,97 @@ namespace ModTek
                 }
             }
 
-            // load mod dll
-            if (modDef.DLL != null)
+            return expandedManifest;
+        }
+
+        private static bool LoadAssemblyAndCallInit(ModDef modDef)
+        {
+            var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
+            string typeName = null;
+            var methodName = "Init";
+
+            if (!File.Exists(dllPath))
             {
-                var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
-                string typeName = null;
-                var methodName = "Init";
-
-                if (!File.Exists(dllPath))
-                {
-                    Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
-                    return false;
-                }
-
-                if (modDef.DLLEntryPoint != null)
-                {
-                    var pos = modDef.DLLEntryPoint.LastIndexOf('.');
-                    if (pos == -1)
-                    {
-                        methodName = modDef.DLLEntryPoint;
-                    }
-                    else
-                    {
-                        typeName = modDef.DLLEntryPoint.Substring(0, pos);
-                        methodName = modDef.DLLEntryPoint.Substring(pos + 1);
-                    }
-                }
-
-                var assembly = AssemblyUtil.LoadDLL(dllPath);
-                if (assembly == null)
-                {
-                    Log($"\tFailed to load mod assembly at path {dllPath}.");
-                    return false;
-                }
-
-                var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
-                if (methods == null || methods.Length == 0)
-                {
-                    Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
-                    return false;
-                }
-
-                foreach (var method in methods)
-                {
-                    var directory = modDef.Directory;
-                    var settings = modDef.Settings.ToString(Formatting.None);
-
-                    var parameterDictionary = new Dictionary<string, object>
-                    {
-                        { "modDir", directory },
-                        { "directory", directory },
-                        { "modSettings", settings },
-                        { "settings", settings }
-                    };
-
-                    try
-                    {
-                        if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
-                        {
-                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary");
-                            continue;
-                        }
-
-                        if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
-                        {
-                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter (string, string)");
-                            continue;
-                        }
-
-                        if (AssemblyUtil.InvokeMethodByParameterTypes(method, null))
-                        {
-                            Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using no parameters");
-                            continue;
-                        }
-                    }
-                    catch(Exception e)
-                    {
-                        LogException($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
-                        return false;
-                    }
-
-                    Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
-                    return false;
-                }
-
-                modDef.Assembly = assembly;
-
-                if (!modDef.EnableAssemblyVersionCheck)
-                    TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
+                Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
+                return false;
             }
 
-            if (potentialAdditions.Count > 0)
-                Log($"\t{potentialAdditions.Count} entries");
+            if (modDef.DLLEntryPoint != null)
+            {
+                var pos = modDef.DLLEntryPoint.LastIndexOf('.');
+                if (pos == -1)
+                {
+                    methodName = modDef.DLLEntryPoint;
+                }
+                else
+                {
+                    typeName = modDef.DLLEntryPoint.Substring(0, pos);
+                    methodName = modDef.DLLEntryPoint.Substring(pos + 1);
+                }
+            }
 
-            // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
-            modDef.Manifest = potentialAdditions;
+            var assembly = AssemblyUtil.LoadDLL(dllPath);
+            if (assembly == null)
+            {
+                Log($"\tFailed to load mod assembly at path {dllPath}.");
+                return false;
+            }
+
+            var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
+            if (methods == null || methods.Length == 0)
+            {
+                Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                return false;
+            }
+
+            foreach (var method in methods)
+            {
+                var directory = modDef.Directory;
+                var settings = modDef.Settings.ToString(Formatting.None);
+
+                var parameterDictionary = new Dictionary<string, object>
+                {
+                    { "modDir", directory },
+                    { "directory", directory },
+                    { "modSettings", settings },
+                    { "settings", settings }
+                };
+
+                try
+                {
+                    if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
+                    {
+                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary");
+                        continue;
+                    }
+
+                    if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
+                    {
+                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter (string, string)");
+                        continue;
+                    }
+
+                    if (AssemblyUtil.InvokeMethodByParameterTypes(method, null))
+                    {
+                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using no parameters");
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogException($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    return false;
+                }
+
+                Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                return false;
+            }
+
+            modDef.Assembly = assembly;
+
+            if (!modDef.EnableAssemblyVersionCheck)
+                TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
+
             return true;
         }
 
@@ -574,7 +592,6 @@ namespace ModTek
                 }
 
                 var btgVersion = new Version(VersionInfo.ProductVersion);
-
                 if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
                 {
                     var minVersion = new Version(modDef.BattleTechVersionMin);
@@ -610,8 +627,9 @@ namespace ModTek
                 ModDefs.Add(modDef.Name, modDef);
             }
 
-            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var willNotLoad, LoadOrder.FromFile(LoadOrderPath));
-            foreach (var modName in willNotLoad)
+            // get a load order and remove mods that won't be loaded
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(LoadOrderPath));
+            foreach (var modName in notLoaded)
             {
                 ModDefs.Remove(modName);
 
@@ -621,11 +639,10 @@ namespace ModTek
                 Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
+
+            // try loading each mod
+            var numModsLoaded = 0;
             Log("");
-
-            // lists guarantee order
-            var modLoaded = 0;
-
             foreach (var modName in ModLoadOrder)
             {
                 var modDef = ModDefs[modName];
@@ -641,7 +658,7 @@ namespace ModTek
                     continue;
                 }
 
-                yield return new ProgressReport(modLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+                yield return new ProgressReport(numModsLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
                 try
                 {
@@ -664,9 +681,6 @@ namespace ModTek
                     FailedToLoadMods.Add(modName);
                 }
             }
-
-            PrintHarmonySummary(HarmonySummaryPath);
-            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
         }
 
 
@@ -1047,7 +1061,6 @@ namespace ModTek
             mergeCache.ToFile(MergeCachePath);
             typeCache.ToFile(TypeCachePath);
             dbCache.ToFile(DBCachePath);
-            Config.ToFile(ConfigPath);
 
             if (shouldWriteDB)
             {
