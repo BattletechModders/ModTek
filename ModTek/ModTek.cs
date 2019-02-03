@@ -3,6 +3,9 @@ using BattleTech.Data;
 using Harmony;
 using HBS.Util;
 using JetBrains.Annotations;
+using ModTek.Caches;
+using ModTek.UI;
+using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,12 +15,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using ModTek.Caches;
-using ModTek.UI;
-using ModTek.Util;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
-// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace ModTek
@@ -70,6 +69,7 @@ namespace ModTek
         // internal temp structures
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Stopwatch stopwatch = new Stopwatch();
+        private static Dictionary<string, List<string>> jsonMerges = new Dictionary<string, List<string>>();
 
         // internal structures
         internal static Configuration Config;
@@ -166,7 +166,6 @@ namespace ModTek
             }
 
             LoadMods();
-            HandleModEntries();
         }
 
         internal static void Finish()
@@ -185,7 +184,9 @@ namespace ModTek
 
             CloseLogStream();
 
+            // clear temp objects
             cachedJObjects = null;
+            jsonMerges = null;
             stopwatch = null;
         }
 
@@ -323,7 +324,7 @@ namespace ModTek
         }
 
 
-        // READING MODDEFs AND LOAD/INIT MODS
+        // READING MODDEFs AND LOAD/INIT/FINISH MODS
         private static bool LoadMod(ModDef modDef)
         {
             Log($"{modDef.Name} {modDef.Version}");
@@ -533,154 +534,39 @@ namespace ModTek
             return true;
         }
 
-        internal static void LoadMods()
+        private static void CallFinishedLoadMethods()
         {
-            ProgressPanel.SubmitWork(LoadModsLoop);
-        }
-
-        internal static IEnumerator<ProgressReport> LoadModsLoop()
-        {
-            yield return new ProgressReport(1, "Initializing Mods", "");
-
-            // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModsDirectory)
-                .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
-
-            if (modDirectories.Length == 0)
-            {
-                Log("No ModTek-compatible mods found.");
-                yield break;
-            }
-
-            // create ModDef objects for each mod.json file
-            foreach (var modDirectory in modDirectories)
-            {
-                ModDef modDef;
-                var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
-
-                try
-                {
-                    modDef = ModDef.CreateFromPath(modDefPath);
-                }
-                catch (Exception e)
-                {
-                    FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
-                    LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
-                    continue;
-                }
-
-                if (!modDef.Enabled)
-                {
-                    Log($"Will not load {modDef.Name} because it's disabled.");
-                    continue;
-                }
-
-                if (ModDefs.ContainsKey(modDef.Name))
-                {
-                    Log($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
-                    continue;
-                }
-
-                // check game version vs. specific version or against min/max
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(modDef.BattleTechVersion))
-                {
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
-                        FailedToLoadMods.Add(modDef.Name);
-                    }
-
-                    continue;
-                }
-
-                var btgVersion = new Version(VersionInfo.ProductVersion);
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
-                {
-                    var minVersion = new Version(modDef.BattleTechVersionMin);
-
-                    if (btgVersion < minVersion)
-                    {
-                        if (!modDef.IgnoreLoadFailure)
-                        {
-                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
-                            FailedToLoadMods.Add(modDef.Name);
-                        }
-
-                        continue;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
-                {
-                    var maxVersion = new Version(modDef.BattleTechVersionMax);
-
-                    if (btgVersion > maxVersion)
-                    {
-                        if (!modDef.IgnoreLoadFailure)
-                        {
-                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
-                            FailedToLoadMods.Add(modDef.Name);
-                        }
-
-                        continue;
-                    }
-                }
-
-                ModDefs.Add(modDef.Name, modDef);
-            }
-
-            // get a load order and remove mods that won't be loaded
-            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(LoadOrderPath));
-            foreach (var modName in notLoaded)
-            {
-                ModDefs.Remove(modName);
-
-                if (ModDefs[modName].IgnoreLoadFailure)
-                    continue;
-
-                Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
-                FailedToLoadMods.Add(modName);
-            }
-
-            // try loading each mod
-            var numModsLoaded = 0;
             Log("");
-            foreach (var modName in ModLoadOrder)
+            Log("Calling FinishedLoading:");
+            var assemblyMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null).ToList();
+            foreach (var assemblyMod in assemblyMods)
             {
-                var modDef = ModDefs[modName];
+                var modDef = ModDefs[assemblyMod];
+                var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
 
-                if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
-                {
-                    ModDefs.Remove(modName);
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        Log($"Skipping load of {modName} because one of its dependencies failed to load.");
-                        FailedToLoadMods.Add(modName);
-                    }
+                if (methods == null || methods.Length == 0)
                     continue;
+
+                var paramsDictionary = new Dictionary<string, object>
+                {
+                    { "loadOrder", new List<string>(ModLoadOrder) },
+                };
+
+                if (modDef.CustomResourceTypes.Count > 0)
+                {
+                    var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
+                    foreach (var resourceType in modDef.CustomResourceTypes)
+                        customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
+
+                    paramsDictionary.Add("customResources", customResources);
                 }
 
-                yield return new ProgressReport(numModsLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
-
-                try
+                foreach (var method in methods)
                 {
-                    if (!LoadMod(modDef))
-                    {
-                        ModDefs.Remove(modName);
-
-                        if (!modDef.IgnoreLoadFailure)
-                            FailedToLoadMods.Add(modName);
-                    }
-                }
-                catch (Exception e)
-                {
-                    ModDefs.Remove(modName);
-
-                    if (modDef.IgnoreLoadFailure)
-                        continue;
-
-                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
-                    FailedToLoadMods.Add(modName);
+                    if (AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                        Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
+                    else
+                        Log($"\t{modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
         }
@@ -774,35 +660,174 @@ namespace ModTek
             return false;
         }
 
-        internal static void HandleModEntries()
+
+        // LOADING MODS WORK
+        private static void LoadMods()
         {
             CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
-            ProgressPanel.SubmitWork(HandleModEntriesLoop);
+            ProgressPanel.SubmitWork(InitModsLoop);
+            ProgressPanel.SubmitWork(AddModContentLoop);
+            ProgressPanel.SubmitWork(MergeLoop);
+            ProgressPanel.SubmitWork(AddToDBLoop);
+            ProgressPanel.SubmitWork(FinishLoop);
         }
 
-        internal static IEnumerator<ProgressReport> HandleModEntriesLoop()
+        private static IEnumerator<ProgressReport> InitModsLoop()
         {
-            // there are no mods loaded, just return
-            if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+            yield return new ProgressReport(1, "Initializing Mods", "");
+
+            // find all sub-directories that have a mod.json file
+            var modDirectories = Directory.GetDirectories(ModsDirectory)
+                .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+
+            if (modDirectories.Length == 0)
             {
-                Finish();
+                Log("No ModTek-compatible mods found.");
                 yield break;
             }
 
+            // create ModDef objects for each mod.json file
+            foreach (var modDirectory in modDirectories)
+            {
+                ModDef modDef;
+                var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
+
+                try
+                {
+                    modDef = ModDef.CreateFromPath(modDefPath);
+                }
+                catch (Exception e)
+                {
+                    FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
+                    LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
+                    continue;
+                }
+
+                if (!modDef.Enabled)
+                {
+                    Log($"Will not load {modDef.Name} because it's disabled.");
+                    continue;
+                }
+
+                if (ModDefs.ContainsKey(modDef.Name))
+                {
+                    Log($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
+                    continue;
+                }
+
+                // check game version vs. specific version or against min/max
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(modDef.BattleTechVersion))
+                {
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
+                        FailedToLoadMods.Add(modDef.Name);
+                    }
+
+                    continue;
+                }
+
+                var btgVersion = new Version(VersionInfo.ProductVersion);
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
+                {
+                    if (btgVersion < new Version(modDef.BattleTechVersionMin))
+                    {
+                        if (!modDef.IgnoreLoadFailure)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                        }
+
+                        continue;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
+                {
+                    if (btgVersion > new Version(modDef.BattleTechVersionMax))
+                    {
+                        if (!modDef.IgnoreLoadFailure)
+                        {
+                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
+                            FailedToLoadMods.Add(modDef.Name);
+                        }
+
+                        continue;
+                    }
+                }
+
+                ModDefs.Add(modDef.Name, modDef);
+            }
+
+            // get a load order and remove mods that won't be loaded
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(LoadOrderPath));
+            foreach (var modName in notLoaded)
+            {
+                ModDefs.Remove(modName);
+
+                if (ModDefs[modName].IgnoreLoadFailure)
+                    continue;
+
+                Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
+                FailedToLoadMods.Add(modName);
+            }
+
+            // try loading each mod
+            var numModsLoaded = 0;
+            Log("");
+            foreach (var modName in ModLoadOrder)
+            {
+                var modDef = ModDefs[modName];
+
+                if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
+                {
+                    ModDefs.Remove(modName);
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        Log($"Skipping load of {modName} because one of its dependencies failed to load.");
+                        FailedToLoadMods.Add(modName);
+                    }
+                    continue;
+                }
+
+                yield return new ProgressReport(numModsLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+
+                try
+                {
+                    if (!LoadMod(modDef))
+                    {
+                        ModDefs.Remove(modName);
+
+                        if (!modDef.IgnoreLoadFailure)
+                            FailedToLoadMods.Add(modName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    ModDefs.Remove(modName);
+
+                    if (modDef.IgnoreLoadFailure)
+                        continue;
+
+                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    FailedToLoadMods.Add(modName);
+                }
+            }
+        }
+
+        private static IEnumerator<ProgressReport> AddModContentLoop()
+        {
+            // there are no mods loaded, just return
+            if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+                yield break;
+
             Log("");
 
-            // read/create/upgrade all of the caches
-            yield return new ProgressReport(1, "Reading Caches", "", true);
-            var dbCache = new DBCache(DBCachePath, MDDBPath, ModMDDBPath);
-            dbCache.UpdateToRelativePaths();
-            var mergeCache = MergeCache.FromFile(MergeCachePath);
-            mergeCache.UpdateToRelativePaths();
             var typeCache = new TypeCache(TypeCachePath);
             typeCache.UpdateToIDBased();
 
             Log("");
 
-            var jsonMerges = new Dictionary<string, List<string>>();
             var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0).ToList();
 
             var entryCount = 0;
@@ -948,10 +973,22 @@ namespace ModTek
                 }
             }
 
+            typeCache.ToFile(TypeCachePath);
+        }
+
+        private static IEnumerator<ProgressReport> MergeLoop()
+        {
+            // there are no mods loaded, just return
+            if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+                yield break;
+
             // perform merges into cache
             Log("");
-            LogWithDate("Doing merges...");
+            Log("Doing merges...");
             yield return new ProgressReport(1, "Merging", "", true);
+
+            var mergeCache = MergeCache.FromFile(MergeCachePath);
+            mergeCache.UpdateToRelativePaths();
 
             var mergeCount = 0;
             foreach (var id in jsonMerges.Keys)
@@ -978,16 +1015,28 @@ namespace ModTek
                 var cacheEntry = new ModEntry(cachePath)
                 {
                     ShouldMergeJSON = false,
-                    Type = typeCache.GetTypes(id)[0], // this assumes only one type for each json file
+                    Type = existingEntry.Type,
                     Id = id
                 };
 
                 AddModEntry(cacheEntry);
             }
 
+            mergeCache.ToFile(MergeCachePath);
+        }
+
+        private static IEnumerator<ProgressReport> AddToDBLoop()
+        {
+            // there are no mods loaded, just return
+            if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+                yield break;
+
             Log("");
             Log("Syncing Database");
             yield return new ProgressReport(1, "Syncing Database", "", true);
+
+            var dbCache = new DBCache(DBCachePath, MDDBPath, ModMDDBPath);
+            dbCache.UpdateToRelativePaths();
 
             // since DB instance is read at type init, before we patch the file location
             // need re-init the mddb to read from the proper modded location
@@ -1060,8 +1109,6 @@ namespace ModTek
                 addCount++;
             }
 
-            mergeCache.ToFile(MergeCachePath);
-            typeCache.ToFile(TypeCachePath);
             dbCache.ToFile(DBCachePath);
 
             if (shouldWriteDB)
@@ -1069,45 +1116,13 @@ namespace ModTek
                 yield return new ProgressReport(1, "Writing Database", "", true);
                 MetadataDatabase.Instance.WriteInMemoryDBToDisk();
             }
-
-            Finish();
         }
 
-        internal static void CallFinishedLoadMethods()
+        private static IEnumerator<ProgressReport> FinishLoop()
         {
-            Log("");
-            Log("Calling FinishedLoading:");
-            var assemblyMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null).ToList();
-            foreach (var assemblyMod in assemblyMods)
-            {
-                var modDef = ModDefs[assemblyMod];
-                var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
-
-                if (methods == null || methods.Length == 0)
-                    continue;
-
-                var paramsDictionary = new Dictionary<string, object>
-                {
-                    { "loadOrder", new List<string>(ModLoadOrder) },
-                };
-
-                if (modDef.CustomResourceTypes.Count > 0)
-                {
-                    var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
-                    foreach (var resourceType in modDef.CustomResourceTypes)
-                        customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
-
-                    paramsDictionary.Add("customResources", customResources);
-                }
-
-                foreach (var method in methods)
-                {
-                    if (AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
-                        Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
-                    else
-                        Log($"\t{modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
-                }
-            }
+            // "Loop"
+            yield return new ProgressReport(1, "Finishing Up", "", true);
+            Finish();
         }
     }
 }
