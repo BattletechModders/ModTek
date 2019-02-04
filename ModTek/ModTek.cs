@@ -189,6 +189,40 @@ namespace ModTek
         }
 
 
+        // PATHS
+        internal static string ResolvePath(string path, string rootPathToUse)
+        {
+            if (!Path.IsPathRooted(path))
+                path = Path.Combine(rootPathToUse, path);
+
+            return Path.GetFullPath(path);
+        }
+
+        internal static string GetRelativePath(string path, string rootPath)
+        {
+            if (!Path.IsPathRooted(path))
+                return path;
+
+            rootPath = Path.GetFullPath(rootPath);
+            if (rootPath.Last() != Path.DirectorySeparatorChar)
+                rootPath += Path.DirectorySeparatorChar;
+
+            var pathUri = new Uri(Path.GetFullPath(path), UriKind.Absolute);
+            var rootUri = new Uri(rootPath, UriKind.Absolute);
+
+            if (pathUri.Scheme != rootUri.Scheme)
+                return path;
+
+            var relativeUri = rootUri.MakeRelativeUri(pathUri);
+            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+            return relativePath;
+        }
+
+
         // UTIL
         private static void PrintHarmonySummary(string path)
         {
@@ -237,38 +271,6 @@ namespace ModTek
         private static bool FileIsOnDenyList(string filePath)
         {
             return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        internal static string ResolvePath(string path, string rootPathToUse)
-        {
-            if (!Path.IsPathRooted(path))
-                path = Path.Combine(rootPathToUse, path);
-
-            return Path.GetFullPath(path);
-        }
-
-        internal static string GetRelativePath(string path, string rootPath)
-        {
-            if (!Path.IsPathRooted(path))
-                return path;
-
-            rootPath = Path.GetFullPath(rootPath);
-            if (rootPath.Last() != Path.DirectorySeparatorChar)
-                rootPath += Path.DirectorySeparatorChar;
-
-            var pathUri = new Uri(Path.GetFullPath(path), UriKind.Absolute);
-            var rootUri = new Uri(rootPath, UriKind.Absolute);
-
-            if (pathUri.Scheme != rootUri.Scheme)
-                return path;
-
-            var relativeUri = rootUri.MakeRelativeUri(pathUri);
-            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
-
-            if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
-                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-
-            return relativePath;
         }
 
         internal static JObject ParseGameJSONFile(string path)
