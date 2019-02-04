@@ -172,8 +172,6 @@ namespace ModTek
         {
             HasLoaded = true;
 
-            CallFinishedLoadMethods();
-
             PrintHarmonySummary(HarmonySummaryPath);
             LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
             Config?.ToFile(ConfigPath);
@@ -536,8 +534,7 @@ namespace ModTek
 
         private static void CallFinishedLoadMethods()
         {
-            Log("");
-            Log("Calling FinishedLoading:");
+            var hasPrinted = false;
             var assemblyMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null).ToList();
             foreach (var assemblyMod in assemblyMods)
             {
@@ -546,6 +543,12 @@ namespace ModTek
 
                 if (methods == null || methods.Length == 0)
                     continue;
+
+                if (!hasPrinted)
+                {
+                    Log("\nCalling FinishedLoading:");
+                    hasPrinted = true;
+                }
 
                 var paramsDictionary = new Dictionary<string, object>
                 {
@@ -1122,6 +1125,10 @@ namespace ModTek
         {
             // "Loop"
             yield return new ProgressReport(1, "Finishing Up", "", true);
+            Log("Finishing Up");
+
+            CallFinishedLoadMethods();
+
             Finish();
         }
     }
