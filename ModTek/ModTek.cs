@@ -826,19 +826,17 @@ namespace ModTek
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
                 yield break;
 
-            Log("");
-
+            Log("\nAdding Mod Content...");
             var typeCache = new TypeCache(TypeCachePath);
             typeCache.UpdateToIDBased();
-
             Log("");
 
-            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0).ToList();
-
+            // progress panel setup
             var entryCount = 0;
             var numEntries = 0;
             ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
+            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0).ToList();
             foreach (var modName in manifestMods)
             {
                 Log($"{modName}:");
@@ -988,8 +986,7 @@ namespace ModTek
                 yield break;
 
             // perform merges into cache
-            Log("");
-            Log("Doing merges...");
+            Log("\nDoing merges...");
             yield return new ProgressReport(1, "Merging", "", true);
 
             var mergeCache = MergeCache.FromFile(MergeCachePath);
@@ -1036,8 +1033,7 @@ namespace ModTek
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
                 yield break;
 
-            Log("");
-            Log("Syncing Database");
+            Log("\nSyncing Database...");
             yield return new ProgressReport(1, "Syncing Database", "", true);
 
             var dbCache = new DBCache(DBCachePath, MDDBPath, ModMDDBPath);
@@ -1119,6 +1115,7 @@ namespace ModTek
             if (shouldWriteDB)
             {
                 yield return new ProgressReport(1, "Writing Database", "", true);
+                Log("Writing DB");
                 MetadataDatabase.Instance.WriteInMemoryDBToDisk();
             }
         }
@@ -1127,7 +1124,7 @@ namespace ModTek
         {
             // "Loop"
             yield return new ProgressReport(1, "Finishing Up", "", true);
-            Log("Finishing Up");
+            Log("\nFinishing Up");
 
             CallFinishedLoadMethods();
 
