@@ -2,7 +2,6 @@ using BattleTech;
 using BattleTech.Data;
 using Harmony;
 using HBS.Util;
-using JetBrains.Annotations;
 using ModTek.Caches;
 using ModTek.UI;
 using ModTek.Util;
@@ -84,7 +83,6 @@ namespace ModTek
 
 
         // INITIALIZATION (called by injected code)
-        [UsedImplicitly]
         public static void Init()
         {
             if (HasLoaded)
