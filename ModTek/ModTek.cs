@@ -662,8 +662,8 @@ namespace ModTek
         {
             CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
             ProgressPanel.SubmitWork(InitModsLoop);
-            ProgressPanel.SubmitWork(AddModContentLoop);
-            ProgressPanel.SubmitWork(MergeLoop);
+            ProgressPanel.SubmitWork(HandleModManifestsLoop);
+            ProgressPanel.SubmitWork(MergeJSONLoop);
             ProgressPanel.SubmitWork(AddToDBLoop);
             ProgressPanel.SubmitWork(FinishLoop);
         }
@@ -811,7 +811,7 @@ namespace ModTek
             }
         }
 
-        private static IEnumerator<ProgressReport> AddModContentLoop()
+        private static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
@@ -970,7 +970,7 @@ namespace ModTek
             typeCache.ToFile(TypeCachePath);
         }
 
-        private static IEnumerator<ProgressReport> MergeLoop()
+        private static IEnumerator<ProgressReport> MergeJSONLoop()
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
