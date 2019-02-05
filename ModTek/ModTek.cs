@@ -63,8 +63,8 @@ namespace ModTek
         internal static string ConfigPath { get; private set; }
 
         // internal temp structures
-        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Stopwatch stopwatch = new Stopwatch();
+        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, List<string>> jsonMerges = new Dictionary<string, List<string>>();
 
         // internal structures
@@ -166,10 +166,6 @@ namespace ModTek
         internal static void Finish()
         {
             HasLoaded = true;
-
-            PrintHarmonySummary(HarmonySummaryPath);
-            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
-            Config?.ToFile(ConfigPath);
 
             stopwatch.Stop();
             Log("");
@@ -1122,6 +1118,10 @@ namespace ModTek
             Log("\nFinishing Up");
 
             CallFinishedLoadMethods();
+
+            PrintHarmonySummary(HarmonySummaryPath);
+            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
+            Config?.ToFile(ConfigPath);
 
             Finish();
         }
