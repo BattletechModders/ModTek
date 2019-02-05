@@ -344,7 +344,7 @@ namespace ModTek
 
             // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             if (expandedManifest.Count > 0)
-                Log($"\t{expandedManifest.Count} entries");
+                Log($"\t{expandedManifest.Count} manifest entries");
 
             modDef.Manifest = expandedManifest;
             return true;
