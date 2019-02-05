@@ -16,9 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
-// ReSharper disable FieldCanBeMadeReadOnly.Local
-
 namespace ModTek
 {
     using static Logger;
