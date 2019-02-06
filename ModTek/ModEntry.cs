@@ -23,6 +23,7 @@ namespace ModTek
             AssetBundleName = parent.AssetBundleName;
             AssetBundlePersistent = parent.AssetBundlePersistent;
             ShouldMergeJSON = parent.ShouldMergeJSON;
+            ShouldAppendText = parent.ShouldAppendText;
             AddToAddendum = parent.AddToAddendum;
             AddToDB = parent.AddToDB;
         }
@@ -31,7 +32,10 @@ namespace ModTek
         public string Path { get; set; }
 
         [DefaultValue(false)]
-        public bool ShouldMergeJSON { get; set; } // defaults to false
+        public bool ShouldMergeJSON { get; set; }
+
+        [DefaultValue(false)]
+        public bool ShouldAppendText { get; set; }
 
         [DefaultValue(true)]
         public bool AddToDB { get; set; } = true;

@@ -181,44 +181,59 @@ namespace ModTek.Caches
                     return;
                 }
 
-                // get the parent JSON
-                JObject parentJObj;
-                try
-                {
-                    parentJObj = ModTek.ParseGameJSONFile(originalAbsolutePath);
-                }
-                catch (Exception e)
-                {
-                    LogException($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!", e);
-                    HasErrors = true;
-                    return;
-                }
-
                 foreach (var mergePath in mergePaths)
                     Merges.Add(new PathTimeTuple(ModTek.GetRelativePath(mergePath, ModTek.GameDirectory), File.GetLastWriteTimeUtc(mergePath)));
 
                 Directory.CreateDirectory(ContainingDirectory);
 
-                using (var writer = File.CreateText(absolutePath))
+                // do json merge if json
+                if (Path.GetExtension(absolutePath)?.ToLowerInvariant() == ".json")
                 {
-                    // merge all of the merges
-                    foreach (var mergePath in mergePaths)
+                    // get the parent JSON
+                    JObject parentJObj;
+                    try
                     {
-                        try
-                        {
-                            // since all json files are opened and parsed before this point, they won't have errors
-                            JSONMerger.MergeIntoTarget(parentJObj, ModTek.ParseGameJSONFile(mergePath));
-                        }
-                        catch (Exception e)
-                        {
-                            LogException($"\tMod JSON merge at path {ModTek.GetRelativePath(mergePath, ModTek.GameDirectory)} has errors preventing merge!", e);
-                        }
+                        parentJObj = ModTek.ParseGameJSONFile(originalAbsolutePath);
+                    }
+                    catch (Exception e)
+                    {
+                        LogException($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!", e);
+                        HasErrors = true;
+                        return;
                     }
 
-                    // write the merged onto file to disk
-                    var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented };
-                    parentJObj.WriteTo(jsonWriter);
-                    jsonWriter.Close();
+                    using (var writer = File.CreateText(absolutePath))
+                    {
+                        // merge all of the merges
+                        foreach (var mergePath in mergePaths)
+                        {
+                            try
+                            {
+                                // since all json files are opened and parsed before this point, they won't have errors
+                                JSONMerger.MergeIntoTarget(parentJObj, ModTek.ParseGameJSONFile(mergePath));
+                            }
+                            catch (Exception e)
+                            {
+                                LogException($"\tMod JSON merge at path {ModTek.GetRelativePath(mergePath, ModTek.GameDirectory)} has errors preventing merge!", e);
+                            }
+                        }
+
+                        // write the merged onto file to disk
+                        var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.Indented };
+                        parentJObj.WriteTo(jsonWriter);
+                        jsonWriter.Close();
+                    }
+
+                    return;
+                }
+
+                // do file append if not json
+                using (var writer = File.CreateText(absolutePath))
+                {
+                    writer.Write(File.ReadAllText(originalAbsolutePath));
+
+                    foreach (var mergePath in mergePaths)
+                        writer.Write(File.ReadAllText(mergePath));
                 }
             }
 
