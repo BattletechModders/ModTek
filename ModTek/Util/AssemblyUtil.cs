@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static ModTek.Util.Logger;
 
 namespace ModTek.Util
 {
-    using static Logger;
-
     internal static class AssemblyUtil
     {
         private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;

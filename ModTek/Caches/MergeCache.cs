@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static ModTek.Util.Logger;
 
 namespace ModTek.Caches
 {
@@ -18,7 +19,7 @@ namespace ModTek.Caches
             absolutePath = Path.GetFullPath(absolutePath);
             var relativePath = ModTek.GetRelativePath(absolutePath, ModTek.GameDirectory);
 
-            Logger.Log("");
+            Log("");
 
             if (!CachedEntries.ContainsKey(relativePath) || !CachedEntries[relativePath].MatchesPaths(absolutePath, mergePaths))
             {
@@ -30,19 +31,19 @@ namespace ModTek.Caches
 
                 CachedEntries[relativePath] = cachedEntry;
 
-                Logger.Log($"Merge performed: {Path.GetFileName(absolutePath)}");
+                Log($"Merge performed: {Path.GetFileName(absolutePath)}");
             }
             else
             {
-                Logger.Log($"Cached merge: {Path.GetFileName(absolutePath)} ({File.GetLastWriteTime(CachedEntries[relativePath].CacheAbsolutePath):G})");
+                Log($"Cached merge: {Path.GetFileName(absolutePath)} ({File.GetLastWriteTime(CachedEntries[relativePath].CacheAbsolutePath):G})");
             }
 
-            Logger.Log($"\t{relativePath}");
+            Log($"\t{relativePath}");
 
             foreach (var contributingPath in mergePaths)
-                Logger.Log($"\t{ModTek.GetRelativePath(contributingPath, ModTek.ModsDirectory)}");
+                Log($"\t{ModTek.GetRelativePath(contributingPath, ModTek.ModsDirectory)}");
 
-            Logger.Log("");
+            Log("");
 
             CachedEntries[relativePath].CacheHit = true;
             return CachedEntries[relativePath].CacheAbsolutePath;
@@ -65,7 +66,7 @@ namespace ModTek.Caches
             }
 
             if (unusedMergePaths.Count > 0)
-                Logger.Log("");
+                Log("");
 
             foreach (var unusedMergePath in unusedMergePaths)
             {
@@ -75,13 +76,13 @@ namespace ModTek.Caches
                 if (File.Exists(cacheAbsolutePath))
                     File.Delete(cacheAbsolutePath);
 
-                Logger.Log($"Old Merge Deleted: {cacheAbsolutePath}");
+                Log($"Old Merge Deleted: {cacheAbsolutePath}");
 
                 var directory = Path.GetDirectoryName(cacheAbsolutePath);
                 while (Directory.Exists(directory) && Directory.GetDirectories(directory).Length == 0 && Directory.GetFiles(directory).Length == 0 && Path.GetFullPath(directory) != ModTek.CacheDirectory)
                 {
                     Directory.Delete(directory);
-                    Logger.Log($"Old Merge folder deleted: {directory}");
+                    Log($"Old Merge folder deleted: {directory}");
                     directory = Path.GetFullPath(Path.Combine(directory, ".."));
                 }
             }
@@ -125,17 +126,17 @@ namespace ModTek.Caches
                 try
                 {
                     mergeCache = JsonConvert.DeserializeObject<MergeCache>(File.ReadAllText(path));
-                    Logger.Log("Loaded merge cache.");
+                    Log("Loaded merge cache.");
                     return mergeCache;
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException("Loading merge cache failed -- will rebuild it.", e);
+                    LogException("Loading merge cache failed -- will rebuild it.", e);
                 }
             }
 
             // create a new one if it doesn't exist or couldn't be added'
-            Logger.Log("Building new Merge Cache.");
+            Log("Building new Merge Cache.");
             mergeCache = new MergeCache();
             return mergeCache;
         }
@@ -188,7 +189,7 @@ namespace ModTek.Caches
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!", e);
+                    LogException($"\tParent JSON at path {originalAbsolutePath} has errors preventing any merges!", e);
                     HasErrors = true;
                     return;
                 }
@@ -210,7 +211,7 @@ namespace ModTek.Caches
                         }
                         catch (Exception e)
                         {
-                            Logger.LogException($"\tMod JSON merge at path {ModTek.GetRelativePath(mergePath, ModTek.GameDirectory)} has errors preventing merge!", e);
+                            LogException($"\tMod JSON merge at path {ModTek.GetRelativePath(mergePath, ModTek.GameDirectory)} has errors preventing merge!", e);
                         }
                     }
 

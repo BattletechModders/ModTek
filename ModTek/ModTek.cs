@@ -14,11 +14,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using static ModTek.Util.Logger;
 
 namespace ModTek
 {
-    using static Logger;
-
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };

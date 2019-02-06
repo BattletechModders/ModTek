@@ -7,7 +7,7 @@ using Harmony;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = ModTek.Util.Logger;
+using static ModTek.Util.Logger;
 
 namespace ModTek.UI
 {
@@ -71,11 +71,11 @@ namespace ModTek.UI
                         }
                         catch (Exception e)
                         {
-                            Logger.LogException("\nUncaught ModTek exception!", e);
+                            LogException("\nUncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
-                            LoadingText.text = $"See \"{ModTek.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\"";
+                            LoadingText.text = $"See \"{ModTek.GetRelativePath(LogPath, ModTek.GameDirectory)}\"";
 
                             ModTek.Finish();
 
@@ -114,7 +114,7 @@ namespace ModTek.UI
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDirectory, ASSET_BUNDLE_NAME));
             if (assetBundle == null)
             {
-                Logger.Log($"Error loading asset bundle {ASSET_BUNDLE_NAME}");
+                Log($"Error loading asset bundle {ASSET_BUNDLE_NAME}");
                 return false;
             }
 
@@ -127,7 +127,7 @@ namespace ModTek.UI
 
             if (panelTitleText == null || sliderText == null || loadingText == null || sliderGameObject == null)
             {
-                Logger.Log("Error loading a GameObject from asset bundle");
+                Log("Error loading a GameObject from asset bundle");
                 return false;
             }
 

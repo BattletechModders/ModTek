@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ModTek.Util;
 using Newtonsoft.Json;
+using static ModTek.Util.Logger;
 
 namespace ModTek.Caches
 {
@@ -17,12 +17,12 @@ namespace ModTek.Caches
                 try
                 {
                     Entries = JsonConvert.DeserializeObject<Dictionary<string, DateTime>>(File.ReadAllText(path));
-                    Logger.Log("Loaded db cache.");
+                    Log("Loaded db cache.");
                     return;
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException("Loading db cache failed -- will rebuild it.", e);
+                    LogException("Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -33,7 +33,7 @@ namespace ModTek.Caches
             File.Copy(mddbPath, modMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
-            Logger.Log("Copying over DB and building new DB Cache.");
+            Log("Copying over DB and building new DB Cache.");
             Entries = new Dictionary<string, DateTime>();
         }
 

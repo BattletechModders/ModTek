@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BattleTech;
-using ModTek.Util;
 using Newtonsoft.Json;
+using static ModTek.Util.Logger;
 
 namespace ModTek.Caches
 {
@@ -18,16 +18,16 @@ namespace ModTek.Caches
                 try
                 {
                     entries = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(File.ReadAllText(path));
-                    Logger.Log("Loaded type cache.");
+                    Log("Loaded type cache.");
                     return;
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException("Loading type cache failed -- will rebuild it.", e);
+                    LogException("Loading type cache failed -- will rebuild it.", e);
                 }
             }
 
-            Logger.Log("Building new Type Cache.");
+            Log("Building new Type Cache.");
             entries = new Dictionary<string, List<string>>();
         }
 
