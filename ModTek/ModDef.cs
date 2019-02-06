@@ -65,6 +65,9 @@ namespace ModTek
         // manifest, for including any kind of things to add to the game's manifest
         public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 
+        // remove these entries by ID from the game
+        public List<string> RemoveManifestEntries { get; set; } = new List<string>();
+
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
         public JObject Settings { get; set; } = new JObject();

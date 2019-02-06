@@ -75,7 +75,8 @@ namespace ModTek
 
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest;
-        internal static List<ModEntry> BTRLEntries = new List<ModEntry>();
+        internal static List<ModEntry> AddBTRLEntries = new List<ModEntry>();
+        internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
@@ -310,8 +311,12 @@ namespace ModTek
             if (containingCustomType.Any())
                 return containingCustomType.Last().Value[id];
 
-            return BTRLEntries.FindLast(x => x.Id == id)?.GetVersionManifestEntry()
-                ?? CachedVersionManifest.Find(x => x.Id == id);
+            var modEntry = AddBTRLEntries.FindLast(x => x.Id == id)?.GetVersionManifestEntry();
+            if (modEntry != null)
+                return modEntry;
+
+            // if we're slating to remove an entry, then we don't want to return it here from the manifest
+            return RemoveBTRLEntries.Exists(entry => entry.Id == id) ? null : CachedVersionManifest.Find(x => x.Id == id);
         }
 
 
@@ -568,13 +573,16 @@ namespace ModTek
         }
 
 
-        // ADDING MOD CONTENT TO THE GAME
+        // ADDING/REMOVING CONTENT
         private static void AddModEntry(ModEntry modEntry)
         {
             if (modEntry.Path == null)
                 return;
 
-            // custom type
+            // since we're adding a new entry here, we want to remove anything that would remove it again after the fact
+            if (RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
+                Log($"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
+
             if (CustomResources.ContainsKey(modEntry.Type))
             {
                 Log($"\tAdd/Replace (CustomResource): \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
@@ -608,8 +616,8 @@ namespace ModTek
             else
                 Log($"\tAdd/Replace: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
 
-            // entries in BTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
-            BTRLEntries.Add(modEntry);
+            // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
+            AddBTRLEntries.Add(modEntry);
         }
 
         private static bool AddModEntryToDB(MetadataDatabase db, DBCache dbCache, string absolutePath, string typeStr)
@@ -654,6 +662,43 @@ namespace ModTek
             }
 
             return false;
+        }
+
+        private static bool RemoveEntry(string id)
+        {
+            var removedEntry = false;
+
+            var containingCustomTypes = CustomResources.Where(pair => pair.Value.ContainsKey(id)).ToList();
+            foreach (var pair in containingCustomTypes)
+            {
+                Log($"\tRemove: \"{pair.Value[id].Id}\" ({pair.Value[id].Type}) - Custom Resource");
+                pair.Value.Remove(id);
+                removedEntry = true;
+            }
+
+            var modEntries = AddBTRLEntries.FindAll(entry => entry.Id == id);
+            foreach (var modEntry in modEntries)
+            {
+                Log($"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
+                AddBTRLEntries.Remove(modEntry);
+                removedEntry = true;
+            }
+
+            var vanillaEntries = CachedVersionManifest.FindAll(entry => entry.Id == id);
+            foreach (var vanillaEntry in vanillaEntries)
+            {
+                Log($"\tRemove: \"{vanillaEntry.Id}\" ({vanillaEntry.Type}) - Vanilla Entry");
+                RemoveBTRLEntries.Add(vanillaEntry);
+                removedEntry = true;
+            }
+
+            if (jsonMerges.ContainsKey(id))
+            {
+                Log($"\t\tAlso removing all JSON merges for {id}");
+                jsonMerges.Remove(id);
+            }
+
+            return removedEntry;
         }
 
 
@@ -827,7 +872,7 @@ namespace ModTek
             var numEntries = 0;
             ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0).ToList();
+            var manifestMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && (ModDefs[name].Manifest.Count > 0 || ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
             foreach (var modName in manifestMods)
             {
                 Log($"{modName}:");
@@ -965,6 +1010,14 @@ namespace ModTek
                         Log($"\t\tHad merges for {modEntry.Id} but had to toss, since original file is being replaced");
                     }
                 }
+
+                foreach (var removeID in ModDefs[modName].RemoveManifestEntries)
+                {
+                    if (!RemoveEntry(removeID))
+                    {
+                        Log($"\tCould not find manifest entries for {removeID} to remove them. Skipping.");
+                    }
+                }
             }
 
             typeCache.ToFile(TypeCachePath);
@@ -1046,15 +1099,17 @@ namespace ModTek
                 var absolutePath = ResolvePath(path, GameDirectory);
 
                 // check if the file in the db cache is still used
-                if (BTRLEntries.Exists(x => x.Path == absolutePath))
+                if (AddBTRLEntries.Exists(x => x.Path == absolutePath))
                     continue;
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = BTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
+                var existingEntry = AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
                     ?? CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+
+                // TODO: DOES NOT HANDLE CASE WHERE REMOVING VANILLA CONTENT IN DB
 
                 if (existingEntry == null)
                 {
@@ -1090,11 +1145,11 @@ namespace ModTek
 
             // add needed files to db
             var addCount = 0;
-            foreach (var modEntry in BTRLEntries)
+            foreach (var modEntry in AddBTRLEntries)
             {
                 if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
                 {
-                    yield return new ProgressReport(addCount / ((float)BTRLEntries.Count), "Populating Database", modEntry.Id);
+                    yield return new ProgressReport(addCount / ((float)AddBTRLEntries.Count), "Populating Database", modEntry.Id);
                     Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     shouldWriteDB = true;
                 }
