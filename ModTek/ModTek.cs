@@ -75,19 +75,14 @@ namespace ModTek
         internal static List<string> ModLoadOrder;
         internal static Dictionary<string, ModDef> ModDefs = new Dictionary<string, ModDef>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
+        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest;
         internal static List<ModEntry> AddBTRLEntries = new List<ModEntry>();
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
-        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
-
-        // special handling types
-        internal static Dictionary<string, string> ModSoundBanks { get; } = new Dictionary<string, string>();
-        internal static Dictionary<string, string> ModGameTips { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
-        internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
 
 
         // INITIALIZATION (called by injected code)
@@ -718,7 +713,12 @@ namespace ModTek
         private static void LoadMods()
         {
             CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
+
+            // setup custom resources for ModTek types
             CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry> { { "settings", new VersionManifestEntry("settings", Path.Combine(StreamingAssetsDirectory, DebugSettingsPath), "DebugSettings", DateTime.Now, "1") } });
+            CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
 
             ProgressPanel.SubmitWork(InitModsLoop);
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
@@ -926,7 +926,7 @@ namespace ModTek
                         }
 
                         // this is getting merged later and then added to the BTRL entries then
-                        if (Path.GetExtension(modEntry.Path).ToLower() == ".json" && modEntry.ShouldMergeJSON)
+                        if (Path.GetExtension(modEntry.Path)?.ToLower() == ".json" && modEntry.ShouldMergeJSON)
                         {
                             // this assumes that .json can only have a single type
                             // typeCache will always contain this path
@@ -964,40 +964,9 @@ namespace ModTek
                         continue;
                     }
 
-                    // get "fake" entries that don't actually go into the game's VersionManifest
-                    // add videos to be loaded from an external path
+                    // special handling for types
                     switch (modEntry.Type)
                     {
-                        case "Video":
-                        {
-                            var fileName = Path.GetFileName(modEntry.Path);
-                            if (fileName != null && File.Exists(modEntry.Path))
-                            {
-                                Log($"\tVideo: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
-                                ModVideos.Add(fileName, modEntry.Path);
-                            }
-                            continue;
-                        }
-                        case "GameTip":
-                        {
-                            var fileName = Path.GetFileName(modEntry.Path);
-                            if (fileName != null && File.Exists(modEntry.Path))
-                            {
-                                Log($"\tGameTip: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
-                                ModGameTips.Add(fileName, modEntry.Path);
-                            }
-                            continue;
-                        }
-                        case "SoundBank":
-                        {
-                            var fileName = Path.GetFileNameWithoutExtension(modEntry.Path);
-                            if (fileName != null && File.Exists(modEntry.Path))
-                            {
-                                Log($"\tSoundBank: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
-                                ModSoundBanks.Add(fileName, modEntry.Path);
-                            }
-                            continue;
-                        }
                         case "AdvancedJSONMerge":
                         {
                             var id = JSONMerger.GetTargetID(modEntry.Path);

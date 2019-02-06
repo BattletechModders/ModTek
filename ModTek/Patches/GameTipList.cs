@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using Harmony;
 
@@ -13,15 +14,14 @@ namespace ModTek.Patches
     {
         public static void Postfix(string filename, List<string> ___tips)
         {
-            if (!ModTek.ModGameTips.ContainsKey(filename))
+            var tipEntry = ModTek.CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
+            if (tipEntry == null)
                 return;
-
-            var text = File.ReadAllText(ModTek.ModGameTips[filename]);
-            var textSplit = text.Split('\n');
 
             ___tips.Clear();
 
-            foreach (var tip in textSplit)
+            var text = File.ReadAllText(tipEntry.FilePath);
+            foreach (var tip in text.Split('\n'))
             {
                 var trimmedTip = tip.Trim();
                 if (!string.IsNullOrEmpty(trimmedTip))

@@ -11,16 +11,16 @@ namespace ModTek.Patches
     {
         public static void Prefix(string ___name)
         {
-            if (!ModTek.ModSoundBanks.ContainsKey(___name))
+            if (!ModTek.CustomResources["SoundBank"].ContainsKey(___name))
                 return;
 
-            var directory = Path.GetDirectoryName(ModTek.ModSoundBanks[___name]);
+            var directory = Path.GetDirectoryName(ModTek.CustomResources["SoundBank"][___name].FilePath);
             AkSoundEngine.SetBasePath(directory);
         }
 
         public static void Postfix(string ___name)
         {
-            if (!ModTek.ModSoundBanks.ContainsKey(___name))
+            if (!ModTek.CustomResources["SoundBank"].ContainsKey(___name))
                 return;
 
             var basePath = AkBasePathGetter.GetValidBasePath();
