@@ -22,7 +22,7 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static bool HasLoaded { get; private set; }
@@ -78,9 +78,12 @@ namespace ModTek
         internal static List<ModEntry> AddBTRLEntries = new List<ModEntry>();
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
+        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
+
+        // special handling types
+        internal static Dictionary<string, string> ModGameTips { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
-        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
 
         // INITIALIZATION (called by injected code)
@@ -942,6 +945,7 @@ namespace ModTek
                     switch (modEntry.Type)
                     {
                         case "Video":
+                        {
                             var fileName = Path.GetFileName(modEntry.Path);
                             if (fileName != null && File.Exists(modEntry.Path))
                             {
@@ -949,7 +953,19 @@ namespace ModTek
                                 ModVideos.Add(fileName, modEntry.Path);
                             }
                             continue;
+                        }
+                        case "GameTip":
+                        {
+                            var fileName = Path.GetFileName(modEntry.Path);
+                            if (fileName != null && File.Exists(modEntry.Path))
+                            {
+                                Log($"\tGameTip: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
+                                ModGameTips.Add(fileName, modEntry.Path);
+                            }
+                            continue;
+                        }
                         case "AdvancedJSONMerge":
+                        {
                             var id = JSONMerger.GetTargetID(modEntry.Path);
 
                             // need to add the types of the file to the typeCache, so that they can be used later
@@ -971,6 +987,7 @@ namespace ModTek
                             Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({types[0]})");
                             jsonMerges[id].Add(modEntry.Path);
                             continue;
+                        }
                     }
 
                     // non-StreamingAssets json merges
