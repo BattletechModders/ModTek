@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
+    <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\JSONMerger.cs" />
