@@ -22,7 +22,7 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static bool HasLoaded { get; private set; }
@@ -81,6 +81,7 @@ namespace ModTek
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
         // special handling types
+        internal static Dictionary<string, string> ModSoundBanks { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModGameTips { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
         internal static Dictionary<string, string> ModVideos { get; } = new Dictionary<string, string>();
@@ -961,6 +962,16 @@ namespace ModTek
                             {
                                 Log($"\tGameTip: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
                                 ModGameTips.Add(fileName, modEntry.Path);
+                            }
+                            continue;
+                        }
+                        case "SoundBank":
+                        {
+                            var fileName = Path.GetFileNameWithoutExtension(modEntry.Path);
+                            if (fileName != null && File.Exists(modEntry.Path))
+                            {
+                                Log($"\tSoundBank: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\"");
+                                ModSoundBanks.Add(fileName, modEntry.Path);
                             }
                             continue;
                         }
