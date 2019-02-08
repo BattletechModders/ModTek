@@ -933,40 +933,52 @@ namespace ModTek
                         case "AdvancedJSONMerge":
                         {
                             var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
-                            var id = advancedJSONMerge.TargetID;
-                            var type = advancedJSONMerge.TargetType;
 
-                            if (string.IsNullOrEmpty(type))
+                            if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
+                                advancedJSONMerge.TargetIDs = new List<string>{advancedJSONMerge.TargetID};
+
+                            if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                var types = typeCache.GetTypes(id, CachedVersionManifest);
-                                if (types == null || types.Count == 0)
+                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
+                                continue;
+                            }
+
+                            foreach (var id in advancedJSONMerge.TargetIDs)
+                            {
+                                var type = advancedJSONMerge.TargetType;
+                                if (string.IsNullOrEmpty(type))
                                 {
-                                    Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                    var types = typeCache.GetTypes(id, CachedVersionManifest);
+                                    if (types == null || types.Count == 0)
+                                    {
+                                        Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                        continue;
+                                    }
+
+                                    // assume that only a single type
+                                    type = types[0];
+                                }
+
+                                var entry = FindEntry(type, id);
+                                if (entry == null)
+                                {
+                                    Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
                                     continue;
                                 }
 
-                                // assume that only a single type
-                                type = types[0];
+                                if (!merges.ContainsKey(type))
+                                    merges[type] = new Dictionary<string, List<string>>();
+
+                                if (!merges[type].ContainsKey(id))
+                                    merges[type][id] = new List<string>();
+
+                                if (merges[type][id].Contains(modEntry.Path)) // TODO: is this necessary?
+                                    continue;
+
+                                Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                                merges[type][id].Add(modEntry.Path);
                             }
 
-                            var entry = FindEntry(type, id);
-                            if (entry == null)
-                            {
-                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
-                                continue;
-                            }
-
-                            if (!merges.ContainsKey(type))
-                                merges[type] = new Dictionary<string, List<string>>();
-
-                            if (!merges[type].ContainsKey(id))
-                                merges[type][id] = new List<string>();
-
-                            if (merges[type][id].Contains(modEntry.Path)) // TODO: is this necessary?
-                                continue;
-
-                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
-                            merges[type][id].Add(modEntry.Path);
                             continue;
                         }
                     }
