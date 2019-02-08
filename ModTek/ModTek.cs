@@ -136,7 +136,7 @@ namespace ModTek
             // load progress bar
             if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
             {
-                Log("Failed to load progress bar.  Skipping mod loading completely.");
+                Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                 Finish();
             }
 
@@ -157,7 +157,7 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                LogException("PATCHING FAILED!", e);
+                LogException("Error: PATCHING FAILED!", e);
                 CloseLogStream();
                 return;
             }
@@ -332,7 +332,7 @@ namespace ModTek
             {
                 if (VANILLA_TYPES.Contains(customResourceType) || MODTEK_TYPES.Contains(customResourceType))
                 {
-                    Log($"\t{modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    Log($"\tWarning: {modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
                     continue;
                 }
 
@@ -372,7 +372,7 @@ namespace ModTek
                 {
                     if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
-                        Log($"\t{modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
+                        Log($"\tError: {modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
                         return null;
                     }
 
@@ -386,7 +386,7 @@ namespace ModTek
 
                 if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
                 {
-                    Log($"\t{modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
+                    Log($"\tError: {modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
                     return null;
                 }
 
@@ -395,7 +395,7 @@ namespace ModTek
                     && !MODTEK_TYPES.Contains(modEntry.Type)
                     && !CustomResources.ContainsKey(modEntry.Type))
                 {
-                    Log($"\t{modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
+                    Log($"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
                     return null;
                 }
 
@@ -414,7 +414,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}", e);
+                            LogException($"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(path, GameDirectory)}", e);
                             return null;
                         }
                     }
@@ -430,14 +430,14 @@ namespace ModTek
                     }
                     catch (Exception e)
                     {
-                        LogException($"\tCanceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}", e);
+                        LogException($"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {GetRelativePath(entryPath, GameDirectory)}", e);
                         return null;
                     }
                 }
                 else if (modEntry.Path != "StreamingAssets")
                 {
                     // path is not StreamingAssets and it's missing
-                    Log($"\tMissing Entry: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+                    Log($"\tWarning: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
                 }
             }
 
@@ -452,7 +452,7 @@ namespace ModTek
 
             if (!File.Exists(dllPath))
             {
-                Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
+                Log($"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
                 return false;
             }
 
@@ -473,14 +473,14 @@ namespace ModTek
             var assembly = AssemblyUtil.LoadDLL(dllPath);
             if (assembly == null)
             {
-                Log($"\tFailed to load mod assembly at path {dllPath}.");
+                Log($"\tError: Failed to load mod assembly at path {dllPath}.");
                 return false;
             }
 
             var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
             if (methods == null || methods.Length == 0)
             {
-                Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                Log($"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
                 return false;
             }
 
@@ -516,11 +516,11 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    LogException($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    LogException($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 
-                Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                Log($"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                 return false;
             }
 
@@ -569,7 +569,7 @@ namespace ModTek
                     if (AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                         Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
                     else
-                        Log($"\t{modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                        Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
         }
@@ -599,7 +599,7 @@ namespace ModTek
 
                 if (addendum == null)
                 {
-                    Log($"\tCannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
+                    Log($"\tWarning: Cannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
                     return;
                 }
             }
@@ -656,7 +656,7 @@ namespace ModTek
                         }
                         catch (Exception e)
                         {
-                            LogException($"\tAdd to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
+                            LogException($"\tError: Add to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
                             return false;
                         }
                     }
@@ -760,7 +760,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
-                    LogException($"Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
+                    LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
 
@@ -785,7 +785,7 @@ namespace ModTek
                 if (ModDefs[modName].IgnoreLoadFailure)
                     continue;
 
-                Log($"Will not load {modName} because it's lacking a dependency or has a conflict.");
+                Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
 
@@ -801,7 +801,7 @@ namespace ModTek
                     ModDefs.Remove(modName);
                     if (!modDef.IgnoreLoadFailure)
                     {
-                        Log($"Skipping load of {modName} because one of its dependencies failed to load.");
+                        Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
                         FailedToLoadMods.Add(modName);
                     }
                     continue;
@@ -826,7 +826,7 @@ namespace ModTek
                     if (modDef.IgnoreLoadFailure)
                         continue;
 
-                    LogException($"Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
                 }
             }
@@ -876,14 +876,14 @@ namespace ModTek
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relativePath));
                         if (!File.Exists(fakeStreamingAssetsPath))
                         {
-                            Log($"\tCould not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
+                            Log($"\tWarning: Could not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
                             continue;
                         }
 
                         var types = typeCache.GetTypes(modEntry.Id, CachedVersionManifest);
                         if (types == null)
                         {
-                            Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
+                            Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                             continue;
                         }
 
@@ -939,7 +939,7 @@ namespace ModTek
 
                             if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
+                                Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
                                 continue;
                             }
 
@@ -951,7 +951,7 @@ namespace ModTek
                                     var types = typeCache.GetTypes(id, CachedVersionManifest);
                                     if (types == null || types.Count == 0)
                                     {
-                                        Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                        Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
                                         continue;
                                     }
 
@@ -962,7 +962,7 @@ namespace ModTek
                                 var entry = FindEntry(type, id);
                                 if (entry == null)
                                 {
-                                    Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
                                     continue;
                                 }
 
@@ -992,7 +992,7 @@ namespace ModTek
 
                         if (matchingEntry == null)
                         {
-                            Log($"\tCould not find an existing VersionManifest entry for {modEntry.Id}!");
+                            Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}!");
                             continue;
                         }
 
@@ -1028,7 +1028,7 @@ namespace ModTek
                 {
                     if (!RemoveEntry(removeID, typeCache))
                     {
-                        Log($"\tCould not find manifest entries for {removeID} to remove them. Skipping.");
+                        Log($"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
                     }
                 }
             }
@@ -1061,7 +1061,7 @@ namespace ModTek
                     var existingEntry = FindEntry(type, id);
                     if (existingEntry == null)
                     {
-                        Log($"\tHave merges for {id} but cannot find an original file! Skipping.");
+                        Log($"\tWarning: Have merges for {id} but cannot find an original file! Skipping.");
                         continue;
                     }
 
