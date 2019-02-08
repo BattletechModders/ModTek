@@ -47,6 +47,7 @@ namespace ModTek
         public string AssetBundleName { get; set; }
         public bool? AssetBundlePersistent { get; set; }
 
+        [JsonIgnore]
         private VersionManifestEntry versionManifestEntry;
 
         public VersionManifestEntry GetVersionManifestEntry()
