@@ -215,7 +215,7 @@ namespace ModTekUnitTests
 
         private void ProcessInstructionJSON(string json)
         {
-            var instruction = JsonConvert.DeserializeObject<JSONMerger.AdvancedMergeInstruction>(json);
+            var instruction = JsonConvert.DeserializeObject<AdvancedJSONMerge.Instruction>(json);
             instruction.Process(root);
         }
     }

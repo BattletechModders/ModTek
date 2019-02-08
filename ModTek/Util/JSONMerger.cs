@@ -1,15 +1,40 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using static ModTek.Util.Logger;
 
 namespace ModTek.Util
 {
     public static class JSONMerger
     {
-        public enum AdvancedMergeAction
+        private static bool IsAdvancedJSONMerge(JObject merge)
+        {
+            return merge[nameof(AdvancedJSONMerge.TargetID)] != null && merge[nameof(AdvancedJSONMerge.Instructions)] != null;
+        }
+
+        private static void DoAdvancedMerge(JObject target, JObject merge)
+        {
+            var instructions = merge[nameof(AdvancedJSONMerge.Instructions)].ToObject<List<AdvancedJSONMerge.Instruction>>();
+            foreach (var instruction in instructions)
+                instruction.Process(target);
+        }
+
+        public static void MergeIntoTarget(JObject target, JObject merge)
+        {
+            if (IsAdvancedJSONMerge(merge))
+                DoAdvancedMerge(target, merge);
+            else
+                target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+        }
+    }
+
+    public class AdvancedJSONMerge
+    {
+        public enum MergeAction
         {
             ArrayAdd, // adds a given value to the end of the target array
             ArrayAddAfter, // adds a given value after the target element in the array
@@ -20,15 +45,15 @@ namespace ModTek.Util
             Replace // replaces the target with a given value
         }
 
-        public class AdvancedMergeInstruction
+        public class Instruction
         {
-            [JsonProperty(Required = Required.Always)] [JsonConverter(typeof(StringEnumConverter))]
-            public AdvancedMergeAction Action;
+            [JsonProperty(Required = Required.Always)]
+            [JsonConverter(typeof(StringEnumConverter))]
+            public MergeAction Action;
 
             [JsonProperty(Required = Required.Always)]
             public string JSONPath;
 
-            // TODO add external JSON support
             public JToken Value;
 
             public void Process(JObject root)
@@ -38,7 +63,7 @@ namespace ModTek.Util
                 if (tokens.Count == 0)
                     throw new Exception("JSONPath does not point to anything");
 
-                if (Action == AdvancedMergeAction.Remove)
+                if (Action == MergeAction.Remove)
                 {
                     foreach (var jToken in tokens)
                     {
@@ -57,10 +82,10 @@ namespace ModTek.Util
                 var token = tokens[0];
                 switch (Action)
                 {
-                    case AdvancedMergeAction.Replace:
+                    case MergeAction.Replace:
                         token.Replace(Value);
                         break;
-                    case AdvancedMergeAction.ArrayAdd:
+                    case MergeAction.ArrayAdd:
                     {
                         if (!(token is JArray a))
                             throw new Exception("JSONPath needs to point an array");
@@ -68,13 +93,13 @@ namespace ModTek.Util
                         a.Add(Value);
                         break;
                     }
-                    case AdvancedMergeAction.ArrayAddAfter:
+                    case MergeAction.ArrayAddAfter:
                         token.AddAfterSelf(Value);
                         break;
-                    case AdvancedMergeAction.ArrayAddBefore:
+                    case MergeAction.ArrayAddBefore:
                         token.AddBeforeSelf(Value);
                         break;
-                    case AdvancedMergeAction.ObjectMerge:
+                    case MergeAction.ObjectMerge:
                     {
                         if (!(token is JObject o1) || !(Value is JObject o2))
                             throw new Exception("JSONPath has to point to an object and Value has to be an object");
@@ -83,7 +108,7 @@ namespace ModTek.Util
                         o1.Merge(o2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
                         break;
                     }
-                    case AdvancedMergeAction.ArrayConcat:
+                    case MergeAction.ArrayConcat:
                     {
                         if (!(token is JArray a1) || !(Value is JArray a2))
                             throw new Exception("JSONPath has to point to an array and Value has to be an array");
@@ -97,42 +122,28 @@ namespace ModTek.Util
             }
         }
 
-        public static string GetTargetID(string modEntryPath)
-        {
-            var merge = ModTek.ParseGameJSONFile(modEntryPath);
-            return merge[nameof(AdvancedJSONMerge.TargetID)].ToString();
-        }
+        [JsonProperty(Required = Required.Always)]
+        public string TargetID;
 
-        private static bool IsAdvancedJSONMerge(JObject merge)
-        {
-            return merge[nameof(AdvancedJSONMerge.TargetID)] != null;
-        }
+        public string TargetType;
 
-        private static void DoAdvancedMerge(JObject target, JObject merge)
-        {
-            var instructions = merge[nameof(AdvancedJSONMerge.Instructions)].ToObject<List<AdvancedMergeInstruction>>();
-            foreach (var instruction in instructions)
-                instruction.Process(target);
-        }
+        [JsonProperty(Required = Required.Always)]
+        public List<Instruction> Instructions;
 
-        public static void MergeIntoTarget(JObject target, JObject merge)
+        public static AdvancedJSONMerge FromFile(string path)
         {
-            if (IsAdvancedJSONMerge(merge))
-                DoAdvancedMerge(target, merge);
-            else
-                target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
-        }
+            if (!File.Exists(path))
+                return null;
 
-        // unused, this level is parsed manually
-#pragma warning disable CS0649
-        private class AdvancedJSONMerge
-        {
-            [JsonProperty(Required = Required.Always)]
-            public string TargetID;
-
-            [JsonProperty(Required = Required.Always)]
-            public List<AdvancedMergeInstruction> Instructions;
+            try
+            {
+                return JsonConvert.DeserializeObject<AdvancedJSONMerge>(File.ReadAllText(path));
+            }
+            catch (Exception e)
+            {
+                LogException($"\tCould not read AdvancedJSONMerge in path: {path}", e);
+                return null;
+            }
         }
-#pragma warning restore
     }
 }

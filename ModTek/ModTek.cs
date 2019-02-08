@@ -891,7 +891,7 @@ namespace ModTek
                         // StreamingAssets don't get default appendText
                         if (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".json" && modEntry.ShouldMergeJSON)
                         {
-                            // this assumes that .json can only have a single type
+                            // this assumes that vanilla .json can only have a single type
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
 
@@ -932,29 +932,41 @@ namespace ModTek
                     {
                         case "AdvancedJSONMerge":
                         {
-                            var id = JSONMerger.GetTargetID(modEntry.Path);
+                            var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
+                            var id = advancedJSONMerge.TargetID;
+                            var type = advancedJSONMerge.TargetType;
 
-                            // need to add the types of the file to the typeCache, so that they can be used later
-                            // if merging onto a file added by another mod, the type is already in the cache
-                            var types = typeCache.GetTypes(id, CachedVersionManifest);
-
-                            if (types == null || types.Count == 0)
+                            if (string.IsNullOrEmpty(type))
                             {
-                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" has ID that doesn't match anything! Skipping this merge");
+                                var types = typeCache.GetTypes(id, CachedVersionManifest);
+                                if (types == null || types.Count == 0)
+                                {
+                                    Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                    continue;
+                                }
+
+                                // assume that only a single type
+                                type = types[0];
+                            }
+
+                            var entry = FindEntry(type, id);
+                            if (entry == null)
+                            {
+                                Log($"\tERROR: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
                                 continue;
                             }
 
-                            if (!merges.ContainsKey(types[0]))
-                                merges[types[0]] = new Dictionary<string, List<string>>();
+                            if (!merges.ContainsKey(type))
+                                merges[type] = new Dictionary<string, List<string>>();
 
-                            if (!merges[types[0]].ContainsKey(id))
-                                merges[types[0]][id] = new List<string>();
+                            if (!merges[type].ContainsKey(id))
+                                merges[type][id] = new List<string>();
 
-                            if (merges[types[0]][id].Contains(modEntry.Path)) // TODO: is this necessary?
+                            if (merges[type][id].Contains(modEntry.Path)) // TODO: is this necessary?
                                 continue;
 
-                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({types[0]})");
-                            merges[types[0]][id].Add(modEntry.Path);
+                            Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                            merges[type][id].Add(modEntry.Path);
                             continue;
                         }
                     }
