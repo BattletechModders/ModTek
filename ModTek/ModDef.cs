@@ -38,13 +38,13 @@ namespace ModTek
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
 
-        // load order
+        // load order and requirements
         public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
         public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
 
         [DefaultValue(false)]
-        public bool IgnoreLoadFailure { get; set; } = false;
+        public bool IgnoreLoadFailure { get; set; }
 
         // adding and running code
         [JsonIgnore]
@@ -96,6 +96,48 @@ namespace ModTek
         public bool HasConflicts(IEnumerable<string> otherMods)
         {
             return ConflictsWith.Intersect(otherMods).Any();
+        }
+
+        /// <summary>
+        /// Checks to see if this ModDef should load, providing a reason if shouldn't load
+        /// </summary>
+        public bool ShouldTryLoad(List<string> alreadyTryLoadMods, out string reason)
+        {
+            if (!Enabled)
+            {
+                reason = "it is disabled";
+                IgnoreLoadFailure = true;
+                return false;
+            }
+
+            if (alreadyTryLoadMods.Contains(Name))
+            {
+                reason = $"ModTek already loaded with the same name. Skipping load from {ModTek.GetRelativePath(ModTek.ModsDirectory, Directory)}.";
+                return false;
+            }
+
+            // check game version vs. specific version or against min/max
+            if (!string.IsNullOrEmpty(BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(BattleTechVersion))
+            {
+                reason = $"it specifies a game version and this isn't it ({BattleTechVersion} vs. game {VersionInfo.ProductVersion})";
+                return false;
+            }
+
+            var btgVersion = new Version(VersionInfo.ProductVersion);
+            if (!string.IsNullOrEmpty(BattleTechVersionMin) && btgVersion < new Version(BattleTechVersionMin))
+            {
+                reason = $"it doesn't match the min version set in the mod.json ({BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})";
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(BattleTechVersionMax) && btgVersion > new Version(BattleTechVersionMax))
+            {
+                reason = $"it doesn't match the max version set in the mod.json ({BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})";
+                return false;
+            }
+
+            reason = "";
+            return true;
         }
     }
 }

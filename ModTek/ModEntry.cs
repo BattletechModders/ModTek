@@ -30,6 +30,11 @@ namespace ModTek
 
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
+        public string Type { get; set; }
+        public string Id { get; set; }
+        public string AddToAddendum { get; set; }
+        public string AssetBundleName { get; set; }
+        public bool? AssetBundlePersistent { get; set; }
 
         [DefaultValue(false)]
         public bool ShouldMergeJSON { get; set; }
@@ -39,13 +44,6 @@ namespace ModTek
 
         [DefaultValue(true)]
         public bool AddToDB { get; set; } = true;
-
-        public string AddToAddendum { get; set; }
-
-        public string Type { get; set; }
-        public string Id { get; set; }
-        public string AssetBundleName { get; set; }
-        public bool? AssetBundlePersistent { get; set; }
 
         [JsonIgnore]
         private VersionManifestEntry versionManifestEntry;

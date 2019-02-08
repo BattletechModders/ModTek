@@ -764,57 +764,13 @@ namespace ModTek
                     continue;
                 }
 
-                if (!modDef.Enabled)
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
                 {
-                    Log($"Will not load {modDef.Name} because it's disabled.");
-                    continue;
-                }
-
-                if (ModDefs.ContainsKey(modDef.Name))
-                {
-                    Log($"Already loaded a mod named {modDef.Name}. Skipping load from {modDef.Directory}.");
-                    continue;
-                }
-
-                // check game version vs. specific version or against min/max
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersion) && !VersionInfo.ProductVersion.StartsWith(modDef.BattleTechVersion))
-                {
+                    Log($"Not loading {modDef.Name} because {reason}");
                     if (!modDef.IgnoreLoadFailure)
-                    {
-                        Log($"Will not load {modDef.Name} because it specifies a game version and this isn't it ({modDef.BattleTechVersion} vs. game {VersionInfo.ProductVersion})");
                         FailedToLoadMods.Add(modDef.Name);
-                    }
 
                     continue;
-                }
-
-                var btgVersion = new Version(VersionInfo.ProductVersion);
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMin))
-                {
-                    if (btgVersion < new Version(modDef.BattleTechVersionMin))
-                    {
-                        if (!modDef.IgnoreLoadFailure)
-                        {
-                            Log($"Will not load {modDef.Name} because it doesn't match the min version set in the mod.json ({modDef.BattleTechVersionMin} vs. game {VersionInfo.ProductVersion})");
-                            FailedToLoadMods.Add(modDef.Name);
-                        }
-
-                        continue;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(modDef.BattleTechVersionMax))
-                {
-                    if (btgVersion > new Version(modDef.BattleTechVersionMax))
-                    {
-                        if (!modDef.IgnoreLoadFailure)
-                        {
-                            Log($"Will not load {modDef.Name} because it doesn't match the max version set in the mod.json ({modDef.BattleTechVersionMax} vs. game {VersionInfo.ProductVersion})");
-                            FailedToLoadMods.Add(modDef.Name);
-                        }
-
-                        continue;
-                    }
                 }
 
                 ModDefs.Add(modDef.Name, modDef);
