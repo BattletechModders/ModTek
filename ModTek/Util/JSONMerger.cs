@@ -21,15 +21,21 @@ namespace ModTek.Util
         {
             var instructions = merge[nameof(AdvancedJSONMerge.Instructions)].ToObject<List<AdvancedJSONMerge.Instruction>>();
             foreach (var instruction in instructions)
-                instruction.Process(target);
+            {
+                if (!instruction.Process(target))
+                    Log($"Warning: An instruction (Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') did not perform anything.");
+            }
         }
 
         public static void MergeIntoTarget(JObject target, JObject merge)
         {
             if (IsAdvancedJSONMerge(merge))
+            {
                 DoAdvancedMerge(target, merge);
-            else
-                target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                return;
+            }
+
+            target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
         }
     }
 
@@ -57,12 +63,12 @@ namespace ModTek.Util
 
             public JToken Value;
 
-            public void Process(JObject root)
+            public bool Process(JObject root)
             {
                 var tokens = root.SelectTokens(JSONPath).ToList();
 
                 if (tokens.Count == 0)
-                    throw new Exception("JSONPath does not point to anything");
+                    return false;
 
                 if (Action == MergeAction.Remove)
                 {
@@ -74,7 +80,7 @@ namespace ModTek.Util
                             jToken.Remove();
                     }
 
-                    return;
+                    return true;
                 }
 
                 if (tokens.Count > 1)
@@ -120,6 +126,8 @@ namespace ModTek.Util
                     default:
                         throw new Exception("Unhandled action in Process");
                 }
+
+                return true;
             }
         }
 
