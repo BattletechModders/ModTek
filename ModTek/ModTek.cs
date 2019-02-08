@@ -666,6 +666,20 @@ namespace ModTek
             return false;
         }
 
+        private static void AddMerge(string type, string id, string path)
+        {
+            if (!merges.ContainsKey(type))
+                merges[type] = new Dictionary<string, List<string>>();
+
+            if (!merges[type].ContainsKey(id))
+                merges[type][id] = new List<string>();
+
+            if (merges[type][id].Contains(path))
+                return;
+
+            merges[type][id].Add(path);
+        }
+
         private static bool RemoveEntry(string id, TypeCache typeCache)
         {
             var removedEntry = false;
@@ -707,6 +721,14 @@ namespace ModTek
             return removedEntry;
         }
 
+        private static void RemoveMerge(string type, string id)
+        {
+            if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
+                return;
+
+            merges[type].Remove(id);
+            Log($"\t\tHad merges for {id} but had to toss, since original file is being replaced");
+        }
 
         // LOADING MODS WORK
         private static void LoadMods()
@@ -894,19 +916,8 @@ namespace ModTek
                             // this assumes that vanilla .json can only have a single type
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
-
-                            if (!merges.ContainsKey(modEntry.Type))
-                                merges[modEntry.Type] = new Dictionary<string, List<string>>();
-
-                            if (!merges[modEntry.Type].ContainsKey(modEntry.Id))
-                                merges[modEntry.Type][modEntry.Id] = new List<string>();
-
-                            if (merges[modEntry.Type][modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
-                                continue;
-
+                            AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                             Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
-
-                            merges[modEntry.Type][modEntry.Id].Add(modEntry.Path);
                             continue;
                         }
 
@@ -915,13 +926,7 @@ namespace ModTek
                             var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(subModEntry);
-
-                            // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
-                            if (merges.ContainsKey(type) && merges[type].ContainsKey(modEntry.Id))
-                            {
-                                merges[type].Remove(modEntry.Id);
-                                Log($"\t\tHad merges for {modEntry.Id} but had to toss, since original file is being replaced");
-                            }
+                            RemoveMerge(type, modEntry.Id);
                         }
 
                         continue;
@@ -966,17 +971,8 @@ namespace ModTek
                                     continue;
                                 }
 
-                                if (!merges.ContainsKey(type))
-                                    merges[type] = new Dictionary<string, List<string>>();
-
-                                if (!merges[type].ContainsKey(id))
-                                    merges[type][id] = new List<string>();
-
-                                if (merges[type][id].Contains(modEntry.Path)) // TODO: is this necessary?
-                                    continue;
-
+                                AddMerge(type, id, modEntry.Path);
                                 Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
-                                merges[type][id].Add(modEntry.Path);
                             }
 
                             continue;
@@ -998,30 +994,14 @@ namespace ModTek
 
                         // this assumes that .json can only have a single type
                         typeCache.TryAddType(modEntry.Id, modEntry.Type);
-
-                        if (!merges.ContainsKey(modEntry.Type))
-                            merges[modEntry.Type] = new Dictionary<string, List<string>>();
-
-                        if (!merges[modEntry.Type].ContainsKey(modEntry.Id))
-                            merges[modEntry.Type][modEntry.Id] = new List<string>();
-
-                        if (merges[modEntry.Type][modEntry.Id].Contains(modEntry.Path)) // TODO: is this necessary?
-                            continue;
-
                         Log($"\tMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
-                        merges[modEntry.Type][modEntry.Id].Add(modEntry.Path);
+                        AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                         continue;
                     }
 
-                    AddModEntry(modEntry);
                     typeCache.TryAddType(modEntry.Id, modEntry.Type);
-
-                    // clear json merges for this entry, mod is overwriting the original file, previous mods merges are tossed
-                    if (merges.ContainsKey(modEntry.Type) && merges[modEntry.Type].ContainsKey(modEntry.Id))
-                    {
-                        merges[modEntry.Type].Remove(modEntry.Id);
-                        Log($"\t\tHad merges for {modEntry.Id} but had to toss, since original file is being replaced");
-                    }
+                    AddModEntry(modEntry);
+                    RemoveMerge(modEntry.Type, modEntry.Id);
                 }
 
                 foreach (var removeID in ModDefs[modName].RemoveManifestEntries)
