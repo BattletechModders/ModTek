@@ -41,7 +41,7 @@ namespace ModTek.Caches
             Log($"\t{relativePath}");
 
             foreach (var contributingPath in mergePaths)
-                Log($"\t{ModTek.GetRelativePath(contributingPath, ModTek.ModsDirectory)}");
+                Log($"\t{ModTek.GetRelativePath(contributingPath, ModTek.GameDirectory)}");
 
             Log("");
 
