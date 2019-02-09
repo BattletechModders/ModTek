@@ -497,22 +497,18 @@ namespace ModTek
                     { "modSettings", settings },
                     { "settings", settings },
                     { "settingsJson", settings },
-                    { "settingsJSON", settings }
+                    { "settingsJSON", settings },
+                    { "JSON", settings },
+                    { "json", settings },
                 };
 
                 try
                 {
                     if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
-                    {
-                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter dictionary (or null parameters)");
                         continue;
-                    }
 
                     if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
-                    {
-                        Log($"\tInvoked '{method.DeclaringType?.Name}.{method.Name}' using parameter (string, string)");
                         continue;
-                    }
                 }
                 catch (Exception e)
                 {
@@ -566,9 +562,7 @@ namespace ModTek
 
                 foreach (var method in methods)
                 {
-                    if (AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
-                        Log($"\t{modDef.Name}: Invoking '{method.DeclaringType?.Name}.{method.Name}'");
-                    else
+                    if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                         Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
@@ -729,6 +723,7 @@ namespace ModTek
             merges[type].Remove(id);
             Log($"\t\tHad merges for {id} but had to toss, since original file is being replaced");
         }
+
 
         // LOADING MODS WORK
         private static void LoadMods()

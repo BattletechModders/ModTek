@@ -63,10 +63,12 @@ namespace ModTek.Util
 
             if (methodParameters.Length == 0)
             {
+                Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}()' using parameter dictionary");
                 method.Invoke(null, null);
                 return true;
             }
 
+            var parametersStrings = new List<string>();
             foreach (var parameter in methodParameters)
             {
                 var name = parameter.Name;
@@ -74,8 +76,11 @@ namespace ModTek.Util
                     return false;
 
                 parameterList.Add(paramsDictionary[name]);
+                parametersStrings.Add($"{parameter.ParameterType.Name} {name}");
             }
 
+            var parametersString = string.Join(", ", parametersStrings.ToArray());
+            Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}({parametersString})' using parameter dictionary");
             method.Invoke(null, parameterList.ToArray());
             return true;
         }
@@ -89,6 +94,7 @@ namespace ModTek.Util
                 if (methodParameters.Length != 0)
                     return false;
 
+                Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}()' using parameter type");
                 method.Invoke(null, null);
                 return true;
             }
@@ -96,12 +102,17 @@ namespace ModTek.Util
             if (parameters.Length != methodParameters.Length)
                 return false;
 
+            var parametersStrings = new List<string>();
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i].GetType() != methodParameters[i].ParameterType)
                     return false;
+
+                parametersStrings.Add($"{methodParameters[i].ParameterType.Name} {methodParameters[i].Name}");
             }
 
+            var parametersString = string.Join(", ", parametersStrings.ToArray());
+            Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}({parametersString})' using parameter type");
             method.Invoke(null, parameters);
             return true;
         }
