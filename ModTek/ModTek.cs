@@ -372,7 +372,7 @@ namespace ModTek
                 {
                     if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
                     {
-                        Log($"\tError: {modDef.Name} has a Prefab that's referencing an AssetBundle that hasn't been loaded. Put the assetbundle first in the manifest!");
+                        Log($"\tError: {modDef.Name} has a Prefab '{modEntry.Id}' that's referencing an AssetBundle '{modEntry.AssetBundleName}' that hasn't been loaded. Put the assetbundle first in the manifest!");
                         return null;
                     }
 
@@ -797,9 +797,10 @@ namespace ModTek
             ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(LoadOrderPath));
             foreach (var modName in notLoaded)
             {
+                var modDef = ModDefs[modName];
                 ModDefs.Remove(modName);
 
-                if (ModDefs[modName].IgnoreLoadFailure)
+                if (modDef.IgnoreLoadFailure)
                     continue;
 
                 Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
