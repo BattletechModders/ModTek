@@ -4,8 +4,9 @@ ModTek is a modding system for HBS's BATTLETECH PC that allows modders to packag
 
 ## Installing
 
-ModTek 0.6.0 integrates BTML so installing is even easier than it used to be.
+ModTek 0.6.* and forward integrates BTML so installing is even easier than it used to be.
 
+* Download a [release from here](https://github.com/BattletechModders/ModTek/releases).
 * If the `BATTLETECH\Mods\` directory doesn't exist, create it.
 * Move the entire ModTek folder from the release download into the `BATTLETECH\Mods\` folder
 * You should now have a `BATTLETECH\Mods\ModTek\` folder
