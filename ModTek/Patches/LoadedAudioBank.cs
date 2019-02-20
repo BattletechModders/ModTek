@@ -6,6 +6,9 @@ using Harmony;
 
 namespace ModTek.Patches
 {
+    /// <summary>
+    /// Patch LoadedAudioBank to use modded replacement SoundBank instead by changing the base path of the AkSoundEngine.
+    /// </summary>
     [HarmonyPatch(typeof(LoadedAudioBank), "LoadBank")]
     public static class LoadedAudioBank_LoadBank_Patch
     {
