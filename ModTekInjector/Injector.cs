@@ -756,6 +756,9 @@ namespace ModTekInjector
 
             if (modTekInjected)
                 WriteLine("ModTek Injected");
+            
+            if (!btmlInjected && !modTekInjected)
+                WriteLine("No injection detected. Game assembly appears unmodified.");
         }
 
         private static void SayHelp(OptionSet p)

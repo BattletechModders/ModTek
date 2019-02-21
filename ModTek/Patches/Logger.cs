@@ -1,5 +1,6 @@
 using BattleTech.UI;
 using Harmony;
+using ModTek.UI;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming
