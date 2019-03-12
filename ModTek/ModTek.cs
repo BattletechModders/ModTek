@@ -1172,10 +1172,13 @@ namespace ModTek
             if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(StreamingAssetsDirectory, DebugSettingsPath))
                 DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
 
-            CallFinishedLoadMethods();
+            if (ModLoadOrder != null && ModLoadOrder.Count > 0)
+            {
+                CallFinishedLoadMethods();
+                PrintHarmonySummary(HarmonySummaryPath);
+                LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
+            }
 
-            PrintHarmonySummary(HarmonySummaryPath);
-            LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
             Config?.ToFile(ConfigPath);
 
             Finish();
