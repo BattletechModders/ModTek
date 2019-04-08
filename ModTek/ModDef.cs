@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using HBS.Logging;
+using ModTek.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -51,6 +53,9 @@ namespace ModTek
         public Assembly Assembly { get; set; }
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
+
+        public ILog Logger => HBS.Logging.Logger.GetLogger(Name);
+        public BetterLogSettings LogSettings { get; set; } = new BetterLogSettings();
 
         [DefaultValue(false)]
         public bool EnableAssemblyVersionCheck { get; set; } = false;

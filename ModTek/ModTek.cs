@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using ModTek.Logging;
 using static ModTek.Util.Logger;
 
 namespace ModTek
@@ -133,15 +134,22 @@ namespace ModTek
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
 
+            // read config
+            Config = Configuration.FromFile(ConfigPath);
+
+            // TODO make configurable
+            BetterLogHandler.Shared.SetupCleanedLog(
+                Path.Combine(ModsDirectory, "cleaned_log.txt"),
+                Config.CleanedLogSettings,
+                Config.EnableStackTraceLogging
+            );
+
             // load progress bar
             if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
             {
                 Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                 Finish();
             }
-
-            // read config
-            Config = Configuration.FromFile(ConfigPath);
 
             // setup assembly resolver
             TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
@@ -780,10 +788,19 @@ namespace ModTek
                     LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
+                
+                BetterLogHandler.Shared.SetupModLog(modDef);
 
                 if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
                 {
-                    Log($"Not loading {modDef.Name} because {reason}");
+                    // TODO: double logging could be avoided by attaching the mods fileAppender temporarily to the ModTek HBS logger
+                    // and then just log to the ModTek HBS logger
+                    // that would require to have an ModTek HBS Logger in the first place though
+                    // and one would need to track the file appender of a mod
+                    // and add and remove it depending if we are in the context of a mod again
+                    var text = $"Not loading {modDef.Name} because {reason}";
+                    Log(text);
+                    modDef.Logger.Log($"ModTek: {text}");
                     if (!modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modDef.Name);
 

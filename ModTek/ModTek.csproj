@@ -21,7 +21,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -58,6 +58,11 @@
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
+    <Compile Include="Logging\BetterLogFileAppender.cs" />
+    <Compile Include="Logging\BetterLogFormatter.cs" />
+    <Compile Include="Logging\BetterLogHandler.cs" />
+    <Compile Include="Logging\BetterLogSettings.cs" />
+    <Compile Include="Logging\Patches\LoggerLogImpl_LogAtLevel_Patch.cs" />
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />

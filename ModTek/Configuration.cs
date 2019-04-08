@@ -2,7 +2,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ModTek.Util;
+using HBS.Logging;
+using ModTek.Logging;
+using Logger = ModTek.Util.Logger;
 
 namespace ModTek
 {
@@ -12,6 +14,8 @@ namespace ModTek
         public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
+        public BetterLogSettings CleanedLogSettings = new BetterLogSettings { LogFileEnabled = true, LogLevel = LogLevel.Log };
+        public bool EnableStackTraceLogging = false;
 
         public void ToFile(string path)
         {
