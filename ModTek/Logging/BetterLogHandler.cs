@@ -16,7 +16,7 @@ namespace ModTek.Logging
 
         internal void SetupCleanedLog(string path, BetterLogSettings settings, bool enableStackTraceLogging)
         {
-            cleanAppender = new BetterLogFileAppender(path, settings.Formatter, settings.PatternsToIgnore);
+            cleanAppender = new BetterLogFileAppender(path, settings.Formatter, settings.IgnoreMessagePatterns);
             logLevel = settings.LogLevel;
             Logger.IsStackTraceEnabled = enableStackTraceLogging;
         }
@@ -29,7 +29,7 @@ namespace ModTek.Logging
                     
             if (modDef.LogSettings.LogFileEnabled)
             {
-                var appender = new BetterLogFileAppender(logPath, settings.Formatter, settings.PatternsToIgnore);
+                var appender = new BetterLogFileAppender(logPath, settings.Formatter, settings.IgnoreMessagePatterns);
                 Logger.AddAppender(loggerName, appender);
             }
             Logger.SetLoggerLevel(loggerName, settings.LogLevel);

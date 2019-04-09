@@ -136,8 +136,7 @@ namespace ModTek
 
             // read config
             Config = Configuration.FromFile(ConfigPath);
-
-            // TODO make configurable
+            
             BetterLogHandler.Shared.SetupCleanedLog(
                 Path.Combine(ModsDirectory, "cleaned_log.txt"),
                 Config.CleanedLogSettings,

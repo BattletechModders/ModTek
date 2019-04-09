@@ -1,4 +1,5 @@
 using HBS.Logging;
+using Newtonsoft.Json;
 
 namespace ModTek.Logging
 {
@@ -6,7 +7,8 @@ namespace ModTek.Logging
     {
         public bool LogFileEnabled = false;
         public LogLevel LogLevel = LogLevel.Debug;
-        public BetterLogFormatter Formatter = new BetterLogFormatter();
-        public string[] PatternsToIgnore = null;
+        public string[] IgnoreMessagePatterns = new string[0];
+        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+        public BetterLogFormatter Formatter = null;
     }
 }

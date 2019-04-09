@@ -21,11 +21,12 @@ namespace ModTek.Logging
 
         public void OnLogMessage(string name, LogLevel logLevel, object message, Object context, Exception exception, IStackTrace location)
         {
-            var line = formatter.GetFormattedLogLine(name, logLevel, message, context, exception, location);
-            if (patternsToIgnore.Any(line.Contains))
+            var text = message?.ToString();
+            if (!string.IsNullOrEmpty(text) && patternsToIgnore.Any(text.StartsWith))
             {
                 return;
             }
+            var line = formatter.GetFormattedLogLine(name, logLevel, text, context, exception, location);
             writer.WriteLine(line);
         }
 

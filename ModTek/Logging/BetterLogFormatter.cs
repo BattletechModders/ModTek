@@ -15,7 +15,7 @@ namespace ModTek.Logging
         internal string GetFormattedLogLine(string name, LogLevel logLevel, object message, Object context, Exception exception, IStackTrace location)
         {
             var line = string.Format(LogLineFormat,
-                GetFormattedStartupTime(),
+                GetFormattedTime(),
                 GetFormattedLogLevel(logLevel),
                 GetFormattedName(name),
                 GetFormattedMessage(message),
@@ -23,6 +23,13 @@ namespace ModTek.Logging
             );
 
             return line;
+        }
+
+        public bool UseAbsoluteTime = false;
+
+        private string GetFormattedTime()
+        {
+            return UseAbsoluteTime ? GetFormattedAbsoluteTime() : GetFormattedStartupTime();
         }
 
         public string StartupTimeFormat { get; set; } = "{1:D2}:{2:D2}.{3:D3}";
@@ -37,6 +44,13 @@ namespace ModTek.Logging
                 value.Seconds,
                 value.Milliseconds);
             return formatted;
+        }
+
+        public string AbsoluteTimeFormat { get; set; } = "yyyy-MM-dd HH:mm:ss.fff";
+
+        private string GetFormattedAbsoluteTime()
+        {
+            return DateTime.UtcNow.ToString(AbsoluteTimeFormat, System.Globalization.CultureInfo.InvariantCulture);
         }
 
         public string LogLevelFormat { get; set; } = "{0,-5}";
