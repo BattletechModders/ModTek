@@ -65,66 +65,69 @@ namespace ModTek.Util
 
             public bool Process(JObject root)
             {
-                var tokens = root.SelectTokens(JSONPath).ToList();
+                var jTokens = root.SelectTokens(JSONPath).ToList();
 
-                if (tokens.Count == 0)
+                if (jTokens.Count == 0)
                     return false;
 
-                if (Action == MergeAction.Remove)
+                foreach (var jToken in jTokens)
                 {
-                    foreach (var jToken in tokens)
+                    switch (Action)
                     {
-                        if (jToken.Parent is JProperty)
-                            jToken.Parent.Remove();
-                        else
-                            jToken.Remove();
+                        case MergeAction.Remove:
+                        {
+                            if (jToken.Parent is JProperty)
+                                jToken.Parent.Remove();
+                            else
+                                jToken.Remove();
+
+                            break;
+                        }
+                        case MergeAction.Replace:
+                        {
+                            jToken.Replace(Value);
+                            break;
+                        }
+                        case MergeAction.ArrayAdd:
+                        {
+                            if (!(jToken is JArray jArray))
+                                throw new Exception("JSONPath needs to point an array");
+
+                            jArray.Add(Value);
+                            break;
+                        }
+                        case MergeAction.ArrayAddAfter:
+                        {
+                            jToken.AddAfterSelf(Value);
+                            break;
+                        }
+                        case MergeAction.ArrayAddBefore:
+                        {
+                            jToken.AddBeforeSelf(Value);
+                            break;
+                        }
+                        case MergeAction.ObjectMerge:
+                        {
+                            if (!(jToken is JObject jObject1) || !(Value is JObject jObject2))
+                                throw new Exception("JSONPath has to point to an object and Value has to be an object");
+
+                            // same behavior as partial json merging
+                            jObject1.Merge(jObject2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                            break;
+                        }
+                        case MergeAction.ArrayConcat:
+                        {
+                            if (!(jToken is JArray jArray1) || !(Value is JArray jArray2))
+                                throw new Exception("JSONPath has to point to an array and Value has to be an array");
+
+                            jArray1.Merge(jArray2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
+                            break;
+                        }
+                        default:
+                        {
+                            throw new Exception("Unhandled action in Process");
+                        }
                     }
-
-                    return true;
-                }
-
-                if (tokens.Count > 1)
-                    throw new Exception("JSONPath can't point to more than one token outside of the Remove action");
-
-                var token = tokens[0];
-                switch (Action)
-                {
-                    case MergeAction.Replace:
-                        token.Replace(Value);
-                        break;
-                    case MergeAction.ArrayAdd:
-                    {
-                        if (!(token is JArray a))
-                            throw new Exception("JSONPath needs to point an array");
-
-                        a.Add(Value);
-                        break;
-                    }
-                    case MergeAction.ArrayAddAfter:
-                        token.AddAfterSelf(Value);
-                        break;
-                    case MergeAction.ArrayAddBefore:
-                        token.AddBeforeSelf(Value);
-                        break;
-                    case MergeAction.ObjectMerge:
-                    {
-                        if (!(token is JObject o1) || !(Value is JObject o2))
-                            throw new Exception("JSONPath has to point to an object and Value has to be an object");
-
-                        // same behavior as partial json merging
-                        o1.Merge(o2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
-                        break;
-                    }
-                    case MergeAction.ArrayConcat:
-                    {
-                        if (!(token is JArray a1) || !(Value is JArray a2))
-                            throw new Exception("JSONPath has to point to an array and Value has to be an array");
-
-                        a1.Merge(a2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
-                        break;
-                    }
-                    default:
-                        throw new Exception("Unhandled action in Process");
                 }
 
                 return true;
