@@ -785,13 +785,7 @@ namespace ModTek
                     continue;
                 }
 
-                if (modDef.LogSettings.Enabled)
-                {
-                    var logPath = Path.Combine(modDirectory, MOD_LOG_NAME);
-                    modDef.Logger = HBS.Logging.Logger.GetLogger(modDef.Name);
-                    HBS.Logging.Logger.AddAppender(modDef.Name, new BetterLog(logPath, modDef.LogSettings));
-                    HBS.Logging.Logger.SetLoggerLevel(modDef.Name, modDef.LogSettings.Level);
-                }
+                modDef.Logger = BetterLog.SetupModLog(Path.Combine(modDirectory, MOD_LOG_NAME), modDef.Name, modDef.LogSettings);
 
                 if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
                 {

@@ -44,6 +44,19 @@ namespace ModTek.Logging
         }
 
 
+        internal static ILog SetupModLog(string path, string name, BetterLogSettings settings)
+        {
+            if (!settings.Enabled)
+                return null;
+
+            var log = HBS.Logging.Logger.GetLogger(name);
+            HBS.Logging.Logger.AddAppender(name, new BetterLog(path, settings));
+            HBS.Logging.Logger.SetLoggerLevel(name, settings.Level);
+
+            return log;
+        }
+
+
         // FORMATTING
         private string FormatLogMessage (string logName, LogLevel level, string message, Exception exception, IStackTrace location)
         {
