@@ -5,7 +5,11 @@ using HBS.Logging;
 using Logger = HBS.Logging.Logger;
 using Object = UnityEngine.Object;
 
-namespace ModTek.Logging.Patches
+// ReSharper disable UnusedMember.Local
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
+namespace ModTek.Patches
 {
     [HarmonyPatch]
     public static class LoggerLogImpl_LogAtLevel_Patch
@@ -28,11 +32,11 @@ namespace ModTek.Logging.Patches
         {
             try
             {
-                BetterLogHandler.Shared.OnLogMessage(___name, level, message, context, exception, location);
+                ModTek.CleanedLog.OnLogMessage(___name, level, message, context, exception, location);
             }
             catch (Exception e)
             {
-                Util.Logger.LogException("Error when running LogAtLevel hook!", e);
+                Logging.Logger.LogException("Error when running LogAtLevel hook!", e);
             }
         }
     }

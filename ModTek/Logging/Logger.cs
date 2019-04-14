@@ -1,7 +1,8 @@
 using System;
 using System.IO;
+using HBS.Logging;
 
-namespace ModTek.Util
+namespace ModTek.Logging
 {
     internal static class Logger
     {
@@ -43,6 +44,12 @@ namespace ModTek.Util
         {
             var stream = GetOrCreateStream();
             stream?.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
+        }
+
+        internal static void Log(string message, ILog hbsLog, params object[] formatObjects)
+        {
+            Log(message, formatObjects);
+            hbsLog?.Log(message);
         }
 
         internal static void LogException(string message, Exception e)

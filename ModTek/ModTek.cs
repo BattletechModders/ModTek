@@ -15,7 +15,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ModTek.Logging;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek
 {
@@ -47,6 +47,8 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
+        private const string CLEANED_LOG_NAME = "cleaned_output.log";
+        private const string MOD_LOG_NAME = "mod.log";
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -72,6 +74,7 @@ namespace ModTek
 
         // internal structures
         internal static Configuration Config;
+        internal static BetterLog CleanedLog;
         internal static List<string> ModLoadOrder;
         internal static Dictionary<string, ModDef> ModDefs = new Dictionary<string, ModDef>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
@@ -126,22 +129,16 @@ namespace ModTek
             Directory.CreateDirectory(CacheDirectory);
             Directory.CreateDirectory(DatabaseDirectory);
 
+            // config and logging
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
-
-            // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
-            {
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
-            }
 
-            // read config
             Config = Configuration.FromFile(ConfigPath);
-            
-            BetterLogHandler.Shared.SetupCleanedLog(
-                Path.Combine(ModsDirectory, "cleaned_log.txt"),
-                Config.CleanedLogSettings,
-                Config.EnableStackTraceLogging
-            );
+            CleanedLog = new BetterLog(Path.Combine(ModsDirectory, CLEANED_LOG_NAME), Config.CleanedLogSettings);
+
+            if (Config.EnableStackTraceLogging)
+                HBS.Logging.Logger.IsStackTraceEnabled = true;
 
             // load progress bar
             if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
@@ -787,19 +784,19 @@ namespace ModTek
                     LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
-                
-                BetterLogHandler.Shared.SetupModLog(modDef);
+
+                if (modDef.LogSettings.Enabled)
+                {
+                    var logPath = Path.Combine(modDirectory, MOD_LOG_NAME);
+                    modDef.Logger = HBS.Logging.Logger.GetLogger(modDef.Name);
+                    HBS.Logging.Logger.AddAppender(modDef.Name, new BetterLog(logPath, modDef.LogSettings));
+                    HBS.Logging.Logger.SetLoggerLevel(modDef.Name, modDef.LogSettings.Level);
+                }
 
                 if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
                 {
-                    // TODO: double logging could be avoided by attaching the mods fileAppender temporarily to the ModTek HBS logger
-                    // and then just log to the ModTek HBS logger
-                    // that would require to have an ModTek HBS Logger in the first place though
-                    // and one would need to track the file appender of a mod
-                    // and add and remove it depending if we are in the context of a mod again
-                    var text = $"Not loading {modDef.Name} because {reason}";
-                    Log(text);
-                    modDef.Logger.Log($"ModTek: {text}");
+                    Log($"Not loading {modDef.Name} because {reason}", modDef.Logger);
+
                     if (!modDef.IgnoreLoadFailure)
                         FailedToLoadMods.Add(modDef.Name);
 

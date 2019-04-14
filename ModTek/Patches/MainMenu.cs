@@ -1,7 +1,7 @@
 using System.Linq;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Util;
+using ModTek.Logging;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

@@ -7,7 +7,7 @@ using Harmony;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.UI
 {

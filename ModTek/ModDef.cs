@@ -54,7 +54,8 @@ namespace ModTek
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
-        public ILog Logger => HBS.Logging.Logger.GetLogger(Name);
+        [JsonIgnore]
+        internal ILog Logger;
         public BetterLogSettings LogSettings { get; set; } = new BetterLogSettings();
 
         [DefaultValue(false)]

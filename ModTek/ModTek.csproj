@@ -58,11 +58,9 @@
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
-    <Compile Include="Logging\BetterLogFileAppender.cs" />
-    <Compile Include="Logging\BetterLogFormatter.cs" />
-    <Compile Include="Logging\BetterLogHandler.cs" />
+    <Compile Include="Logging\BetterLog.cs" />
     <Compile Include="Logging\BetterLogSettings.cs" />
-    <Compile Include="Logging\Patches\LoggerLogImpl_LogAtLevel_Patch.cs" />
+    <Compile Include="Patches\LoggerLogImpl.cs" />
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
@@ -70,7 +68,7 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
     <Compile Include="Util\LoadOrder.cs" />
-    <Compile Include="Util\Logger.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Caches\MergeCache.cs" />
     <Compile Include="ModDef.cs" />
