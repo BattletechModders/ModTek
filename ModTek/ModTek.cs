@@ -47,8 +47,8 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
-        private const string CLEANED_LOG_NAME = "cleaned_output.log";
-        private const string MOD_LOG_NAME = "mod.log";
+        private const string CLEANED_LOG_NAME = "cleaned_output_log.txt";
+        private const string MOD_LOG_NAME = "log.txt";
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
