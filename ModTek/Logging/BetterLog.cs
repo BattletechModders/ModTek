@@ -7,10 +7,29 @@ using Object = UnityEngine.Object;
 
 namespace ModTek.Logging
 {
+    internal class CleanedLog : BetterLog
+    {
+        public CleanedLog(string path, BetterLogSettings settings) : base(path, settings)
+        {
+        }
+
+        public override void OnLogMessage(string logName, LogLevel level, object message, Object context, Exception exception, IStackTrace location)
+        {
+            // this check makes sure not to write debug information into the cleaned log if so configured
+            // we don't want this check for the mod loggers, as those log levels could be manipulated outside of the BetterLogSettings
+            if (level < logSettings.Level)
+            {
+                return;
+            }
+
+            base.OnLogMessage(logName, level, message, context, exception, location);
+        }
+    }
+
     internal class BetterLog : ILogAppender, IDisposable
     {
         private readonly StreamWriter streamWriter;
-        private readonly BetterLogSettings logSettings;
+        protected readonly BetterLogSettings logSettings;
 
 
         public BetterLog(string path, BetterLogSettings settings)
@@ -23,7 +42,7 @@ namespace ModTek.Logging
             streamWriter.WriteLine(VersionInfo.GetFormattedInfo());
         }
 
-        public void OnLogMessage(string logName, LogLevel level, object message, Object context, Exception exception, IStackTrace location)
+        public virtual void OnLogMessage(string logName, LogLevel level, object message, Object context, Exception exception, IStackTrace location)
         {
             var messageString = message?.ToString();
             if (string.IsNullOrEmpty(messageString))

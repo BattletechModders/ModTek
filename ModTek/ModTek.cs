@@ -135,7 +135,7 @@ namespace ModTek
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
 
             Config = Configuration.FromFile(ConfigPath);
-            CleanedLog = new BetterLog(Path.Combine(ModsDirectory, CLEANED_LOG_NAME), Config.CleanedLogSettings);
+            CleanedLog = new CleanedLog(Path.Combine(ModsDirectory, CLEANED_LOG_NAME), Config.CleanedLogSettings);
 
             if (Config.EnableStackTraceLogging)
                 HBS.Logging.Logger.IsStackTraceEnabled = true;
