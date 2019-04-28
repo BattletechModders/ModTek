@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Harmony;
 using HBS.Logging;
 using UnityEngine;
@@ -25,13 +26,20 @@ namespace ModTek.Logging
                 exception == null ?  GetFormattedLocation(location) : GetFormattedException(exception)
             );
 
+            if (settings.NormalizeNewLines)
+            {
+                line = NEWLINE_REGEX.Replace(line, Environment.NewLine);
+            }
+
             if (settings.IndentNewLines)
             {
-                line = line.Replace("\n", "\n\t");
+                line = NEWLINE_REGEX.Replace(line, Environment.NewLine + "\t");
             }
 
             return line;
         }
+        
+        private static readonly Regex NEWLINE_REGEX = new Regex(@"\r\n|\n\r|\n|\r", RegexOptions.Compiled);
 
         private string GetFormattedTime()
         {

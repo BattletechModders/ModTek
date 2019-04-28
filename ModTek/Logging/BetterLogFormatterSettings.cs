@@ -4,6 +4,7 @@ namespace ModTek.Logging
     {
         public string LogLineFormat { get; set; } = "{0} [{1}] {2} {3}{4}";
         public bool IndentNewLines = true;
+        public bool NormalizeNewLines = true;
         public bool UseAbsoluteTime = false;
         public string StartupTimeFormat { get; set; } = "{1:D2}:{2:D2}.{3:D3}";
         public string AbsoluteTimeFormat { get; set; } = "yyyy-MM-dd HH:mm:ss.fff";
