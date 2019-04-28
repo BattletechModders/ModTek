@@ -15,7 +15,7 @@ namespace ModTek
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
 
-        public BetterLogSettings CleanedLogSettings = new BetterLogSettings { Enabled = true, Level = LogLevel.Log };
+        public CleanedLogSettings CleanedLogSettings = new CleanedLogSettings { Enabled = true, Level = LogLevel.Log };
         public bool EnableStackTraceLogging = false;
 
 

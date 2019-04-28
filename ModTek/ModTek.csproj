@@ -59,7 +59,11 @@
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
     <Compile Include="Logging\BetterLog.cs" />
+    <Compile Include="Logging\BetterLogFormatter.cs" />
+    <Compile Include="Logging\BetterLogFormatterSettings.cs" />
+    <Compile Include="Logging\CleanedLogSettings.cs" />
     <Compile Include="Logging\BetterLogSettings.cs" />
+    <Compile Include="Logging\CleanedLog.cs" />
     <Compile Include="Patches\LoggerLogImpl.cs" />
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
