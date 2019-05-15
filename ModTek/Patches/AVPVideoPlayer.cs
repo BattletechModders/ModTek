@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 using BattleTech.Rendering;
 using BattleTech.Save;
 using BattleTech.UI;
@@ -19,7 +21,10 @@ namespace ModTek.Patches
     {
         public static bool Prefix(AVPVideoPlayer __instance, string video, Strings.Culture culture, Action<string> onComplete = null)
         {
-            if (!ModTek.ModVideos.ContainsKey(video))
+            var videoEntry = ModTek.CustomResources["Video"].Values.LastOrDefault(entry =>
+                entry.Id == video || entry.Id == Path.GetFileNameWithoutExtension(video));
+
+            if (videoEntry == null)
                 return true;
 
             // THIS CODE IS REWRITTEN FROM DECOMPILED HBS CODE
@@ -32,7 +37,7 @@ namespace ModTek.Patches
             {
                 instance.Method("ConfigureMediaPlayer").GetValue();
             }
-            AVPMediaPlayer.OpenVideoFromFile(MediaPlayer.FileLocation.AbsolutePathOrURL, ModTek.ModVideos[video], false);
+            AVPMediaPlayer.OpenVideoFromFile(MediaPlayer.FileLocation.AbsolutePathOrURL, videoEntry.FilePath, false);
             if (ActiveOrDefaultSettings.CloudSettings.subtitles)
             {
                 instance.Method("LoadSubtitle", video, Strings.GetCultureNameEnglish(culture));

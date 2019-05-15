@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
@@ -21,7 +22,7 @@ namespace ModTek.Patches
             Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___contentPacksManifest,
             Dictionary<VersionManifestAddendum, Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>> ___addendumsManifest)
         {
-            foreach (var entry in ModTek.BTRLEntries)
+            foreach (var entry in ModTek.AddBTRLEntries)
             {
                 var versionManifestEntry = entry.GetVersionManifestEntry();
                 var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
@@ -58,6 +59,21 @@ namespace ModTek.Patches
 
                     ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
                 }
+            }
+
+            foreach (var entry in ModTek.RemoveBTRLEntries)
+            {
+                var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
+
+                if (___baseManifest.ContainsKey(resourceType) && ___baseManifest[resourceType].ContainsKey(entry.Id))
+                    ___baseManifest[resourceType].Remove(entry.Id);
+
+                if (___contentPacksManifest.ContainsKey(resourceType) && ___contentPacksManifest[resourceType].ContainsKey(entry.Id))
+                    ___contentPacksManifest[resourceType].Remove(entry.Id);
+
+                var containingAddendums = ___addendumsManifest.Where(pair => pair.Value.ContainsKey(resourceType) && pair.Value[resourceType].ContainsKey(entry.Id));
+                foreach (var containingAddendum in containingAddendums)
+                    containingAddendum.Value[resourceType].Remove(entry.Id);
             }
         }
     }

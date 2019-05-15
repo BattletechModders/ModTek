@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ModTek.Util;
 
 namespace ModTek
 {
@@ -11,6 +12,11 @@ namespace ModTek
         public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
+
+        public void ToFile(string path)
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
 
         public static Configuration FromFile(string path)
         {

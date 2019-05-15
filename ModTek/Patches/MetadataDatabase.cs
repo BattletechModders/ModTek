@@ -21,4 +21,20 @@ namespace ModTek.Patches
             __result = ModTek.ModMDDBPath;
         }
     }
+
+    /// <summary>
+    /// Patch the MDDB tmp path to direct to the one in the .modtek path
+    /// </summary>
+    [HarmonyPatch(typeof(MetadataDatabase))]
+    [HarmonyPatch("MDD_TMP_PATH", MethodType.Getter)]
+    public static class MetadataDatabase_MDD_TMP_PATH_Patch
+    {
+        public static void Postfix(ref string __result)
+        {
+            if (string.IsNullOrEmpty(ModTek.ModMDDBPath))
+                return;
+
+            __result = ModTek.ModMDDBPath + ".tmp";
+        }
+    }
 }

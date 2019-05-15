@@ -1,8 +1,7 @@
 using System;
 using System.IO;
-using JetBrains.Annotations;
 
-namespace ModTek
+namespace ModTek.Util
 {
     internal static class Logger
     {
@@ -34,14 +33,12 @@ namespace ModTek
             stream?.WriteLine(message);
         }
 
-        [StringFormatMethod("message")]
         internal static void Log(string message, params object[] formatObjects)
         {
             var stream = GetOrCreateStream();
             stream?.WriteLine(message, formatObjects);
         }
 
-        [StringFormatMethod("message")]
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
             var stream = GetOrCreateStream();
