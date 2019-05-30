@@ -709,8 +709,10 @@ namespace ModTekInjector
                 throw new BackupFileNotFound();
 
             using (var backup = ModuleDefinition.ReadModule(backupFilePath))
-            if (IsBTMLInjected(backup) || IsModTekInjected(backup))
-                throw new BackupFileInjected();
+            {
+                if (IsBTMLInjected(backup) || IsModTekInjected(backup))
+                    throw new BackupFileInjected();
+            }
 
             File.Copy(backupFilePath, filePath, true);
             WriteLine($"{Path.GetFileName(backupFilePath)} restored to {Path.GetFileName(filePath)}");
@@ -756,7 +758,7 @@ namespace ModTekInjector
 
             if (modTekInjected)
                 WriteLine("ModTek Injected");
-            
+
             if (!btmlInjected && !modTekInjected)
                 WriteLine("No injection detected. Game assembly appears unmodified.");
         }
