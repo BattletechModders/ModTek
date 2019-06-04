@@ -73,7 +73,7 @@
     <Compile Include="Injection.cs" />
     <Compile Include="Patches\ActivateAfterInit.cs" />
     <Compile Include="Patches\AssetBundleManager.cs" />
-    <Compile Include="Patches\AVPVideoPlayer.cs" />
+    <Compile Include="Patches\BinkMediaPlayer.cs" />
     <Compile Include="Patches\BattleTechResourceLocator.cs" />
     <Compile Include="Patches\Logger.cs" />
     <Compile Include="Patches\LoadingCurtain.cs" />
