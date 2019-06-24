@@ -273,7 +273,6 @@ namespace ModTek
 
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
             var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", File.ReadAllText(path)).GetValue<string>();
-
             if (commentsStripped == null)
                 throw new Exception("StripHBSCommentsFromJSON returned null.");
 
@@ -297,13 +296,15 @@ namespace ModTek
 
         private static string InferIDFromFile(string path)
         {
-            // if not json, return the file name without the extension, as this is what HBS uses
-            var ext = Path.GetExtension(path);
-            if (ext == null || ext.ToLowerInvariant() != ".json" || !File.Exists(path))
-                return Path.GetFileNameWithoutExtension(path);
+            return Path.GetFileNameWithoutExtension(path);
 
-            // read the json and get ID out of it if able to
-            return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
+            // if not json, return the file name without the extension, as this is what HBS uses
+            //var ext = Path.GetExtension(path);
+            //if (ext == null || ext.ToLowerInvariant() != ".json" || !File.Exists(path))
+            //    return Path.GetFileNameWithoutExtension(path);
+
+            //// read the json and get ID out of it if able to
+            //return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
         }
 
         private static VersionManifestEntry FindEntry(string type, string id)
