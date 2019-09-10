@@ -8,6 +8,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using static ModTek.Util.Logger;
 
+// ReSharper disable UnusedMember.Local
+
 namespace ModTek.UI
 {
     internal struct ProgressReport
