@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Harmony;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using static ModTek.Util.Logger;
@@ -43,7 +42,6 @@ namespace ModTek.UI
 
             private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
 
-            [UsedImplicitly]
             private void Start()
             {
                 StartCoroutine(RunWorkList());

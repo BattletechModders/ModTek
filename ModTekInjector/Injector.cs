@@ -293,6 +293,10 @@ namespace ModTekInjector
             {
                 SayException(e);
             }
+            finally
+            {
+                ReadLine();
+            }
 
             return RC_UNHANDLED_STATE;
         }
@@ -315,7 +319,9 @@ namespace ModTekInjector
             foreach (var seek in MANAGED_DIRECTORY_SEEK_LIST)
             {
                 var seekPath = Path.Combine(currentDirectory, seek);
-                if (File.Exists(Path.Combine(seekPath, GAME_DLL_FILE_NAME)))
+                var fileSeekPath = Path.Combine(seekPath, GAME_DLL_FILE_NAME);
+                var fullPath = Path.GetFullPath(fileSeekPath);
+                if (File.Exists(fullPath))
                     return seekPath;
             }
 

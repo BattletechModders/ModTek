@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,7 +10,6 @@ namespace ModTek.Caches
 {
     internal class MergeCache
     {
-        [UsedImplicitly]
         public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new Dictionary<string, CacheEntry>();
 
         public string GetOrCreateCachedEntry(string absolutePath, List<string> mergePaths)
