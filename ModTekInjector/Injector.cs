@@ -600,14 +600,15 @@ namespace ModTekInjector
         private static bool InjectFunctionCall(ModuleDefinition game)
         {
             // get the methods that we're hooking and injecting
-            var injectedMethod = game.GetType(HOOK_TYPE).Methods.Single(x => x.Name == INJECT_METHOD);
-            var hookedMethod = game.GetType(HOOK_TYPE).Methods.First(x => x.Name == HOOK_METHOD);
+            var hookType = game.GetType(HOOK_TYPE);
+            var methods = hookType.Methods;
+            var injectedMethod = methods.Single(x => x.Name == INJECT_METHOD);
+            var hookedMethod = methods.First(x => x.Name == HOOK_METHOD);
 
             // if the return type is an iterator -- need to go searching for its MoveNext method which contains the actual code you'll want to inject
             if (hookedMethod.ReturnType.Name.Equals("IEnumerator"))
             {
-                var nestedIterator = game.GetType(HOOK_TYPE).NestedTypes.First(x =>
-                    x.Name.Contains(HOOK_METHOD) && x.Name.Contains("Iterator"));
+                var nestedIterator = hookType.NestedTypes.First(x => x.Name.Contains(HOOK_METHOD));
                 hookedMethod = nestedIterator.Methods.First(x => x.Name.Equals("MoveNext"));
             }
 
