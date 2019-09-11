@@ -281,21 +281,20 @@ namespace ModTekInjector
             {
                 SayException(e);
                 SayHowToRecoverMissingBackup(e.BackupFileName);
+                PromptForKey(true);
                 return RC_MISSING_BACKUP_FILE;
             }
             catch (BackupFileInjected e)
             {
                 SayException(e);
                 SayHowToRecoverInjectedBackup(e.BackupFileName);
+                PromptForKey(true);
                 return RC_BACKUP_FILE_INJECTED;
             }
             catch (Exception e)
             {
                 SayException(e);
-            }
-            finally
-            {
-                ReadLine();
+                PromptForKey(true);
             }
 
             return RC_UNHANDLED_STATE;
