@@ -284,27 +284,9 @@ namespace ModTek
             return cachedJObjects[path];
         }
 
-        private static string InferIDFromJObject(JObject jObj)
-        {
-            if (jObj == null)
-                return null;
-
-            // go through the different kinds of id storage in JSONs
-            string[] jPaths = { "Description.Id", "id", "Id", "ID", "identifier", "Identifier" };
-            return jPaths.Select(jPath => (string) jObj.SelectToken(jPath)).FirstOrDefault(id => id != null);
-        }
-
         private static string InferIDFromFile(string path)
         {
             return Path.GetFileNameWithoutExtension(path);
-
-            // if not json, return the file name without the extension, as this is what HBS uses
-            //var ext = Path.GetExtension(path);
-            //if (ext == null || ext.ToLowerInvariant() != ".json" || !File.Exists(path))
-            //    return Path.GetFileNameWithoutExtension(path);
-
-            //// read the json and get ID out of it if able to
-            //return InferIDFromJObject(ParseGameJSONFile(path)) ?? Path.GetFileNameWithoutExtension(path);
         }
 
         private static VersionManifestEntry FindEntry(string type, string id)
