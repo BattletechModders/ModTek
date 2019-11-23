@@ -1,4 +1,4 @@
-** ModTek has been integrated into HBS BATTLETECH as of 1.8 and will no longer be maintained. **
+**ModTek has been integrated into HBS BATTLETECH as of 1.8 and will no longer be maintained.**
 
 # ModTek
 
