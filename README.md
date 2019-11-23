@@ -1,3 +1,5 @@
+** ModTek has been integrated into HBS BATTLETECH as of 1.8 and will no longer be maintained. **
+
 # ModTek
 
 ModTek is a modding system for HBS's BATTLETECH PC that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
