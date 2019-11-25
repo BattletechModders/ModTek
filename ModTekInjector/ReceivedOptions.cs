@@ -16,7 +16,7 @@ namespace ModTekInjector
             Install,
         }
 
-        public bool RequireKeyPress = true;
+        public bool RequireKeyPress = false;
         public string RequiredGameVersion = string.Empty;
         public string RequiredGameVersionMismatchMessage = string.Empty;
         public string ManagedDirectory = string.Empty;

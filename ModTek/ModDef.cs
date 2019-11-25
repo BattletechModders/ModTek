@@ -10,8 +10,11 @@ using Newtonsoft.Json.Linq;
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace ModTek
-{
+namespace ModTek{
+    public class DataAddendumEntry{
+        public string name;
+        public string path;
+    }
     public class ModDef
     {
         // this path will be set at runtime by ModTek
@@ -61,7 +64,8 @@ namespace ModTek
 
         // custom resources types that will be passed into FinishedLoading method
         public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
-
+        // palce for add enum files
+        public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new List<DataAddendumEntry>();
         // manifest, for including any kind of things to add to the game's manifest
         public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 
