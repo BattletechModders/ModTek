@@ -8,7 +8,7 @@ ModTek is a modding system for HBS's BATTLETECH PC that allows modders to packag
   path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ . You should note ID should be unique and it is YOUR responsibility as modder. 
   
   example:
-  
+  ```
   "DataAddendumEntries":[
     {
       "name": "BattleTech.FactionEnumeration",
@@ -19,7 +19,7 @@ ModTek is a modding system for HBS's BATTLETECH PC that allows modders to packag
       "path": "WeaponCategory.json"
     }
   ]
-  
+  ```
 ## Installing
 
 ModTek 0.6.* and forward integrates BTML so installing is even easier than it used to be.
