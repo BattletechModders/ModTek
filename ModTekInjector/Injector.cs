@@ -32,6 +32,7 @@ namespace ModTekInjector
         private const string INJECT_METHOD = "LoadModTek";
 
         private const string GAME_DLL_FILE_NAME = "Assembly-CSharp.dll";
+        private const string HARMONY_DLL_FILE_NAME = "0Harmony.dll";
         private const string HOOK_TYPE = "BattleTech.Main";
         private const string HOOK_METHOD = "Start";
 
@@ -46,7 +47,7 @@ namespace ModTekInjector
             "../../Data/Managed"
         };
 
-        private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> { "0Harmony.dll", "BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll", "rt-factions.zip" };
+        private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> {"BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll", "rt-factions.zip" };
         private static readonly List<string> MOD_DIRECTORY_OLD_FILES = new List<string> { "ModTek.dll", "modtekassetbundle", "BTModLoader.log" };
 
         private const int FACTION_ENUM_STARTING_ID = 5000;
@@ -162,7 +163,17 @@ namespace ModTekInjector
                 var gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + BACKUP_FILE_EXT);
                 var modTekDLLPath = Path.Combine(Directory.GetCurrentDirectory(), MODTEK_DLL_FILE_NAME);
                 var modDirectory = Path.Combine(Directory.GetCurrentDirectory(), "..");
-
+                string HarmonySrcDLLPath = Path.Combine(Directory.GetCurrentDirectory(), HARMONY_DLL_FILE_NAME);
+                string HarmonyDstDLLPath = Path.Combine(managedDirectory, HARMONY_DLL_FILE_NAME);
+                if (File.Exists(HarmonySrcDLLPath) == false)
+                {
+                    SayModTekAssemblyMissingError(modTekDLLPath);
+                    return RC_MISSING_MODTEK_ASSEMBLY;
+                }
+                if (File.Exists(HarmonyDstDLLPath) == false)
+                {
+                    File.Copy(HarmonySrcDLLPath, HarmonyDstDLLPath);
+                }
                 if (!File.Exists(gameDLLPath))
                 {
                     SayGameAssemblyMissingError(OptionsIn.ManagedDirectory);
@@ -176,7 +187,7 @@ namespace ModTekInjector
                 }
 
                 // setup factionsPath
-                var factionsPath = GetFactionPath(OptionsIn.FactionsPath);
+                /*var factionsPath = GetFactionPath(OptionsIn.FactionsPath);
                 if (!string.IsNullOrEmpty(OptionsIn.FactionsPath) && !File.Exists(factionsPath))
                 {
                     SayFactionsFileMissing(factionsPath);
@@ -193,7 +204,7 @@ namespace ModTekInjector
                         if (PromptForYesNo(OptionsIn.RequireKeyPress))
                             factionsPath = path;
                     }
-                }
+                }*/
 
                 // read the assembly for game version and injected status
                 bool btmlInjected, modTekInjected, anyInjected;
@@ -263,7 +274,7 @@ namespace ModTekInjector
                         if (!string.IsNullOrEmpty(gameDLLBackupPath))
                             Backup(gameDLLPath, gameDLLBackupPath);
 
-                        Inject(gameDLLPath, modTekDLLPath, factionsPath);
+                        Inject(gameDLLPath, modTekDLLPath, string.Empty); //factionsPath);
 
                         if (HasOldFiles(modDirectory, managedDirectory))
                         {
@@ -580,8 +591,8 @@ namespace ModTekInjector
                 var success = InjectLoadFunction(game, injecting);
                 success &= InjectFunctionCall(game);
 
-                if (!string.IsNullOrEmpty(factionsFilePath))
-                    success &= InjectNewFactions(game, factionsFilePath);
+                //if (!string.IsNullOrEmpty(factionsFilePath))
+                //    success &= InjectNewFactions(game, factionsFilePath);
 
                 success &= WriteNewAssembly(game, hookFilePath);
 

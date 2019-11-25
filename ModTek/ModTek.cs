@@ -8,6 +8,7 @@ using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -915,47 +916,47 @@ namespace ModTek
                     switch (modEntry.Type)
                     {
                         case "AdvancedJSONMerge":
-                        {
-                            var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
-
-                            if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
-                                advancedJSONMerge.TargetIDs = new List<string>{advancedJSONMerge.TargetID};
-
-                            if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
-                                continue;
-                            }
+                                var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
 
-                            foreach (var id in advancedJSONMerge.TargetIDs)
-                            {
-                                var type = advancedJSONMerge.TargetType;
-                                if (string.IsNullOrEmpty(type))
+                                if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
+                                    advancedJSONMerge.TargetIDs = new List<string> { advancedJSONMerge.TargetID };
+
+                                if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                                 {
-                                    var types = typeCache.GetTypes(id, CachedVersionManifest);
-                                    if (types == null || types.Count == 0)
-                                    {
-                                        Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
-                                        continue;
-                                    }
-
-                                    // assume that only a single type
-                                    type = types[0];
-                                }
-
-                                var entry = FindEntry(type, id);
-                                if (entry == null)
-                                {
-                                    Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
                                     continue;
                                 }
 
-                                AddMerge(type, id, modEntry.Path);
-                                Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
-                            }
+                                foreach (var id in advancedJSONMerge.TargetIDs)
+                                {
+                                    var type = advancedJSONMerge.TargetType;
+                                    if (string.IsNullOrEmpty(type))
+                                    {
+                                        var types = typeCache.GetTypes(id, CachedVersionManifest);
+                                        if (types == null || types.Count == 0)
+                                        {
+                                            Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                            continue;
+                                        }
 
-                            continue;
-                        }
+                                        // assume that only a single type
+                                        type = types[0];
+                                    }
+
+                                    var entry = FindEntry(type, id);
+                                    if (entry == null)
+                                    {
+                                        Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                        continue;
+                                    }
+
+                                    AddMerge(type, id, modEntry.Path);
+                                    Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                                }
+
+                                continue;
+                            }
                     }
 
                     // non-StreamingAssets json merges
@@ -990,6 +991,8 @@ namespace ModTek
                         Log($"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
                     }
                 }
+                foreach (DataAddendumEntry dataAddendumEntry in modDef.DataAddendumEntries)
+                    ModTek.LoadDataAddendum(dataAddendumEntry, modDef.Directory);
             }
 
             typeCache.ToFile(TypeCachePath);
@@ -1165,6 +1168,109 @@ namespace ModTek
             Config?.ToFile(ConfigPath);
 
             Finish();
+        }
+        public static void LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
+        {
+            try
+            {
+                System.Type type = typeof(FactionEnumeration).Assembly.GetType(dataAddendumEntry.name);
+                if (type == (System.Type)null)
+                {
+                    Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.name);
+                }
+                else
+                {
+                    PropertyInfo property = type.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty);
+                    if (property == (PropertyInfo)null)
+                    {
+                        Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.name + "]");
+                    }
+                    else
+                    {
+                        object bdataAddendum = property.GetValue((object)null);
+                        BattleTech.ModSupport.IDataAddendum dataAddendum = bdataAddendum as BattleTech.ModSupport.IDataAddendum;
+                        //Enumeration<type.GetType()> dataAddendum = property.GetValue((object)null) as BattleTech.ModSupport.IDataAddendum;
+                        if (dataAddendum == null)
+                        {
+                            //Log("\tError: Class does not implement interface [IDataAddendum] on class named [" + dataAddendumEntry.name + "]");
+                            PropertyInfo pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
+                            if (pCachedEnumerationValueList == null)
+                            {
+                                Log("\tError: Class does not implement interface [IDataAddendum] or CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
+                            }
+                            else
+                            {
+                                IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
+                                if (jdataAddEnum == null)
+                                {
+                                    Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
+                                }
+                                else
+                                {
+                                    string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                                    jdataAddEnum.FromJSON(fileData);
+                                    IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                                    if (enumList == null)
+                                    {
+                                        Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                                    }
+                                    else
+                                    {
+                                        bool needFlush = false;
+                                        Log("\tLoading values [" + dataAddendumEntry.name + "]");
+                                        for (int index = 0; index < enumList.Count; ++index)
+                                        {
+                                            EnumValue val = enumList[index] as EnumValue;
+                                            if (val == null) { continue; };
+                                            if(val.GetType() == typeof(WeaponCategoryValue))
+                                            {
+                                                MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
+                                                Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                                needFlush = true;
+                                            }
+                                            else
+                                            if(val.GetType() == typeof(AmmoCategoryValue))
+                                            {
+                                                MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
+                                                Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                                needFlush = true;
+                                            }
+                                            else
+                                            if (val.GetType() == typeof(ContractTypeValue))
+                                            {
+                                                MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
+                                                Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
+                                                needFlush = true;
+                                            }
+                                            else
+                                            {
+                                                Log("\t\tUnknown enum type");
+                                                break;
+                                            }
+                                        }
+                                        if (needFlush) {
+                                            Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                                            MetadataDatabase.Instance.WriteInMemoryDBToDisk((string)null);
+                                        };
+                                        
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                            dataAddendum.LoadDataAddendum(fileData, null);
+                            Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.name + "]");
+                Log(ex.ToString());
+            }
         }
     }
 }

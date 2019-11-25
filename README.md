@@ -4,6 +4,24 @@
 
 ModTek is a modding system for HBS's BATTLETECH PC that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
 
+## Notes on dynamic enums 
+  dynamic enums handled outside manifest array. By DataAddendumEntries
+  name - name of type. Supporting types BattleTech.FactionEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.AmmoCategoryEnumeration, BattleTech.ContractTypeEnumeration
+  path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ . You should note ID should be unique and it is YOUR responsibility as modder. 
+  
+  example:
+  ```
+  "DataAddendumEntries":[
+    {
+      "name": "BattleTech.FactionEnumeration",
+      "path": "Faction.json"
+    },
+    {
+      "name": "BattleTech.WeaponCategoryEnumeration",
+      "path": "WeaponCategory.json"
+    }
+  ]
+  ```
 ## Installing
 
 ModTek 0.6.* and forward integrates BTML so installing is even easier than it used to be.
