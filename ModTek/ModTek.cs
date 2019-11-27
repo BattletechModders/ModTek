@@ -991,8 +991,6 @@ namespace ModTek
                         Log($"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
                     }
                 }
-                foreach (DataAddendumEntry dataAddendumEntry in modDef.DataAddendumEntries)
-                    ModTek.LoadDataAddendum(dataAddendumEntry, modDef.Directory);
             }
 
             typeCache.ToFile(TypeCachePath);
@@ -1139,6 +1137,29 @@ namespace ModTek
                 addCount++;
             }
 
+            //ModLoadOrder.Count;
+            List<ModDef> mods = new List<ModDef>();
+            foreach(string modname in ModLoadOrder)
+            {
+                mods.Add(ModTek.ModDefs[modname]);
+            }
+
+            Log($"\nAdding dynamic enums:");
+            addCount = 0;
+            foreach (ModDef moddef in mods)
+            {
+                if (moddef.DataAddendumEntries.Count != 0)
+                {
+                    Log($"{moddef.Name}:");
+                    foreach (DataAddendumEntry dataAddendumEntry in moddef.DataAddendumEntries)
+                    {
+                        if (ModTek.LoadDataAddendum(dataAddendumEntry, moddef.Directory)) { shouldWriteDB = true; }
+                        yield return new ProgressReport(addCount / ((float)mods.Count), "Populating Dynamic Enums", moddef.Name);
+                    }
+                }
+                ++addCount;
+            }
+
             dbCache.ToFile(DBCachePath);
 
             if (shouldWriteDB)
@@ -1169,7 +1190,7 @@ namespace ModTek
 
             Finish();
         }
-        public static void LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
+        public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {
             try
             {
@@ -1177,6 +1198,7 @@ namespace ModTek
                 if (type == (System.Type)null)
                 {
                     Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.name);
+                    return false;
                 }
                 else
                 {
@@ -1184,84 +1206,86 @@ namespace ModTek
                     if (property == (PropertyInfo)null)
                     {
                         Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.name + "]");
+                        return false;
                     }
                     else
                     {
                         object bdataAddendum = property.GetValue((object)null);
-                        BattleTech.ModSupport.IDataAddendum dataAddendum = bdataAddendum as BattleTech.ModSupport.IDataAddendum;
+                        //BattleTech.ModSupport.IDataAddendum dataAddendum = bdataAddendum as BattleTech.ModSupport.IDataAddendum;
                         //Enumeration<type.GetType()> dataAddendum = property.GetValue((object)null) as BattleTech.ModSupport.IDataAddendum;
-                        if (dataAddendum == null)
+                        //Log("\tError: Class does not implement interface [IDataAddendum] on class named [" + dataAddendumEntry.name + "]");
+                        PropertyInfo pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
+                        if (pCachedEnumerationValueList == null)
                         {
-                            //Log("\tError: Class does not implement interface [IDataAddendum] on class named [" + dataAddendumEntry.name + "]");
-                            PropertyInfo pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
-                            if (pCachedEnumerationValueList == null)
-                            {
-                                Log("\tError: Class does not implement interface [IDataAddendum] or CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
-                            }
-                            else
-                            {
-                                IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
-                                if (jdataAddEnum == null)
-                                {
-                                    Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
-                                }
-                                else
-                                {
-                                    string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
-                                    jdataAddEnum.FromJSON(fileData);
-                                    IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
-                                    if (enumList == null)
-                                    {
-                                        Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
-                                    }
-                                    else
-                                    {
-                                        bool needFlush = false;
-                                        Log("\tLoading values [" + dataAddendumEntry.name + "]");
-                                        for (int index = 0; index < enumList.Count; ++index)
-                                        {
-                                            EnumValue val = enumList[index] as EnumValue;
-                                            if (val == null) { continue; };
-                                            if(val.GetType() == typeof(WeaponCategoryValue))
-                                            {
-                                                MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
-                                                Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
-                                                needFlush = true;
-                                            }
-                                            else
-                                            if(val.GetType() == typeof(AmmoCategoryValue))
-                                            {
-                                                MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
-                                                Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
-                                                needFlush = true;
-                                            }
-                                            else
-                                            if (val.GetType() == typeof(ContractTypeValue))
-                                            {
-                                                MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
-                                                Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
-                                                needFlush = true;
-                                            }
-                                            else
-                                            {
-                                                Log("\t\tUnknown enum type");
-                                                break;
-                                            }
-                                        }
-                                        if (needFlush) {
-                                            Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
-                                            MetadataDatabase.Instance.WriteInMemoryDBToDisk((string)null);
-                                        };
-                                        
-                                    }
-                                }
-                            }
+                            Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
+                            return false;
                         }
                         else
                         {
-                            string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
-                            dataAddendum.LoadDataAddendum(fileData, null);
-                            Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                            IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
+                            if (jdataAddEnum == null)
+                            {
+                                Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
+                                return false;
+                            }
+                            else
+                            {
+                                string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                                jdataAddEnum.FromJSON(fileData);
+                                IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                                if (enumList == null)
+                                {
+                                    Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                                    return false;
+                                }
+                                else
+                                {
+                                    bool needFlush = false;
+                                    Log("\tLoading values [" + dataAddendumEntry.name + "]");
+                                    for (int index = 0; index < enumList.Count; ++index)
+                                    {
+                                        EnumValue val = enumList[index] as EnumValue;
+                                        if (val == null) { continue; };
+                                        if (val.GetType() == typeof(FactionValue))
+                                        {
+                                            MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
+                                            Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
+                                            needFlush = true;
+                                        }
+                                        else
+                                        if (val.GetType() == typeof(WeaponCategoryValue))
+                                        {
+                                            MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
+                                            Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                            needFlush = true;
+                                        }
+                                        else
+                                        if(val.GetType() == typeof(AmmoCategoryValue))
+                                        {
+                                            MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
+                                            Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                            needFlush = true;
+                                        }
+                                        else
+                                        if (val.GetType() == typeof(ContractTypeValue))
+                                        {
+                                            MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
+                                            Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
+                                            needFlush = true;
+                                        }
+                                        else
+                                        {
+                                            Log("\t\tUnknown enum type");
+                                            break;
+                                        }
+                                    }
+                                    if (needFlush)
+                                    {
+                                        Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                                    }
+                                    return needFlush;
+                                }
+                            }
                         }
                     }
                 }
@@ -1270,6 +1294,7 @@ namespace ModTek
             {
                 Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.name + "]");
                 Log(ex.ToString());
+                return false;
             }
         }
     }
