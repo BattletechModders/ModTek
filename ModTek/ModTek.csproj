@@ -61,7 +61,7 @@
       <HintPath>..\..\BattleTech_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>D:\Games\Steam\steamapps\common\Battlestar Galactica Deadlock\BSG_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\BattleTech_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextCoreModule">
       <HintPath>..\..\BattleTech_Data\Managed\UnityEngine.TextCoreModule.dll</HintPath>
