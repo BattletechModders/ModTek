@@ -1141,6 +1141,7 @@ namespace ModTek
             List<ModDef> mods = new List<ModDef>();
             foreach(string modname in ModLoadOrder)
             {
+                if (ModTek.ModDefs.ContainsKey(modname) == false) { continue; }
                 mods.Add(ModTek.ModDefs[modname]);
             }
 
