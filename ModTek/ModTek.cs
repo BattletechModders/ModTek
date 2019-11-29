@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,11 +20,18 @@ using static ModTek.Util.Logger;
 
 namespace ModTek
 {
+    public class Settings
+    {
+        [DefaultValue(true)]
+        public bool Enabled { get; set; } = true;
+    }
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
         private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "DebugSettings" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
+
+        public static Settings settings { get; private set; } = new Settings();
 
         public static bool HasLoaded { get; private set; }
 
@@ -31,10 +39,13 @@ namespace ModTek
         public static string GameDirectory { get; private set; }
         public static string ModsDirectory { get; private set; }
         public static string StreamingAssetsDirectory { get; private set; }
+        public static ModDefEx SettingsDef { get; private set; }
+
+        public static bool Enabled { get { return SettingsDef.Enabled; } }
 
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
-        private const string MOD_JSON_NAME = "mod.json";
+        public const string MOD_JSON_NAME = "mod.json";
         private const string MODTEK_DIRECTORY_NAME = "ModTek";
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
@@ -47,6 +58,7 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
+        public const string MODTEK_DEF_NAME = "ModTek";
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -61,6 +73,7 @@ namespace ModTek
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
+        internal static string ModTekSettingsPath { get; private set; }
 
         // special StreamingAssets relative directories
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
@@ -73,7 +86,8 @@ namespace ModTek
         // internal structures
         internal static Configuration Config;
         internal static List<string> ModLoadOrder;
-        internal static Dictionary<string, ModDef> ModDefs = new Dictionary<string, ModDef>();
+        internal static Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
+        internal static Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
@@ -83,7 +97,6 @@ namespace ModTek
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
-
 
         // INITIALIZATION (called by injected code)
         public static void Init()
@@ -121,6 +134,7 @@ namespace ModTek
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(TempModTekDirectory, CONFIG_FILE_NAME);
+            ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
@@ -133,12 +147,39 @@ namespace ModTek
             {
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
+            if (File.Exists(ModTekSettingsPath))
+            {
+                try
+                {
+                    SettingsDef = ModDefEx.CreateFromPath(ModTekSettingsPath);
+                }
+                catch (Exception e)
+                {
+                    LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {ModTekSettingsPath}", e);
+                    Finish();
+                    return;
+                }
+                SettingsDef.Version = versionString;
+            }
+            else
+            {
+                Log("File not exists "+ ModTekSettingsPath+" fallback to defaults");
+                SettingsDef = new ModDefEx();
+                SettingsDef.Enabled = true;
+                SettingsDef.Name = MODTEK_DEF_NAME;
+                SettingsDef.Version = versionString;
+                SettingsDef.Description = MODTEK_DEF_NAME;
+            }
+
 
             // load progress bar
-            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
+            if (Enabled)
             {
-                Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
-                Finish();
+                if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
+                {
+                    Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
+                    Finish();
+                }
             }
 
             // read config
@@ -162,7 +203,12 @@ namespace ModTek
                 CloseLogStream();
                 return;
             }
-
+            if (Enabled == false)
+            {
+                Log("ModTek not enabled");
+                CloseLogStream();
+                return;
+            }
             LoadMods();
         }
 
@@ -307,7 +353,7 @@ namespace ModTek
 
 
         // READING MODDEFs AND LOAD/INIT/FINISH MODS
-        private static bool LoadMod(ModDef modDef)
+        private static bool LoadMod(ModDefEx modDef, out string reason)
         {
             Log($"{modDef.Name} {modDef.Version}");
 
@@ -327,21 +373,25 @@ namespace ModTek
             // expand the manifest (parses all JSON as well)
             var expandedManifest = ExpandManifest(modDef);
             if (expandedManifest == null)
+            {
+                reason = "Can't expand manifest";
                 return false;
-
+            }
             // load the mod assembly
             if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
+            {
+                reason = "Fail to call init method";
                 return false;
-
+            }
             // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             if (expandedManifest.Count > 0)
                 Log($"\t{expandedManifest.Count} manifest entries");
-
             modDef.Manifest = expandedManifest;
+            reason = "Success";
             return true;
         }
 
-        private static List<ModEntry> ExpandManifest(ModDef modDef)
+        private static List<ModEntry> ExpandManifest(ModDefEx modDef)
         {
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
             var expandedManifest = new List<ModEntry>();
@@ -428,7 +478,7 @@ namespace ModTek
             return expandedManifest;
         }
 
-        private static bool LoadAssemblyAndCallInit(ModDef modDef)
+        private static bool LoadAssemblyAndCallInit(ModDefEx modDef)
         {
             var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
             string typeName = null;
@@ -751,12 +801,12 @@ namespace ModTek
             // create ModDef objects for each mod.json file
             foreach (var modDirectory in modDirectories)
             {
-                ModDef modDef;
+                ModDefEx modDef;
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
-
                 try
                 {
-                    modDef = ModDef.CreateFromPath(modDefPath);
+                    modDef = ModDefEx.CreateFromPath(modDefPath);
+                    if (modDef.Name == MODTEK_DEF_NAME) { modDef = SettingsDef; }
                 }
                 catch (Exception e)
                 {
@@ -764,16 +814,36 @@ namespace ModTek
                     LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
-
-                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
+                if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name,modDef); } else
                 {
-                    Log($"Not loading {modDef.Name} because {reason}");
-                    if (!modDef.IgnoreLoadFailure)
-                        FailedToLoadMods.Add(modDef.Name);
-
+                    int counter = 0;
+                    string tmpname = modDef.Name;
+                    do
+                    {
+                        ++counter;
+                        tmpname = modDef.Name + "{dublicate " + counter + "}";
+                    } while (allModDefs.ContainsKey(tmpname) == true);
+                    modDef.Name = tmpname;
+                    modDef.Enabled = false;
+                    modDef.LoadFail = true;
+                    //modDef.Description = "Dublicate";
+                    allModDefs.Add(modDef.Name, modDef);
                     continue;
                 }
 
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out bool shouldAddToList))
+                {
+                    Log($"Not loading {modDef.Name} because {reason}");
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        FailedToLoadMods.Add(modDef.Name);
+                        if (allModDefs.ContainsKey(modDef.Name)) {
+                            allModDefs[modDef.Name].LoadFail = true;
+                            //allModDefs[modDef.Name].Description = reason;
+                        }
+                    }
+                    continue;
+                }
                 ModDefs.Add(modDef.Name, modDef);
             }
 
@@ -783,10 +853,12 @@ namespace ModTek
             {
                 var modDef = ModDefs[modName];
                 ModDefs.Remove(modName);
-
-                if (modDef.IgnoreLoadFailure)
-                    continue;
-
+                if (modDef.IgnoreLoadFailure) { continue; }
+                if (allModDefs.ContainsKey(modName))
+                {
+                    allModDefs[modName].LoadFail = true;
+                    //allModDefs[modName].Description = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
+                }
                 Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
@@ -804,6 +876,10 @@ namespace ModTek
                     if (!modDef.IgnoreLoadFailure)
                     {
                         Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
+                        if (allModDefs.ContainsKey(modName)) {
+                            allModDefs[modName].LoadFail = true;
+                            //allModDefs[modName].Description = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                        }
                         FailedToLoadMods.Add(modName);
                     }
                     continue;
@@ -813,12 +889,19 @@ namespace ModTek
 
                 try
                 {
-                    if (!LoadMod(modDef))
+                    if (!LoadMod(modDef, out string reason))
                     {
                         ModDefs.Remove(modName);
 
                         if (!modDef.IgnoreLoadFailure)
+                        {
                             FailedToLoadMods.Add(modName);
+                            if (allModDefs.ContainsKey(modName))
+                            {
+                                allModDefs[modName].LoadFail = true;
+                                //allModDefs[modName].Description = reason;
+                            }
+                        }
                     }
                 }
                 catch (Exception e)
@@ -830,6 +913,11 @@ namespace ModTek
 
                     LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
+                    if (allModDefs.ContainsKey(modName))
+                    {
+                        allModDefs[modName].LoadFail = true;
+                        //allModDefs[modName].Description = "Error: Tried to load mod: " + modDef.Name +", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                    }
                 }
             }
         }
@@ -1138,7 +1226,7 @@ namespace ModTek
             }
 
             //ModLoadOrder.Count;
-            List<ModDef> mods = new List<ModDef>();
+            List<ModDefEx> mods = new List<ModDefEx>();
             foreach(string modname in ModLoadOrder)
             {
                 if (ModTek.ModDefs.ContainsKey(modname) == false) { continue; }
@@ -1147,7 +1235,7 @@ namespace ModTek
 
             Log($"\nAdding dynamic enums:");
             addCount = 0;
-            foreach (ModDef moddef in mods)
+            foreach (ModDefEx moddef in mods)
             {
                 if (moddef.DataAddendumEntries.Count != 0)
                 {

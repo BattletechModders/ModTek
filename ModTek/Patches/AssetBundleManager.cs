@@ -12,6 +12,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
     public static class AssetBundleManager_AssetBundleNameToFilepath_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Postfix(string assetBundleName, ref string __result)
         {
             if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
@@ -27,6 +28,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFileURL")]
     public static class AssetBundleManager_AssetBundleNameToFileURL_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Postfix(string assetBundleName, ref string __result)
         {
             if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))

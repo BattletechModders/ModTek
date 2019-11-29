@@ -13,6 +13,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ActivateAfterInit), "Start")]
     public static class ActivateAfterInit_Start_Patch
     {
+        public static bool Prepare(){ return ModTek.Enabled; }
         public static bool Prefix(ActivateAfterInit __instance, ActivateAfterInit.ActivateAfter ___activateAfter, GameObject[] ___activationSet)
         {
             //Log("ActivateAfterInit.Start activateAfter:" + ___activateAfter);

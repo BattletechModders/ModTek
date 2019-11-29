@@ -17,6 +17,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), "RefreshTypedEntries")]
     public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Postfix(ContentPackIndex ___contentPackIndex,
             Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___baseManifest,
             Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___contentPacksManifest,

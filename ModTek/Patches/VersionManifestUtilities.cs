@@ -13,6 +13,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static bool Prefix(ref VersionManifest __result)
         {
             if (ModTek.CachedVersionManifest == null)

@@ -15,7 +15,7 @@ namespace ModTek{
         public string name;
         public string path;
     }
-    public class ModDef
+    public class ModDefEx
     {
         // this path will be set at runtime by ModTek
         [JsonIgnore]
@@ -45,6 +45,8 @@ namespace ModTek{
         public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
         public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
+        [JsonIgnore]
+        public HashSet<ModDefEx> DependsOnMe { get; set; } = new HashSet<ModDefEx>();
 
         [DefaultValue(false)]
         public bool IgnoreLoadFailure { get; set; }
@@ -68,7 +70,6 @@ namespace ModTek{
         public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new List<DataAddendumEntry>();
         // manifest, for including any kind of things to add to the game's manifest
         public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
-
         // remove these entries by ID from the game
         public List<string> RemoveManifestEntries { get; set; } = new List<string>();
 
@@ -76,16 +77,24 @@ namespace ModTek{
         // these will be different depending on the mod obviously
         public JObject Settings { get; set; } = new JObject();
 
+        [JsonIgnore]
+        public bool LoadFail { get; set; } = false;
+        [JsonIgnore]
+        public bool PendingEnable { get; set; } = false;
         /// <summary>
         /// Creates a ModDef from a path to a mod.json
         /// </summary>
-        public static ModDef CreateFromPath(string path)
+        public static ModDefEx CreateFromPath(string path)
         {
-            var modDef = JsonConvert.DeserializeObject<ModDef>(File.ReadAllText(path));
+            var modDef = JsonConvert.DeserializeObject<ModDefEx>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
             return modDef;
         }
 
+        public string toJSON()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
         /// <summary>
         /// Checks if all dependencies are present in param loaded
         /// </summary>
@@ -93,7 +102,6 @@ namespace ModTek{
         {
             return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
-
         /// <summary>
         /// Checks against provided list of mods to see if any of them conflict
         /// </summary>
@@ -105,15 +113,16 @@ namespace ModTek{
         /// <summary>
         /// Checks to see if this ModDef should load, providing a reason if shouldn't load
         /// </summary>
-        public bool ShouldTryLoad(List<string> alreadyTryLoadMods, out string reason)
+        public bool ShouldTryLoad(List<string> alreadyTryLoadMods, out string reason, out bool shouldAddToList)
         {
             if (!Enabled)
             {
                 reason = "it is disabled";
                 IgnoreLoadFailure = true;
+                shouldAddToList = true;
                 return false;
             }
-
+            shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {
                 reason = $"ModTek already loaded with the same name. Skipping load from {ModTek.GetRelativePath(ModTek.ModsDirectory, Directory)}.";
