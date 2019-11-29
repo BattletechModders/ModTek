@@ -46,6 +46,7 @@ namespace ModTek
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
         public const string MOD_JSON_NAME = "mod.json";
+        public const string MOD_STATE_JSON_NAME = "modstate.json";
         private const string MODTEK_DIRECTORY_NAME = "ModTek";
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
@@ -814,6 +815,25 @@ namespace ModTek
                     LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
                 }
+                string modStatePath = Path.Combine(modDirectory, MOD_STATE_JSON_NAME);
+                try
+                {
+                    if (File.Exists(modStatePath))
+                    {
+                        ModState state = ModState.CreateFromPath(modStatePath);
+                        modDef.Enabled = state.Enabled;
+                    }
+                    else
+                    {
+                        modDef.state.SaveToPath(modStatePath);
+                    }                    
+                }
+                catch (Exception e)
+                {
+                    FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
+                    LogException($"Error: Caught exception while parsing {MOD_STATE_JSON_NAME} at path {modStatePath}", e);
+                }
+
                 if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name,modDef); } else
                 {
                     int counter = 0;

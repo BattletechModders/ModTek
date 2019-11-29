@@ -43,7 +43,7 @@ namespace ModTek.Patches
             playerSettings.loadedMods.Clear();
             foreach (var mod in ModTek.allModDefs)
             {
-                playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled);
+                if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
             }
             return false;
         }
@@ -108,7 +108,9 @@ namespace ModTek.Patches
                     {
                         ModTek.SettingsDef.Enabled = true;
                         File.WriteAllText(moddefpath, JsonConvert.SerializeObject(ModTek.SettingsDef, Formatting.Indented));
-                    }catch(Exception e)
+                        ModTek.SettingsDef.SaveState();
+                    }
+                    catch(Exception e)
                     {
 
                     }
@@ -136,7 +138,7 @@ namespace ModTek.Patches
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
-                        File.WriteAllText(moddefpath, JsonConvert.SerializeObject(mod.Value, Formatting.Indented));
+                        mod.Value.SaveState();
                     }
                     catch (Exception e)
                     {
@@ -210,6 +212,11 @@ namespace ModTek.Patches
             else
             {
                 ModDefEx mod = ModTek.allModDefs[__instance.modDef.Name];
+                if (mod.Locked)
+                {
+                    ___toggleBox.SetToggled(mod.PendingEnable);
+                    return false;
+                }
                 if(mod.PendingEnable == true)
                 {
                     List<ModDefEx> deps = mod.GatherDependsOnMe();
@@ -380,7 +387,7 @@ namespace ModTek.Patches
             foreach(var mod in ModTek.allModDefs)
             {
                 mod.Value.PendingEnable = mod.Value.Enabled;
-                ___modsList.Add(mod.Value.ToVanilla());
+                if (mod.Value.Hidden == false){ ___modsList.Add(mod.Value.ToVanilla()); }
             }
             __result = true;
             /*StringBuilder dbg = new StringBuilder();

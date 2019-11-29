@@ -11,6 +11,20 @@ using Newtonsoft.Json.Linq;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace ModTek{
+    public class ModState
+    {
+        [DefaultValue(true)]
+        public bool Enabled { get; set; } = true;
+        public static ModState CreateFromPath(string path)
+        {
+            var modState = JsonConvert.DeserializeObject<ModState>(File.ReadAllText(path));
+            return modState;
+        }
+        public void SaveToPath(string path)
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(this));
+        }
+    }
     public class DataAddendumEntry{
         public string name;
         public string path;
@@ -40,6 +54,10 @@ namespace ModTek{
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+        [DefaultValue(false)]
+        public bool Hidden { get; set; } = false;
+        [DefaultValue(false)]
+        public bool Locked { get; set; } = false;
 
         // load order and requirements
         public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
@@ -81,6 +99,11 @@ namespace ModTek{
         public bool LoadFail { get; set; } = false;
         [JsonIgnore]
         public bool PendingEnable { get; set; } = false;
+        public ModState state { get { ModState r = new ModState(); r.Enabled = this.Enabled; return r; } }
+        public void SaveState() {
+            string modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
+            this.state.SaveToPath(modStatePath);
+        }
         /// <summary>
         /// Creates a ModDef from a path to a mod.json
         /// </summary>
