@@ -64,6 +64,10 @@ namespace ModTek{
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
         public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
         [JsonIgnore]
+        public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new Dictionary<ModDefEx, bool>();
+        [JsonIgnore]
+        public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new Dictionary<ModDefEx, bool>();
+        [JsonIgnore]
         public HashSet<ModDefEx> DependsOnMe { get; set; } = new HashSet<ModDefEx>();
 
         [DefaultValue(false)]

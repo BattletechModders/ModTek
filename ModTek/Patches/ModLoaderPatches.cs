@@ -219,14 +219,15 @@ namespace ModTek.Patches
                 }
                 if(mod.PendingEnable == true)
                 {
-                    List<ModDefEx> deps = mod.GatherDependsOnMe();
+                    Dictionary<ModDefEx, bool> deps = mod.GatherDependsOnMe();
                     if (deps.Count > 0)
                     {
                         StringBuilder text = new StringBuilder();
                         text.AppendLine("Some mods relay on this:");
+                        List<KeyValuePair<ModDefEx, bool>> listdeps = deps.ToList();
                         for (int t = 0; t < Mathf.Min(7, deps.Count); ++t)
                         {
-                            text.AppendLine(deps[t].Name);
+                            text.AppendLine(listdeps[t].Key.Name + "->" + (listdeps[t].Value ? "Enable" : "Disable"));
                         }
                         if (deps.Count > 7) { text.AppendLine("..........."); }
                         text.AppendLine("They will fail to load, but it will be only your damn problem.");
@@ -234,9 +235,9 @@ namespace ModTek.Patches
                         {
                             mod.PendingEnable = false;
                             ___toggleBox.SetToggled(mod.PendingEnable);
-                            foreach (ModDefEx dmod in deps)
+                            foreach (var dmod in deps)
                             {
-                                dmod.PendingEnable = false;
+                                dmod.Key.PendingEnable = dmod.Value;
                             }
                             ____screen.installedModsPanel.RefreshListViewItems();
                         })).AddButton("Shoot own leg", (Action)(() => { mod.PendingEnable = false; ___toggleBox.SetToggled(mod.PendingEnable); })).IsNestedPopupWithBuiltInFader().SetAlwaysOnTop().Render();
@@ -321,61 +322,21 @@ namespace ModTek.Patches
             result.Description = mod.Description;
             return result;
         }
-        public static List<ModDefEx> GatherDependsOnMe(this ModDefEx moddef)
+        public static Dictionary<ModDefEx, bool> GatherDependsOnMe(this ModDefEx moddef)
         {
-            HashSet<ModDefEx> result = new HashSet<ModDefEx>();
-            GatherDependsOnMeRecursive(moddef, ref result);
-            return result.ToList();
-        }
-        private static void GatherDependsOnMeRecursive(ModDefEx moddef, ref HashSet<ModDefEx> result)
-        {
-            if (result == null) { result = new HashSet<ModDefEx>(); };
-            foreach (var mod in ModTek.allModDefs)
+            Dictionary<ModDefEx, bool> result = new Dictionary<ModDefEx, bool>();
+            foreach(var mod in moddef.AffectingOffline)
             {
-                if (mod.Value.PendingEnable == false) { continue; }
-                if (mod.Value.DependsOn.Contains(moddef.Name)) {
-                    if (result.Contains(mod.Value) == false)
-                    {
-                        result.Add(mod.Value);
-                        GatherDependsOnMeRecursive(mod.Value, ref result);
-                    }
-                };
+                if (mod.Key.PendingEnable != mod.Value) { result.Add(mod.Key, mod.Value); }
             }
+            return result;
         }
         public static Dictionary<ModDefEx,bool> ConflictsWithMe(this ModDefEx moddef)
         {
             Dictionary<ModDefEx, bool> result = new Dictionary<ModDefEx, bool>();
-            foreach (string modname in moddef.ConflictsWith)
+            foreach (var mod in moddef.AffectingOnline)
             {
-                if (ModTek.allModDefs.ContainsKey(modname) == false) { continue; }
-                ModDefEx mod = ModTek.allModDefs[modname];
-                if (mod.PendingEnable == false) { continue; }
-                if (result.ContainsKey(mod) == false){ result.Add(mod, false); }
-            }
-            foreach (var mod in ModTek.allModDefs) {
-                if (mod.Value.PendingEnable == false) { continue; }
-                if (mod.Value.ConflictsWith.Contains(moddef.Name)) { continue; }
-            }
-            HashSet<ModDefEx> conflictDeps = new HashSet<ModDefEx>();
-            foreach(ModDefEx mod in result.Keys.ToHashSet())
-            {
-                GatherDependsOnMeRecursive(mod, ref conflictDeps);
-            }
-            foreach(ModDefEx mod in conflictDeps)
-            {
-                if (result.ContainsKey(mod) == false) { result.Add(mod, false); }
-            }
-            foreach (string modname in moddef.DependsOn)
-            {
-                if (ModTek.allModDefs.ContainsKey(modname) == false) { continue; }
-                ModDefEx mod = ModTek.allModDefs[modname];
-                if (mod.PendingEnable == true) { continue; }
-                Dictionary<ModDefEx, bool> subresult = mod.ConflictsWithMe();
-                if (result.ContainsKey(mod) == false) { result.Add(mod, true); }
-                foreach(var submod in subresult)
-                {
-                    if (result.ContainsKey(submod.Key) == false) { result.Add(submod.Key, submod.Value); }
-                }
+                if (mod.Key.PendingEnable != mod.Value) { result.Add(mod.Key, mod.Value); }
             }
             return result;
         }

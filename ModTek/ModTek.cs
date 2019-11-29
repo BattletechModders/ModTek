@@ -782,7 +782,87 @@ namespace ModTek
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
             ProgressPanel.SubmitWork(MergeFilesLoop);
             ProgressPanel.SubmitWork(AddToDBLoop);
+            ProgressPanel.SubmitWork(GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
+        }
+
+        private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
+        {
+            yield return new ProgressReport(0, "Gathering dependencies trees", "");
+            if(allModDefs.Count == 0)
+            {
+                yield break;
+            }
+            int progeress = 0;
+            foreach(var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me {mod.Key}", "", true);
+                foreach(string depname in mod.Value.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(depname)) { if(allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
+                }
+            }
+            progeress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather offline tree {mod.Key}", "", true);
+                mod.Value.GatherAffectingOfflineRec();
+            }
+            progeress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather online tree {mod.Key}", "", true);
+                mod.Value.GatherAffectingOnline();
+            }
+        }
+
+        private static void GatherAffectingOfflineRec(this ModDefEx mod)
+        {
+            Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
+            GatherAffectingOfflineRec(mod, ref deps);
+            mod.AffectingOffline = deps;
+        }
+
+        private static void GatherAffectingOfflineRec(this ModDefEx mod,ref Dictionary<ModDefEx,bool> deps)
+        {
+            foreach(var dmod in mod.DependsOnMe)
+            {
+                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps);  };
+            }
+        }
+
+        private static void GatherAffectingOnlineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps)
+        {
+            foreach(string dep in mod.DependsOn)
+            {
+                if (allModDefs.ContainsKey(dep) == false) { continue; }
+                ModDefEx dmod = allModDefs[dep];
+                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod,true); GatherAffectingOnlineRec(dmod,ref deps); }
+            }
+        }
+
+        private static void GatherConflicts(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps)
+        {
+            foreach(string dep in mod.ConflictsWith)
+            {
+                if (allModDefs.ContainsKey(dep) == false) { continue; }
+                ModDefEx dmod = allModDefs[dep];
+                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod, false); }
+            }
+        }
+        private static void GatherAffectingOnline(this ModDefEx mod)
+        {
+            Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
+            GatherAffectingOnlineRec(mod, ref deps);
+            HashSet<ModDefEx> conflicts = deps.Keys.ToHashSet();
+            foreach(ModDefEx cmod in conflicts)
+            {
+                GatherConflicts(cmod, ref deps);
+            }
+            mod.AffectingOnline = deps;
         }
 
         private static IEnumerator<ProgressReport> InitModsLoop()
@@ -790,8 +870,8 @@ namespace ModTek
             yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModsDirectory)
-                .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            var modDirectories = Directory.GetDirectories(ModsDirectory).Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
 
             if (modDirectories.Length == 0)
             {
@@ -803,6 +883,7 @@ namespace ModTek
             foreach (var modDirectory in modDirectories)
             {
                 ModDefEx modDef;
+                //var modDirectory = Path.GetDirectoryName(modFile);
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
                 try
                 {
