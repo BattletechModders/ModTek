@@ -797,7 +797,7 @@ namespace ModTek
             foreach(var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me {mod.Key}", "", true);
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me", mod.Key, true);
                 foreach(string depname in mod.Value.DependsOn)
                 {
                     if (allModDefs.ContainsKey(depname)) { if(allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
@@ -807,14 +807,14 @@ namespace ModTek
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather offline tree {mod.Key}", "", true);
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather disable influence tree", mod.Key, true);
                 mod.Value.GatherAffectingOfflineRec();
             }
             progeress = 0;
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather online tree {mod.Key}", "", true);
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather enable influence tree", mod.Key, true);
                 mod.Value.GatherAffectingOnline();
             }
         }
@@ -822,25 +822,37 @@ namespace ModTek
         private static void GatherAffectingOfflineRec(this ModDefEx mod)
         {
             Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
-            GatherAffectingOfflineRec(mod, ref deps);
+            Log("Gathering "+mod.Name+"->Disable influence. My state:"+mod.Enabled+" fail:"+(mod.LoadFail?mod.FailReason:"no"));
+            GatherAffectingOfflineRec(mod, ref deps, 1);
             mod.AffectingOffline = deps;
         }
 
-        private static void GatherAffectingOfflineRec(this ModDefEx mod,ref Dictionary<ModDefEx,bool> deps)
+        private static void GatherAffectingOfflineRec(this ModDefEx mod,ref Dictionary<ModDefEx,bool> deps, int level)
         {
             foreach(var dmod in mod.DependsOnMe)
             {
-                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps);  };
+                if (deps.ContainsKey(dmod) == false) {
+                    string i = new string(' ', level);
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps,level+1);
+                };
             }
         }
 
-        private static void GatherAffectingOnlineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps)
+        private static void GatherAffectingOnlineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps, int level)
         {
-            foreach(string dep in mod.DependsOn)
+            foreach (string dep in mod.DependsOn)
             {
-                if (allModDefs.ContainsKey(dep) == false) { continue; }
+                string i = new string(' ', level);
+                if (allModDefs.ContainsKey(dep) == false) {
+                    Log(i + dep + " state:Absent!");
+                    continue;
+                }
                 ModDefEx dmod = allModDefs[dep];
-                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod,true); GatherAffectingOnlineRec(dmod,ref deps); }
+                if (deps.ContainsKey(dmod) == false) {
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    deps.Add(dmod,true); GatherAffectingOnlineRec(dmod,ref deps, level+1);
+                }
             }
         }
 
@@ -848,17 +860,26 @@ namespace ModTek
         {
             foreach(string dep in mod.ConflictsWith)
             {
-                if (allModDefs.ContainsKey(dep) == false) { continue; }
+                if (allModDefs.ContainsKey(dep) == false) {
+                    Log("  due to "+mod.Name+" with "+dep+" state:Abcent");
+                    continue;
+                }
                 ModDefEx dmod = allModDefs[dep];
-                if (deps.ContainsKey(dmod) == false) { deps.Add(dmod, false); }
+                Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                if (deps.ContainsKey(dmod) == false) {
+                    deps.Add(dmod, false);
+                }
             }
         }
         private static void GatherAffectingOnline(this ModDefEx mod)
         {
             Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
-            GatherAffectingOnlineRec(mod, ref deps);
+            Log("Gathering " + mod.Name + "->Enable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
+            Log(" I'm depends on:");
+            GatherAffectingOnlineRec(mod, ref deps, 2);
             HashSet<ModDefEx> conflicts = deps.Keys.ToHashSet();
-            foreach(ModDefEx cmod in conflicts)
+            Log(" Conflicts:");
+            foreach (ModDefEx cmod in conflicts)
             {
                 GatherConflicts(cmod, ref deps);
             }
@@ -927,6 +948,7 @@ namespace ModTek
                     modDef.Name = tmpname;
                     modDef.Enabled = false;
                     modDef.LoadFail = true;
+                    modDef.FailReason = "dublicate";
                     //modDef.Description = "Dublicate";
                     allModDefs.Add(modDef.Name, modDef);
                     continue;
@@ -940,6 +962,7 @@ namespace ModTek
                         FailedToLoadMods.Add(modDef.Name);
                         if (allModDefs.ContainsKey(modDef.Name)) {
                             allModDefs[modDef.Name].LoadFail = true;
+                            modDef.FailReason = reason;
                             //allModDefs[modDef.Name].Description = reason;
                         }
                     }
@@ -958,7 +981,7 @@ namespace ModTek
                 if (allModDefs.ContainsKey(modName))
                 {
                     allModDefs[modName].LoadFail = true;
-                    //allModDefs[modName].Description = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
+                    allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
                 }
                 Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
@@ -979,7 +1002,7 @@ namespace ModTek
                         Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
                         if (allModDefs.ContainsKey(modName)) {
                             allModDefs[modName].LoadFail = true;
-                            //allModDefs[modName].Description = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                            allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
                         }
                         FailedToLoadMods.Add(modName);
                     }
@@ -1000,7 +1023,7 @@ namespace ModTek
                             if (allModDefs.ContainsKey(modName))
                             {
                                 allModDefs[modName].LoadFail = true;
-                                //allModDefs[modName].Description = reason;
+                                allModDefs[modName].FailReason = reason;
                             }
                         }
                     }
@@ -1017,7 +1040,7 @@ namespace ModTek
                     if (allModDefs.ContainsKey(modName))
                     {
                         allModDefs[modName].LoadFail = true;
-                        //allModDefs[modName].Description = "Error: Tried to load mod: " + modDef.Name +", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name +", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
                     }
                 }
             }

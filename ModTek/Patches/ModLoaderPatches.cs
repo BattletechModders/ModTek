@@ -231,7 +231,7 @@ namespace ModTek.Patches
                         }
                         if (deps.Count > 7) { text.AppendLine("..........."); }
                         text.AppendLine("They will fail to load, but it will be only your damn problem.");
-                        GenericPopupBuilder.Create("Dependency conflict", text.ToString()).AddButton("Return").AddButton("Resolve", (Action)(() =>
+                        GenericPopupBuilder.Create("Dependency conflict", text.ToString()).AddButton("Return", (Action)(() => { mod.PendingEnable = true; ___toggleBox.SetToggled(mod.PendingEnable); })).AddButton("Resolve", (Action)(() =>
                         {
                             mod.PendingEnable = false;
                             ___toggleBox.SetToggled(mod.PendingEnable);
@@ -261,7 +261,7 @@ namespace ModTek.Patches
                         }
                         if (conflicts.Count > 7) { text.AppendLine("..........."); }
                         text.AppendLine("They will fail to load, but it will be only your damn problem.");
-                        GenericPopupBuilder.Create("Dependency conflict", text.ToString()).AddButton("Return").AddButton("Resolve", (Action)(() =>
+                        GenericPopupBuilder.Create("Dependency conflict", text.ToString()).AddButton("Return", (Action)(() => { mod.PendingEnable = false; ___toggleBox.SetToggled(mod.PendingEnable); })).AddButton("Resolve", (Action)(() =>
                         {
                             mod.PendingEnable = true;
                             ___toggleBox.SetToggled(mod.PendingEnable);

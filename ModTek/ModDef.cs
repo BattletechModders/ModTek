@@ -103,6 +103,8 @@ namespace ModTek{
         public bool LoadFail { get; set; } = false;
         [JsonIgnore]
         public bool PendingEnable { get; set; } = false;
+        [JsonIgnore]
+        public string FailReason { get; set; }
         public ModState state { get { ModState r = new ModState(); r.Enabled = this.Enabled; return r; } }
         public void SaveState() {
             string modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
@@ -115,6 +117,8 @@ namespace ModTek{
         {
             var modDef = JsonConvert.DeserializeObject<ModDefEx>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
+            modDef.LoadFail = false;
+            modDef.FailReason = string.Empty;
             return modDef;
         }
 
