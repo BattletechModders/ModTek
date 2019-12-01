@@ -16,7 +16,7 @@ namespace ModTek.Patches
         public static void Postfix(ref string __result)
         {
             var old = __result;
-            __result = old + $"\nw/ ModTek v{Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}-dbg2";
+            __result = old + $"\nw/ ModTek v{Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}";
         }
     }
 }

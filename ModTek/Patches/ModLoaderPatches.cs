@@ -3,6 +3,7 @@ using BattleTech.Save;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
+using ModTek.RuntimeLog;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -124,14 +125,18 @@ namespace ModTek.Patches
     [HarmonyPatch(MethodType.Normal)]
     public static class ActiveOrDefaultSettings_SaveUserSettings
     {
+        public static bool SaveModsState { get; set; } = false;
         public static bool Prepare() { return ModTek.Enabled; }
         public static bool Prefix()
         {
             PlayerPrefs.SetInt("ModsEnabled", 1);
             LocalUserSettings playerSettings = BattleTech.Save.ActiveOrDefaultSettings.LocalSettings;
             playerSettings.loadedMods = ModLoader_InitializeModSettings.loadedModsCache;
-            foreach(var mod in ModTek.allModDefs)
+            if (SaveModsState == false) { return true; }
+            RLog.M.TWL(0, "SaveUserSettings");
+            foreach (var mod in ModTek.allModDefs)
             {
+                RLog.M.W(1, mod.Value.Name+":"+mod.Value.Enabled+":"+mod.Value.PendingEnable+":"+mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     string moddefpath = Path.Combine(mod.Value.Directory, ModTek.MOD_JSON_NAME);
@@ -139,13 +144,17 @@ namespace ModTek.Patches
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
                         mod.Value.SaveState();
+                        RLog.M.W(" save state:"+mod.Value.Enabled);
                     }
                     catch (Exception e)
                     {
-
+                        RLog.M.TWL(0,e.ToString());
                     }
                 }
+                RLog.M.WL("");
             }
+            RLog.M.flush();
+            SaveModsState = false;
             return true;
         }
     }
@@ -179,9 +188,12 @@ namespace ModTek.Patches
                 return false;
             }
             else
+            if (button == "save")
             {
+                ActiveOrDefaultSettings_SaveUserSettings.SaveModsState = true;
                 return true;
             }
+            return true;
         }
     }
     [HarmonyPatch(typeof(BattleTech.UI.ModManagerScreen))]
@@ -345,10 +357,12 @@ namespace ModTek.Patches
             typeof(BattleTech.UI.ModManagerInstalledModsPanel).GetMethod("Clear", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[0] { });
             __instance.SetSort(0);
             if (ModTek.allModDefs.Count == 0) { __result = false; return false; };
-            foreach(var mod in ModTek.allModDefs)
+            RLog.M.TWL(0, "InitializeList");
+            foreach (var mod in ModTek.allModDefs)
             {
                 mod.Value.PendingEnable = mod.Value.Enabled;
                 if (mod.Value.Hidden == false){ ___modsList.Add(mod.Value.ToVanilla()); }
+                RLog.M.WL(1, mod.Value.Name+":"+mod.Value.Enabled+":"+mod.Value.PendingEnable+":"+mod.Value.LoadFail);
             }
             __result = true;
             /*StringBuilder dbg = new StringBuilder();

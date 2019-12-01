@@ -3,6 +3,7 @@ using BattleTech.Data;
 using Harmony;
 using HBS.Util;
 using ModTek.Caches;
+using ModTek.RuntimeLog;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -142,6 +143,8 @@ namespace ModTek
             Directory.CreateDirectory(DatabaseDirectory);
 
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            RLog.InitLog(TempModTekDirectory, true);
+            RLog.M.TWL(0,"Init ModTek vesrion " + Assembly.GetExecutingAssembly().GetName().Version);
 
             // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
@@ -167,9 +170,15 @@ namespace ModTek
                 Log("File not exists "+ ModTekSettingsPath+" fallback to defaults");
                 SettingsDef = new ModDefEx();
                 SettingsDef.Enabled = true;
+                SettingsDef.PendingEnable = true;
                 SettingsDef.Name = MODTEK_DEF_NAME;
                 SettingsDef.Version = versionString;
-                SettingsDef.Description = MODTEK_DEF_NAME;
+                SettingsDef.Description = "Mod system for HBS's PC game BattleTech.";
+                SettingsDef.Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum";
+                SettingsDef.Website = "https://github.com/BattletechModders/ModTek";
+                File.WriteAllText(ModTekSettingsPath,JsonConvert.SerializeObject(SettingsDef,Formatting.Indented));
+                SettingsDef.Directory = ModTekDirectory;
+                SettingsDef.SaveState();
             }
 
 
@@ -916,24 +925,6 @@ namespace ModTek
                     FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
                     LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
                     continue;
-                }
-                string modStatePath = Path.Combine(modDirectory, MOD_STATE_JSON_NAME);
-                try
-                {
-                    if (File.Exists(modStatePath))
-                    {
-                        ModState state = ModState.CreateFromPath(modStatePath);
-                        modDef.Enabled = state.Enabled;
-                    }
-                    else
-                    {
-                        modDef.state.SaveToPath(modStatePath);
-                    }                    
-                }
-                catch (Exception e)
-                {
-                    FailedToLoadMods.Add(GetRelativePath(modDirectory, ModsDirectory));
-                    LogException($"Error: Caught exception while parsing {MOD_STATE_JSON_NAME} at path {modStatePath}", e);
                 }
 
                 if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name,modDef); } else

@@ -105,10 +105,12 @@ namespace ModTek{
         public bool PendingEnable { get; set; } = false;
         [JsonIgnore]
         public string FailReason { get; set; }
-        public ModState state { get { ModState r = new ModState(); r.Enabled = this.Enabled; return r; } }
         public void SaveState() {
             string modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
-            this.state.SaveToPath(modStatePath);
+            ModState state = new ModState();
+            state.Enabled = this.Enabled;
+            RuntimeLog.RLog.M.WL(2,"writing to FS:"+this.Name+"->"+state.Enabled);
+            state.SaveToPath(modStatePath);
         }
         /// <summary>
         /// Creates a ModDef from a path to a mod.json
@@ -119,6 +121,28 @@ namespace ModTek{
             modDef.Directory = Path.GetDirectoryName(path);
             modDef.LoadFail = false;
             modDef.FailReason = string.Empty;
+            string statepath = Path.Combine(Path.GetDirectoryName(path),ModTek.MOD_STATE_JSON_NAME);
+            if (File.Exists(statepath))
+            {
+                try
+                {
+                    var stateDef = JsonConvert.DeserializeObject<ModState>(File.ReadAllText(statepath));
+                    modDef.Enabled = stateDef.Enabled;
+                }
+                catch (Exception)
+                {
+                    ModState state = new ModState();
+                    state.Enabled = modDef.Enabled;
+                    state.SaveToPath(statepath);
+                }
+            }
+            else
+            {
+                ModState state = new ModState();
+                state.Enabled = modDef.Enabled;
+                state.SaveToPath(statepath);
+            }
+            modDef.PendingEnable = modDef.Enabled;
             return modDef;
         }
 
