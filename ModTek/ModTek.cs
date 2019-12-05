@@ -89,7 +89,7 @@ namespace ModTek
         internal static Configuration Config;
         internal static List<string> ModLoadOrder;
         internal static Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
-        internal static Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
+        public static Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
@@ -1327,29 +1327,14 @@ namespace ModTek
             if (shouldRebuildDB)
                 dbCache = new DBCache(null, MDDBPath, ModMDDBPath);
 
-            // add needed files to db
+            Log($"\nAdding dynamic enums:");
             var addCount = 0;
-            foreach (var modEntry in AddBTRLEntries)
-            {
-                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
-                {
-                    yield return new ProgressReport(addCount / ((float)AddBTRLEntries.Count), "Populating Database", modEntry.Id);
-                    Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
-                    shouldWriteDB = true;
-                }
-                addCount++;
-            }
-
-            //ModLoadOrder.Count;
             List<ModDefEx> mods = new List<ModDefEx>();
-            foreach(string modname in ModLoadOrder)
+            foreach (string modname in ModLoadOrder)
             {
                 if (ModTek.ModDefs.ContainsKey(modname) == false) { continue; }
                 mods.Add(ModTek.ModDefs[modname]);
             }
-
-            Log($"\nAdding dynamic enums:");
-            addCount = 0;
             foreach (ModDefEx moddef in mods)
             {
                 if (moddef.DataAddendumEntries.Count != 0)
@@ -1363,6 +1348,21 @@ namespace ModTek
                 }
                 ++addCount;
             }
+            // add needed files to db
+            addCount = 0;
+            foreach (var modEntry in AddBTRLEntries)
+            {
+                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
+                {
+                    yield return new ProgressReport(addCount / ((float)AddBTRLEntries.Count), "Populating Database", modEntry.Id);
+                    Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    shouldWriteDB = true;
+                }
+                addCount++;
+            }
+
+            //ModLoadOrder.Count;
+
 
             dbCache.ToFile(DBCachePath);
 
