@@ -9,9 +9,9 @@ namespace ModTek.Util
 {
     internal static class LoadOrder
     {
-        public static List<string> CreateLoadOrder(Dictionary<string, ModDef> modDefs, out List<string> unloaded, List<string> cachedOrder)
+        public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> modDefs, out List<string> unloaded, List<string> cachedOrder)
         {
-            var modDefsCopy = new Dictionary<string, ModDef>(modDefs);
+            var modDefsCopy = new Dictionary<string, ModDefEx>(modDefs);
             var loadOrder = new List<string>();
 
             // remove all mods that have a conflict
@@ -104,7 +104,7 @@ namespace ModTek.Util
             return order;
         }
 
-        private static void FillInOptionalDependencies(Dictionary<string, ModDef> modDefs)
+        private static void FillInOptionalDependencies(Dictionary<string, ModDefEx> modDefs)
         {
             // add optional dependencies if they are present
             foreach (var modDef in modDefs.Values)

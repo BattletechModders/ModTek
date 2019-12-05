@@ -17,6 +17,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(BinkMediaPlayer), "Play")]
     public static class BinkMediaPlayer_Play_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static bool Prefix(BinkMediaPlayer __instance, string videoName)
         {
             var videoEntry = ModTek.CustomResources["Video"].Values.LastOrDefault(entry =>

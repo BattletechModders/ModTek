@@ -12,6 +12,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(LoadedAudioBank), "LoadBank")]
     public static class LoadedAudioBank_LoadBank_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Prefix(string ___name)
         {
             if (!ModTek.CustomResources["SoundBank"].ContainsKey(___name))
