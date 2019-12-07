@@ -60,6 +60,7 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
+        private const string CHANGED_FLAG_NAME = ".changed";
         public const string MODTEK_DEF_NAME = "ModTek";
 
         // ModTek paths/directories
@@ -76,6 +77,7 @@ namespace ModTek
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
+        public static string ChangedFlagPath { get; private set; }
 
         // special StreamingAssets relative directories
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
@@ -99,7 +101,23 @@ namespace ModTek
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+        public static void RecursiveDelete(DirectoryInfo baseDir)
+        {
+            if (!baseDir.Exists) { return; }
 
+            foreach (var dir in baseDir.EnumerateDirectories()){ RecursiveDelete(dir); }
+            var files = baseDir.GetFiles();
+            foreach (var file in files)
+            {
+                if (file.Name == "ModTek.log") { continue; }
+                if (file.Name == "ModTek_runtime_log.txt") { continue; }
+                file.IsReadOnly = false;
+                RLog.M.TWL(0, "delete file "+file.FullName);
+                try { file.Delete(); } catch (Exception) { }
+            }
+            RLog.M.TWL(0, "delete directory " + baseDir.FullName);
+            try { baseDir.Delete(); } catch (Exception) { }
+        }
         // INITIALIZATION (called by injected code)
         public static void Init()
         {
@@ -110,8 +128,7 @@ namespace ModTek
 
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
-            if (manifestDirectory == null)
-                return;
+            if (manifestDirectory == null) { return; };
 
             // setup directories
             ModsDirectory = Path.GetFullPath(
@@ -128,6 +145,7 @@ namespace ModTek
             CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
             DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
 
+            ChangedFlagPath = Path.Combine(TempModTekDirectory, CHANGED_FLAG_NAME);
             LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
             HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
             LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
@@ -145,7 +163,13 @@ namespace ModTek
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             RLog.InitLog(TempModTekDirectory, true);
             RLog.M.TWL(0,"Init ModTek vesrion " + Assembly.GetExecutingAssembly().GetName().Version);
-
+            if (File.Exists(ChangedFlagPath))
+            {
+                File.Delete(ChangedFlagPath);
+                RecursiveDelete(new DirectoryInfo(TempModTekDirectory));
+                Directory.CreateDirectory(CacheDirectory);
+                Directory.CreateDirectory(DatabaseDirectory);
+            }
             // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
             {
@@ -1415,9 +1439,6 @@ namespace ModTek
                     else
                     {
                         object bdataAddendum = property.GetValue((object)null);
-                        //BattleTech.ModSupport.IDataAddendum dataAddendum = bdataAddendum as BattleTech.ModSupport.IDataAddendum;
-                        //Enumeration<type.GetType()> dataAddendum = property.GetValue((object)null) as BattleTech.ModSupport.IDataAddendum;
-                        //Log("\tError: Class does not implement interface [IDataAddendum] on class named [" + dataAddendumEntry.name + "]");
                         PropertyInfo pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
                         if (pCachedEnumerationValueList == null)
                         {
