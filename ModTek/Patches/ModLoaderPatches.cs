@@ -134,11 +134,13 @@ namespace ModTek.Patches
             playerSettings.loadedMods = ModLoader_InitializeModSettings.loadedModsCache;
             if (SaveModsState == false) { return true; }
             RLog.M.TWL(0, "SaveUserSettings");
+            bool changed = false;
             foreach (var mod in ModTek.allModDefs)
             {
                 RLog.M.W(1, mod.Value.Name+":"+mod.Value.Enabled+":"+mod.Value.PendingEnable+":"+mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
+                    changed = true;
                     string moddefpath = Path.Combine(mod.Value.Directory, ModTek.MOD_JSON_NAME);
                     try
                     {
@@ -153,6 +155,7 @@ namespace ModTek.Patches
                 }
                 RLog.M.WL("");
             }
+            File.WriteAllText(ModTek.ChangedFlagPath, "changed");
             RLog.M.flush();
             SaveModsState = false;
             return true;
