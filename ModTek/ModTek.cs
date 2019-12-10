@@ -62,6 +62,7 @@ namespace ModTek
         private const string CONFIG_FILE_NAME = "config.json";
         private const string CHANGED_FLAG_NAME = ".changed";
         public const string MODTEK_DEF_NAME = "ModTek";
+        private static HashSet<string> EnumsLoadedFromFile = new HashSet<string>();
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -105,14 +106,14 @@ namespace ModTek
         {
             if (!baseDir.Exists) { return; }
 
-            foreach (var dir in baseDir.EnumerateDirectories()){ RecursiveDelete(dir); }
+            foreach (var dir in baseDir.EnumerateDirectories()) { RecursiveDelete(dir); }
             var files = baseDir.GetFiles();
             foreach (var file in files)
             {
                 if (file.Name == "ModTek.log") { continue; }
                 if (file.Name == "ModTek_runtime_log.txt") { continue; }
                 file.IsReadOnly = false;
-                RLog.M.TWL(0, "delete file "+file.FullName);
+                RLog.M.TWL(0, "delete file " + file.FullName);
                 try { file.Delete(); } catch (Exception) { }
             }
             RLog.M.TWL(0, "delete directory " + baseDir.FullName);
@@ -162,7 +163,7 @@ namespace ModTek
 
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             RLog.InitLog(TempModTekDirectory, true);
-            RLog.M.TWL(0,"Init ModTek vesrion " + Assembly.GetExecutingAssembly().GetName().Version);
+            RLog.M.TWL(0, "Init ModTek vesrion " + Assembly.GetExecutingAssembly().GetName().Version);
             if (File.Exists(ChangedFlagPath))
             {
                 File.Delete(ChangedFlagPath);
@@ -191,7 +192,7 @@ namespace ModTek
             }
             else
             {
-                Log("File not exists "+ ModTekSettingsPath+" fallback to defaults");
+                Log("File not exists " + ModTekSettingsPath + " fallback to defaults");
                 SettingsDef = new ModDefEx();
                 SettingsDef.Enabled = true;
                 SettingsDef.PendingEnable = true;
@@ -200,7 +201,7 @@ namespace ModTek
                 SettingsDef.Description = "Mod system for HBS's PC game BattleTech.";
                 SettingsDef.Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum";
                 SettingsDef.Website = "https://github.com/BattletechModders/ModTek";
-                File.WriteAllText(ModTekSettingsPath,JsonConvert.SerializeObject(SettingsDef,Formatting.Indented));
+                File.WriteAllText(ModTekSettingsPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
                 SettingsDef.Directory = ModTekDirectory;
                 SettingsDef.SaveState();
             }
@@ -822,18 +823,18 @@ namespace ModTek
         private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             yield return new ProgressReport(0, "Gathering dependencies trees", "");
-            if(allModDefs.Count == 0)
+            if (allModDefs.Count == 0)
             {
                 yield break;
             }
             int progeress = 0;
-            foreach(var mod in allModDefs)
+            foreach (var mod in allModDefs)
             {
                 ++progeress;
                 yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me", mod.Key, true);
-                foreach(string depname in mod.Value.DependsOn)
+                foreach (string depname in mod.Value.DependsOn)
                 {
-                    if (allModDefs.ContainsKey(depname)) { if(allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
+                    if (allModDefs.ContainsKey(depname)) { if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
                 }
             }
             progeress = 0;
@@ -855,19 +856,20 @@ namespace ModTek
         private static void GatherAffectingOfflineRec(this ModDefEx mod)
         {
             Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
-            Log("Gathering "+mod.Name+"->Disable influence. My state:"+mod.Enabled+" fail:"+(mod.LoadFail?mod.FailReason:"no"));
+            Log("Gathering " + mod.Name + "->Disable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
             GatherAffectingOfflineRec(mod, ref deps, 1);
             mod.AffectingOffline = deps;
         }
 
-        private static void GatherAffectingOfflineRec(this ModDefEx mod,ref Dictionary<ModDefEx,bool> deps, int level)
+        private static void GatherAffectingOfflineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps, int level)
         {
-            foreach(var dmod in mod.DependsOnMe)
+            foreach (var dmod in mod.DependsOnMe)
             {
-                if (deps.ContainsKey(dmod) == false) {
+                if (deps.ContainsKey(dmod) == false)
+                {
                     string i = new string(' ', level);
                     Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
-                    deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps,level+1);
+                    deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps, level + 1);
                 };
             }
         }
@@ -877,29 +879,33 @@ namespace ModTek
             foreach (string dep in mod.DependsOn)
             {
                 string i = new string(' ', level);
-                if (allModDefs.ContainsKey(dep) == false) {
+                if (allModDefs.ContainsKey(dep) == false)
+                {
                     Log(i + dep + " state:Absent!");
                     continue;
                 }
                 ModDefEx dmod = allModDefs[dep];
-                if (deps.ContainsKey(dmod) == false) {
+                if (deps.ContainsKey(dmod) == false)
+                {
                     Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
-                    deps.Add(dmod,true); GatherAffectingOnlineRec(dmod,ref deps, level+1);
+                    deps.Add(dmod, true); GatherAffectingOnlineRec(dmod, ref deps, level + 1);
                 }
             }
         }
 
         private static void GatherConflicts(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps)
         {
-            foreach(string dep in mod.ConflictsWith)
+            foreach (string dep in mod.ConflictsWith)
             {
-                if (allModDefs.ContainsKey(dep) == false) {
-                    Log("  due to "+mod.Name+" with "+dep+" state:Abcent");
+                if (allModDefs.ContainsKey(dep) == false)
+                {
+                    Log("  due to " + mod.Name + " with " + dep + " state:Abcent");
                     continue;
                 }
                 ModDefEx dmod = allModDefs[dep];
                 Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
-                if (deps.ContainsKey(dmod) == false) {
+                if (deps.ContainsKey(dmod) == false)
+                {
                     deps.Add(dmod, false);
                 }
             }
@@ -951,7 +957,8 @@ namespace ModTek
                     continue;
                 }
 
-                if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name,modDef); } else
+                if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name, modDef); }
+                else
                 {
                     int counter = 0;
                     string tmpname = modDef.Name;
@@ -975,7 +982,8 @@ namespace ModTek
                     if (!modDef.IgnoreLoadFailure)
                     {
                         FailedToLoadMods.Add(modDef.Name);
-                        if (allModDefs.ContainsKey(modDef.Name)) {
+                        if (allModDefs.ContainsKey(modDef.Name))
+                        {
                             allModDefs[modDef.Name].LoadFail = true;
                             modDef.FailReason = reason;
                             //allModDefs[modDef.Name].Description = reason;
@@ -1015,7 +1023,8 @@ namespace ModTek
                     if (!modDef.IgnoreLoadFailure)
                     {
                         Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
-                        if (allModDefs.ContainsKey(modName)) {
+                        if (allModDefs.ContainsKey(modName))
+                        {
                             allModDefs[modName].LoadFail = true;
                             allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
                         }
@@ -1055,7 +1064,7 @@ namespace ModTek
                     if (allModDefs.ContainsKey(modName))
                     {
                         allModDefs[modName].LoadFail = true;
-                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name +", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
                     }
                 }
             }
@@ -1445,72 +1454,106 @@ namespace ModTek
                             Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
                             return false;
                         }
+                        FieldInfo f_enumerationValueList = type.BaseType.GetField("enumerationValueList",BindingFlags.Instance|BindingFlags.NonPublic);
+                        if (f_enumerationValueList == null)
+                        {
+                            Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                        if (enumList == null)
+                        {
+                            Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        Log("\tCurrent values [" + dataAddendumEntry.name + "]");
+                        int maxIndex = 0;
+                        Dictionary<string, int> names = new Dictionary<string, int>();
+                        for (int index = 0; index < enumList.Count; ++index)
+                        {
+                            EnumValue val = enumList[index] as EnumValue;
+                            if (val == null) { continue; };
+                            Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                            if (maxIndex < val.ID) { maxIndex = val.ID; };
+                            if (names.ContainsKey(val.Name) == false) { names.Add(val.Name, val.ID); } else { names[val.Name] = val.ID; }
+                        }
+                        MethodInfo pRefreshStaticData = type.GetMethod("RefreshStaticData");
+                        if (pRefreshStaticData == null)
+                        {
+                            Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
+                        if (jdataAddEnum == null)
+                        {
+                            Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                        jdataAddEnum.FromJSON(fileData);
+                        enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                        if (enumList == null)
+                        {
+                            Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
                         else
                         {
-                            IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
-                            if (jdataAddEnum == null)
+                            bool needFlush = false;
+                            Log("\tLoading values [" + dataAddendumEntry.name + "] from "+ dataAddendumEntry.path);
+                            for (int index = 0; index < enumList.Count; ++index)
                             {
-                                Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
-                                return false;
-                            }
-                            else
-                            {
-                                string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
-                                jdataAddEnum.FromJSON(fileData);
-                                IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
-                                if (enumList == null)
+                                EnumValue val = enumList[index] as EnumValue;
+                                if (val == null) { continue; };
+                                if (names.ContainsKey(val.Name)) { val.ID = names[val.Name]; } else { val.ID = maxIndex + 1; ++maxIndex; };
+                                if (val.GetType() == typeof(FactionValue))
                                 {
-                                    Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
-                                    return false;
+                                    MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
+                                    Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(WeaponCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
+                                    Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(AmmoCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
+                                    Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(ContractTypeValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
+                                    Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
                                 }
                                 else
                                 {
-                                    bool needFlush = false;
-                                    Log("\tLoading values [" + dataAddendumEntry.name + "]");
-                                    for (int index = 0; index < enumList.Count; ++index)
-                                    {
-                                        EnumValue val = enumList[index] as EnumValue;
-                                        if (val == null) { continue; };
-                                        if (val.GetType() == typeof(FactionValue))
-                                        {
-                                            MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
-                                            Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
-                                            needFlush = true;
-                                        }
-                                        else
-                                        if (val.GetType() == typeof(WeaponCategoryValue))
-                                        {
-                                            MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
-                                            Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
-                                            needFlush = true;
-                                        }
-                                        else
-                                        if(val.GetType() == typeof(AmmoCategoryValue))
-                                        {
-                                            MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
-                                            Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
-                                            needFlush = true;
-                                        }
-                                        else
-                                        if (val.GetType() == typeof(ContractTypeValue))
-                                        {
-                                            MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
-                                            Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
-                                            needFlush = true;
-                                        }
-                                        else
-                                        {
-                                            Log("\t\tUnknown enum type");
-                                            break;
-                                        }
-                                    }
-                                    if (needFlush)
-                                    {
-                                        Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
-                                    }
-                                    return needFlush;
+                                    Log("\t\tUnknown enum type");
+                                    break;
                                 }
                             }
+                            if (needFlush)
+                            {
+                                Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                                pRefreshStaticData.Invoke(bdataAddendum, new object[] { });
+                                f_enumerationValueList.SetValue(bdataAddendum, null);
+                                enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                                Log("\tUpdated values [" + dataAddendumEntry.name + "]");
+                                for (int index = 0; index < enumList.Count; ++index)
+                                {
+                                    EnumValue val = enumList[index] as EnumValue;
+                                    if (val == null) { continue; };
+                                    Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                                }
+                            }
+                            return needFlush;
                         }
                     }
                 }
