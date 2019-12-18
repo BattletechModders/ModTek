@@ -4,14 +4,16 @@ ModTek is a modding system for HBS's BATTLETECH PC that allows modders to packag
 ## Notes on SoundBankDef
 since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
   example:
-```{
+```
+{
   "name": "Screams",
   "filename": "Screams.bnk",
   "type": "Combat",
   "events":{
     "scream01":147496415
   }
-}```
+}
+```
   name - is unique name of sound bank
   filename - is name of file containing real audio content. Battletech is using Wwise 2016.2
   type - type of sound bank. 
