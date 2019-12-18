@@ -1,11 +1,32 @@
 # ModTek
 
 ModTek is a modding system for HBS's BATTLETECH PC that allows modders to package their mods in a self-contained manner without overwritting game files. ModTek is run at game startup and initializies other mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). In this way, it allows for the dynamic loading of mods at runtime with dependancies resolved and load order enforced, without having to edit the dreaded `VersionManifest.csv`. It also provides for incrementatal patching of stock game files that are easy to remove, version, and persist through patches.
+## Notes on SoundBankDef
+since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
+  example:
+```
+{
+  "name": "Screams",
+  "filename": "Screams.bnk",
+  "type": "Combat",
+  "events":{
+    "scream01":147496415
+  }
+}
+```
+  **name** - is unique name of sound bank<br/>
+  **filename** - is name of file containing real audio content. Battletech is using Wwise 2016.2<br/>
+  **type** - type of sound bank. <br/>
+    Avaible types:<br/>
+* **Combat** - banks of this type always loading at combat start and unloading at combat end. Should be used for sounds played on battlefield.<br/>
+* **Default** - banks of this type loading at game start. Moistly used for UI <br/>
+* **Voice** - banks of this type contains pilot's voices<br/>
+  events - map of events exported in bank. Needed for events can be referenced from code via WwiseManager.PostEvent which takes this name as parameter<br/>
 
 ## Notes on dynamic enums 
   dynamic enums handled outside manifest array. By DataAddendumEntries
   name - name of type. Supporting types BattleTech.FactionEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.AmmoCategoryEnumeration, BattleTech.ContractTypeEnumeration
-  path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ . You should note ID should be unique and it is YOUR responsibility as modder. 
+  path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ .
   
   example:
 ```
@@ -39,6 +60,8 @@ ModTek 0.6.* and forward integrates BTML so installing is even easier than it us
 * You should now have a `BATTLETECH\Mods\ModTek\` folder
 * Run the injector program (`ModTekInjector.exe`) in that folder
 * DO NOT move anything from the `BATTLETECH\Mods\ModTek\` folder, it is self-contained.
+
+NOTE: `BATTLETECH\Mods\` is in game installation folder NOT in `Documents\My Games`
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu (introduced in Patch 1.01) with "/W MODTEK". If you don't see this and you're beyond patch 1.01, something has gone wrong.
 

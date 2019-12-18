@@ -1,6 +1,7 @@
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
+using HBS;
 using HBS.Util;
 using ModTek.Caches;
 using ModTek.RuntimeLog;
@@ -29,7 +30,7 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "DebugSettings" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "SoundBankDef", "DebugSettings" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static Settings settings { get; private set; } = new Settings();
@@ -84,7 +85,8 @@ namespace ModTek
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
 
         // internal temp structures
-        private static Stopwatch stopwatch = new Stopwatch();
+        private static System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        public static Dictionary<string, SoundBankDef> soundBanks = new Dictionary<string, SoundBankDef>();
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, Dictionary<string, List<string>>> merges = new Dictionary<string, Dictionary<string, List<string>>>();
 
@@ -433,10 +435,11 @@ namespace ModTek
 
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
-
+            Log($"Expanding manifest {modDef.Name}:");
             foreach (var modEntry in modDef.Manifest)
             {
                 // handle prefabs; they have potential internal path to assetbundle
+                Log($"\t{modEntry.Type}:{modEntry.Path}");
                 if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
                 {
                     if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
@@ -448,7 +451,10 @@ namespace ModTek
                     modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
 
                     if (!FileIsOnDenyList(modEntry.Path))
+                    {
                         expandedManifest.Add(modEntry);
+                        Log($"\t\t{modEntry.Path}");
+                    }
 
                     continue;
                 }
@@ -472,7 +478,12 @@ namespace ModTek
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
-                    var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
+                    List<string> files = new List<string>();
+                    switch (modEntry.Type)
+                    {
+                        case nameof(SoundBankDef): files = Directory.GetFiles(entryPath, "*.json", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList(); break;
+                        default: files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList(); break;
+                    }
                     foreach (var filePath in files)
                     {
                         var path = Path.GetFullPath(filePath);
@@ -480,6 +491,7 @@ namespace ModTek
                         {
                             var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
                             expandedManifest.Add(childModEntry);
+                            Log($"\t\t{childModEntry.Path}");
                         }
                         catch (Exception e)
                         {
@@ -496,6 +508,7 @@ namespace ModTek
                         modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
                         modEntry.Path = entryPath;
                         expandedManifest.Add(modEntry);
+                        Log($"\t\t{modEntry.Path}");
                     }
                     catch (Exception e)
                     {
@@ -637,6 +650,29 @@ namespace ModTek
             }
         }
 
+        private static void AddSoundBankDef(string path)
+        {
+            try
+            {
+                Log($"\tAdd SoundBankDef {path}");
+                SoundBankDef def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
+                def.filename = Path.Combine(Path.GetDirectoryName(path), def.filename);
+                if (ModTek.soundBanks.ContainsKey(def.name))
+                {
+                    ModTek.soundBanks[def.name] = def;
+                    Log($"\t\tReplace:"+def.name);
+                }
+                else
+                {
+                    ModTek.soundBanks.Add(def.name, def);
+                    Log($"\t\tAdd:" + def.name);
+                }
+            }
+            catch (Exception e)
+            {
+                Log($"\tError while reading SoundBankDef:" + e.ToString());
+            }
+        }
 
         // ADDING/REMOVING CONTENT
         private static void AddModEntry(ModEntry modEntry)
@@ -673,6 +709,9 @@ namespace ModTek
                 case "AssetBundle":
                     ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     break;
+                case nameof(SoundBankDef):
+                    ModTek.AddSoundBankDef(modEntry.Path);
+                    return;
             }
 
             // add to addendum instead of adding to manifest
@@ -816,11 +855,35 @@ namespace ModTek
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
             ProgressPanel.SubmitWork(MergeFilesLoop);
             ProgressPanel.SubmitWork(AddToDBLoop);
+            ProgressPanel.SubmitWork(SoundBanksProcessing);
             ProgressPanel.SubmitWork(GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
         }
-
-        private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
+        private static IEnumerator<ProgressReport> SoundBanksProcessing()
+        {
+            Log($"Processing sound banks ({soundBanks.Count}):");
+            if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
+            {
+                Log($"\tWWise manager not inited");
+                yield break;
+            }
+            yield return new ProgressReport(0, "Processing sound banks", "");
+            if (soundBanks.Count == 0)
+            {
+                yield break;
+            }
+            List<LoadedAudioBank> loadedBanks = (List<LoadedAudioBank>)typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance); int progeress = 0;
+            foreach (var soundBank in soundBanks)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)soundBanks.Count), $"Processing sound bank", soundBank.Key, true);
+                Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
+                if (soundBank.Value.type != SoundBankType.Default) { continue; };
+                if (soundBank.Value.loaded) { continue; }
+                loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
+            }
+        }
+            private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             yield return new ProgressReport(0, "Gathering dependencies trees", "");
             if (allModDefs.Count == 0)
@@ -1193,6 +1256,11 @@ namespace ModTek
 
                                 continue;
                             }
+                        case nameof(SoundBankDef):
+                            {
+                                AddModEntry(modEntry);
+                                continue;
+                            }
                     }
 
                     // non-StreamingAssets json merges
@@ -1454,7 +1522,7 @@ namespace ModTek
                             Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
                             return false;
                         }
-                        FieldInfo f_enumerationValueList = type.BaseType.GetField("enumerationValueList",BindingFlags.Instance|BindingFlags.NonPublic);
+                        FieldInfo f_enumerationValueList = type.BaseType.GetField("enumerationValueList", BindingFlags.Instance | BindingFlags.NonPublic);
                         if (f_enumerationValueList == null)
                         {
                             Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.name + "]");
@@ -1500,7 +1568,7 @@ namespace ModTek
                         else
                         {
                             bool needFlush = false;
-                            Log("\tLoading values [" + dataAddendumEntry.name + "] from "+ dataAddendumEntry.path);
+                            Log("\tLoading values [" + dataAddendumEntry.name + "] from " + dataAddendumEntry.path);
                             for (int index = 0; index < enumList.Count; ++index)
                             {
                                 EnumValue val = enumList[index] as EnumValue;
