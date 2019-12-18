@@ -69,6 +69,10 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\BattleTech_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\BattleTech_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
@@ -77,6 +81,7 @@
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
+    <Compile Include="Patches\SoundBanks.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
