@@ -82,6 +82,7 @@
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
     <Compile Include="Patches\SoundBanks.cs" />
+    <Compile Include="Patches\SVGAssetHelper.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
