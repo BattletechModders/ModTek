@@ -9,6 +9,7 @@ using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SVGImporter;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "SoundBankDef", "DebugSettings" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "SoundBankDef", "DebugSettings", "FixedSVGAsset" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static Settings settings { get; private set; } = new Settings();
@@ -79,6 +80,7 @@ namespace ModTek
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
+        internal static Dictionary<string, SVGAsset> fixedSVGAssets { get; } = new Dictionary<string, SVGAsset>();
         public static string ChangedFlagPath { get; private set; }
 
         // special StreamingAssets relative directories
@@ -232,7 +234,9 @@ namespace ModTek
 
             try
             {
-                HarmonyInstance.Create("io.github.mpstark.ModTek").PatchAll(Assembly.GetExecutingAssembly());
+                HarmonyInstance instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
+                instance.PatchAll(Assembly.GetExecutingAssembly());
+                SVGAssetLoadRequest_Load.Patch(instance);
             }
             catch (Exception e)
             {
@@ -660,7 +664,7 @@ namespace ModTek
                 if (ModTek.soundBanks.ContainsKey(def.name))
                 {
                     ModTek.soundBanks[def.name] = def;
-                    Log($"\t\tReplace:"+def.name);
+                    Log($"\t\tReplace:" + def.name);
                 }
                 else
                 {
@@ -671,6 +675,29 @@ namespace ModTek
             catch (Exception e)
             {
                 Log($"\tError while reading SoundBankDef:" + e.ToString());
+            }
+        }
+
+        public static SVGAsset GetFixedAsset(string name)
+        {
+            if (ModTek.fixedSVGAssets.TryGetValue(name, out SVGAsset result)) { return result; }
+            return null;
+        }
+
+        private static void AddFixedSVGAsset(string name,string path)
+        {
+            try
+            {
+                SVGAsset svg = SVGAsset.Load(File.ReadAllText(path));
+                if(svg == null)
+                {
+                    throw new NullReferenceException("Fail to load "+path);
+                }
+                if (ModTek.fixedSVGAssets.ContainsKey(name) == false) { ModTek.fixedSVGAssets.Add(name,svg); } else { ModTek.fixedSVGAssets[name] = svg; }
+            }
+            catch (Exception e)
+            {
+                Log($"\tError while reading SVG file:" + e.ToString());
             }
         }
 
@@ -711,6 +738,9 @@ namespace ModTek
                     break;
                 case nameof(SoundBankDef):
                     ModTek.AddSoundBankDef(modEntry.Path);
+                    return;
+                case "FixedSVGAsset":
+                    ModTek.AddFixedSVGAsset(modEntry.Id,modEntry.Path);
                     return;
             }
 
@@ -883,7 +913,7 @@ namespace ModTek
                 loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
             }
         }
-            private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
+        private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             yield return new ProgressReport(0, "Gathering dependencies trees", "");
             if (allModDefs.Count == 0)
@@ -913,6 +943,28 @@ namespace ModTek
                 ++progeress;
                 yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather enable influence tree", mod.Key, true);
                 mod.Value.GatherAffectingOnline();
+            }
+            Log($"FAIL LIST:");
+            foreach (ModDefEx mod in allModDefs.Values)
+            {
+                if (mod.Enabled == false) { continue; };
+                if (mod.LoadFail == false) { continue; }
+                Log($"\t{mod.Name} fail {mod.FailReason}");
+                foreach (var dmod in mod.AffectingOnline)
+                {
+                    bool state = dmod.Key.Enabled && (dmod.Key.LoadFail == false);
+                    if (state != dmod.Value)
+                    {
+                        Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                    }
+                }
+                foreach (string deps in mod.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(deps) == false)
+                    {
+                        Log($"\t\tdepends on {deps} but abcent");
+                    }
+                }
             }
         }
 
@@ -1261,6 +1313,11 @@ namespace ModTek
                                 AddModEntry(modEntry);
                                 continue;
                             }
+                        case "FixedSVGAsset":
+                            {
+                                AddModEntry(modEntry);
+                                continue;
+                            }
                     }
 
                     // non-StreamingAssets json merges
@@ -1537,6 +1594,7 @@ namespace ModTek
                         Log("\tCurrent values [" + dataAddendumEntry.name + "]");
                         int maxIndex = 0;
                         Dictionary<string, int> names = new Dictionary<string, int>();
+                        Dictionary<int, string> ids = new Dictionary<int, string>();
                         for (int index = 0; index < enumList.Count; ++index)
                         {
                             EnumValue val = enumList[index] as EnumValue;
@@ -1544,6 +1602,7 @@ namespace ModTek
                             Log("\t\t[" + val.Name + ":" + val.ID + "]");
                             if (maxIndex < val.ID) { maxIndex = val.ID; };
                             if (names.ContainsKey(val.Name) == false) { names.Add(val.Name, val.ID); } else { names[val.Name] = val.ID; }
+                            if (ids.ContainsKey(val.ID) == false) { ids.Add(val.ID, val.Name); } else { ids[val.ID] = val.Name; }
                         }
                         MethodInfo pRefreshStaticData = type.GetMethod("RefreshStaticData");
                         if (pRefreshStaticData == null)
@@ -1573,7 +1632,30 @@ namespace ModTek
                             {
                                 EnumValue val = enumList[index] as EnumValue;
                                 if (val == null) { continue; };
-                                if (names.ContainsKey(val.Name)) { val.ID = names[val.Name]; } else { val.ID = maxIndex + 1; ++maxIndex; };
+                                if (names.ContainsKey(val.Name)) {
+                                    val.ID = names[val.Name];
+                                } else {
+                                    if (ids.ContainsKey(val.ID))
+                                    {
+                                        if (val.ID == 0)
+                                        {
+                                            val.ID = maxIndex + 1; ++maxIndex;
+                                            names.Add(val.Name, val.ID);
+                                            ids.Add(val.ID, val.Name);
+                                        }
+                                        else
+                                        {
+                                            Log("\tError value with same id:"+val.ID+" but different name "+ids[val.ID]+" already exist. Value: "+val.Name+" will not be added");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        names.Add(val.Name, val.ID);
+                                        ids.Add(val.ID, val.Name);
+                                        if (val.ID > maxIndex) { maxIndex = val.ID; }
+                                    }
+                                };
                                 if (val.GetType() == typeof(FactionValue))
                                 {
                                     MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
