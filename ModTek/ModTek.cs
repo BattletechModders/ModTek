@@ -1,5 +1,6 @@
 using BattleTech;
 using BattleTech.Data;
+using BattleTech.UI;
 using Harmony;
 using HBS;
 using HBS.Util;
@@ -80,7 +81,8 @@ namespace ModTek
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
-        internal static Dictionary<string, SVGAsset> fixedSVGAssets { get; } = new Dictionary<string, SVGAsset>();
+        internal static HashSet<string> systemIcons = new HashSet<string>();
+        public static bool isInSystemIcons(string id) { return systemIcons.Contains(id); }
         public static string ChangedFlagPath { get; private set; }
 
         // special StreamingAssets relative directories
@@ -678,29 +680,6 @@ namespace ModTek
             }
         }
 
-        public static SVGAsset GetFixedAsset(string name)
-        {
-            if (ModTek.fixedSVGAssets.TryGetValue(name, out SVGAsset result)) { return result; }
-            return null;
-        }
-
-        private static void AddFixedSVGAsset(string name,string path)
-        {
-            try
-            {
-                SVGAsset svg = SVGAsset.Load(File.ReadAllText(path));
-                if(svg == null)
-                {
-                    throw new NullReferenceException("Fail to load "+path);
-                }
-                if (ModTek.fixedSVGAssets.ContainsKey(name) == false) { ModTek.fixedSVGAssets.Add(name,svg); } else { ModTek.fixedSVGAssets[name] = svg; }
-            }
-            catch (Exception e)
-            {
-                Log($"\tError while reading SVG file:" + e.ToString());
-            }
-        }
-
         // ADDING/REMOVING CONTENT
         private static void AddModEntry(ModEntry modEntry)
         {
@@ -739,9 +718,9 @@ namespace ModTek
                 case nameof(SoundBankDef):
                     ModTek.AddSoundBankDef(modEntry.Path);
                     return;
-                case "FixedSVGAsset":
-                    ModTek.AddFixedSVGAsset(modEntry.Id,modEntry.Path);
-                    return;
+                case nameof(SVGAsset):
+                    if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants))) { ModTek.systemIcons.Add(modEntry.Id); }
+                    break;
             }
 
             // add to addendum instead of adding to manifest

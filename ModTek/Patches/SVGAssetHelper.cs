@@ -46,7 +46,11 @@ namespace ModTek
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
                     if (field.FieldType != typeof(SVGAsset)) { continue; }
-                    svgs.Add("UILookAndColorConstants." +field.Name);
+                    string id = "UILookAndColorConstants." + field.Name;
+                    if (ModTek.isInSystemIcons(id))
+                    {
+                        svgs.Add(id);
+                    }
                 }
                 foreach (string svg in svgs)
                 {
