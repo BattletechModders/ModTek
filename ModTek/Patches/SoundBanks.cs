@@ -1,3 +1,5 @@
+using BattleTech;
+using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.RuntimeLog;
@@ -21,9 +23,17 @@ namespace ModTek
         public bool loaded { get; set; }
         public string name { get; set; }
         public string filename { get; set; }
+        public List<uint> volumeRTPCIds { get; set; }
+        public float volumeShift { get; set; }
         public SoundBankType type { get; set; }
         public Dictionary<string, uint> events { get; set; }
-        public SoundBankDef() { events = new Dictionary<string, uint>(); type = SoundBankType.Default; loaded = false; }
+        public SoundBankDef() {
+            events = new Dictionary<string, uint>();
+            type = SoundBankType.Default;
+            loaded = false;
+            volumeRTPCIds = new List<uint>();
+            volumeShift = 0f;
+        }
     }
     public static class CustomSoundHelper
     {
@@ -46,6 +56,57 @@ namespace ModTek
                 {
                     SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap()[ev.Key] = ev.Value;
                 }
+            }
+        }
+        public static void setVolume(this SoundBankDef bank)
+        {
+            float volume = (AudioEventManager.MasterVolume/100f);
+            switch (bank.type)
+            {
+                case SoundBankType.Voice: volume *= (AudioEventManager.VoiceVolume/100f) * (AudioEventManager.VoiceVolume / 100f); break; //долбанный HBS
+                case SoundBankType.Combat: volume *= (AudioEventManager.SFXVolume/100f); break;
+            }
+            volume *= 100f;
+            volume += bank.volumeShift;
+            volume = Mathf.Min(100f, volume);
+            volume = Mathf.Max(0f, volume);
+            RLog.M.TWL(0, "SoundBankDef.setVolume "+bank.name);
+            foreach (uint id in bank.volumeRTPCIds)
+            {
+                AKRESULT res = AkSoundEngine.SetRTPCValue(id, volume);
+                RLog.M.WL(1, "SetRTPCValue "+id+" "+volume+" result:" + res);
+            }
+        }
+    }
+    [HarmonyPatch(typeof(AudioEventManager))]
+    [HarmonyPatch("LoadAudioSettings")]
+    [HarmonyPatch(MethodType.Normal)]
+    [HarmonyPatch(new Type[] { })]
+    public static class AudioEventManager_LoadAudioSettings
+    {
+        public static void Postfix()
+        {
+            RLog.M.TWL(0, "AudioEventManager.LoadAudioSettings");
+            foreach (var soundBank in ModTek.soundBanks)
+            {
+                if (soundBank.Value.loaded != true) { continue; }
+                soundBank.Value.setVolume();
+            }
+        }
+    }
+    [HarmonyPatch(typeof(AudioSettingsModule))]
+    [HarmonyPatch("SaveSettings")]
+    [HarmonyPatch(MethodType.Normal)]
+    [HarmonyPatch(new Type[] { })]
+    public static class AudioSettingsModule_SaveSettings
+    {
+        public static void Postfix(AudioSettingsModule __instance)
+        {
+            RLog.M.TWL(0, "AudioSettingsModule.SaveSettings");
+            foreach (var soundBank in ModTek.soundBanks)
+            {
+                if (soundBank.Value.loaded != true) { continue; }
+                soundBank.Value.setVolume();
             }
         }
     }
@@ -125,7 +186,10 @@ namespace ModTek
                 uint id = uint.MaxValue;
                 __result = AkSoundEngine.LoadBank(GCHandle.Alloc((object)www.bytes, GCHandleType.Pinned).AddrOfPinnedObject(), (uint)www.bytes.Length, out id);
                 ___id = id;
-                if (__result == AKRESULT.AK_Success) { ModTek.soundBanks[__instance.name].registerEvents(); };
+                if (__result == AKRESULT.AK_Success) {
+                    ModTek.soundBanks[__instance.name].registerEvents();
+                    ModTek.soundBanks[__instance.name].setVolume();
+                };
             }
             catch
             {
