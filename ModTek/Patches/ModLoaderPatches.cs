@@ -32,25 +32,77 @@ namespace ModTek.Patches
         }
     }
     [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
-    [HarmonyPatch("InitializeModSettings")]
+    [HarmonyPatch("LoadSystemModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_InitializeModSettings
+    public static class ModLoader_LoadSystemMods
+    {
+        public static bool Prepare() { return !ModTek.Enabled; }
+        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
+        public static bool Prefix()
+        {
+            //loadedModsCache = playerSettings.loadedMods;
+            //playerSettings.loadedMods.Clear();
+            //foreach (var mod in ModTek.allModDefs)
+            //{
+            //    if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
+            //}
+            return true;
+        }
+        public static void Postfix()
+        {
+            //playerSettings.loadedMods = loadedModsCache;
+            //if (ModTek.allModDefs.TryGetValue(ModTek.MODTEK_DEF_NAME, out ModDefEx modtek))
+            //{
+            //    ModLoader.loadedSystemModStatus = new Dictionary<string, ModStatusItem>();
+            //    ModLoader.loadedSystemModStatus.Add(ModTek.MODTEK_DEF_NAME, modtek.ToVanilla());
+            //}
+        }
+    }
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("LoadSystemModStatus")]
+    [HarmonyPatch(MethodType.Normal)]
+    public static class ModLoader_LoadSystemModStatus
     {
         public static bool Prepare() { return ModTek.Enabled; }
-        public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
-        public static bool Prefix(ref BattleTech.Save.LocalUserSettings playerSettings)
+        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
+        public static bool Prefix()
         {
-            loadedModsCache = playerSettings.loadedMods;
-            playerSettings.loadedMods.Clear();
-            foreach (var mod in ModTek.allModDefs)
-            {
-                if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
+            //loadedModsCache = playerSettings.loadedMods;
+            //playerSettings.loadedMods.Clear();
+            //foreach (var mod in ModTek.allModDefs)
+            //{
+            //    if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
+            //}
+            ModLoader.loadedSystemModStatus = new Dictionary<string, ModStatusItem>();
+            ModLoader.loadedSystemModStatus.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
+            return false;
+        }
+        public static void Postfix()
+        {
+            //playerSettings.loadedMods = loadedModsCache;
+        }
+    }
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("LoadGameModStatus")]
+    [HarmonyPatch(MethodType.Normal)]
+    public static class ModLoader_LoadGameModStatus
+    {
+        public static bool Prepare() { return ModTek.Enabled; }
+        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
+        public static bool Prefix()
+        {
+
+            ModLoader.loadedGameModStatus = new Dictionary<string, ModStatusItem>();
+            foreach (var mod in ModTek.allModDefs) {
+                if (mod.Key == ModTek.MODTEK_DEF_NAME) { continue; }
+                if (mod.Value.Hidden) { continue; }
+                ModLoader.loadedGameModStatus.Add(mod.Key,mod.Value.ToVanilla());
             }
             return false;
         }
-        public static void Postfix(ref BattleTech.Save.LocalUserSettings playerSettings)
+        public static void Postfix()
         {
-            playerSettings.loadedMods = loadedModsCache;
+            //playerSettings.loadedMods = loadedModsCache;
         }
     }
     [HarmonyPatch(typeof(BattleTech.UI.ModManagerScreen))]
@@ -74,66 +126,77 @@ namespace ModTek.Patches
         public static void Postfix(BattleTech.UI.ModManagerScreen __instance)
         {
             //if(ModLoader.ModDefs)
-            if (__instance.tempLoadedMods.ContainsKey(ModTek.MODTEK_DEF_NAME) == false) { __instance.tempLoadedMods.Add(ModTek.MODTEK_DEF_NAME, false); };
-            __instance.tempLoadedMods[ModTek.MODTEK_DEF_NAME] = false;
-        }
-    }
-    [HarmonyPatch(typeof(BattleTech.UI.ModManagerInstalledModsPanel))]
-    [HarmonyPatch("InitializeList")]
-    [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerInstalledModsPanel_InitializeListDisabled
-    {
-        public static bool Prepare() { return !ModTek.Enabled; }
-        public static bool Prefix(BattleTech.UI.ModManagerInstalledModsPanel __instance, ref bool __result, BattleTech.UI.ModManagerListView ___modsList)
-        {
-            if (ModLoader.ModDefs.ContainsKey(ModTek.MODTEK_DEF_NAME) == false) { ModLoader.ModDefs.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla()); };
-            return true;
-        }
-    }
-    [HarmonyPatch(typeof(BattleTech.Save.ActiveOrDefaultSettings))]
-    [HarmonyPatch("SaveUserSettings")]
-    [HarmonyPatch(MethodType.Normal)]
-    public static class ActiveOrDefaultSettings_SaveUserSettingsDisabled
-    {
-        public static bool Prepare() { return !ModTek.Enabled; }
-        public static bool Prefix()
-        {
-            if (PlayerPrefs.GetInt("ModsEnabled", 0) == 0) { return true; };
-            LocalUserSettings playerSettings = BattleTech.Save.ActiveOrDefaultSettings.LocalSettings;
-            if (playerSettings.loadedMods.ContainsKey(ModTek.MODTEK_DEF_NAME))
+            if (__instance.tempLoadedMods.ContainsKey(ModTek.MODTEK_DEF_NAME) == false)
             {
-                if(playerSettings.loadedMods[ModTek.MODTEK_DEF_NAME] == true)
-                {
-                    string moddefpath = Path.Combine(ModTek.SettingsDef.Directory,ModTek.MOD_JSON_NAME);
-                    try
-                    {
-                        ModTek.SettingsDef.Enabled = true;
-                        File.WriteAllText(moddefpath, JsonConvert.SerializeObject(ModTek.SettingsDef, Formatting.Indented));
-                        ModTek.SettingsDef.SaveState();
-                    }
-                    catch(Exception e)
-                    {
-
-                    }
-                }
+                __instance.tempLoadedMods.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
             }
-            return true;
+            else
+            {
+                __instance.tempLoadedMods[ModTek.MODTEK_DEF_NAME] = ModTek.SettingsDef.ToVanilla();
+            }
         }
     }
-    [HarmonyPatch(typeof(BattleTech.Save.ActiveOrDefaultSettings))]
-    [HarmonyPatch("SaveUserSettings")]
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("GetCombinedModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ActiveOrDefaultSettings_SaveUserSettings
+    public static class ModManagerInstalledModsPanel_GetCombinedModStatusDisabled
     {
-        public static bool SaveModsState { get; set; } = false;
-        public static bool Prepare() { return ModTek.Enabled; }
-        public static bool Prefix()
+        public static bool Prepare() { return !ModTek.Enabled; }
+        public static void Postfix(ref Dictionary<string, ModStatusItem> __result)
         {
-            PlayerPrefs.SetInt("ModsEnabled", 1);
-            LocalUserSettings playerSettings = BattleTech.Save.ActiveOrDefaultSettings.LocalSettings;
-            playerSettings.loadedMods = ModLoader_InitializeModSettings.loadedModsCache;
-            if (SaveModsState == false) { return true; }
-            RLog.M.TWL(0, "SaveUserSettings");
+            if (__result.ContainsKey(ModTek.MODTEK_DEF_NAME) == false)
+            {
+                __result.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
+            }
+        }
+    }
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("GetCombinedModStatus")]
+    [HarmonyPatch(MethodType.Normal)]
+    public static class ModManagerInstalledModsPanel_GetCombinedModStatus
+    {
+        public static bool Prepare() { return ModTek.Enabled; }
+        public static void Postfix(ref Dictionary<string, ModStatusItem> __result)
+        {
+            __result = new Dictionary<string, ModStatusItem>();
+            foreach(var mod in ModTek.allModDefs)
+            {
+                if (mod.Key == ModTek.MODTEK_DEF_NAME) { continue; }
+                if (mod.Value.Hidden) { continue; }
+                __result.Add(mod.Key, mod.Value.ToVanilla());
+            }
+            __result.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
+        }
+    }
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("SaveModStatusToFile")]
+    [HarmonyPatch(MethodType.Normal)]
+    public static class ModLoader_SaveSystemModStatusToFile
+    {
+        public static bool Prepare() { return !ModTek.Enabled; }
+        public static bool Prefix(Dictionary<string, ModStatusItem> tempLoadedMods)
+        {
+            return true;
+        }
+        public static void Postfix(Dictionary<string, ModStatusItem> tempLoadedMods)
+        {
+            if(tempLoadedMods.TryGetValue(ModTek.MODTEK_DEF_NAME,out ModStatusItem modtek))
+            {
+                ModTek.SettingsDef.Enabled = modtek.enabled;
+                ModTek.SettingsDef.SaveState();
+            }
+        }
+    }
+    [HarmonyPatch(typeof(BattleTech.ModSupport.ModLoader))]
+    [HarmonyPatch("SaveModStatusToFile")]
+    [HarmonyPatch(MethodType.Normal)]
+    public static class ModLoader_SaveModStatusToFile
+    {
+        //public static bool SaveModsState { get; set; } = false;
+        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prefix(Dictionary<string, ModStatusItem> tempLoadedMods)
+        {
+            RLog.M.TWL(0, "SaveModStatusToFile");
             bool changed = false;
             foreach (var mod in ModTek.allModDefs)
             {
@@ -155,10 +218,10 @@ namespace ModTek.Patches
                 }
                 RLog.M.WL("");
             }
-            File.WriteAllText(ModTek.ChangedFlagPath, "changed");
+            if(changed)File.WriteAllText(ModTek.ChangedFlagPath, "changed");
             RLog.M.flush();
-            SaveModsState = false;
-            return true;
+            //SaveModsState = false;
+            return false;
         }
     }
     [HarmonyPatch(typeof(BattleTech.UI.ModManagerScreen))]
@@ -193,7 +256,7 @@ namespace ModTek.Patches
             else
             if (button == "save")
             {
-                ActiveOrDefaultSettings_SaveUserSettings.SaveModsState = true;
+                //ActiveOrDefaultSettings_SaveUserSettings.SaveModsState = true;
                 return true;
             }
             return true;
@@ -219,14 +282,14 @@ namespace ModTek.Patches
         public static bool Prepare() { return ModTek.Enabled; }
         public static bool Prefix(BattleTech.UI.ModManagerListViewItem __instance, BattleTech.UI.HBSDOTweenToggle ___toggleBox, ModManagerScreen ____screen)
         {
-            if (ModTek.allModDefs.ContainsKey(__instance.modDef.Name) == false)
+            if (ModTek.allModDefs.ContainsKey(__instance.ModStatusItem.name) == false)
             {
                 //if (ModTek.allModDefs[modDef.Name].Enabled == false) { ___modNameText.color = Color.red; };
                 ___toggleBox.SetToggled(false);
             }
             else
             {
-                ModDefEx mod = ModTek.allModDefs[__instance.modDef.Name];
+                ModDefEx mod = ModTek.allModDefs[__instance.ModStatusItem.name];
                 if (mod.Locked)
                 {
                     ___toggleBox.SetToggled(mod.PendingEnable);
@@ -303,11 +366,11 @@ namespace ModTek.Patches
     public static class ModManagerListViewItem_SetData
     {
         public static bool Prepare() { return ModTek.Enabled; }
-        public static void Postfix(BattleTech.UI.ModManagerListViewItem __instance, ModDef modDef, LocalizableText ___modNameText, BattleTech.UI.HBSDOTweenToggle ___toggleBox)
+        public static void Postfix(BattleTech.UI.ModManagerListViewItem __instance, ModStatusItem modStatusItem, LocalizableText ___modNameText, BattleTech.UI.HBSDOTweenToggle ___toggleBox)
         {
-            if (ModTek.allModDefs.ContainsKey(modDef.Name))
+            if (ModTek.allModDefs.ContainsKey(modStatusItem.name))
             {
-                ModDefEx mod = ModTek.allModDefs[modDef.Name];
+                ModDefEx mod = ModTek.allModDefs[modStatusItem.name];
                 ___toggleBox.SetToggled(mod.PendingEnable);
                 if (mod.LoadFail) {
                     ___modNameText.color = Color.red;
@@ -325,16 +388,19 @@ namespace ModTek.Patches
     public static class ModManagerInstalledModsPanel_InitializeList
     {
         public static bool Prepare() { return ModTek.Enabled; }
-        public static ModDef ToVanilla(this ModDefEx mod)
+        public static ModStatusItem ToVanilla(this ModDefEx mod)
         {
-            ModDef result = new ModDef();
-            result.Name = mod.Name;
-            result.Enabled = mod.Enabled;
-            result.Version = mod.Version;
-            result.Website = mod.Website;
-            result.Author = mod.Author;
-            result.Contact = mod.Contact;
-            result.Description = mod.Description;
+            ModStatusItem result = new ModStatusItem();
+            result.name = mod.Name;
+            result.enabled = mod.Enabled;
+            result.version = mod.Version;
+            result.website = mod.Website;
+            result.failedToLoad = mod.LoadFail;
+            result.dependsOn = mod.DependsOn.ToList();
+            result.directory = mod.Directory;
+            //result.Author = mod.Author;
+            //result.Contact = mod.Contact;
+            //result.Description = mod.Description;
             return result;
         }
         public static Dictionary<ModDefEx, bool> GatherDependsOnMe(this ModDefEx moddef)
