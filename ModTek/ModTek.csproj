@@ -81,6 +81,7 @@
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
+    <Compile Include="Patches\SimGameConstants.cs" />
     <Compile Include="Patches\SoundBanks.cs" />
     <Compile Include="Patches\SVGAssetHelper.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />

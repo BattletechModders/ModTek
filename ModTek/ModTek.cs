@@ -1663,6 +1663,13 @@ namespace ModTek
                                     needFlush = true;
                                 }
                                 else
+                                if (val.GetType() == typeof(ShipUpgradeCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateEnumValue((EnumValue)val, "ShipUpgradeCategory", true);
+                                    Log("\t\tAddind ShipUpgradeCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
                                 {
                                     Log("\t\tUnknown enum type");
                                     break;
