@@ -1,15 +1,16 @@
-using System.Reflection;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ModTek")]
-[assembly: AssemblyDescription("A mod system for HBS's BattleTech PC Game.")]
+[assembly: AssemblyTitle("ModTekAutoInjector")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ModTek")]
-[assembly: AssemblyCopyright("Public domain under the Unlicence")]
+[assembly: AssemblyProduct("ModTekAutoInjector")]
+[assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8d955c2c-d75b-453c-99d1-b337bbf82cca")]
+[assembly: Guid("fa4943dd-9f22-48ca-9648-414fab7307dd")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -30,4 +31,6 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("0.7.7.2")]
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.0.1")]
+[assembly: AssemblyFileVersion("1.0.0.1")]
