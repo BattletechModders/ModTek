@@ -3,6 +3,7 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.RuntimeLog;
+using BattleTech;
 
 namespace ModTek.Patches
 {
@@ -25,6 +26,9 @@ namespace ModTek.Patches
         public static void Prefix()
         {
             DataManager dm = SceneSingletonBehavior<DataManagerUnityInstance>.Instance.DataManager;
+            RLog.LogWrite("Forcing refresh of BTRL Manifest...");
+            Traverse.Create(dm.ResourceLocator).Property("manifest").SetValue(VersionManifestUtilities.LoadDefaultManifest());
+            RLog.LogWrite(" DONE");
             Traverse refreshTypedEntriesT = Traverse.Create(dm.ResourceLocator).Method("RefreshTypedEntries");
             RLog.LogWrite("Forcing refresh of TypedEntities to prevent Shadowhawk DLC bug...");
             refreshTypedEntriesT.GetValue();
