@@ -14,6 +14,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(MainMenu), "Init")]
     public static class MainMenu_Init_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Postfix()
         {
             if (ModTek.FailedToLoadMods.Count <= 0)

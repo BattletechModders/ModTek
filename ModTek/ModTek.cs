@@ -1,14 +1,20 @@
 using BattleTech;
 using BattleTech.Data;
+using BattleTech.UI;
 using Harmony;
+using HBS;
 using HBS.Util;
 using ModTek.Caches;
+using ModTek.RuntimeLog;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SVGImporter;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -18,11 +24,18 @@ using static ModTek.Util.Logger;
 
 namespace ModTek
 {
+    public class Settings
+    {
+        [DefaultValue(true)]
+        public bool Enabled { get; set; } = true;
+    }
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "DebugSettings" };
+        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "SoundBankDef", "DebugSettings", "FixedSVGAsset" };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
+
+        public static Settings settings { get; private set; } = new Settings();
 
         public static bool HasLoaded { get; private set; }
 
@@ -30,10 +43,14 @@ namespace ModTek
         public static string GameDirectory { get; private set; }
         public static string ModsDirectory { get; private set; }
         public static string StreamingAssetsDirectory { get; private set; }
+        public static ModDefEx SettingsDef { get; private set; }
+
+        public static bool Enabled { get { return SettingsDef.Enabled; } }
 
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
-        private const string MOD_JSON_NAME = "mod.json";
+        public const string MOD_JSON_NAME = "mod.json";
+        public const string MOD_STATE_JSON_NAME = "modstate.json";
         private const string MODTEK_DIRECTORY_NAME = "ModTek";
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
@@ -46,6 +63,9 @@ namespace ModTek
         private const string DB_CACHE_FILE_NAME = "database_cache.json";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
+        private const string CHANGED_FLAG_NAME = ".changed";
+        public const string MODTEK_DEF_NAME = "ModTek";
+        private static HashSet<string> EnumsLoadedFromFile = new HashSet<string>();
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -60,19 +80,25 @@ namespace ModTek
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
+        internal static string ModTekSettingsPath { get; private set; }
+        internal static HashSet<string> systemIcons = new HashSet<string>();
+        public static bool isInSystemIcons(string id) { return systemIcons.Contains(id); }
+        public static string ChangedFlagPath { get; private set; }
 
         // special StreamingAssets relative directories
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
 
         // internal temp structures
-        private static Stopwatch stopwatch = new Stopwatch();
+        private static System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        public static Dictionary<string, SoundBankDef> soundBanks = new Dictionary<string, SoundBankDef>();
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, Dictionary<string, List<string>>> merges = new Dictionary<string, Dictionary<string, List<string>>>();
 
         // internal structures
         internal static Configuration Config;
         internal static List<string> ModLoadOrder;
-        internal static Dictionary<string, ModDef> ModDefs = new Dictionary<string, ModDef>();
+        internal static Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
+        public static Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
@@ -82,8 +108,23 @@ namespace ModTek
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+        public static void RecursiveDelete(DirectoryInfo baseDir)
+        {
+            if (!baseDir.Exists) { return; }
 
-
+            foreach (var dir in baseDir.EnumerateDirectories()) { RecursiveDelete(dir); }
+            var files = baseDir.GetFiles();
+            foreach (var file in files)
+            {
+                if (file.Name == "ModTek.log") { continue; }
+                if (file.Name == "ModTek_runtime_log.txt") { continue; }
+                file.IsReadOnly = false;
+                RLog.M.TWL(0, "delete file " + file.FullName);
+                try { file.Delete(); } catch (Exception) { }
+            }
+            RLog.M.TWL(0, "delete directory " + baseDir.FullName);
+            try { baseDir.Delete(); } catch (Exception) { }
+        }
         // INITIALIZATION (called by injected code)
         public static void Init()
         {
@@ -94,8 +135,7 @@ namespace ModTek
 
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
-            if (manifestDirectory == null)
-                return;
+            if (manifestDirectory == null) { return; };
 
             // setup directories
             ModsDirectory = Path.GetFullPath(
@@ -112,6 +152,7 @@ namespace ModTek
             CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
             DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
 
+            ChangedFlagPath = Path.Combine(TempModTekDirectory, CHANGED_FLAG_NAME);
             LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
             HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
             LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
@@ -120,24 +161,66 @@ namespace ModTek
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(TempModTekDirectory, CONFIG_FILE_NAME);
+            ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
 
             // creates the directories above it as well
             Directory.CreateDirectory(CacheDirectory);
             Directory.CreateDirectory(DatabaseDirectory);
 
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
-
+            RLog.InitLog(TempModTekDirectory, true);
+            RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
+            if (File.Exists(ChangedFlagPath))
+            {
+                File.Delete(ChangedFlagPath);
+                RecursiveDelete(new DirectoryInfo(TempModTekDirectory));
+                Directory.CreateDirectory(CacheDirectory);
+                Directory.CreateDirectory(DatabaseDirectory);
+            }
             // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
             {
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
+            if (File.Exists(ModTekSettingsPath))
+            {
+                try
+                {
+                    SettingsDef = ModDefEx.CreateFromPath(ModTekSettingsPath);
+                }
+                catch (Exception e)
+                {
+                    LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {ModTekSettingsPath}", e);
+                    Finish();
+                    return;
+                }
+                SettingsDef.Version = versionString;
+            }
+            else
+            {
+                Log("File not exists " + ModTekSettingsPath + " fallback to defaults");
+                SettingsDef = new ModDefEx();
+                SettingsDef.Enabled = true;
+                SettingsDef.PendingEnable = true;
+                SettingsDef.Name = MODTEK_DEF_NAME;
+                SettingsDef.Version = versionString;
+                SettingsDef.Description = "Mod system for HBS's PC game BattleTech.";
+                SettingsDef.Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum";
+                SettingsDef.Website = "https://github.com/BattletechModders/ModTek";
+                File.WriteAllText(ModTekSettingsPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
+                SettingsDef.Directory = ModTekDirectory;
+                SettingsDef.SaveState();
+            }
+
 
             // load progress bar
-            if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
+            if (Enabled)
             {
-                Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
-                Finish();
+                if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
+                {
+                    Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
+                    Finish();
+                }
             }
 
             // read config
@@ -153,7 +236,10 @@ namespace ModTek
 
             try
             {
-                HarmonyInstance.Create("io.github.mpstark.ModTek").PatchAll(Assembly.GetExecutingAssembly());
+                HarmonyInstance instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
+                instance.PatchAll(Assembly.GetExecutingAssembly());
+                BattleTechResourceLoader.Refresh();
+                SVGAssetLoadRequest_Load.Patch(instance);
             }
             catch (Exception e)
             {
@@ -161,7 +247,12 @@ namespace ModTek
                 CloseLogStream();
                 return;
             }
-
+            if (Enabled == false)
+            {
+                Log("ModTek not enabled");
+                CloseLogStream();
+                return;
+            }
             LoadMods();
         }
 
@@ -306,7 +397,7 @@ namespace ModTek
 
 
         // READING MODDEFs AND LOAD/INIT/FINISH MODS
-        private static bool LoadMod(ModDef modDef)
+        private static bool LoadMod(ModDefEx modDef, out string reason)
         {
             Log($"{modDef.Name} {modDef.Version}");
 
@@ -326,31 +417,36 @@ namespace ModTek
             // expand the manifest (parses all JSON as well)
             var expandedManifest = ExpandManifest(modDef);
             if (expandedManifest == null)
+            {
+                reason = "Can't expand manifest";
                 return false;
-
+            }
             // load the mod assembly
             if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
+            {
+                reason = "Fail to call init method";
                 return false;
-
+            }
             // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             if (expandedManifest.Count > 0)
                 Log($"\t{expandedManifest.Count} manifest entries");
-
             modDef.Manifest = expandedManifest;
+            reason = "Success";
             return true;
         }
 
-        private static List<ModEntry> ExpandManifest(ModDef modDef)
+        private static List<ModEntry> ExpandManifest(ModDefEx modDef)
         {
             // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
             var expandedManifest = new List<ModEntry>();
 
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
-
+            Log($"Expanding manifest {modDef.Name}:");
             foreach (var modEntry in modDef.Manifest)
             {
                 // handle prefabs; they have potential internal path to assetbundle
+                Log($"\t{modEntry.Type}:{modEntry.Path}");
                 if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
                 {
                     if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
@@ -359,10 +455,23 @@ namespace ModTek
                         return null;
                     }
 
-                    modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    //if (string.IsNullOrEmpty(modEntry.Id))
+                    //{
+                    if (modEntry.Type != "Prefab")
+                    {
+                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    }
+                    else if(string.IsNullOrEmpty(modEntry.Id))
+                    {
+                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    }
+                    //}
 
                     if (!FileIsOnDenyList(modEntry.Path))
+                    {
                         expandedManifest.Add(modEntry);
+                        Log($"\t\t{modEntry.Path}");
+                    }
 
                     continue;
                 }
@@ -386,7 +495,12 @@ namespace ModTek
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
-                    var files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath));
+                    List<string> files = new List<string>();
+                    switch (modEntry.Type)
+                    {
+                        case nameof(SoundBankDef): files = Directory.GetFiles(entryPath, "*.json", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList(); break;
+                        default: files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList(); break;
+                    }
                     foreach (var filePath in files)
                     {
                         var path = Path.GetFullPath(filePath);
@@ -394,6 +508,7 @@ namespace ModTek
                         {
                             var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
                             expandedManifest.Add(childModEntry);
+                            Log($"\t\t{childModEntry.Path}");
                         }
                         catch (Exception e)
                         {
@@ -410,6 +525,7 @@ namespace ModTek
                         modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
                         modEntry.Path = entryPath;
                         expandedManifest.Add(modEntry);
+                        Log($"\t\t{modEntry.Path}");
                     }
                     catch (Exception e)
                     {
@@ -427,7 +543,7 @@ namespace ModTek
             return expandedManifest;
         }
 
-        private static bool LoadAssemblyAndCallInit(ModDef modDef)
+        private static bool LoadAssemblyAndCallInit(ModDefEx modDef)
         {
             var dllPath = Path.Combine(modDef.Directory, modDef.DLL);
             string typeName = null;
@@ -551,6 +667,29 @@ namespace ModTek
             }
         }
 
+        private static void AddSoundBankDef(string path)
+        {
+            try
+            {
+                Log($"\tAdd SoundBankDef {path}");
+                SoundBankDef def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
+                def.filename = Path.Combine(Path.GetDirectoryName(path), def.filename);
+                if (ModTek.soundBanks.ContainsKey(def.name))
+                {
+                    ModTek.soundBanks[def.name] = def;
+                    Log($"\t\tReplace:" + def.name);
+                }
+                else
+                {
+                    ModTek.soundBanks.Add(def.name, def);
+                    Log($"\t\tAdd:" + def.name);
+                }
+            }
+            catch (Exception e)
+            {
+                Log($"\tError while reading SoundBankDef:" + e.ToString());
+            }
+        }
 
         // ADDING/REMOVING CONTENT
         private static void AddModEntry(ModEntry modEntry)
@@ -586,6 +725,12 @@ namespace ModTek
             {
                 case "AssetBundle":
                     ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
+                    break;
+                case nameof(SoundBankDef):
+                    ModTek.AddSoundBankDef(modEntry.Path);
+                    return;
+                case nameof(SVGAsset):
+                    if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants))) { ModTek.systemIcons.Add(modEntry.Id); }
                     break;
             }
 
@@ -730,7 +875,159 @@ namespace ModTek
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
             ProgressPanel.SubmitWork(MergeFilesLoop);
             ProgressPanel.SubmitWork(AddToDBLoop);
+            ProgressPanel.SubmitWork(SoundBanksProcessing);
+            ProgressPanel.SubmitWork(GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
+        }
+        private static IEnumerator<ProgressReport> SoundBanksProcessing()
+        {
+            Log($"Processing sound banks ({soundBanks.Count}):");
+            if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
+            {
+                Log($"\tWWise manager not inited");
+                yield break;
+            }
+            yield return new ProgressReport(0, "Processing sound banks", "");
+            if (soundBanks.Count == 0)
+            {
+                yield break;
+            }
+            List<LoadedAudioBank> loadedBanks = (List<LoadedAudioBank>)typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance); int progeress = 0;
+            foreach (var soundBank in soundBanks)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)soundBanks.Count), $"Processing sound bank", soundBank.Key, true);
+                Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
+                if (soundBank.Value.type != SoundBankType.Default) { continue; };
+                if (soundBank.Value.loaded) { continue; }
+                loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
+            }
+        }
+        private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
+        {
+            yield return new ProgressReport(0, "Gathering dependencies trees", "");
+            if (allModDefs.Count == 0)
+            {
+                yield break;
+            }
+            int progeress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me", mod.Key, true);
+                foreach (string depname in mod.Value.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(depname)) { if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
+                }
+            }
+            progeress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather disable influence tree", mod.Key, true);
+                mod.Value.GatherAffectingOfflineRec();
+            }
+            progeress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progeress;
+                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather enable influence tree", mod.Key, true);
+                mod.Value.GatherAffectingOnline();
+            }
+            Log($"FAIL LIST:");
+            foreach (ModDefEx mod in allModDefs.Values)
+            {
+                if (mod.Enabled == false) { continue; };
+                if (mod.LoadFail == false) { continue; }
+                Log($"\t{mod.Name} fail {mod.FailReason}");
+                foreach (var dmod in mod.AffectingOnline)
+                {
+                    bool state = dmod.Key.Enabled && (dmod.Key.LoadFail == false);
+                    if (state != dmod.Value)
+                    {
+                        Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                    }
+                }
+                foreach (string deps in mod.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(deps) == false)
+                    {
+                        Log($"\t\tdepends on {deps} but abcent");
+                    }
+                }
+            }
+        }
+
+        private static void GatherAffectingOfflineRec(this ModDefEx mod)
+        {
+            Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
+            Log("Gathering " + mod.Name + "->Disable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
+            GatherAffectingOfflineRec(mod, ref deps, 1);
+            mod.AffectingOffline = deps;
+        }
+
+        private static void GatherAffectingOfflineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps, int level)
+        {
+            foreach (var dmod in mod.DependsOnMe)
+            {
+                if (deps.ContainsKey(dmod) == false)
+                {
+                    string i = new string(' ', level);
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    deps.Add(dmod, false); GatherAffectingOfflineRec(dmod, ref deps, level + 1);
+                };
+            }
+        }
+
+        private static void GatherAffectingOnlineRec(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps, int level)
+        {
+            foreach (string dep in mod.DependsOn)
+            {
+                string i = new string(' ', level);
+                if (allModDefs.ContainsKey(dep) == false)
+                {
+                    Log(i + dep + " state:Absent!");
+                    continue;
+                }
+                ModDefEx dmod = allModDefs[dep];
+                if (deps.ContainsKey(dmod) == false)
+                {
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    deps.Add(dmod, true); GatherAffectingOnlineRec(dmod, ref deps, level + 1);
+                }
+            }
+        }
+
+        private static void GatherConflicts(this ModDefEx mod, ref Dictionary<ModDefEx, bool> deps)
+        {
+            foreach (string dep in mod.ConflictsWith)
+            {
+                if (allModDefs.ContainsKey(dep) == false)
+                {
+                    Log("  due to " + mod.Name + " with " + dep + " state:Abcent");
+                    continue;
+                }
+                ModDefEx dmod = allModDefs[dep];
+                Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                if (deps.ContainsKey(dmod) == false)
+                {
+                    deps.Add(dmod, false);
+                }
+            }
+        }
+        private static void GatherAffectingOnline(this ModDefEx mod)
+        {
+            Dictionary<ModDefEx, bool> deps = new Dictionary<ModDefEx, bool>();
+            Log("Gathering " + mod.Name + "->Enable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
+            Log(" I'm depends on:");
+            GatherAffectingOnlineRec(mod, ref deps, 2);
+            HashSet<ModDefEx> conflicts = deps.Keys.ToHashSet();
+            Log(" Conflicts:");
+            foreach (ModDefEx cmod in conflicts)
+            {
+                GatherConflicts(cmod, ref deps);
+            }
+            mod.AffectingOnline = deps;
         }
 
         private static IEnumerator<ProgressReport> InitModsLoop()
@@ -738,8 +1035,8 @@ namespace ModTek
             yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModsDirectory)
-                .Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            var modDirectories = Directory.GetDirectories(ModsDirectory).Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
 
             if (modDirectories.Length == 0)
             {
@@ -750,12 +1047,13 @@ namespace ModTek
             // create ModDef objects for each mod.json file
             foreach (var modDirectory in modDirectories)
             {
-                ModDef modDef;
+                ModDefEx modDef;
+                //var modDirectory = Path.GetDirectoryName(modFile);
                 var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
-
                 try
                 {
-                    modDef = ModDef.CreateFromPath(modDefPath);
+                    modDef = ModDefEx.CreateFromPath(modDefPath);
+                    if (modDef.Name == MODTEK_DEF_NAME) { modDef = SettingsDef; }
                 }
                 catch (Exception e)
                 {
@@ -764,15 +1062,40 @@ namespace ModTek
                     continue;
                 }
 
-                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason))
+                if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name, modDef); }
+                else
                 {
-                    Log($"Not loading {modDef.Name} because {reason}");
-                    if (!modDef.IgnoreLoadFailure)
-                        FailedToLoadMods.Add(modDef.Name);
-
+                    int counter = 0;
+                    string tmpname = modDef.Name;
+                    do
+                    {
+                        ++counter;
+                        tmpname = modDef.Name + "{dublicate " + counter + "}";
+                    } while (allModDefs.ContainsKey(tmpname) == true);
+                    modDef.Name = tmpname;
+                    modDef.Enabled = false;
+                    modDef.LoadFail = true;
+                    modDef.FailReason = "dublicate";
+                    //modDef.Description = "Dublicate";
+                    allModDefs.Add(modDef.Name, modDef);
                     continue;
                 }
 
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out bool shouldAddToList))
+                {
+                    Log($"Not loading {modDef.Name} because {reason}");
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        FailedToLoadMods.Add(modDef.Name);
+                        if (allModDefs.ContainsKey(modDef.Name))
+                        {
+                            allModDefs[modDef.Name].LoadFail = true;
+                            modDef.FailReason = reason;
+                            //allModDefs[modDef.Name].Description = reason;
+                        }
+                    }
+                    continue;
+                }
                 ModDefs.Add(modDef.Name, modDef);
             }
 
@@ -782,10 +1105,12 @@ namespace ModTek
             {
                 var modDef = ModDefs[modName];
                 ModDefs.Remove(modName);
-
-                if (modDef.IgnoreLoadFailure)
-                    continue;
-
+                if (modDef.IgnoreLoadFailure) { continue; }
+                if (allModDefs.ContainsKey(modName))
+                {
+                    allModDefs[modName].LoadFail = true;
+                    allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
+                }
                 Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
@@ -803,6 +1128,11 @@ namespace ModTek
                     if (!modDef.IgnoreLoadFailure)
                     {
                         Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
+                        if (allModDefs.ContainsKey(modName))
+                        {
+                            allModDefs[modName].LoadFail = true;
+                            allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                        }
                         FailedToLoadMods.Add(modName);
                     }
                     continue;
@@ -812,12 +1142,19 @@ namespace ModTek
 
                 try
                 {
-                    if (!LoadMod(modDef))
+                    if (!LoadMod(modDef, out string reason))
                     {
                         ModDefs.Remove(modName);
 
                         if (!modDef.IgnoreLoadFailure)
+                        {
                             FailedToLoadMods.Add(modName);
+                            if (allModDefs.ContainsKey(modName))
+                            {
+                                allModDefs[modName].LoadFail = true;
+                                allModDefs[modName].FailReason = reason;
+                            }
+                        }
                     }
                 }
                 catch (Exception e)
@@ -829,6 +1166,11 @@ namespace ModTek
 
                     LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
+                    if (allModDefs.ContainsKey(modName))
+                    {
+                        allModDefs[modName].LoadFail = true;
+                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                    }
                 }
             }
         }
@@ -915,47 +1257,57 @@ namespace ModTek
                     switch (modEntry.Type)
                     {
                         case "AdvancedJSONMerge":
-                        {
-                            var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
-
-                            if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
-                                advancedJSONMerge.TargetIDs = new List<string>{advancedJSONMerge.TargetID};
-
-                            if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
-                                continue;
-                            }
+                                var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
 
-                            foreach (var id in advancedJSONMerge.TargetIDs)
-                            {
-                                var type = advancedJSONMerge.TargetType;
-                                if (string.IsNullOrEmpty(type))
+                                if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
+                                    advancedJSONMerge.TargetIDs = new List<string> { advancedJSONMerge.TargetID };
+
+                                if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                                 {
-                                    var types = typeCache.GetTypes(id, CachedVersionManifest);
-                                    if (types == null || types.Count == 0)
-                                    {
-                                        Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
-                                        continue;
-                                    }
-
-                                    // assume that only a single type
-                                    type = types[0];
-                                }
-
-                                var entry = FindEntry(type, id);
-                                if (entry == null)
-                                {
-                                    Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
                                     continue;
                                 }
 
-                                AddMerge(type, id, modEntry.Path);
-                                Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
-                            }
+                                foreach (var id in advancedJSONMerge.TargetIDs)
+                                {
+                                    var type = advancedJSONMerge.TargetType;
+                                    if (string.IsNullOrEmpty(type))
+                                    {
+                                        var types = typeCache.GetTypes(id, CachedVersionManifest);
+                                        if (types == null || types.Count == 0)
+                                        {
+                                            Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                            continue;
+                                        }
 
-                            continue;
-                        }
+                                        // assume that only a single type
+                                        type = types[0];
+                                    }
+
+                                    var entry = FindEntry(type, id);
+                                    if (entry == null)
+                                    {
+                                        Log($"\tError: AdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                        continue;
+                                    }
+
+                                    AddMerge(type, id, modEntry.Path);
+                                    Log($"\tAdvancedJSONMerge: \"{GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                                }
+
+                                continue;
+                            }
+                        case nameof(SoundBankDef):
+                            {
+                                AddModEntry(modEntry);
+                                continue;
+                            }
+                        case "FixedSVGAsset":
+                            {
+                                AddModEntry(modEntry);
+                                continue;
+                            }
                     }
 
                     // non-StreamingAssets json merges
@@ -1123,8 +1475,29 @@ namespace ModTek
             if (shouldRebuildDB)
                 dbCache = new DBCache(null, MDDBPath, ModMDDBPath);
 
-            // add needed files to db
+            Log($"\nAdding dynamic enums:");
             var addCount = 0;
+            List<ModDefEx> mods = new List<ModDefEx>();
+            foreach (string modname in ModLoadOrder)
+            {
+                if (ModTek.ModDefs.ContainsKey(modname) == false) { continue; }
+                mods.Add(ModTek.ModDefs[modname]);
+            }
+            foreach (ModDefEx moddef in mods)
+            {
+                if (moddef.DataAddendumEntries.Count != 0)
+                {
+                    Log($"{moddef.Name}:");
+                    foreach (DataAddendumEntry dataAddendumEntry in moddef.DataAddendumEntries)
+                    {
+                        if (ModTek.LoadDataAddendum(dataAddendumEntry, moddef.Directory)) { shouldWriteDB = true; }
+                        yield return new ProgressReport(addCount / ((float)mods.Count), "Populating Dynamic Enums", moddef.Name);
+                    }
+                }
+                ++addCount;
+            }
+            // add needed files to db
+            addCount = 0;
             foreach (var modEntry in AddBTRLEntries)
             {
                 if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
@@ -1135,6 +1508,9 @@ namespace ModTek
                 }
                 addCount++;
             }
+
+            //ModLoadOrder.Count;
+
 
             dbCache.ToFile(DBCachePath);
 
@@ -1165,6 +1541,176 @@ namespace ModTek
             Config?.ToFile(ConfigPath);
 
             Finish();
+        }
+        public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
+        {
+            try
+            {
+                System.Type type = typeof(FactionEnumeration).Assembly.GetType(dataAddendumEntry.name);
+                if (type == (System.Type)null)
+                {
+                    Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.name);
+                    return false;
+                }
+                else
+                {
+                    PropertyInfo property = type.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty);
+                    if (property == (PropertyInfo)null)
+                    {
+                        Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.name + "]");
+                        return false;
+                    }
+                    else
+                    {
+                        object bdataAddendum = property.GetValue((object)null);
+                        PropertyInfo pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
+                        if (pCachedEnumerationValueList == null)
+                        {
+                            Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        FieldInfo f_enumerationValueList = type.BaseType.GetField("enumerationValueList", BindingFlags.Instance | BindingFlags.NonPublic);
+                        if (f_enumerationValueList == null)
+                        {
+                            Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        IList enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                        if (enumList == null)
+                        {
+                            Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        Log("\tCurrent values [" + dataAddendumEntry.name + "]");
+                        int maxIndex = 0;
+                        Dictionary<string, int> names = new Dictionary<string, int>();
+                        Dictionary<int, string> ids = new Dictionary<int, string>();
+                        for (int index = 0; index < enumList.Count; ++index)
+                        {
+                            EnumValue val = enumList[index] as EnumValue;
+                            if (val == null) { continue; };
+                            Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                            if (maxIndex < val.ID) { maxIndex = val.ID; };
+                            if (names.ContainsKey(val.Name) == false) { names.Add(val.Name, val.ID); } else { names[val.Name] = val.ID; }
+                            if (ids.ContainsKey(val.ID) == false) { ids.Add(val.ID, val.Name); } else { ids[val.ID] = val.Name; }
+                        }
+                        MethodInfo pRefreshStaticData = type.GetMethod("RefreshStaticData");
+                        if (pRefreshStaticData == null)
+                        {
+                            Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        IJsonTemplated jdataAddEnum = bdataAddendum as IJsonTemplated;
+                        if (jdataAddEnum == null)
+                        {
+                            Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        string fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                        jdataAddEnum.FromJSON(fileData);
+                        enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                        if (enumList == null)
+                        {
+                            Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            return false;
+                        }
+                        else
+                        {
+                            bool needFlush = false;
+                            Log("\tLoading values [" + dataAddendumEntry.name + "] from " + dataAddendumEntry.path);
+                            for (int index = 0; index < enumList.Count; ++index)
+                            {
+                                EnumValue val = enumList[index] as EnumValue;
+                                if (val == null) { continue; };
+                                if (names.ContainsKey(val.Name)) {
+                                    val.ID = names[val.Name];
+                                } else {
+                                    if (ids.ContainsKey(val.ID))
+                                    {
+                                        if (val.ID == 0)
+                                        {
+                                            val.ID = maxIndex + 1; ++maxIndex;
+                                            names.Add(val.Name, val.ID);
+                                            ids.Add(val.ID, val.Name);
+                                        }
+                                        else
+                                        {
+                                            Log("\tError value with same id:"+val.ID+" but different name "+ids[val.ID]+" already exist. Value: "+val.Name+" will not be added");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        names.Add(val.Name, val.ID);
+                                        ids.Add(val.ID, val.Name);
+                                        if (val.ID > maxIndex) { maxIndex = val.ID; }
+                                    }
+                                };
+                                if (val.GetType() == typeof(FactionValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
+                                    Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(WeaponCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
+                                    Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(AmmoCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
+                                    Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(ContractTypeValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
+                                    Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                if (val.GetType() == typeof(ShipUpgradeCategoryValue))
+                                {
+                                    MetadataDatabase.Instance.InsertOrUpdateEnumValue((EnumValue)val, "ShipUpgradeCategory", true);
+                                    Log("\t\tAddind ShipUpgradeCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                                    needFlush = true;
+                                }
+                                else
+                                {
+                                    Log("\t\tUnknown enum type");
+                                    break;
+                                }
+                            }
+                            if (needFlush)
+                            {
+                                Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                                pRefreshStaticData.Invoke(bdataAddendum, new object[] { });
+                                f_enumerationValueList.SetValue(bdataAddendum, null);
+                                enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
+                                Log("\tUpdated values [" + dataAddendumEntry.name + "]");
+                                for (int index = 0; index < enumList.Count; ++index)
+                                {
+                                    EnumValue val = enumList[index] as EnumValue;
+                                    if (val == null) { continue; };
+                                    Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                                }
+                            }
+                            return needFlush;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.name + "]");
+                Log(ex.ToString());
+                return false;
+            }
         }
     }
 }

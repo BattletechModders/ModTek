@@ -37,23 +37,30 @@ namespace ModTek.Util
         public static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
         {
             // find types with our method on them
-            var types = new List<Type>();
-            if (typeName == null)
-                types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
-            else
-                types.Add(assembly.GetType(typeName));
-
-            if (types.Count == 0)
-                return null;
-
-            var methods = new List<MethodInfo>();
-            foreach (var type in types)
+            try
             {
-                var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
-                methods.Add(method);
-            }
+                var types = new List<Type>();
+                if (typeName == null)
+                    types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
+                else
+                    types.Add(assembly.GetType(typeName));
 
-            return methods.ToArray();
+                if (types.Count == 0)
+                    return null;
+
+                var methods = new List<MethodInfo>();
+                foreach (var type in types)
+                {
+                    var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
+                    methods.Add(method);
+                }
+
+                return methods.ToArray();
+            }catch(Exception e)
+            {
+                LogException($"\t", e);
+                return null;
+            }
         }
 
         public static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)

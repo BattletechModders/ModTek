@@ -15,6 +15,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(GameTipList), MethodType.Constructor, typeof(string), typeof(int))]
     public static class GameTipList_ctor_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Postfix(string filename, List<string> ___tips)
         {
             var tipEntry = ModTek.CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));

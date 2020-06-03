@@ -14,6 +14,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(SimGame_MDDExtensions), "UpdateContract")]
     public static class SimGame_MDDExtensions_UpdateContract_Patch
     {
+        public static bool Prepare() { return ModTek.Enabled; }
         public static void Prefix(ref string fileID)
         {
             if (Path.IsPathRooted(fileID))
