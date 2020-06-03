@@ -238,6 +238,7 @@ namespace ModTek
             {
                 HarmonyInstance instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
                 instance.PatchAll(Assembly.GetExecutingAssembly());
+                BattleTechResourceLoader.Refresh();
                 SVGAssetLoadRequest_Load.Patch(instance);
             }
             catch (Exception e)
@@ -454,7 +455,17 @@ namespace ModTek
                         return null;
                     }
 
-                    modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    //if (string.IsNullOrEmpty(modEntry.Id))
+                    //{
+                    if (modEntry.Type != "Prefab")
+                    {
+                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    }
+                    else if(string.IsNullOrEmpty(modEntry.Id))
+                    {
+                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
+                    }
+                    //}
 
                     if (!FileIsOnDenyList(modEntry.Path))
                     {

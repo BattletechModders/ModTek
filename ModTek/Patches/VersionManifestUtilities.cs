@@ -22,5 +22,14 @@ namespace ModTek.Patches
             __result = ModTek.CachedVersionManifest;
             return false;
         }
+        public static void Postfix(ref VersionManifest __result)
+        {
+            if (ModTek.CachedVersionManifest == null)
+            {
+                ModTek.CachedVersionManifest = __result;
+                RuntimeLog.RLog.M.TWL(0, "Updating CachedVersionManifest");
+            }
+
+        }
     }
 }
