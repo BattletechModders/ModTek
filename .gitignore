@@ -776,3 +776,6 @@ $RECYCLE.BIN/
 
 
 # End of https://www.gitignore.io/api/git,macos,linux,csharp,windows,intellij,jetbrains,aspnetcore,sublimetext,tortoisegit,visualstudio,visualstudiocode
+
+# Ignore the VS Directory.build.props file
+**Directory.Build.props

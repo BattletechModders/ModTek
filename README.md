@@ -326,11 +326,11 @@ Example replaces the mech tags with a new list of tags.
 
 ## Building It
 
-After checking out the project, you must edit `Directory.Build.props` at the root level. Replace `CHANGEME_TO_FULL_PATH_TO_BTG_DIR` with the full path to your BattleTech Game (BTG) directory (one example - `E:\steam\SteamApps\common\BATTLETECH`). Once this is done, open the projects and restore NuGet dependencies. You should be able to build ModTek once these steps are complete.
+After checking out the project, you must update a configuration file with the full path to your BattleTech Game directory. Copy the file from `CHANGEME.Directory.Build.props` to `Directory.Build.props`. Open `Directory.Build.props` in the editor of your choice, and replace `CHANGEME_TO_FULL_PATH_TO_BTG_DIR` with the full path to your BattleTech Game (BTG) directory (one example - `E:\steam\SteamApps\common\BATTLETECH`). Close and save. `Directory.Build.props` is excluded in `.gitignore` so you changes will not affect other developers, only you.
 
-:information_source: Linux users should note that `Directory.Build.props` is likely case-sensitive. If you find the project won't compile for you, make sure the case is correct.
+:information_source: Linux users should note that `Directory.Build.props` is case-sensitive. If you find the project won't compile for you, make sure the case is correct.
 
-:warning: You SHOULD NOT commit changes to `Directory.Build.props`. You are strongly suggested to update your local git index to skip this file, using the `git update-index --skip-worktree Directory.Build.props` command. This will allow you to change the file, and leave it tracked by Git, without always being marked as changed on your end. This [StackOverflow answer](https://stackoverflow.com/questions/936249/how-to-stop-tracking-and-ignore-changes-to-a-file-in-git) has background on this recommendation.
+Once you can updated the configuration, open the VS solution and restore NuGet dependencies. You should be able to build ModTek once these steps are complete.
 
 ## License
 
