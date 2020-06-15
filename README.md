@@ -31,7 +31,7 @@ since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
   dynamic enums handled outside manifest array. By DataAddendumEntries
   name - name of type. Supporting types BattleTech.FactionEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.AmmoCategoryEnumeration, BattleTech.ContractTypeEnumeration
   path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ .
-  
+
   example:
 ```
   "DataAddendumEntries":[
@@ -326,7 +326,11 @@ Example replaces the mech tags with a new list of tags.
 
 ## Building It
 
-In the project folder there is an example project user file (e.g. `ModTek.csproj.user.example`). You can make a copy of that file and rename it without the `.example` ending and then update it to point to your BTG Managed DLL folder.
+After checking out the project, you must edit `Directory.Build.props` at the root level. Replace `CHANGEME_TO_FULL_PATH_TO_BTG_DIR` with the full path to your BattleTech Game (BTG) directory (one example - `E:\steam\SteamApps\common\BATTLETECH`). Once this is done, open the projects and restore NuGet dependencies. You should be able to build ModTek once these steps are complete.
+
+:information_source: Linux users should note that `Directory.Build.props` is likely case-sensitive. If you find the project won't compile for you, make sure the case is correct.
+
+:warning: You SHOULD NOT commit changes to `Directory.Build.props`. You are strongly suggested to update your local git index to skip this file, using the `git update-index --skip-worktree Directory.Build.props` command. This will allow you to change the file, and leave it tracked by Git, without always being marked as changed on your end. 
 
 ## License
 
