@@ -330,7 +330,7 @@ After checking out the project, you must edit `Directory.Build.props` at the roo
 
 :information_source: Linux users should note that `Directory.Build.props` is likely case-sensitive. If you find the project won't compile for you, make sure the case is correct.
 
-:warning: You SHOULD NOT commit changes to `Directory.Build.props`. You are strongly suggested to update your local git index to skip this file, using the `git update-index --skip-worktree Directory.Build.props` command. This will allow you to change the file, and leave it tracked by Git, without always being marked as changed on your end. 
+:warning: You SHOULD NOT commit changes to `Directory.Build.props`. You are strongly suggested to update your local git index to skip this file, using the `git update-index --skip-worktree Directory.Build.props` command. This will allow you to change the file, and leave it tracked by Git, without always being marked as changed on your end. This [StackOverflow answer](https://stackoverflow.com/questions/936249/how-to-stop-tracking-and-ignore-changes-to-a-file-in-git) has background on this recommendation.
 
 ## License
 
