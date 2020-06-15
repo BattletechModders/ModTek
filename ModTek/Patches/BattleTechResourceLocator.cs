@@ -34,30 +34,30 @@ namespace ModTek.Patches
         public static void AddToModTekManifest(this VersionManifestEntry versionManifestEntry, BattleTechResourceType resourceType)
         {
             return;
-            Dictionary<string, VersionManifestEntry> manifests = null;
-            if (!modtekManifest.TryGetValue(resourceType, out manifests))
-            {
-                manifests = new Dictionary<string, VersionManifestEntry>();
-                modtekManifest.Add(resourceType, manifests);
-            }
-            string id = versionManifestEntry.Id.ToUpper(CultureInfo.InvariantCulture);
-            if (manifests.ContainsKey(id))
-            {
-                modtekManifest[resourceType][id] = versionManifestEntry;
-            }
-            else
-            {
-                manifests.Add(id, versionManifestEntry);
-            }
+            //Dictionary<string, VersionManifestEntry> manifests = null;
+            //if (!modtekManifest.TryGetValue(resourceType, out manifests))
+            //{
+            //    manifests = new Dictionary<string, VersionManifestEntry>();
+            //    modtekManifest.Add(resourceType, manifests);
+            //}
+            //string id = versionManifestEntry.Id.ToUpper(CultureInfo.InvariantCulture);
+            //if (manifests.ContainsKey(id))
+            //{
+            //    modtekManifest[resourceType][id] = versionManifestEntry;
+            //}
+            //else
+            //{
+            //    manifests.Add(id, versionManifestEntry);
+            //}
         }
         public static void RemoveFromModTekManifest(this VersionManifestEntry entry, BattleTechResourceType type)
         {
             return;
-            if (modtekManifest.TryGetValue(type, out Dictionary<string, VersionManifestEntry> manifests))
-            {
-                string id = entry.Id.ToUpper(CultureInfo.InvariantCulture);
-                manifests.Remove(id);
-            }
+            //if (modtekManifest.TryGetValue(type, out Dictionary<string, VersionManifestEntry> manifests))
+            //{
+            //    string id = entry.Id.ToUpper(CultureInfo.InvariantCulture);
+            //    manifests.Remove(id);
+            //}
         }
         public static bool Prepare() { return false; }
         public static void Postfix(string id, BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry __result)
