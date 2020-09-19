@@ -26,11 +26,11 @@ namespace ModTek.RuntimeLog
                 this.m_cache = new StringBuilder();
                 this.m_logfile = Path.Combine(RLog.BaseDirectory, name);
                 FileInfo loginfo = new FileInfo(this.m_logfile);
-                if (loginfo.Exists && (loginfo.Length > 10 * 1024 * 1024))
-                {
+                //if (loginfo.Exists && (loginfo.Length > 10 * 1024 * 1024))
+                //{
                     File.Delete(this.m_logfile);
-                }
-                this.m_fs = new StreamWriter(this.m_logfile,true);
+                //}
+                this.m_fs = new StreamWriter(this.m_logfile,false);
                 this.m_fs.AutoFlush = true;
             }
             catch (Exception)

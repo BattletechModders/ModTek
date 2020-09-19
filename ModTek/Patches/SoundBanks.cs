@@ -6,8 +6,10 @@ using ModTek.RuntimeLog;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Threading;
 using UnityEngine;
 
@@ -166,6 +168,39 @@ namespace ModTek
             }
         }
     }
+    public class ProcessParameters
+    {
+        public string param1 { get; set; }
+        public string param2 { get; set; }
+        public ProcessParameters(string p1,string p2)
+        {
+            param1 = p1;
+            param2 = p2;
+        }
+    }
+    public static class SoundBanksProcessHelper
+    {
+        private static Dictionary<string, ProcessParameters> procParams = new Dictionary<string, ProcessParameters>();
+        public static void RegisterProcessParams(string soundbank,string param1, string param2)
+        {
+            if (procParams.ContainsKey(soundbank))
+            {
+                procParams[soundbank] = new ProcessParameters(param1, param2);
+            }
+            else
+            {
+                procParams.Add(soundbank, new ProcessParameters(param1, param2));
+            }
+        }
+        public static ProcessParameters GetRegistredProcParams(string soundbank)
+        {
+            if(procParams.TryGetValue(soundbank, out ProcessParameters p))
+            {
+                return p;
+            }
+            return null;
+        }
+    }
     [HarmonyPatch(typeof(LoadedAudioBank))]
     [HarmonyPatch("LoadBankExternal")]
     [HarmonyPatch(MethodType.Normal)]
@@ -180,11 +215,44 @@ namespace ModTek
             RLog.M.WL(1, uri);
             WWW www = new WWW(uri);
             while (!www.isDone) { Thread.Sleep(25); }
-            RLog.M.WL(1, "loaded");
+            RLog.M.WL(1, "'" + uri + "' loaded");
+            ProcessParameters pparams = SoundBanksProcessHelper.GetRegistredProcParams(__instance.name);
+            GCHandle? handle = null;
+            uint dataLength = (uint)www.bytes.Length;
+            if (pparams != null)
+            {
+                RLog.M.WL(1, "found post-process parameters "+ pparams.param1 + " "+ pparams.param2);
+                Aes aes = Aes.Create();
+                aes.Mode = CipherMode.CBC;
+                aes.KeySize = 256;
+                aes.BlockSize = 128;
+                aes.FeedbackSize = 128;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Key = Convert.FromBase64String(pparams.param1);
+                aes.IV = Convert.FromBase64String(pparams.param2);
+                ICryptoTransform encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+                byte[] result = null;
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        csEncrypt.Write(www.bytes, 0, www.bytes.Length);
+                    }
+                    result = msEncrypt.ToArray();
+                }
+                handle = GCHandle.Alloc((object)result, GCHandleType.Pinned);
+                dataLength = (uint)result.Length;
+            }
+            else
+            {
+                handle = GCHandle.Alloc((object)www.bytes, GCHandleType.Pinned);
+                dataLength = (uint)www.bytes.Length;
+            }
+            if (handle.HasValue == false) { return false; }
             try
             {
                 uint id = uint.MaxValue;
-                __result = AkSoundEngine.LoadBank(GCHandle.Alloc((object)www.bytes, GCHandleType.Pinned).AddrOfPinnedObject(), (uint)www.bytes.Length, out id);
+                __result = AkSoundEngine.LoadBank(handle.Value.AddrOfPinnedObject(), dataLength, out id);
                 ___id = id;
                 if (__result == AKRESULT.AK_Success) {
                     ModTek.soundBanks[__instance.name].registerEvents();
@@ -195,7 +263,7 @@ namespace ModTek
             {
                 __result = AKRESULT.AK_Fail;
             }
-            RLog.M.WL(1, "Result:" + __result + " id:" + ___id + " length:" + www.bytes.Length);
+            RLog.M.WL(1, "Result:" + __result + " id:" + ___id + " length:" + dataLength);
             return false;
         }
     }
