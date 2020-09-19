@@ -169,7 +169,7 @@ namespace ModTek
 
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             RLog.InitLog(TempModTekDirectory, true);
-            RLog.M.TWL(0, "Init ModTek vesrion " + Assembly.GetExecutingAssembly().GetName().Version);
+            RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
             if (File.Exists(ChangedFlagPath))
             {
                 File.Delete(ChangedFlagPath);
