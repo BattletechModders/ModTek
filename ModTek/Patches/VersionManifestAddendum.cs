@@ -63,7 +63,7 @@ namespace ModTek.Patches
         }
     }
 
-    static class VersionManifestAddendumCache
+    public static class VersionManifestAddendumCache
     {
         private static Dictionary<string, VersionManifestAddendum> lookupCache = new Dictionary<string, VersionManifestAddendum>();
 
@@ -75,7 +75,7 @@ namespace ModTek.Patches
             {
                 if (!cachedAddendums.ContainsKey(vma.Name))
                 {
-                    RLog.LogWrite($"Adding to addendum cache: {vma.Name}\n");
+                    //RLog.LogWrite($"Adding to addendum cache: {vma.Name}\n");
                     foreach (VersionManifestEntry vme in vma.Entries)
                     {
                         string entryKey = $"{vme.Id}_{vme.Type}";
@@ -102,7 +102,17 @@ namespace ModTek.Patches
         {
             UpdateCache(addendums);
             bool wasFound = FindInCache(id, type, out VersionManifestAddendum addendum);       
-            return addendum;
+            return wasFound ? addendum : null;
+        }
+
+        public static void InvalidateAddendum(VersionManifestAddendum addendum)
+        {
+            if (lookupCache.ContainsKey(addendum.Name))
+            {
+                RLog.M.WL(0, "Invalidating cache for addendum: " + addendum.Name);
+                lookupCache.Remove(addendum.Name);
+            }
+                
         }
 
     }

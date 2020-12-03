@@ -162,6 +162,10 @@ namespace ModTek.Patches
                         ___addendumsManifest[addendum].Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
                     ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
+
+                    // Invalidate the cache we've created for this addendum
+                    VersionManifestAddendumCache.InvalidateAddendum(addendum);
+
                     if (ModTek.Config.EnableDebugLogging)
                         RLog.M.WL(1, "addendumsManifest[" + addendum.Name + "]["+resourceType+"]["+entry.Id+"] " + versionManifestEntry.FilePath);
                 }
@@ -192,6 +196,9 @@ namespace ModTek.Patches
                 {
                     RLog.M.WL(1, "remove addendumsManifest[" + resourceType + "][" + entry.Id + "]");
                     containingAddendum.Value[resourceType].Remove(entry.Id);
+
+                    // Invalidate the cache we've created for this addendum
+                    VersionManifestAddendumCache.InvalidateAddendum(containingAddendum.Key);
                 }
             }
             sw.Stop();
