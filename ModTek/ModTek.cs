@@ -162,7 +162,7 @@ namespace ModTek
             TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
-            ConfigPath = Path.Combine(TempModTekDirectory, CONFIG_FILE_NAME);
+            ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
             ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
 
             // creates the directories above it as well
