@@ -12,6 +12,7 @@ namespace ModTek
         public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
+        public bool EnableDebugLogging = true;
 
         public void ToFile(string path)
         {

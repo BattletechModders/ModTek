@@ -1554,6 +1554,7 @@ namespace ModTek
 
             Finish();
         }
+
         public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {
             try
