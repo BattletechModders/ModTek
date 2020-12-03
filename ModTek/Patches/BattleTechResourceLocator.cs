@@ -204,7 +204,6 @@ namespace ModTek.Patches
             sw.Stop();
 
             __state.Stop();
-
             if (ModTek.Config.EnableDebugLogging)
                 RLog.M.TWL(0, $"BattleTechResourceLocator.RefreshTypedEntries complete in {__state.ElapsedMilliseconds}ms");
         }
