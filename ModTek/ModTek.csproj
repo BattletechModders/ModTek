@@ -85,6 +85,7 @@
     <Compile Include="Patches\SoundBanks.cs" />
     <Compile Include="Patches\SVGAssetHelper.cs" />
     <Compile Include="Patches\UIManagerPatches.cs" />
+    <Compile Include="Patches\VersionManifestAddendum.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
