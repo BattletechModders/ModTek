@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -20,10 +21,14 @@ namespace ModTek.Patches
 
         public static void Postfix(BattleTechResourceLocator __instance, BattleTechResourceType type, VersionManifestAddendum addendum, ref VersionManifestEntry[] __result)
         {
-            RLog.M.TWL(0, "BattleTechResourceLocator.AllEntriesOfResourceFromAddendum "+addendum.Name+" type:"+type);
-            RLog.M.TWL(0, "BattleTechResourceLocator.AllEntriesOfResourceFromAddendum " + addendum.Name + " type:" + type);
-            foreach (VersionManifestEntry entry in __result) {
-                RLog.M.WL(1,entry.FileName);
+            if (ModTek.Config.EnableDebugLogging)
+            {
+                RLog.M.TWL(0, "BattleTechResourceLocator.AllEntriesOfResourceFromAddendum " + addendum.Name + " type:" + type);
+                RLog.M.TWL(0, "BattleTechResourceLocator.AllEntriesOfResourceFromAddendum " + addendum.Name + " type:" + type);
+                foreach (VersionManifestEntry entry in __result)
+                {
+                    RLog.M.WL(1, entry.FileName);
+                }
             }
         }
     }
@@ -31,34 +36,7 @@ namespace ModTek.Patches
     public static class BattleTechResourceLocator_EntryByID_Patch
     {
         private static Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> modtekManifest = new Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>();
-        public static void AddToModTekManifest(this VersionManifestEntry versionManifestEntry, BattleTechResourceType resourceType)
-        {
-            return;
-            //Dictionary<string, VersionManifestEntry> manifests = null;
-            //if (!modtekManifest.TryGetValue(resourceType, out manifests))
-            //{
-            //    manifests = new Dictionary<string, VersionManifestEntry>();
-            //    modtekManifest.Add(resourceType, manifests);
-            //}
-            //string id = versionManifestEntry.Id.ToUpper(CultureInfo.InvariantCulture);
-            //if (manifests.ContainsKey(id))
-            //{
-            //    modtekManifest[resourceType][id] = versionManifestEntry;
-            //}
-            //else
-            //{
-            //    manifests.Add(id, versionManifestEntry);
-            //}
-        }
-        public static void RemoveFromModTekManifest(this VersionManifestEntry entry, BattleTechResourceType type)
-        {
-            return;
-            //if (modtekManifest.TryGetValue(type, out Dictionary<string, VersionManifestEntry> manifests))
-            //{
-            //    string id = entry.Id.ToUpper(CultureInfo.InvariantCulture);
-            //    manifests.Remove(id);
-            //}
-        }
+
         public static bool Prepare() { return false; }
         public static void Postfix(string id, BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry __result)
         {
@@ -94,29 +72,45 @@ namespace ModTek.Patches
     public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
     {
         public static bool Prepare() { return ModTek.Enabled; }
+
         private static PropertyInfo f_manifest = typeof(BattleTechResourceLocator).GetProperty("manifest", BindingFlags.Instance|BindingFlags.NonPublic);
         private static VersionManifest manifest(this BattleTechResourceLocator locator) { return (VersionManifest)f_manifest.GetValue(locator); }
         private static void manifest(this BattleTechResourceLocator locator, VersionManifest manifest) { f_manifest.SetValue(locator, manifest); }
-        public static void Prefix(BattleTechResourceLocator __instance)
+        public static void Prefix(BattleTechResourceLocator __instance, ref Stopwatch __state, int ___typedEntriesCount)
         {
-            RLog.M.TWL(0, "BattleTechResourceLocator.RefreshTypedEntries");
+            __state = new Stopwatch();
+            __state.Start();
+
             VersionManifest versionManifest = __instance.manifest();
+            if (ModTek.Config.EnableDebugLogging)
+            {
+                RLog.M.TWL(0, "BattleTechResourceLocator.RefreshTypedEntries");
+                RLog.M.TWL(0, $"  typedEntriesCount: {___typedEntriesCount}  versionManifest.Count: {versionManifest.Count}");
+                RLog.M.TWL(0, $"  addBTRLEntries: {ModTek.AddBTRLEntries.Count}  removeBTRLEntries: {ModTek.RemoveBTRLEntries.Count}");
+            }
+
+            
             if (versionManifest != ModTek.CachedVersionManifest)
             {
                 RLog.M.TWL(0, "WARNING! STRANGE BEHAVIOR cachedManifest does not much locator manifest. Resolving");
                 __instance.manifest(ModTek.CachedVersionManifest);
             }
         }
+
         public static void Postfix(BattleTechResourceLocator __instance, ContentPackIndex ___contentPackIndex,
             ref Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___baseManifest,
             ref Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> ___contentPacksManifest,
-            ref Dictionary<VersionManifestAddendum, Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>> ___addendumsManifest)
+            ref Dictionary<VersionManifestAddendum, Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>> ___addendumsManifest,
+            Stopwatch __state)
         {
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             foreach (var entry in ModTek.AddBTRLEntries)
             {
                 var versionManifestEntry = entry.GetVersionManifestEntry();
                 var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
-                versionManifestEntry.AddToModTekManifest(resourceType);
+                // versionManifestEntry.AddToModTekManifest(resourceType); THIS WAS A NOP
 
                 if (___contentPackIndex == null || ___contentPackIndex.IsResourceOwned(versionManifestEntry.Id))
                 {
@@ -136,7 +130,8 @@ namespace ModTek.Patches
                         manifests.Add(versionManifestEntry.Id, versionManifestEntry);
                     }
                     
-                    RLog.M.WL(1, "baseManifest add:"+resourceType+" "+entry.Id+" "+ (versionManifestEntry == null?"null": versionManifestEntry.FilePath));
+                    if (ModTek.Config.EnableDebugLogging)
+                        RLog.M.WL(1, "baseManifest add:"+resourceType+" "+entry.Id+" "+ (versionManifestEntry == null?"null": versionManifestEntry.FilePath));
                 }
                 else
                 {
@@ -145,7 +140,8 @@ namespace ModTek.Patches
                         ___contentPacksManifest.Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
                     ___contentPacksManifest[resourceType][entry.Id] = versionManifestEntry;
-                    RLog.M.WL(1, "contentPacksManifest add:" + resourceType + " " + entry.Id);
+                    if (ModTek.Config.EnableDebugLogging)
+                        RLog.M.WL(1, "contentPacksManifest add:" + resourceType + " " + entry.Id);
                 }
 
                 if (string.IsNullOrEmpty(entry.AddToAddendum))
@@ -158,21 +154,30 @@ namespace ModTek.Patches
                 {
                     if (!___addendumsManifest.ContainsKey(addendum))
                     {
-                        RLog.M.WL(1, "adding new enum:"+addendum.Name);
+                        if (ModTek.Config.EnableDebugLogging)
+                            RLog.M.WL(1, "adding new enum:"+addendum.Name);
                         ___addendumsManifest.Add(addendum, new Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>>());
                     }
                     if (!___addendumsManifest[addendum].ContainsKey(resourceType))
                         ___addendumsManifest[addendum].Add(resourceType, new Dictionary<string, VersionManifestEntry>());
 
                     ___addendumsManifest[addendum][resourceType][entry.Id] = versionManifestEntry;
-                    RLog.M.WL(1, "addendumsManifest[" + addendum.Name + "]["+resourceType+"]["+entry.Id+"] " + versionManifestEntry.FilePath);
+
+                    // Invalidate the cache we've created for this addendum
+                    VersionManifestAddendumCache.InvalidateAddendum(addendum);
+
+                    if (ModTek.Config.EnableDebugLogging)
+                        RLog.M.WL(1, "addendumsManifest[" + addendum.Name + "]["+resourceType+"]["+entry.Id+"] " + versionManifestEntry.FilePath);
                 }
             }
+            sw.Stop();
+            //RLog.M.WL(0, $"BTRL ADD took: {sw.ElapsedMilliseconds}ms");
 
+            sw.Restart();
             foreach (var entry in ModTek.RemoveBTRLEntries)
             {
                 var resourceType = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), entry.Type);
-                entry.RemoveFromModTekManifest(resourceType);
+                // entry.RemoveFromModTekManifest(resourceType); THIS WAS A NOP
 
                 if (___baseManifest.ContainsKey(resourceType) && ___baseManifest[resourceType].ContainsKey(entry.Id))
                 {
@@ -191,8 +196,16 @@ namespace ModTek.Patches
                 {
                     RLog.M.WL(1, "remove addendumsManifest[" + resourceType + "][" + entry.Id + "]");
                     containingAddendum.Value[resourceType].Remove(entry.Id);
+
+                    // Invalidate the cache we've created for this addendum
+                    VersionManifestAddendumCache.InvalidateAddendum(containingAddendum.Key);
                 }
             }
+            sw.Stop();
+
+            __state.Stop();
+            if (ModTek.Config.EnableDebugLogging)
+                RLog.M.TWL(0, $"BattleTechResourceLocator.RefreshTypedEntries complete in {__state.ElapsedMilliseconds}ms");
         }
     }
 }

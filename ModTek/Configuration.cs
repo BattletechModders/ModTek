@@ -12,6 +12,7 @@ namespace ModTek
         public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
         public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
+        public bool EnableDebugLogging = true;
 
         public void ToFile(string path)
         {
@@ -28,10 +29,10 @@ namespace ModTek
 
             try
             {
-                var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(path),
+                var text = File.ReadAllText(path);
+                var config = JsonConvert.DeserializeObject<Configuration>(text,
                     new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace });
-                Logger.Log($"Loaded config.");
-
+                Logger.Log($"Loaded config from path: {path}");
                 return config;
             }
             catch (Exception e)
@@ -39,6 +40,13 @@ namespace ModTek
                 Logger.LogException("Reading configuration failed -- will rebuild it!", e);
                 return new Configuration();
             }
+        }
+
+        public override string ToString()
+        {
+            return $"ShowLoadingScreenErrors: {this.ShowLoadingScreenErrors}  ShowErrorPopup: {this.ShowErrorPopup}  " +
+                $"EnableDebugLogging: {this.EnableDebugLogging}  UseErrorWhiteList: {this.UseErrorWhiteList}  " +
+                $"ErrorWhiteList: {String.Join("','", this.ErrorWhitelist)}";
         }
     }
 }
