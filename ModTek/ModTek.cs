@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static ModTek.Util.Logger;
 
 namespace ModTek
@@ -93,6 +94,7 @@ namespace ModTek
         public static Dictionary<string, SoundBankDef> soundBanks = new Dictionary<string, SoundBankDef>();
         private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
         private static Dictionary<string, Dictionary<string, List<string>>> merges = new Dictionary<string, Dictionary<string, List<string>>>();
+        private static HashSet<string> BTRLEntriesPathes;
 
         // internal structures
         internal static Configuration Config;
@@ -461,7 +463,7 @@ namespace ModTek
                     {
                         modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
                     }
-                    else if(string.IsNullOrEmpty(modEntry.Id))
+                    else if (string.IsNullOrEmpty(modEntry.Id))
                     {
                         modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
                     }
@@ -819,6 +821,7 @@ namespace ModTek
             {
                 Log($"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
                 AddBTRLEntries.Remove(modEntry);
+                BTRLEntriesPathes.Remove(modEntry.Path);
                 removedEntry = true;
             }
 
@@ -914,26 +917,26 @@ namespace ModTek
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather depends on me", mod.Key, true);
                 foreach (string depname in mod.Value.DependsOn)
                 {
                     if (allModDefs.ContainsKey(depname)) { if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
                 }
             }
+            yield return new ProgressReport(1 / 3f, $"Gather depends on me", String.Empty, true);
             progeress = 0;
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather disable influence tree", mod.Key, true);
                 mod.Value.GatherAffectingOfflineRec();
             }
+            yield return new ProgressReport(2 / 3f, $"Gather disable influence tree", string.Empty, true);
             progeress = 0;
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)allModDefs.Count), $"Gather enable influence tree", mod.Key, true);
                 mod.Value.GatherAffectingOnline();
             }
+            yield return new ProgressReport(1, $"Gather enable influence tree", string.Empty, true);
             Log($"FAIL LIST:");
             foreach (ModDefEx mod in allModDefs.Values)
             {
@@ -1345,6 +1348,7 @@ namespace ModTek
             }
 
             typeCache.ToFile(TypeCachePath);
+            BTRLEntriesPathes = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
         private static IEnumerator<ProgressReport> MergeFilesLoop()
@@ -1431,7 +1435,7 @@ namespace ModTek
                 var absolutePath = ResolvePath(path, GameDirectory);
 
                 // check if the file in the db cache is still used
-                if (AddBTRLEntries.Exists(x => x.Path == absolutePath))
+                if (BTRLEntriesPathes.Contains(absolutePath))
                     continue;
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
@@ -1518,7 +1522,15 @@ namespace ModTek
             {
                 yield return new ProgressReport(1, "Writing Database", "", true);
                 Log("Writing DB");
-                MetadataDatabase.Instance.WriteInMemoryDBToDisk();
+
+                object inMemoryDB = typeof(MetadataDatabase).GetField("inMemoryDB", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MetadataDatabase.Instance);
+                Task.Run(() =>
+                {
+                    lock (inMemoryDB)
+                    {
+                        MetadataDatabase.Instance.WriteInMemoryDBToDisk();
+                    }
+                });
             }
         }
 
@@ -1622,9 +1634,12 @@ namespace ModTek
                             {
                                 EnumValue val = enumList[index] as EnumValue;
                                 if (val == null) { continue; };
-                                if (names.ContainsKey(val.Name)) {
+                                if (names.ContainsKey(val.Name))
+                                {
                                     val.ID = names[val.Name];
-                                } else {
+                                }
+                                else
+                                {
                                     if (ids.ContainsKey(val.ID))
                                     {
                                         if (val.ID == 0)
@@ -1635,7 +1650,7 @@ namespace ModTek
                                         }
                                         else
                                         {
-                                            Log("\tError value with same id:"+val.ID+" but different name "+ids[val.ID]+" already exist. Value: "+val.Name+" will not be added");
+                                            Log("\tError value with same id:" + val.ID + " but different name " + ids[val.ID] + " already exist. Value: " + val.Name + " will not be added");
                                             continue;
                                         }
                                     }
