@@ -31,55 +31,6 @@ ModTek 0.7.6 or higher can be enabled or disabled from within the in-game mods m
 
 Some people worry about running `ModTekInjector.exe` as it's an unknown, unsigned executable file. This file is a small program that injects ModTek code into HBS code before the main game-loop gets started. This allows ModTek to load mods that modify before Unity takes control of everything. It's similar in concept to [BepInEx](https://github.com/BepInEx/BepInEx.UnityInjectorLoader), [Unity DoorStop](https://github.com/NeighTools/UnityDoorstop), and related programs that enable modding before the main Unity thread begins.
 
-
-## Notes on SoundBankDef
-since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
-  example:
-```
-{
-  "name": "Screams",
-  "filename": "Screams.bnk",
-  "type": "Combat",
-  "volumeRTPCIds":[2081458675],
-  "volumeShift": 0,
-  "events":{
-    "scream01":147496415
-  }
-}
-```
-  **name** - is unique name of sound bank<br/>
-  **filename** - is name of file containing real audio content. Battletech is using Wwise 2016.2<br/>
-  **type** - type of sound bank. <br/>
-    Avaible types:<br/>
-* **Combat** - banks of this type always loading at combat start and unloading at combat end. Should be used for sounds played on battlefield.<br/>
-* **Default** - banks of this type loading at game start. Moistly used for UI <br/>
-* **Voice** - banks of this type contains pilot's voices<br/>
-
-**events** - map of events exported in bank. Needed for events can be referenced from code via WwiseManager.PostEvent which takes this name as parameter<br/>
-**volumeRTPCIds** - list of RTPC ids controlling loudness of samples. Combat sound banks controlled by effect settings volume slider, Voice by voice<br/>
-
-## Notes on dynamic enums 
-  dynamic enums handled outside manifest array. By DataAddendumEntries
-  name - name of type. Supporting types BattleTech.FactionEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.AmmoCategoryEnumeration, BattleTech.ContractTypeEnumeration
-  path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ .
-
-  example:
-```
-  "DataAddendumEntries":[
-    {
-      "name": "BattleTech.FactionEnumeration",
-      "path": "Faction.json"
-    },
-    {
-      "name": "BattleTech.WeaponCategoryEnumeration",
-      "path": "WeaponCategory.json"
-    }
-  ]
-```
-
-
-
-
 ## Handling Game Updates
 
 Generally, updates can be dealt with by re-running `ModTekInjector.exe` -- though sometimes ModTek will have to if certain game API's change. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
@@ -334,6 +285,95 @@ Example replaces the mech tags with a new list of tags.
     ]
 }
 ```
+
+## Custom Types
+
+ModTek supports several types that are not handled by the base game. Each of these are described below, and may have unique mechanics. 
+
+### Custom Tags and TagSets
+
+Loreum ipsum
+
+| TagSetType | TypeID |
+| -- | -- |
+| UNDEFINED | 1 |
+| Map | 2 |
+| Encounter | 3 |
+| Contract | 4 |
+| LanceDef | 5 |
+| UnitDef | 6 |
+| PilotDef | 7 |
+| RequirementDefRequirement | 8 |
+| RequirementDefExclusion | 9 |
+| BiomeRequiredMood | 10 |
+| Mood | 11 |
+| EventDefRequired | 12 |
+| EventDefExcluded | 13 |
+| EventDefOptionRequired | 14 |
+| EventDefOptionExcluded | 15 |
+| EventDefAdded | 16 |
+| EventDefRemoved | 17 |
+| UnitDef_RequiredToSpawnCompany | 18 |
+
+
+### Custom Debug Settings
+
+Loreum ipsum
+
+### Custom SVG Assets
+
+Loreum ipsum
+
+### Custom Video
+  
+Loreum ipsum
+
+### Custom Sounds
+
+since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
+  example:
+```
+{
+  "name": "Screams",
+  "filename": "Screams.bnk",
+  "type": "Combat",
+  "volumeRTPCIds":[2081458675],
+  "volumeShift": 0,
+  "events":{
+    "scream01":147496415
+  }
+}
+```
+  **name** - is unique name of sound bank<br/>
+  **filename** - is name of file containing real audio content. Battletech is using Wwise 2016.2<br/>
+  **type** - type of sound bank. <br/>
+    Available types:<br/>
+* **Combat** - banks of this type always loading at combat start and unloading at combat end. Should be used for sounds played on battlefield.<br/>
+* **Default** - banks of this type loading at game start. Moistly used for UI <br/>
+* **Voice** - banks of this type contains pilot's voices<br/>
+
+**events** - map of events exported in bank. Needed for events can be referenced from code via WwiseManager.PostEvent which takes this name as parameter<br/>
+**volumeRTPCIds** - list of RTPC ids controlling loudness of samples. Combat sound banks controlled by effect settings volume slider, Voice by voice<br/>
+
+### Dynamic Enums
+  dynamic enums handled outside manifest array. By DataAddendumEntries
+  name - name of type. Supporting types BattleTech.FactionEnumeration, BattleTech.WeaponCategoryEnumeration, BattleTech.AmmoCategoryEnumeration, BattleTech.ContractTypeEnumeration
+  path - path to file relative to mod root folder. Examples for content at BattleTech_Data\StreamingAssets\data\enums\ .
+
+  example:
+```
+  "DataAddendumEntries":[
+    {
+      "name": "BattleTech.FactionEnumeration",
+      "path": "Faction.json"
+    },
+    {
+      "name": "BattleTech.WeaponCategoryEnumeration",
+      "path": "WeaponCategory.json"
+    }
+  ]
+```
+
 
 # Developing ModTek
 

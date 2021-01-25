@@ -40,8 +40,8 @@ namespace ModTek
         private const string CustomType_GameTip = "GameTip";
         private const string CustomType_SoundBankDef = "SoundBankDef";
         private const string CustomType_SoundBank = "SoundBank";
-        private const string CustomType_Tag = "Tag";
-        private const string CustomType_TagSet = "TagSet";
+        private const string CustomType_Tag = "CustomTag";
+        private const string CustomType_TagSet = "CustomTagSet";
         private const string CustomType_Video = "Video";
 
         private static readonly string[] MODTEK_TYPES =
@@ -758,10 +758,10 @@ namespace ModTek
                     break;
                 case CustomType_Tag:
                     CustomTags.Add(modEntry);
-                    return; // Do not process further
+                    return; // Do not process further and do when the DB is updated
                 case CustomType_TagSet:
                     CustomTagSets.Add(modEntry);
-                    return; // Do no process further
+                    return; // Do no process further and do when the DB is updated
             }
 
             // add to addendum instead of adding to manifest
@@ -1559,17 +1559,15 @@ namespace ModTek
             }
 
             // Add any custom tags to DB
-            if (CustomTags.Count > 0) Log($"Processing custom tags:");
+            if (CustomTags.Count > 0) Log($"Processing CustomTags:");
             foreach (ModEntry modEntry in CustomTags)
             {
-                Log($"\tProcessing entry of: {modEntry.Id}  type: {modEntry.Type}  path: {modEntry.Path}");
                 CustomTypeProcessor.AddOrUpdateTag(modEntry.Path);
             }
 
-            if (CustomTagSets.Count > 0) Log($"Processing custom tagSets:");
+            if (CustomTagSets.Count > 0) Log($"Processing CustomTagSets:");
             foreach (ModEntry modEntry in CustomTagSets)
             {
-                Log($"\tProcessing TagSet with id: {modEntry.Id}  type: {modEntry.Type}  path: {modEntry.Path}");
                 CustomTypeProcessor.AddOrUpdateTagSet(modEntry.Path);
             }
 
