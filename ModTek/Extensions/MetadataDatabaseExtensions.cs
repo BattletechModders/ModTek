@@ -10,10 +10,6 @@ namespace ModTek.Extensions
 {
     public static class MetadataDatabaseExtensions
     {
-        public static void RemoveAll(this MetadataDatabase mdd, string tags)
-        {
-
-        }
 
         public static bool AddOrUpdate(this MetadataDatabase mdd, Tag_MDD tag)
         {
@@ -39,7 +35,7 @@ namespace ModTek.Extensions
                             TagFriendlyName = tag.FriendlyName,
                             TagDescription = tag.Description
                         });
-                    Log($"Inserted tag: {tag.Name}");
+                    Log($"Inserted tag: {tag.Name} into MDDB");
                     success = true;
                 }
                 catch (Exception e)
@@ -52,8 +48,8 @@ namespace ModTek.Extensions
             {
                 try
                 {
-                    mdd.Execute("UPDATE Tag (Important, PlayerVisible, FriendlyName, Description)" +
-                            " VALUES (@TagImportant, @TagPlayerVisible, @TagFriendlyName, @TagDescription)" +
+                    mdd.Execute("UPDATE Tag SET Important = @TagImportant, PlayerVisible = @TagPlayerVisible, " +
+                        "FriendlyName = @TagFriendlyName, Description = @TagDescription" +
                             " WHERE Name = @TagName",
                             new
                             {
@@ -63,7 +59,7 @@ namespace ModTek.Extensions
                                 TagFriendlyName = tag.FriendlyName,
                                 TagDescription = tag.Description
                             });
-                    Log($"Updated tag: {tag.Name}");
+                    Log($"Updated tag: {tag.Name} in MDDB");
                     success = true;
                 }
                 catch (Exception e)
