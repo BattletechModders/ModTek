@@ -290,36 +290,73 @@ Example replaces the mech tags with a new list of tags.
 
 ModTek supports several types that are not handled by the base game. Each of these are described below, and may have unique mechanics. 
 
+### Custom Debug Settings
+
+HBS defined various configuration options in the `BATTLETECH\BattleTech_Data\StreamingAssets\data\debug\settings.json` file. Internal logger levels are defined here, as are some configuration settings only intended to be used by developers. Mods can modify these values using the `DebugSettings` custom type. The contents of any such files will be merged into the HBS provided settings.json. 
+
+This custom type is last-in, last-out. The last mod to change a setting will win.
+
+### Custom SVG Assets
+
+Custom SVG assets can be added through the `SVGAsset` custom type. Any files at these paths will be added to the HBS DataManager and can be referenced through a loadrequest on the datamanager.
+  
+Simply define the path to your SVGs:
+  
+```json    
+{ "Type": "SVGAsset", "Path": "icons/" },
+```
+
+then in your DLL mod read them from the DataManager:
+
+```csharp    
+  
+# Load the file
+DataManager dm = UnityGameInstance.BattleTechGame.DataManager;
+LoadRequest loadRequest = dm.CreateLoadRequest();
+loadRequest.AddLoadRequest<SVGAsset>(BattleTechResourceType.SVGAsset, "icon_foo", null);  
+loadRequest.ProcessRequests();  
+  
+...  
+
+# Read it
+SVGAsset icon = DataManager.GetObjectOfType<SVGAsset>("icon_foo", BattleTechResourceType.SVGAsset);
+
+```
+
 ### Custom Tags and TagSets
 
 ModTek 0.7.8 and above supports adding and update Tags and TagSets in the MetadataDatabase. HBS BT uses Tags for many different purposes, such as the pilot attribute descriptors, contract validation, and many more. You can add your own custom tags or update existing by adding the `CustomTag` and `CustomTagSet` type to your Manifest element: 
   
 ```json  
-    "Manifest": [ 
-      	{ "Type": "CustomTag", "Path": "tags/" },
-		{ "Type": "CustomTagSet", "Path": "tagSets/" }
-    ],
+"Manifest": [ 
+  	{ "Type": "CustomTag", "Path": "tags/" },
+	{ "Type": "CustomTagSet", "Path": "tagSets/" }
+],
 ```
 
 (!) There is currently no way to delete CustomTags or CustomTagSets. These are modified in the ModTek MDDB copy (located in `BATTLETECH\Mods\.modtek\Database\`) and should not alter the base MDDB located in the `BATTLETECH\Data` directory.
 
 Each CustomTag needs to be defined in a .json file with the following structure:  
-```json
-	"Name" : "TAG_NAME_HERE",
-	"Important" : false,
-	"PlayerVisible" : true,
-	"FriendlyName" : "FRIENDLY_NAME",
-	"Description" : "DESCRIPTION TEXT"
+```json  
+{
+"Name" : "TAG_NAME_HERE",
+"Important" : false,
+"PlayerVisible" : true,
+"FriendlyName" : "FRIENDLY_NAME",
+"Description" : "DESCRIPTION TEXT"  
+}
 ```
 
 You can overwrite HBS defined tags with your own values by using the name tag-name. If multiple mods write to the same tag, the *last* mod to write the tag wins.
 
 Each CustomTagSet needs to be defined in a .json file with the following structure:
 
-```json
+```json  
+{
 	"ID" : "TAGSET_ID",
 	"TypeID" : SEE_BELOW,
-	"Tags" : [ "TAG_1" , "TAG_2", "TAG_3" ]
+	"Tags" : [ "TAG_1" , "TAG_2", "TAG_3" ]  
+}
 ```
 
 As with CustomTags, you can update HBS defined TagSets by using the same ID for your  CustomTag. Any existing tags will be removed, and replaced with the tags you defined instead. You **must** include all tags you want in the updated TagSet in your CustomTag definition.
@@ -349,17 +386,6 @@ Note that the TypeID is an enumeration type, that unfortunately was never upgrad
 | UnitDef_RequiredToSpawnCompany | 18 |
 
 
-### Custom Debug Settings
-
-Loreum ipsum
-
-### Custom SVG Assets
-
-Loreum ipsum
-
-### Custom Video
-  
-Loreum ipsum
 
 ### Custom Sounds
 
@@ -387,6 +413,10 @@ since 0.7.6.7 ModTek supports loading Wwise sound banks definitions
 
 **events** - map of events exported in bank. Needed for events can be referenced from code via WwiseManager.PostEvent which takes this name as parameter<br/>
 **volumeRTPCIds** - list of RTPC ids controlling loudness of samples. Combat sound banks controlled by effect settings volume slider, Voice by voice<br/>
+
+### Custom Video
+  
+Loreum ipsum
 
 ### Dynamic Enums
   dynamic enums handled outside manifest array. By DataAddendumEntries
