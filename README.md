@@ -292,7 +292,14 @@ ModTek supports several types that are not handled by the base game. Each of the
 
 ### Custom Tags and TagSets
 
-ModTek 0.7.8 and above supports adding and update Tags and TagSets in the MetadataDatabase. HBS BT uses Tags for many different purposes, such as the pilot attribute descriptors, contract validation, and many more. You can add your own custom tags or update existing by adding the `CustomTag` and `CustomTagSet` type to your Manifest. 
+ModTek 0.7.8 and above supports adding and update Tags and TagSets in the MetadataDatabase. HBS BT uses Tags for many different purposes, such as the pilot attribute descriptors, contract validation, and many more. You can add your own custom tags or update existing by adding the `CustomTag` and `CustomTagSet` type to your Manifest element: 
+  
+```json  
+    "Manifest": [ 
+      	{ "Type": "CustomTag", "Path": "tags/" },
+		{ "Type": "CustomTagSet", "Path": "tagSets/" }
+    ],
+```
 
 (!) There is currently no way to delete CustomTags or CustomTagSets. These are modified in the ModTek MDDB copy (located in `BATTLETECH\Mods\.modtek\Database\`) and should not alter the base MDDB located in the `BATTLETECH\Data` directory.
 
