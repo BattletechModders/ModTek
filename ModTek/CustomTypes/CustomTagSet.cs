@@ -18,5 +18,18 @@ namespace ModTek.CustomTypes
 
         [JsonProperty]
         public string[] Tags { get; set; }
+
+        public override string ToString()
+        {
+            return $"CustomTagSet => ID: {ID}  TypeID: {TypeID}  Tags: ({String.Join(", ", Tags)})";
+        }
+
+        public Tag_MDD ToTagMDD()
+        {
+            return new Tag_MDD(
+                name: Name, important: Important, playerVisible: PlayerVisible,
+                friendlyName: FriendlyName, description: Description
+            );
+        }
     }
 }
