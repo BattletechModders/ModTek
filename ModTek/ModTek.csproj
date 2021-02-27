@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
+    <Compile Include="Extensions\MetadataDatabaseExtensions.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
@@ -86,7 +87,10 @@
     <Compile Include="Patches\SVGAssetHelper.cs" />
     <Compile Include="Patches\UIManagerPatches.cs" />
     <Compile Include="Patches\VersionManifestAddendum.cs" />
+    <Compile Include="CustomTypes\CustomTagSet.cs" />
+    <Compile Include="CustomTypes\CustomTag.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
+    <Compile Include="Util\CustomTypeProcessor.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />

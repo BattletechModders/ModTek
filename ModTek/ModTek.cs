@@ -33,7 +33,23 @@ namespace ModTek
     public static class ModTek
     {
         private static readonly string[] IGNORE_LIST = { ".DS_STORE", "~", ".nomedia" };
-        private static readonly string[] MODTEK_TYPES = { "Video", "AdvancedJSONMerge", "GameTip", "SoundBank", "SoundBankDef", "DebugSettings", "FixedSVGAsset" };
+
+        private const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
+        private const string CustomType_DebugSettings = "DebugSettings";
+        private const string CustomType_FixedSVGAsset = "FixedSVGAsset";
+        private const string CustomType_GameTip = "GameTip";
+        private const string CustomType_SoundBankDef = "SoundBankDef";
+        private const string CustomType_SoundBank = "SoundBank";
+        private const string CustomType_Tag = "CustomTag";
+        private const string CustomType_TagSet = "CustomTagSet";
+        private const string CustomType_Video = "Video";
+
+        private static readonly string[] MODTEK_TYPES =
+        {
+            CustomType_Video, CustomType_AdvancedJSONMerge,
+            CustomType_GameTip, CustomType_SoundBank, CustomType_SoundBankDef,
+            CustomType_DebugSettings, CustomType_FixedSVGAsset, CustomType_Tag, CustomType_TagSet
+        };
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static Settings settings { get; private set; } = new Settings();
@@ -110,6 +126,10 @@ namespace ModTek
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+
+        internal static HashSet<ModEntry> CustomTags = new HashSet<ModEntry>();
+        internal static HashSet<ModEntry> CustomTagSets = new HashSet<ModEntry>();
+
         public static void RecursiveDelete(DirectoryInfo baseDir)
         {
             if (!baseDir.Exists) { return; }
@@ -249,6 +269,7 @@ namespace ModTek
                 CloseLogStream();
                 return;
             }
+
             if (Enabled == false)
             {
                 Log("ModTek not enabled");
@@ -732,8 +753,15 @@ namespace ModTek
                     ModTek.AddSoundBankDef(modEntry.Path);
                     return;
                 case nameof(SVGAsset):
+                    Log($"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
                     if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants))) { ModTek.systemIcons.Add(modEntry.Id); }
                     break;
+                case CustomType_Tag:
+                    CustomTags.Add(modEntry);
+                    return; // Do not process further and do when the DB is updated
+                case CustomType_TagSet:
+                    CustomTagSets.Add(modEntry);
+                    return; // Do no process further and do when the DB is updated
             }
 
             // add to addendum instead of adding to manifest
@@ -864,6 +892,10 @@ namespace ModTek
             // setup custom resources for ModTek types with fake VersionManifestEntries
             CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
             CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
+
+            // We intentionally DO NOT add tags and tagsets here, because AddModEntry() will skip values found in here
+            //CustomResources[CustomType_Tag] = new Dictionary<string, VersionManifestEntry>();
+            //CustomResources[CustomType_TagSet] = new Dictionary<string, VersionManifestEntry>();
 
             CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
             CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry("settings", Path.Combine(StreamingAssetsDirectory, DebugSettingsPath), "DebugSettings", DateTime.Now, "1");
@@ -1259,7 +1291,7 @@ namespace ModTek
                     // special handling for types
                     switch (modEntry.Type)
                     {
-                        case "AdvancedJSONMerge":
+                        case CustomType_AdvancedJSONMerge:
                             {
                                 var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
 
@@ -1306,8 +1338,20 @@ namespace ModTek
                                 AddModEntry(modEntry);
                                 continue;
                             }
-                        case "FixedSVGAsset":
+                        case CustomType_FixedSVGAsset:
                             {
+                                AddModEntry(modEntry);
+                                continue;
+                            }
+                        case CustomType_Tag:
+                            {
+                                Log($"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
+                                AddModEntry(modEntry);
+                                continue;
+                            }
+                        case CustomType_TagSet:
+                            {
+                                Log($"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
                                 AddModEntry(modEntry);
                                 continue;
                             }
@@ -1500,6 +1544,7 @@ namespace ModTek
                 }
                 ++addCount;
             }
+
             // add needed files to db
             addCount = 0;
             foreach (var modEntry in AddBTRLEntries)
@@ -1513,8 +1558,20 @@ namespace ModTek
                 addCount++;
             }
 
-            //ModLoadOrder.Count;
+            // Add any custom tags to DB
+            if (CustomTags.Count > 0) Log($"Processing CustomTags:");
+            foreach (ModEntry modEntry in CustomTags)
+            {
+                CustomTypeProcessor.AddOrUpdateTag(modEntry.Path);
+            }
 
+            if (CustomTagSets.Count > 0) Log($"Processing CustomTagSets:");
+            foreach (ModEntry modEntry in CustomTagSets)
+            {
+                CustomTypeProcessor.AddOrUpdateTagSet(modEntry.Path);
+            }
+
+            //ModLoadOrder.Count;
 
             dbCache.ToFile(DBCachePath);
 
