@@ -86,9 +86,17 @@ Here's an example `mod.json`:
 
 The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format).
 
-If a DLL is supplied with your mod, in order to be loaded and run, it will need to have a path and file name given. Optionally, you can specify an entry point, which defaults to calling all `public static Init(void)` on all classes in your assembly. Some parameters are supported coming into your entry point.
-
 The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\StreamingAssets\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\` and will load those files without needing to be told about them.
+
+## DLL Mods
+
+You can supply a DLL with your mod by specifying the path and file as the `DLL` property in your mod.json. When ModTek initializes your mod, it will invoke an entry points. By default all methods of type `public static void Init()` in your assembly will be invoked. No ordering is guaranteed for these calls. You are __strongly__ encouraged to specify the exact method name for your entry point via the `DLLEntryPoint` property. Doing so makes the ModTek load process faster as it does not need to scan your assembly for all methods.
+
+Init() calls will be passed two string parameters. The first value will be the modDirectory as an absolute file system path. The second value is the contents of the parsed mod.json. 
+
+In addition to the `Init()` call, ModTek will invoke a different method once all mods are loaded and JSON is merged. Any `public static FinishedLoading()` method in your assembly will be invoked at this time. 
+
+Any mod that throws an error during `Init` will be skipped on the current load. It will be retried on future runs.
 
 ## Merging JSON
 
