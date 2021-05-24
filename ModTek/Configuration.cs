@@ -11,7 +11,7 @@ namespace ModTek
         public bool ShowLoadingScreenErrors = true;
         public bool ShowErrorPopup = true;
         public bool UseErrorWhiteList = true;
-        public List<string> ErrorWhitelist = new List<string> { "Data.DataManager [ERROR] ManifestEntry is null" };
+        public List<string> ErrorWhitelist = new() { "Data.DataManager [ERROR] ManifestEntry is null" };
         public bool EnableDebugLogging = true;
 
         public void ToFile(string path)
@@ -30,8 +30,10 @@ namespace ModTek
             try
             {
                 var text = File.ReadAllText(path);
-                var config = JsonConvert.DeserializeObject<Configuration>(text,
-                    new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace });
+                var config = JsonConvert.DeserializeObject<Configuration>(
+                    text,
+                    new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace }
+                );
                 Logger.Log($"Loaded config from path: {path}");
                 return config;
             }
@@ -44,9 +46,9 @@ namespace ModTek
 
         public override string ToString()
         {
-            return $"ShowLoadingScreenErrors: {this.ShowLoadingScreenErrors}  ShowErrorPopup: {this.ShowErrorPopup}  " +
-                $"EnableDebugLogging: {this.EnableDebugLogging}  UseErrorWhiteList: {this.UseErrorWhiteList}  " +
-                $"ErrorWhiteList: {String.Join("','", this.ErrorWhitelist)}";
+            return $"ShowLoadingScreenErrors: {ShowLoadingScreenErrors}  ShowErrorPopup: {ShowErrorPopup}  " +
+                $"EnableDebugLogging: {EnableDebugLogging}  UseErrorWhiteList: {UseErrorWhiteList}  " +
+                $"ErrorWhiteList: {string.Join("','", ErrorWhitelist)}";
         }
     }
 }

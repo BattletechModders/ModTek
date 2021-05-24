@@ -13,15 +13,22 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
     public static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(ref VersionManifest __result)
         {
             if (ModTek.CachedVersionManifest == null)
+            {
                 return true;
+            }
 
             __result = ModTek.CachedVersionManifest;
             return false;
         }
+
         public static void Postfix(ref VersionManifest __result)
         {
             if (ModTek.CachedVersionManifest == null)
@@ -29,7 +36,6 @@ namespace ModTek.Patches
                 ModTek.CachedVersionManifest = __result;
                 RuntimeLog.RLog.M.TWL(0, "Updating CachedVersionManifest");
             }
-
         }
     }
 }

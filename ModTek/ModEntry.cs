@@ -30,6 +30,7 @@ namespace ModTek
 
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
+
         public string Type { get; set; }
         public string Id { get; set; }
         public string AddToAddendum { get; set; }
@@ -50,7 +51,16 @@ namespace ModTek
 
         public VersionManifestEntry GetVersionManifestEntry()
         {
-            return versionManifestEntry ?? (versionManifestEntry = new VersionManifestEntry(Id, Path, Type, DateTime.Now, "1", AssetBundleName, AssetBundlePersistent));
+            return versionManifestEntry ??
+                (versionManifestEntry = new VersionManifestEntry(
+                    Id,
+                    Path,
+                    Type,
+                    DateTime.Now,
+                    "1",
+                    AssetBundleName,
+                    AssetBundlePersistent
+                ));
         }
     }
 }

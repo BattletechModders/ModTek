@@ -11,7 +11,9 @@ namespace ModTek.Util
         private static StreamWriter GetOrCreateStream()
         {
             if (logStream == null && !string.IsNullOrEmpty(LogPath))
+            {
                 logStream = File.AppendText(LogPath);
+            }
 
             return logStream;
         }
@@ -49,7 +51,9 @@ namespace ModTek.Util
         {
             var stream = GetOrCreateStream();
             if (stream == null)
+            {
                 return;
+            }
 
             stream.WriteLine(message);
             stream.WriteLine(e.ToString());

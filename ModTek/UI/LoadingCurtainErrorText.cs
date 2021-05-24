@@ -22,22 +22,30 @@ namespace ModTek.UI
         public static void Clear()
         {
             if (tmProText == null)
+            {
                 return;
+            }
 
             tmProText.text = "";
             currentMessage = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
+            {
                 currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+            }
             else
+            {
                 currentMessage += $"\"output_log.txt\"\n";
+            }
         }
 
         public static void Setup(GameObject parent)
         {
             if (parent == null || parentLoadingCurtain == parent)
+            {
                 return;
+            }
 
             parentLoadingCurtain = parent;
 

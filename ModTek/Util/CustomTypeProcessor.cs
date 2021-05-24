@@ -17,32 +17,36 @@ namespace ModTek
     {
         public static void AddOrUpdateTag(string pathToFile)
         {
-            string fileContents = File.ReadAllText(pathToFile);
-            CustomTag customTag = JsonConvert.DeserializeObject<CustomTag>(fileContents);
+            var fileContents = File.ReadAllText(pathToFile);
+            var customTag = JsonConvert.DeserializeObject<CustomTag>(fileContents);
 
-            Tag_MDD customTagMDD = customTag.ToTagMDD();
+            var customTagMDD = customTag.ToTagMDD();
             MetadataDatabase.Instance.AddOrUpdate(customTagMDD);
         }
 
         public static void AddOrUpdateTagSet(string pathToFile)
         {
-            string fileContents = File.ReadAllText(pathToFile);
-            CustomTagSet customTagSet = JsonConvert.DeserializeObject<CustomTagSet>(fileContents);
+            var fileContents = File.ReadAllText(pathToFile);
+            var customTagSet = JsonConvert.DeserializeObject<CustomTagSet>(fileContents);
 
-            TagSet_MDD tagSet_MDD = MetadataDatabase.Instance.Query<TagSet_MDD>(
-                "SELECT * FROM TagSet WHERE TagSetID = @TagSetID", new
-            {
-                TagSetID = customTagSet.ID
-            }, null, true, null, null).FirstOrDefault<TagSet_MDD>();
+            var tagSet_MDD = MetadataDatabase.Instance.Query<TagSet_MDD>(
+                    "SELECT * FROM TagSet WHERE TagSetID = @TagSetID",
+                    new { TagSetID = customTagSet.ID },
+                    null,
+                    true,
+                    null,
+                    null
+                )
+                .FirstOrDefault<TagSet_MDD>();
 
             // TODO: Can error out, test for that
-            TagSetType tagSetType = (TagSetType)customTagSet.TypeID;
+            var tagSetType = (TagSetType) customTagSet.TypeID;
 
-            TagSet tagSet = new TagSet(customTagSet.Tags);
+            var tagSet = new TagSet(customTagSet.Tags);
             if (tagSet_MDD == null)
             {
                 // Insert
-                Log($"Creating new tagset: {customTagSet.ID} with tags: {String.Join(",", customTagSet.Tags)}");
+                Log($"Creating new tagset: {customTagSet.ID} with tags: {string.Join(",", customTagSet.Tags)}");
 
                 // TODO: If tagset is empty, use the other method
                 MetadataDatabase.Instance.GetOrCreateTagSet(customTagSet.ID, tagSet, tagSetType);
@@ -50,11 +54,9 @@ namespace ModTek
             else
             {
                 // Update
-                Log($"Updating tagset: {customTagSet.ID} to type: {(TagSetType) customTagSet.TypeID} and tags: {String.Join(",", customTagSet.Tags)}");
+                Log($"Updating tagset: {customTagSet.ID} to type: {(TagSetType) customTagSet.TypeID} and tags: {string.Join(",", customTagSet.Tags)}");
                 MetadataDatabase.Instance.UpdateTagSet(customTagSet.ID, tagSet);
             }
-
         }
-
     }
 }

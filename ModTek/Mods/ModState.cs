@@ -8,11 +8,13 @@ namespace ModTek.Mods
     {
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
         public static ModState CreateFromPath(string path)
         {
             var modState = JsonConvert.DeserializeObject<ModState>(File.ReadAllText(path));
             return modState;
         }
+
         public void SaveToPath(string path)
         {
             File.WriteAllText(path, JsonConvert.SerializeObject(this));

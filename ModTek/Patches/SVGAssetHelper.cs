@@ -17,7 +17,12 @@ namespace ModTek
     [HarmonyPatch(typeof(ApplicationConstants))]
     [HarmonyPatch("FromJSON")]
     [HarmonyPatch(MethodType.Normal)]
-    [HarmonyPatch(new Type[] { typeof(string) })]
+    [HarmonyPatch(
+        new Type[]
+        {
+            typeof(string)
+        }
+    )]
     public static class ApplicationConstants_FromJSON
     {
         public static void Postfix(ApplicationConstants __instance)
@@ -25,39 +30,61 @@ namespace ModTek
             RLog.M.TWL(0, "ApplicationConstants.FromJSON. PrewarmRequests:");
             try
             {
-                List<PrewarmRequest> prewarmRequests = new List<PrewarmRequest>();
+                var prewarmRequests = new List<PrewarmRequest>();
                 prewarmRequests.AddRange(__instance.PrewarmRequests);
-                HashSet<string> svgs = new HashSet<string>();
-                foreach(AmmoCategoryValue ammoCat in AmmoCategoryEnumeration.AmmoCategoryList)
+                var svgs = new HashSet<string>();
+                foreach (var ammoCat in AmmoCategoryEnumeration.AmmoCategoryList)
                 {
-                    if (ammoCat.isBuildinIcon() == false) {
+                    if (ammoCat.isBuildinIcon() == false)
+                    {
                         svgs.Add(ammoCat.Icon);
                     }
                 }
-                foreach (WeaponCategoryValue weaponCat in WeaponCategoryEnumeration.WeaponCategoryList)
+
+                foreach (var weaponCat in WeaponCategoryEnumeration.WeaponCategoryList)
                 {
                     if (weaponCat.isBuildinIcon() == false)
                     {
                         svgs.Add(weaponCat.Icon);
                     }
                 }
-                FieldInfo[] fields = typeof(UILookAndColorConstants).GetFields();
-                foreach (FieldInfo field in fields)
+
+                var fields = typeof(UILookAndColorConstants).GetFields();
+                foreach (var field in fields)
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
-                    if (field.FieldType != typeof(SVGAsset)) { continue; }
-                    string id = "UILookAndColorConstants." + field.Name;
+                    if (field.FieldType != typeof(SVGAsset))
+                    {
+                        continue;
+                    }
+
+                    var id = "UILookAndColorConstants." + field.Name;
                     if (ModTek.isInSystemIcons(id))
                     {
                         svgs.Add(id);
                     }
                 }
-                foreach (string svg in svgs)
+
+                foreach (var svg in svgs)
                 {
-                    if (string.IsNullOrEmpty(svg) == false) { prewarmRequests.Add(new PrewarmRequest(BattleTechResourceType.SVGAsset, svg)); };
+                    if (string.IsNullOrEmpty(svg) == false)
+                    {
+                        prewarmRequests.Add(new PrewarmRequest(BattleTechResourceType.SVGAsset, svg));
+                    }
+
+                    ;
                 }
-                typeof(ApplicationConstants).GetProperty("PrewarmRequests", BindingFlags.Instance | BindingFlags.Public).GetSetMethod(true).Invoke(__instance, new object[] { prewarmRequests.ToArray() });
-                foreach (PrewarmRequest preq in __instance.PrewarmRequests)
+
+                typeof(ApplicationConstants).GetProperty("PrewarmRequests", BindingFlags.Instance | BindingFlags.Public)
+                    .GetSetMethod(true)
+                    .Invoke(
+                        __instance,
+                        new object[]
+                        {
+                            prewarmRequests.ToArray()
+                        }
+                    );
+                foreach (var preq in __instance.PrewarmRequests)
                 {
                     RLog.M.WL(1, preq.ResourceType + ":" + preq.ResourceID);
                 }
@@ -68,28 +95,38 @@ namespace ModTek
             }
         }
     }
+
     [HarmonyPatch(typeof(DataManager))]
     [HarmonyPatch("PrewarmComplete")]
     [HarmonyPatch(MethodType.Normal)]
     public static class DataManager_PrewarmComplete
     {
         public static DataManager dataManager { get; private set; } = null;
-        public static bool Prepare() { return ModTek.Enabled; }
+
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(DataManager __instance)
         {
             RLog.M.TWL(0, "DataManager.PrewarmComplete");
             dataManager = __instance;
             if (UIManager.HasInstance)
             {
-                FieldInfo[] fields = typeof(UILookAndColorConstants).GetFields();
-                foreach (FieldInfo field in fields)
+                var fields = typeof(UILookAndColorConstants).GetFields();
+                foreach (var field in fields)
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
-                    if (field.FieldType != typeof(SVGAsset)) { continue; }
-                    SVGAsset result = dataManager.GetObjectOfType<SVGAsset>("UILookAndColorConstants."+ field.Name, BattleTechResourceType.SVGAsset);
-                    if(result != null)
+                    if (field.FieldType != typeof(SVGAsset))
                     {
-                        RLog.M.WL(1,"Updating icon "+field.Name);
+                        continue;
+                    }
+
+                    var result = dataManager.GetObjectOfType<SVGAsset>("UILookAndColorConstants." + field.Name, BattleTechResourceType.SVGAsset);
+                    if (result != null)
+                    {
+                        RLog.M.WL(1, "Updating icon " + field.Name);
                         field.SetValue(UIManager.Instance.UILookAndColorConstants, result);
                     }
                 }
@@ -100,43 +137,71 @@ namespace ModTek
             }
         }
     }
+
     [HarmonyPatch(typeof(AmmoCategoryValue))]
     [HarmonyPatch("GetIcon")]
     [HarmonyPatch(MethodType.Normal)]
     public static class AmmoCategory_GetIcon
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(AmmoCategoryValue __instance, ref SVGAsset __result)
         {
-            if (DataManager_PrewarmComplete.dataManager == null) { return; }
-            SVGAsset result = DataManager_PrewarmComplete.dataManager.GetObjectOfType<SVGAsset>(__instance.Icon, BattleTechResourceType.SVGAsset);
-            if (result != null) { __result = result; }
+            if (DataManager_PrewarmComplete.dataManager == null)
+            {
+                return;
+            }
+
+            var result = DataManager_PrewarmComplete.dataManager.GetObjectOfType<SVGAsset>(__instance.Icon, BattleTechResourceType.SVGAsset);
+            if (result != null)
+            {
+                __result = result;
+            }
         }
     }
+
     [HarmonyPatch(typeof(WeaponCategoryValue))]
     [HarmonyPatch("GetIcon")]
     [HarmonyPatch(MethodType.Normal)]
     public static class WeaponCategoryValue_GetIcon
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(WeaponCategoryValue __instance, ref SVGAsset __result)
         {
-            if (DataManager_PrewarmComplete.dataManager == null) { return; }
-            SVGAsset result = DataManager_PrewarmComplete.dataManager.GetObjectOfType<SVGAsset>(__instance.Icon,BattleTechResourceType.SVGAsset);
-            if (result != null) { __result = result; }
+            if (DataManager_PrewarmComplete.dataManager == null)
+            {
+                return;
+            }
+
+            var result = DataManager_PrewarmComplete.dataManager.GetObjectOfType<SVGAsset>(__instance.Icon, BattleTechResourceType.SVGAsset);
+            if (result != null)
+            {
+                __result = result;
+            }
         }
     }
+
     public static class SVGAssetLoadRequest_Load
     {
-        private static HashSet<string> UILookAndColorConstantsIcons = new HashSet<string>();
+        private static HashSet<string> UILookAndColorConstantsIcons = new();
+
         public static bool isBuildinIcon(this AmmoCategoryValue ammoCat)
         {
             return UILookAndColorConstantsIcons.Contains(ammoCat.Icon);
         }
+
         public static bool isBuildinIcon(this WeaponCategoryValue weaponCat)
         {
             return UILookAndColorConstantsIcons.Contains(weaponCat.Icon);
         }
+
         private static Action<ResourceLoadRequest<SVGAsset>> ResourceLoadRequest_Load = null;
         private static Type SVGAssetLoadRequest = null;
         private static MethodInfo m_StateSet = typeof(FileLoadRequest).GetProperty("State", BindingFlags.Instance | BindingFlags.Public).GetSetMethod(true);
@@ -144,116 +209,199 @@ namespace ModTek
         private static FieldInfo f_manifestEntry = typeof(FileLoadRequest).GetField("manifestEntry", BindingFlags.Instance | BindingFlags.NonPublic);
         private static MethodInfo m_AssetBundleManagerGet = typeof(DataManager).GetProperty("AssetBundleManager", BindingFlags.Instance | BindingFlags.NonPublic).GetGetMethod(true);
         private static MethodInfo m_RequestResourcesLoad_SVGAsset = typeof(DataManager).GetMethod("RequestResourcesLoad", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(typeof(SVGAsset));
-        
+
         private static void RequestResourcesLoad_SVGAsset(this DataManager dataManager, string path, Action<SVGAsset> onComplete)
         {
-            m_RequestResourcesLoad_SVGAsset.Invoke(dataManager, new object[] { path, onComplete });
+            m_RequestResourcesLoad_SVGAsset.Invoke(
+                dataManager,
+                new object[]
+                {
+                    path,
+                    onComplete
+                }
+            );
         }
+
         private static AssetBundleManager AssetBundleManager(this DataManager dataManager)
         {
-            return (AssetBundleManager)m_AssetBundleManagerGet.Invoke(dataManager, null);
+            return (AssetBundleManager) m_AssetBundleManagerGet.Invoke(dataManager, null);
         }
-        private static void State(this FileLoadRequest request, DataManager.FileLoadRequest.RequestState state)
+
+        private static void State(this FileLoadRequest request, FileLoadRequest.RequestState state)
         {
-            m_StateSet.Invoke(request, new object[] { state });
+            m_StateSet.Invoke(
+                request,
+                new object[]
+                {
+                    state
+                }
+            );
         }
+
         private static DataManager dataManager(this FileLoadRequest request)
         {
-            return (DataManager)f_dataManager.GetValue(request);
+            return (DataManager) f_dataManager.GetValue(request);
         }
+
         private static VersionManifestEntry manifestEntry(this FileLoadRequest request)
         {
-            return (VersionManifestEntry)f_manifestEntry.GetValue(request);
+            return (VersionManifestEntry) f_manifestEntry.GetValue(request);
         }
+
         public static void Patch(HarmonyInstance harmony)
         {
             //RLog.M.TWL(0, "SVGAssetLoadRequest patching");
             try
             {
                 SVGAssetLoadRequest = typeof(DataManager).GetNestedType("SVGAssetLoadRequest", BindingFlags.NonPublic);
-                if (SVGAssetLoadRequest == null) {
+                if (SVGAssetLoadRequest == null)
+                {
                     //RLog.M.WL(1, "BattleTech.Data.DataManager.SVGAssetLoadRequest is null");
-                    Type[] types = typeof(DataManager).GetNestedTypes(BindingFlags.NonPublic);
-                    foreach(Type tp in types)
+                    var types = typeof(DataManager).GetNestedTypes(BindingFlags.NonPublic);
+                    foreach (var tp in types)
                     {
                         //RLog.M.WL(2, tp.Name);
-                        if (tp.Name.StartsWith("SVGAssetLoadRequest")) { SVGAssetLoadRequest = tp; break; }
+                        if (tp.Name.StartsWith("SVGAssetLoadRequest"))
+                        {
+                            SVGAssetLoadRequest = tp;
+                            break;
+                        }
                     }
-                    if(SVGAssetLoadRequest == null) return;
+
+                    if (SVGAssetLoadRequest == null)
+                    {
+                        return;
+                    }
                 }
-                MethodInfo target = SVGAssetLoadRequest.GetMethod("Load", BindingFlags.Instance | BindingFlags.Public);
+
+                var target = SVGAssetLoadRequest.GetMethod("Load", BindingFlags.Instance | BindingFlags.Public);
                 harmony.Patch(target, new HarmonyMethod(typeof(SVGAssetLoadRequest_Load).GetMethod("Prefix")));
-                MethodInfo method = typeof(ResourceLoadRequest<SVGAsset>).GetMethod("Load", BindingFlags.Instance|BindingFlags.Public);
+                var method = typeof(ResourceLoadRequest<SVGAsset>).GetMethod("Load", BindingFlags.Instance | BindingFlags.Public);
                 harmony.Patch(method, new HarmonyMethod(typeof(SVGAssetLoadRequest_Load).GetMethod("PrefixBase")));
-                var dm = new DynamicMethod("ModTekResourceLoadRequestLoad", null, new Type[] { typeof(ResourceLoadRequest<SVGAsset>) }, typeof(ResourceLoadRequest<SVGAsset>));
+                var dm = new DynamicMethod(
+                    "ModTekResourceLoadRequestLoad",
+                    null,
+                    new Type[]
+                    {
+                        typeof(ResourceLoadRequest<SVGAsset>)
+                    },
+                    typeof(ResourceLoadRequest<SVGAsset>)
+                );
                 var gen = dm.GetILGenerator();
                 gen.Emit(OpCodes.Ldarg_0);
                 gen.Emit(OpCodes.Call, method);
                 gen.Emit(OpCodes.Ret);
-                ResourceLoadRequest_Load = (Action<ResourceLoadRequest<SVGAsset>>)dm.CreateDelegate(typeof(Action<ResourceLoadRequest<SVGAsset>>));
-                FieldInfo[] fields = typeof(UILookAndColorConstants).GetFields();
-                RLog.M.TWL(0, "UILookAndColorConstants fields:"+fields.Length);
-                foreach (FieldInfo field in fields)
+                ResourceLoadRequest_Load = (Action<ResourceLoadRequest<SVGAsset>>) dm.CreateDelegate(typeof(Action<ResourceLoadRequest<SVGAsset>>));
+                var fields = typeof(UILookAndColorConstants).GetFields();
+                RLog.M.TWL(0, "UILookAndColorConstants fields:" + fields.Length);
+                foreach (var field in fields)
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
-                    if (field.FieldType != typeof(SVGAsset)) { continue; }
+                    if (field.FieldType != typeof(SVGAsset))
+                    {
+                        continue;
+                    }
+
                     UILookAndColorConstantsIcons.Add(field.Name);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 RLog.M.TWL(0, e.ToString(), true);
             }
         }
+
         public static bool PrefixBase(ResourceLoadRequest<SVGAsset> __instance)
         {
             //RLog.M.TWL(0, "ResourceLoadRequest<SVGAsset>.Load " + __instance.ManifestEntry.Name);
             return true;
         }
+
         public static bool Prefix(ResourceLoadRequest<SVGAsset> __instance)
         {
             //RLog.M.TWL(0, "SVGAssetLoadRequest.Load "+__instance.ManifestEntry.Name);
             //return true;
-            ResourceLoadRequest_Load(__instance);//base.Load();
-            if (__instance.State != DataManager.FileLoadRequest.RequestState.Requested) { return false; }
-            __instance.State(DataManager.FileLoadRequest.RequestState.Processing);
+            ResourceLoadRequest_Load(__instance); //base.Load();
+            if (__instance.State != FileLoadRequest.RequestState.Requested)
+            {
+                return false;
+            }
+
+            __instance.State(FileLoadRequest.RequestState.Processing);
             __instance.StartTimeoutTracking(0.0f);
             if (__instance.ManifestEntry.IsAssetBundled)
             {
-                __instance.dataManager().AssetBundleManager().RequestAsset<SVGAsset>(BattleTechResourceType.SVGAsset, __instance.ResourceId, new Action<SVGAsset>(
-                    (SVGAsset resource) => {
-                        SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[] { resource });
-                    }
-                    ));
+                __instance.dataManager()
+                    .AssetBundleManager()
+                    .RequestAsset<SVGAsset>(
+                        BattleTechResourceType.SVGAsset,
+                        __instance.ResourceId,
+                        new Action<SVGAsset>(
+                            (SVGAsset resource) =>
+                            {
+                                SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .Invoke(
+                                        __instance,
+                                        new object[]
+                                        {
+                                            resource
+                                        }
+                                    );
+                            }
+                        )
+                    );
             }
             else
             {
                 if (!__instance.ManifestEntry.IsResourcesAsset)
                 {
-
                     try
                     {
-                        SVGAsset resource = SVGAsset.Load(File.ReadAllText(__instance.ManifestEntry.FilePath));
+                        var resource = SVGAsset.Load(File.ReadAllText(__instance.ManifestEntry.FilePath));
                         if (resource == null)
                         {
                             throw new NullReferenceException("Fail to load SVG file");
                         }
-                        SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[] { resource });
+
+                        SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
+                            .Invoke(
+                                __instance,
+                                new object[]
+                                {
+                                    resource
+                                }
+                            );
                         RLog.M.WL(1, "Loaded from external file:" + __instance.ManifestEntry.FilePath);
-                    }catch(Exception e)
+                    }
+                    catch (Exception e)
                     {
                         RLog.M.TWL(0, "Fail to load external file:" + __instance.ManifestEntry.FilePath);
                         RLog.M.WL(0, e.ToString());
                         throw new ArgumentNullException("THIS IS !NOT! I REPEAT, !NOT! MODTEK ERROR. YOUR SVG FILE FAIL TO LOAD! More info in ModTek_runtime_log.txt");
                     }
+
                     return false;
                 }
-                __instance.dataManager().RequestResourcesLoad_SVGAsset(__instance.ManifestEntry.ResourcesLoadPath, new Action<SVGAsset>(
-                    (SVGAsset resource) => {
-                        SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[] { resource });
-                    }
-                    ));
+
+                __instance.dataManager()
+                    .RequestResourcesLoad_SVGAsset(
+                        __instance.ManifestEntry.ResourcesLoadPath,
+                        new Action<SVGAsset>(
+                            (SVGAsset resource) =>
+                            {
+                                SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .Invoke(
+                                        __instance,
+                                        new object[]
+                                        {
+                                            resource
+                                        }
+                                    );
+                            }
+                        )
+                    );
             }
+
             return false;
         }
     }

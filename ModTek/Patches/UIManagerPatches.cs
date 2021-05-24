@@ -25,30 +25,38 @@ namespace ModTek.Patches
     {
         public static void Prefix()
         {
-            DataManager dm = SceneSingletonBehavior<DataManagerUnityInstance>.Instance.DataManager;
+            var dm = SceneSingletonBehavior<DataManagerUnityInstance>.Instance.DataManager;
 
 
-            Stopwatch sw = new Stopwatch();
+            var sw = new Stopwatch();
             sw.Start();
             if (ModTek.Config.EnableDebugLogging)
+            {
                 RLog.LogWrite("Forcing refresh of BTRL Manifest...\n");
+            }
 
             Traverse.Create(dm.ResourceLocator).Property("manifest").SetValue(VersionManifestUtilities.LoadDefaultManifest());
 
             sw.Stop();
             if (ModTek.Config.EnableDebugLogging)
+            {
                 RLog.LogWrite($"Refresh of BTRL manifest complete in {sw.ElapsedMilliSeconds}ms \n");
+            }
 
             sw.Restart();
             if (ModTek.Config.EnableDebugLogging)
+            {
                 RLog.LogWrite("Forcing refresh of TypedEntities to prevent Shadowhawk DLC bug...\n");
+            }
 
-            Traverse refreshTypedEntriesT = Traverse.Create(dm.ResourceLocator).Method("RefreshTypedEntries");
+            var refreshTypedEntriesT = Traverse.Create(dm.ResourceLocator).Method("RefreshTypedEntries");
             refreshTypedEntriesT.GetValue();
 
             sw.Stop();
             if (ModTek.Config.EnableDebugLogging)
+            {
                 RLog.LogWrite($"Forced refresh of TypedEntities complete in {sw.ElapsedMilliSeconds}ms\n");
+            }
         }
     }
 }

@@ -15,13 +15,21 @@ namespace ModTek.Patches
     /// This is primarily a performance optimization
     /// </summary>
     [HarmonyPatch(typeof(VersionManifest), "GetAddendumContainingEntry")]
-    [HarmonyPatch(new Type[] { typeof(string), typeof(string) })]
-    static class VersionManifest_GetAddendumContainingEntry
+    [HarmonyPatch(
+        new Type[]
+        {
+            typeof(string),
+            typeof(string)
+        }
+    )]
+    internal static class VersionManifest_GetAddendumContainingEntry
     {
+        private static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
 
-        static bool Prepare() => ModTek.Enabled;
-
-        static bool Prefix(string id, string type, ref VersionManifestAddendum __result, List<VersionManifestAddendum> ___addendums)
+        private static bool Prefix(string id, string type, ref VersionManifestAddendum __result, List<VersionManifestAddendum> ___addendums)
         {
             VersionManifestAddendum queryValue;
             if (!VersionManifestAddendumCache.FindInCache(id, type, out queryValue))
@@ -35,21 +43,37 @@ namespace ModTek.Patches
     }
 
     [HarmonyPatch(typeof(VersionManifest), "GetAddendumContainingEntry")]
-    static class VersionManifest_GetAddendumContainingEntry_VME
+    internal static class VersionManifest_GetAddendumContainingEntry_VME
     {
-
         // Necessary as VersionManifestEntry is out - ergo a ref, and can't be defined in an attribute
-        static MethodBase TargetMethod(HarmonyInstance instance)
+        private static MethodBase TargetMethod(HarmonyInstance instance)
         {
-            MethodInfo type = AccessTools.Method(typeof(VersionManifest), "GetAddendumContainingEntry",
-                new Type[] { typeof(string), typeof(string), typeof(VersionManifestEntry).MakeByRefType() });
+            var type = AccessTools.Method(
+                typeof(VersionManifest),
+                "GetAddendumContainingEntry",
+                new Type[]
+                {
+                    typeof(string),
+                    typeof(string),
+                    typeof(VersionManifestEntry).MakeByRefType()
+                }
+            );
             return type;
         }
 
-        static bool Prepare() => ModTek.Enabled;
+        private static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
 
-        static bool Prefix(string id, string type, out VersionManifestEntry entry, ref VersionManifestAddendum __result,
-            List<VersionManifestAddendum> ___addendums)
+        private static bool Prefix
+        (
+            string id,
+            string type,
+            out VersionManifestEntry entry,
+            ref VersionManifestAddendum __result,
+            List<VersionManifestAddendum> ___addendums
+        )
         {
             VersionManifestAddendum queryValue;
             if (!VersionManifestAddendumCache.FindInCache(id, type, out queryValue))
@@ -65,22 +89,24 @@ namespace ModTek.Patches
 
     public static class VersionManifestAddendumCache
     {
-        private static Dictionary<string, VersionManifestAddendum> lookupCache = new Dictionary<string, VersionManifestAddendum>();
+        private static Dictionary<string, VersionManifestAddendum> lookupCache = new();
 
-        private static Dictionary<string, int> cachedAddendums = new Dictionary<string, int>();
+        private static Dictionary<string, int> cachedAddendums = new();
 
         private static void UpdateCache(List<VersionManifestAddendum> addendums)
         {
-            foreach (VersionManifestAddendum vma in addendums)
+            foreach (var vma in addendums)
             {
                 if (!cachedAddendums.ContainsKey(vma.Name))
                 {
                     //RLog.LogWrite($"Adding to addendum cache: {vma.Name}\n");
-                    foreach (VersionManifestEntry vme in vma.Entries)
+                    foreach (var vme in vma.Entries)
                     {
-                        string entryKey = $"{vme.Id}_{vme.Type}";
+                        var entryKey = $"{vme.Id}_{vme.Type}";
                         if (!lookupCache.ContainsKey(entryKey))
+                        {
                             lookupCache.Add(entryKey, vma);
+                        }
                     }
 
                     cachedAddendums.Add(vma.Name, 0);
@@ -90,10 +116,12 @@ namespace ModTek.Patches
 
         public static bool FindInCache(string id, string type, out VersionManifestAddendum addendum)
         {
-            string key = $"{id}_{type}";
-            bool existsInCache = lookupCache.TryGetValue(key, out addendum);
+            var key = $"{id}_{type}";
+            var existsInCache = lookupCache.TryGetValue(key, out addendum);
             if (!existsInCache)
+            {
                 addendum = null;
+            }
 
             return existsInCache;
         }
@@ -101,7 +129,7 @@ namespace ModTek.Patches
         public static VersionManifestAddendum FindInAddendums(string id, string type, List<VersionManifestAddendum> addendums)
         {
             UpdateCache(addendums);
-            bool wasFound = FindInCache(id, type, out VersionManifestAddendum addendum);       
+            var wasFound = FindInCache(id, type, out var addendum);
             return wasFound ? addendum : null;
         }
 
@@ -112,8 +140,6 @@ namespace ModTek.Patches
                 RLog.M.WL(0, "Invalidating cache for addendum: " + addendum.Name);
                 lookupCache.Remove(addendum.Name);
             }
-                
         }
-
     }
 }

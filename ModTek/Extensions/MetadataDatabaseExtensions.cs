@@ -10,22 +10,22 @@ namespace ModTek.Extensions
 {
     public static class MetadataDatabaseExtensions
     {
-
         public static bool AddOrUpdate(this MetadataDatabase mdd, Tag_MDD tag)
         {
+            var success = false;
 
-            bool success = false;
-
-            Tag_MDD tag_MDD = mdd.Query<Tag_MDD>(
-                "SELECT * FROM Tag WHERE Name = @TagName COLLATE NOCASE",
-                new { TagName = tag.Name })
+            var tag_MDD = mdd.Query<Tag_MDD>(
+                    "SELECT * FROM Tag WHERE Name = @TagName COLLATE NOCASE",
+                    new { TagName = tag.Name }
+                )
                 .FirstOrDefault();
 
             if (tag_MDD == null)
             {
                 try
                 {
-                    mdd.Execute("INSERT INTO Tag (Name, Important, PlayerVisible, FriendlyName, Description)" +
+                    mdd.Execute(
+                        "INSERT INTO Tag (Name, Important, PlayerVisible, FriendlyName, Description)" +
                         " VALUES (@TagName, @TagImportant, @TagPlayerVisible, @TagFriendlyName, @TagDescription)",
                         new
                         {
@@ -34,7 +34,8 @@ namespace ModTek.Extensions
                             TagPlayerVisible = tag.PlayerVisible,
                             TagFriendlyName = tag.FriendlyName,
                             TagDescription = tag.Description
-                        });
+                        }
+                    );
                     Log($"Inserted tag: {tag.Name} into MDDB");
                     success = true;
                 }
@@ -48,17 +49,19 @@ namespace ModTek.Extensions
             {
                 try
                 {
-                    mdd.Execute("UPDATE Tag SET Important = @TagImportant, PlayerVisible = @TagPlayerVisible, " +
+                    mdd.Execute(
+                        "UPDATE Tag SET Important = @TagImportant, PlayerVisible = @TagPlayerVisible, " +
                         "FriendlyName = @TagFriendlyName, Description = @TagDescription" +
-                            " WHERE Name = @TagName",
-                            new
-                            {
-                                TagName = tag.Name,
-                                TagImportant = tag.Important,
-                                TagPlayerVisible = tag.PlayerVisible,
-                                TagFriendlyName = tag.FriendlyName,
-                                TagDescription = tag.Description
-                            });
+                        " WHERE Name = @TagName",
+                        new
+                        {
+                            TagName = tag.Name,
+                            TagImportant = tag.Important,
+                            TagPlayerVisible = tag.PlayerVisible,
+                            TagFriendlyName = tag.FriendlyName,
+                            TagDescription = tag.Description
+                        }
+                    );
                     Log($"Updated tag: {tag.Name} in MDDB");
                     success = true;
                 }

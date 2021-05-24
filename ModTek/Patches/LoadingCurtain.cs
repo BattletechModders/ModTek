@@ -13,7 +13,11 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(LoadingCurtain), "ShowUntil")]
     public static class LoadingCurtain_ShowUntil_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
             var activeInstance = Traverse.Create(typeof(LoadingCurtain)).Field("activeInstance").GetValue<LoadingCurtain>();
@@ -27,7 +31,11 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(LoadingCurtain), "Hide")]
     public static class LoadingCurtain_Hide_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
             LoadingCurtainErrorText.Clear();
@@ -40,7 +48,11 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(LoadingCurtain), "ExtraWaitFadeIn")]
     public static class LoadingCurtain_ExtraWaitFadeIn_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
             LoadingCurtainErrorText.Clear();

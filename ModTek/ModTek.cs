@@ -34,7 +34,7 @@ namespace ModTek
         public static string StreamingAssetsDirectory { get; private set; }
         public static ModDefEx SettingsDef { get; private set; }
 
-        public static bool Enabled { get { return SettingsDef.Enabled; } }
+        public static bool Enabled => SettingsDef.Enabled;
 
         // file/directory names
         private const string MODS_DIRECTORY_NAME = "Mods";
@@ -54,7 +54,7 @@ namespace ModTek
         private const string CONFIG_FILE_NAME = "config.json";
         private const string CHANGED_FLAG_NAME = ".changed";
         public const string MODTEK_DEF_NAME = "ModTek";
-        private static HashSet<string> EnumsLoadedFromFile = new HashSet<string>();
+        private static HashSet<string> EnumsLoadedFromFile = new();
 
         // ModTek paths/directories
         internal static string ModTekDirectory { get; private set; }
@@ -70,55 +70,69 @@ namespace ModTek
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
-        internal static HashSet<string> systemIcons = new HashSet<string>();
-        public static bool isInSystemIcons(string id) { return systemIcons.Contains(id); }
+        internal static HashSet<string> systemIcons = new();
+
+        public static bool isInSystemIcons(string id)
+        {
+            return systemIcons.Contains(id);
+        }
+
         public static string ChangedFlagPath { get; private set; }
 
         // special StreamingAssets relative directories
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
 
         // internal temp structures
-        private static System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        public static Dictionary<string, SoundBankDef> soundBanks = new Dictionary<string, SoundBankDef>();
-        private static Dictionary<string, JObject> cachedJObjects = new Dictionary<string, JObject>();
-        private static Dictionary<string, Dictionary<string, List<string>>> merges = new Dictionary<string, Dictionary<string, List<string>>>();
+        private static System.Diagnostics.Stopwatch stopwatch = new();
+        public static Dictionary<string, SoundBankDef> soundBanks = new();
+        private static Dictionary<string, JObject> cachedJObjects = new();
+        private static Dictionary<string, Dictionary<string, List<string>>> merges = new();
         private static HashSet<string> BTRLEntriesPathes;
 
         // internal structures
         internal static Configuration Config;
         internal static List<string> ModLoadOrder;
-        internal static Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
-        public static Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
-        internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
-        internal static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
+        internal static Dictionary<string, ModDefEx> ModDefs = new();
+        public static Dictionary<string, ModDefEx> allModDefs = new();
+        internal static HashSet<string> FailedToLoadMods { get; } = new();
+        internal static Dictionary<string, Assembly> TryResolveAssemblies = new();
 
         // the end result of loading mods, these are used to push into game data through patches
         internal static VersionManifest CachedVersionManifest;
-        internal static List<ModEntry> AddBTRLEntries = new List<ModEntry>();
-        internal static List<VersionManifestEntry> RemoveBTRLEntries = new List<VersionManifestEntry>();
-        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
-        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new Dictionary<string, string>();
+        internal static List<ModEntry> AddBTRLEntries = new();
+        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
+        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
+        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
 
-        internal static HashSet<ModEntry> CustomTags = new HashSet<ModEntry>();
-        internal static HashSet<ModEntry> CustomTagSets = new HashSet<ModEntry>();
+        internal static HashSet<ModEntry> CustomTags = new();
+        internal static HashSet<ModEntry> CustomTagSets = new();
 
         // INITIALIZATION (called by injected code)
         public static void Init()
         {
             if (HasLoaded)
+            {
                 return;
+            }
 
             stopwatch.Start();
 
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
-            if (manifestDirectory == null) { return; };
+            if (manifestDirectory == null)
+            {
+                return;
+            }
+
+            ;
 
             // setup directories
             ModsDirectory = Path.GetFullPath(
-                Path.Combine(manifestDirectory,
-                    Path.Combine(Path.Combine(Path.Combine(
-                        "..", ".."), ".."), MODS_DIRECTORY_NAME)));
+                Path.Combine(
+                    manifestDirectory,
+                    Path.Combine(Path.Combine(Path.Combine("..", ".."), ".."), MODS_DIRECTORY_NAME)
+                )
+            );
 
             StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, ".."));
             GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
@@ -154,11 +168,13 @@ namespace ModTek
                 Directory.CreateDirectory(CacheDirectory);
                 Directory.CreateDirectory(DatabaseDirectory);
             }
+
             // create log file, overwriting if it's already there
             using (var logWriter = File.CreateText(LogPath))
             {
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
+
             if (File.Exists(ModTekSettingsPath))
             {
                 try
@@ -171,6 +187,7 @@ namespace ModTek
                     Finish();
                     return;
                 }
+
                 SettingsDef.Version = versionString;
             }
             else
@@ -213,7 +230,7 @@ namespace ModTek
 
             try
             {
-                HarmonyInstance instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
+                var instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
                 instance.PatchAll(Assembly.GetExecutingAssembly());
                 BattleTechResourceLoader.Refresh();
                 SVGAssetLoadRequest_Load.Patch(instance);
@@ -231,6 +248,7 @@ namespace ModTek
                 CloseLogStream();
                 return;
             }
+
             LoadMods();
         }
 
@@ -256,12 +274,16 @@ namespace ModTek
         internal static JObject ParseGameJSONFile(string path)
         {
             if (cachedJObjects.ContainsKey(path))
+            {
                 return cachedJObjects[path];
+            }
 
             // because StripHBSCommentsFromJSON is private, use Harmony to call the method
             var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", File.ReadAllText(path)).GetValue<string>();
             if (commentsStripped == null)
+            {
                 throw new Exception("StripHBSCommentsFromJSON returned null.");
+            }
 
             // add missing commas, this only fixes if there is a newline
             var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
@@ -274,11 +296,15 @@ namespace ModTek
         private static VersionManifestEntry FindEntry(string type, string id)
         {
             if (CustomResources.ContainsKey(type) && CustomResources[type].ContainsKey(id))
+            {
                 return CustomResources[type][id];
+            }
 
             var modEntry = AddBTRLEntries.FindLast(x => x.Type == type && x.Id == id)?.GetVersionManifestEntry();
             if (modEntry != null)
+            {
                 return modEntry;
+            }
 
             // if we're slating to remove an entry, then we don't want to return it here from the manifest
             return !RemoveBTRLEntries.Exists(entry => entry.Type == type && entry.Id == id)
@@ -296,7 +322,9 @@ namespace ModTek
                 var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
 
                 if (methods == null || methods.Length == 0)
+                {
                     continue;
+                }
 
                 if (!hasPrinted)
                 {
@@ -304,16 +332,15 @@ namespace ModTek
                     hasPrinted = true;
                 }
 
-                var paramsDictionary = new Dictionary<string, object>
-                {
-                    { "loadOrder", new List<string>(ModLoadOrder) },
-                };
+                var paramsDictionary = new Dictionary<string, object> { { "loadOrder", new List<string>(ModLoadOrder) } };
 
                 if (modDef.CustomResourceTypes.Count > 0)
                 {
                     var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
                     foreach (var resourceType in modDef.CustomResourceTypes)
+                    {
                         customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
+                    }
 
                     paramsDictionary.Add("customResources", customResources);
                 }
@@ -321,7 +348,9 @@ namespace ModTek
                 foreach (var method in methods)
                 {
                     if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                    {
                         Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                    }
                 }
             }
         }
@@ -331,16 +360,16 @@ namespace ModTek
             try
             {
                 Log($"\tAdd SoundBankDef {path}");
-                SoundBankDef def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
+                var def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
                 def.filename = Path.Combine(Path.GetDirectoryName(path), def.filename);
-                if (ModTek.soundBanks.ContainsKey(def.name))
+                if (soundBanks.ContainsKey(def.name))
                 {
-                    ModTek.soundBanks[def.name] = def;
+                    soundBanks[def.name] = def;
                     Log($"\t\tReplace:" + def.name);
                 }
                 else
                 {
-                    ModTek.soundBanks.Add(def.name, def);
+                    soundBanks.Add(def.name, def);
                     Log($"\t\tAdd:" + def.name);
                 }
             }
@@ -354,11 +383,15 @@ namespace ModTek
         private static void AddModEntry(ModEntry modEntry)
         {
             if (modEntry.Path == null)
+            {
                 return;
+            }
 
             // since we're adding a new entry here, we want to remove anything that would remove it again after the fact
             if (RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
+            {
                 Log($"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
+            }
 
             if (CustomResources.ContainsKey(modEntry.Type))
             {
@@ -386,11 +419,15 @@ namespace ModTek
                     ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     break;
                 case nameof(SoundBankDef):
-                    ModTek.AddSoundBankDef(modEntry.Path);
+                    AddSoundBankDef(modEntry.Path);
                     return;
                 case nameof(SVGAsset):
                     Log($"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
-                    if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants))) { ModTek.systemIcons.Add(modEntry.Id); }
+                    if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants)))
+                    {
+                        systemIcons.Add(modEntry.Id);
+                    }
+
                     break;
                 case ModDefExLoading.CustomType_Tag:
                     CustomTags.Add(modEntry);
@@ -402,9 +439,13 @@ namespace ModTek
 
             // add to addendum instead of adding to manifest
             if (addendum != null)
+            {
                 Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
+            }
             else
+            {
                 Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+            }
 
             // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
             AddBTRLEntries.Add(modEntry);
@@ -413,9 +454,11 @@ namespace ModTek
         private static bool AddModEntryToDB(MetadataDatabase db, DBCache dbCache, string absolutePath, string typeStr)
         {
             if (Path.GetExtension(absolutePath)?.ToLowerInvariant() != ".json")
+            {
                 return false;
+            }
 
-            var type = (BattleTechResourceType)Enum.Parse(typeof(BattleTechResourceType), typeStr);
+            var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), typeStr);
             var relativePath = FileUtils.GetRelativePath(absolutePath, GameDirectory);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
@@ -438,7 +481,9 @@ namespace ModTek
 
                             // don't write game files to the dbCache, since they're assumed to be default in the db
                             if (!absolutePath.Contains(StreamingAssetsDirectory))
+                            {
                                 dbCache.Entries[relativePath] = writeTime;
+                            }
 
                             return true;
                         }
@@ -448,6 +493,7 @@ namespace ModTek
                             return false;
                         }
                     }
+
                     break;
             }
 
@@ -457,13 +503,19 @@ namespace ModTek
         private static void AddMerge(string type, string id, string path)
         {
             if (!merges.ContainsKey(type))
+            {
                 merges[type] = new Dictionary<string, List<string>>();
+            }
 
             if (!merges[type].ContainsKey(id))
+            {
                 merges[type][id] = new List<string>();
+            }
 
             if (merges[type][id].Contains(path))
+            {
                 return;
+            }
 
             merges[type][id].Add(path);
         }
@@ -501,7 +553,9 @@ namespace ModTek
             foreach (var type in types)
             {
                 if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
+                {
                     continue;
+                }
 
                 Log($"\t\tAlso removing JSON merges for {id} ({type})");
                 merges[type].Remove(id);
@@ -513,7 +567,9 @@ namespace ModTek
         private static void RemoveMerge(string type, string id)
         {
             if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
+            {
                 return;
+            }
 
             merges[type].Remove(id);
             Log($"\t\tHad merges for {id} but had to toss, since original file is being replaced");
@@ -533,13 +589,43 @@ namespace ModTek
             //CustomResources[CustomType_TagSet] = new Dictionary<string, VersionManifestEntry>();
 
             CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
-            CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry("settings", Path.Combine(StreamingAssetsDirectory, DebugSettingsPath), "DebugSettings", DateTime.Now, "1");
+            CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
+                "settings",
+                Path.Combine(StreamingAssetsDirectory, DebugSettingsPath),
+                "DebugSettings",
+                DateTime.Now,
+                "1"
+            );
 
             CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
-            CustomResources["GameTip"]["general"] = new VersionManifestEntry("general", Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")), "GameTip", DateTime.Now, "1");
-            CustomResources["GameTip"]["combat"] = new VersionManifestEntry("combat", Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")), "GameTip", DateTime.Now, "1");
-            CustomResources["GameTip"]["lore"] = new VersionManifestEntry("lore", Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")), "GameTip", DateTime.Now, "1");
-            CustomResources["GameTip"]["sim"] = new VersionManifestEntry("sim", Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")), "GameTip", DateTime.Now, "1");
+            CustomResources["GameTip"]["general"] = new VersionManifestEntry(
+                "general",
+                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
+                "GameTip",
+                DateTime.Now,
+                "1"
+            );
+            CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
+                "combat",
+                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
+                "GameTip",
+                DateTime.Now,
+                "1"
+            );
+            CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
+                "lore",
+                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
+                "GameTip",
+                DateTime.Now,
+                "1"
+            );
+            CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
+                "sim",
+                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
+                "GameTip",
+                DateTime.Now,
+                "1"
+            );
 
             ProgressPanel.SubmitWork(InitModsLoop);
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
@@ -549,6 +635,7 @@ namespace ModTek
             ProgressPanel.SubmitWork(GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
         }
+
         private static IEnumerator<ProgressReport> SoundBanksProcessing()
         {
             Log($"Processing sound banks ({soundBanks.Count}):");
@@ -557,22 +644,35 @@ namespace ModTek
                 Log($"\tWWise manager not inited");
                 yield break;
             }
+
             yield return new ProgressReport(0, "Processing sound banks", "");
             if (soundBanks.Count == 0)
             {
                 yield break;
             }
-            List<LoadedAudioBank> loadedBanks = (List<LoadedAudioBank>)typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance); int progeress = 0;
+
+            var loadedBanks = (List<LoadedAudioBank>) typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance);
+            var progeress = 0;
             foreach (var soundBank in soundBanks)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / ((float)soundBanks.Count), $"Processing sound bank", soundBank.Key, true);
+                yield return new ProgressReport(progeress / (float) soundBanks.Count, $"Processing sound bank", soundBank.Key, true);
                 Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
-                if (soundBank.Value.type != SoundBankType.Default) { continue; };
-                if (soundBank.Value.loaded) { continue; }
+                if (soundBank.Value.type != SoundBankType.Default)
+                {
+                    continue;
+                }
+
+                ;
+                if (soundBank.Value.loaded)
+                {
+                    continue;
+                }
+
                 loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
             }
         }
+
         private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             yield return new ProgressReport(0, "Gathering dependencies trees", "");
@@ -580,22 +680,35 @@ namespace ModTek
             {
                 yield break;
             }
-            int progeress = 0;
+
+            var progeress = 0;
             foreach (var mod in allModDefs)
             {
                 ++progeress;
-                foreach (string depname in mod.Value.DependsOn)
+                foreach (var depname in mod.Value.DependsOn)
                 {
-                    if (allModDefs.ContainsKey(depname)) { if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false) { allModDefs[depname].DependsOnMe.Add(mod.Value); }; };
+                    if (allModDefs.ContainsKey(depname))
+                    {
+                        if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false)
+                        {
+                            allModDefs[depname].DependsOnMe.Add(mod.Value);
+                        }
+
+                        ;
+                    }
+
+                    ;
                 }
             }
-            yield return new ProgressReport(1 / 3f, $"Gather depends on me", String.Empty, true);
+
+            yield return new ProgressReport(1 / 3f, $"Gather depends on me", string.Empty, true);
             progeress = 0;
             foreach (var mod in allModDefs)
             {
                 ++progeress;
                 mod.Value.GatherAffectingOfflineRec();
             }
+
             yield return new ProgressReport(2 / 3f, $"Gather disable influence tree", string.Empty, true);
             progeress = 0;
             foreach (var mod in allModDefs)
@@ -603,22 +716,33 @@ namespace ModTek
                 ++progeress;
                 mod.Value.GatherAffectingOnline();
             }
+
             yield return new ProgressReport(1, $"Gather enable influence tree", string.Empty, true);
             Log($"FAIL LIST:");
-            foreach (ModDefEx mod in allModDefs.Values)
+            foreach (var mod in allModDefs.Values)
             {
-                if (mod.Enabled == false) { continue; };
-                if (mod.LoadFail == false) { continue; }
+                if (mod.Enabled == false)
+                {
+                    continue;
+                }
+
+                ;
+                if (mod.LoadFail == false)
+                {
+                    continue;
+                }
+
                 Log($"\t{mod.Name} fail {mod.FailReason}");
                 foreach (var dmod in mod.AffectingOnline)
                 {
-                    bool state = dmod.Key.Enabled && (dmod.Key.LoadFail == false);
+                    var state = dmod.Key.Enabled && dmod.Key.LoadFail == false;
                     if (state != dmod.Value)
                     {
                         Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
                     }
                 }
-                foreach (string deps in mod.DependsOn)
+
+                foreach (var deps in mod.DependsOn)
                 {
                     if (allModDefs.ContainsKey(deps) == false)
                     {
@@ -651,7 +775,10 @@ namespace ModTek
                 try
                 {
                     modDef = ModDefEx.CreateFromPath(modDefPath);
-                    if (modDef.Name == MODTEK_DEF_NAME) { modDef = SettingsDef; }
+                    if (modDef.Name == MODTEK_DEF_NAME)
+                    {
+                        modDef = SettingsDef;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -660,16 +787,21 @@ namespace ModTek
                     continue;
                 }
 
-                if (allModDefs.ContainsKey(modDef.Name) == false) { allModDefs.Add(modDef.Name, modDef); }
+                if (allModDefs.ContainsKey(modDef.Name) == false)
+                {
+                    allModDefs.Add(modDef.Name, modDef);
+                }
                 else
                 {
-                    int counter = 0;
-                    string tmpname = modDef.Name;
+                    var counter = 0;
+                    var tmpname = modDef.Name;
                     do
                     {
                         ++counter;
                         tmpname = modDef.Name + "{dublicate " + counter + "}";
-                    } while (allModDefs.ContainsKey(tmpname) == true);
+                    }
+                    while (allModDefs.ContainsKey(tmpname) == true);
+
                     modDef.Name = tmpname;
                     modDef.Enabled = false;
                     modDef.LoadFail = true;
@@ -679,7 +811,7 @@ namespace ModTek
                     continue;
                 }
 
-                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out bool shouldAddToList))
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out var shouldAddToList))
                 {
                     Log($"Not loading {modDef.Name} because {reason}");
                     if (!modDef.IgnoreLoadFailure)
@@ -692,8 +824,10 @@ namespace ModTek
                             //allModDefs[modDef.Name].Description = reason;
                         }
                     }
+
                     continue;
                 }
+
                 ModDefs.Add(modDef.Name, modDef);
             }
 
@@ -703,12 +837,17 @@ namespace ModTek
             {
                 var modDef = ModDefs[modName];
                 ModDefs.Remove(modName);
-                if (modDef.IgnoreLoadFailure) { continue; }
+                if (modDef.IgnoreLoadFailure)
+                {
+                    continue;
+                }
+
                 if (allModDefs.ContainsKey(modName))
                 {
                     allModDefs[modName].LoadFail = true;
                     allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
                 }
+
                 Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
@@ -731,16 +870,18 @@ namespace ModTek
                             allModDefs[modName].LoadFail = true;
                             allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
                         }
+
                         FailedToLoadMods.Add(modName);
                     }
+
                     continue;
                 }
 
-                yield return new ProgressReport(numModsLoaded++ / ((float)ModLoadOrder.Count), "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+                yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
                 try
                 {
-                    if (!ModDefExLoading.LoadMod(modDef, out string reason))
+                    if (!ModDefExLoading.LoadMod(modDef, out var reason))
                     {
                         ModDefs.Remove(modName);
 
@@ -760,7 +901,9 @@ namespace ModTek
                     ModDefs.Remove(modName);
 
                     if (modDef.IgnoreLoadFailure)
+                    {
                         continue;
+                    }
 
                     LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
@@ -777,7 +920,9 @@ namespace ModTek
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+            {
                 yield break;
+            }
 
             Log("\nAdding Mod Content...");
             var typeCache = new TypeCache(TypeCachePath);
@@ -795,11 +940,11 @@ namespace ModTek
                 var modDef = ModDefs[modName];
 
                 Log($"{modName}:");
-                yield return new ProgressReport(entryCount / ((float)numEntries), $"Loading {modName}", "", true);
+                yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
 
                 foreach (var modEntry in modDef.Manifest)
                 {
-                    yield return new ProgressReport(entryCount++ / ((float)numEntries), $"Loading {modName}", modEntry.Id);
+                    yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", modEntry.Id);
 
                     // type being null means we have to figure out the type from the path (StreamingAssets)
                     if (modEntry.Type == null)
@@ -807,7 +952,9 @@ namespace ModTek
                         var relativePath = FileUtils.GetRelativePath(modEntry.Path, Path.Combine(modDef.Directory, "StreamingAssets"));
 
                         if (relativePath == DebugSettingsPath)
+                        {
                             modEntry.Type = "DebugSettings";
+                        }
                     }
 
                     // type *still* being null means that this is an "non-special" case, i.e. it's in the manifest
@@ -859,74 +1006,76 @@ namespace ModTek
                     switch (modEntry.Type)
                     {
                         case ModDefExLoading.CustomType_AdvancedJSONMerge:
+                        {
+                            var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
+
+                            if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
                             {
-                                var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
+                                advancedJSONMerge.TargetIDs = new List<string> { advancedJSONMerge.TargetID };
+                            }
 
-                                if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
-                                    advancedJSONMerge.TargetIDs = new List<string> { advancedJSONMerge.TargetID };
+                            if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
+                            {
+                                Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
+                                continue;
+                            }
 
-                                if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
+                            foreach (var id in advancedJSONMerge.TargetIDs)
+                            {
+                                var type = advancedJSONMerge.TargetType;
+                                if (string.IsNullOrEmpty(type))
                                 {
-                                    Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
-                                    continue;
-                                }
-
-                                foreach (var id in advancedJSONMerge.TargetIDs)
-                                {
-                                    var type = advancedJSONMerge.TargetType;
-                                    if (string.IsNullOrEmpty(type))
+                                    var types = typeCache.GetTypes(id, CachedVersionManifest);
+                                    if (types == null || types.Count == 0)
                                     {
-                                        var types = typeCache.GetTypes(id, CachedVersionManifest);
-                                        if (types == null || types.Count == 0)
-                                        {
-                                            Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
-                                            continue;
-                                        }
-
-                                        // assume that only a single type
-                                        type = types[0];
-                                    }
-
-                                    var entry = FindEntry(type, id);
-                                    if (entry == null)
-                                    {
-                                        Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                        Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
                                         continue;
                                     }
 
-                                    AddMerge(type, id, modEntry.Path);
-                                    Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                                    // assume that only a single type
+                                    type = types[0];
                                 }
 
-                                continue;
+                                var entry = FindEntry(type, id);
+                                if (entry == null)
+                                {
+                                    Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    continue;
+                                }
+
+                                AddMerge(type, id, modEntry.Path);
+                                Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
                             }
+
+                            continue;
+                        }
                         case nameof(SoundBankDef):
-                            {
-                                AddModEntry(modEntry);
-                                continue;
-                            }
+                        {
+                            AddModEntry(modEntry);
+                            continue;
+                        }
                         case ModDefExLoading.CustomType_FixedSVGAsset:
-                            {
-                                AddModEntry(modEntry);
-                                continue;
-                            }
+                        {
+                            AddModEntry(modEntry);
+                            continue;
+                        }
                         case ModDefExLoading.CustomType_Tag:
-                            {
-                                Log($"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                                AddModEntry(modEntry);
-                                continue;
-                            }
+                        {
+                            Log($"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
+                            AddModEntry(modEntry);
+                            continue;
+                        }
                         case ModDefExLoading.CustomType_TagSet:
-                            {
-                                Log($"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                                AddModEntry(modEntry);
-                                continue;
-                            }
+                        {
+                            Log($"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
+                            AddModEntry(modEntry);
+                            continue;
+                        }
                     }
 
                     // non-StreamingAssets json merges
-                    if (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".json" && modEntry.ShouldMergeJSON
-                        || (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".txt" || Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".csv") && modEntry.ShouldAppendText)
+                    if (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".json" && modEntry.ShouldMergeJSON ||
+                        (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".txt" || Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".csv") && modEntry.ShouldAppendText)
                     {
                         // have to find the original path for the manifest entry that we're merging onto
                         var matchingEntry = FindEntry(modEntry.Type, modEntry.Id);
@@ -966,7 +1115,9 @@ namespace ModTek
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+            {
                 yield break;
+            }
 
             // perform merges into cache
             Log("\nDoing merges...");
@@ -995,21 +1146,19 @@ namespace ModTek
                     var mergePaths = merges[type][id];
 
                     if (!mergeCache.HasCachedEntry(originalPath, mergePaths))
-                        yield return new ProgressReport(mergeCount++ / ((float)numEntries), "Merging", id);
+                    {
+                        yield return new ProgressReport(mergeCount++ / (float) numEntries, "Merging", id);
+                    }
 
                     var cachePath = mergeCache.GetOrCreateCachedEntry(originalPath, mergePaths);
 
                     // something went wrong (the parent json prob had errors)
                     if (cachePath == null)
-                        continue;
-
-                    var cacheEntry = new ModEntry(cachePath)
                     {
-                        ShouldAppendText = false,
-                        ShouldMergeJSON = false,
-                        Type = existingEntry.Type,
-                        Id = id
-                    };
+                        continue;
+                    }
+
+                    var cacheEntry = new ModEntry(cachePath) { ShouldAppendText = false, ShouldMergeJSON = false, Type = existingEntry.Type, Id = id };
 
                     AddModEntry(cacheEntry);
                 }
@@ -1022,7 +1171,9 @@ namespace ModTek
         {
             // there are no mods loaded, just return
             if (ModLoadOrder == null || ModLoadOrder.Count == 0)
+            {
                 yield break;
+            }
 
             Log("\nSyncing Database...");
             yield return new ProgressReport(1, "Syncing Database", "", true);
@@ -1047,14 +1198,15 @@ namespace ModTek
 
                 // check if the file in the db cache is still used
                 if (BTRLEntriesPathes.Contains(absolutePath))
+                {
                     continue;
+                }
 
                 Log($"\tNeed to remove DB entry from file in path: {path}");
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
-                    ?? CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+                var existingEntry = AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry() ?? CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
 
                 // TODO: DOES NOT HANDLE CASE WHERE REMOVING VANILLA CONTENT IN DB
 
@@ -1074,7 +1226,9 @@ namespace ModTek
             {
                 // remove old entries
                 foreach (var removeEntry in removeEntries)
+                {
                     dbCache.Entries.Remove(removeEntry);
+                }
 
                 foreach (var replacementEntry in replacementEntries)
                 {
@@ -1088,27 +1242,39 @@ namespace ModTek
 
             // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
             if (shouldRebuildDB)
+            {
                 dbCache = new DBCache(null, MDDBPath, ModMDDBPath);
+            }
 
             Log($"\nAdding dynamic enums:");
             var addCount = 0;
-            List<ModDefEx> mods = new List<ModDefEx>();
-            foreach (string modname in ModLoadOrder)
+            var mods = new List<ModDefEx>();
+            foreach (var modname in ModLoadOrder)
             {
-                if (ModTek.ModDefs.ContainsKey(modname) == false) { continue; }
-                mods.Add(ModTek.ModDefs[modname]);
+                if (ModDefs.ContainsKey(modname) == false)
+                {
+                    continue;
+                }
+
+                mods.Add(ModDefs[modname]);
             }
-            foreach (ModDefEx moddef in mods)
+
+            foreach (var moddef in mods)
             {
                 if (moddef.DataAddendumEntries.Count != 0)
                 {
                     Log($"{moddef.Name}:");
-                    foreach (DataAddendumEntry dataAddendumEntry in moddef.DataAddendumEntries)
+                    foreach (var dataAddendumEntry in moddef.DataAddendumEntries)
                     {
-                        if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, moddef.Directory)) { shouldWriteDB = true; }
-                        yield return new ProgressReport(addCount / ((float)mods.Count), "Populating Dynamic Enums", moddef.Name);
+                        if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, moddef.Directory))
+                        {
+                            shouldWriteDB = true;
+                        }
+
+                        yield return new ProgressReport(addCount / (float) mods.Count, "Populating Dynamic Enums", moddef.Name);
                     }
                 }
+
                 ++addCount;
             }
 
@@ -1118,22 +1284,31 @@ namespace ModTek
             {
                 if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
                 {
-                    yield return new ProgressReport(addCount / ((float)AddBTRLEntries.Count), "Populating Database", modEntry.Id);
+                    yield return new ProgressReport(addCount / (float) AddBTRLEntries.Count, "Populating Database", modEntry.Id);
                     Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     shouldWriteDB = true;
                 }
+
                 addCount++;
             }
 
             // Add any custom tags to DB
-            if (CustomTags.Count > 0) Log($"Processing CustomTags:");
-            foreach (ModEntry modEntry in CustomTags)
+            if (CustomTags.Count > 0)
+            {
+                Log($"Processing CustomTags:");
+            }
+
+            foreach (var modEntry in CustomTags)
             {
                 CustomTypeProcessor.AddOrUpdateTag(modEntry.Path);
             }
 
-            if (CustomTagSets.Count > 0) Log($"Processing CustomTagSets:");
-            foreach (ModEntry modEntry in CustomTagSets)
+            if (CustomTagSets.Count > 0)
+            {
+                Log($"Processing CustomTagSets:");
+            }
+
+            foreach (var modEntry in CustomTagSets)
             {
                 CustomTypeProcessor.AddOrUpdateTagSet(modEntry.Path);
             }
@@ -1147,14 +1322,16 @@ namespace ModTek
                 yield return new ProgressReport(1, "Writing Database", "", true);
                 Log("Writing DB");
 
-                object inMemoryDB = typeof(MetadataDatabase).GetField("inMemoryDB", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MetadataDatabase.Instance);
-                Task.Run(() =>
-                {
-                    lock (inMemoryDB)
+                var inMemoryDB = typeof(MetadataDatabase).GetField("inMemoryDB", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MetadataDatabase.Instance);
+                Task.Run(
+                    () =>
                     {
-                        MetadataDatabase.Instance.WriteInMemoryDBToDisk();
+                        lock (inMemoryDB)
+                        {
+                            MetadataDatabase.Instance.WriteInMemoryDBToDisk();
+                        }
                     }
-                });
+                );
             }
         }
 
@@ -1165,7 +1342,9 @@ namespace ModTek
             Log("\nFinishing Up");
 
             if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(StreamingAssetsDirectory, DebugSettingsPath))
+            {
                 DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
+            }
 
             if (ModLoadOrder != null && ModLoadOrder.Count > 0)
             {

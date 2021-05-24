@@ -38,21 +38,26 @@ namespace ModTek.Mods
         // this will abort loading by ModTek if set to false
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
         [DefaultValue(false)]
         public bool Hidden { get; set; } = false;
+
         [DefaultValue(false)]
         public bool Locked { get; set; } = false;
 
         // load order and requirements
-        public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
-        public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
-        public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
+        public HashSet<string> DependsOn { get; set; } = new();
+        public HashSet<string> ConflictsWith { get; set; } = new();
+        public HashSet<string> OptionallyDependsOn { get; set; } = new();
+
         [JsonIgnore]
-        public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new Dictionary<ModDefEx, bool>();
+        public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new();
+
         [JsonIgnore]
-        public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new Dictionary<ModDefEx, bool>();
+        public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new();
+
         [JsonIgnore]
-        public HashSet<ModDefEx> DependsOnMe { get; set; } = new HashSet<ModDefEx>();
+        public HashSet<ModDefEx> DependsOnMe { get; set; } = new();
 
         [DefaultValue(false)]
         public bool IgnoreLoadFailure { get; set; }
@@ -60,6 +65,7 @@ namespace ModTek.Mods
         // adding and running code
         [JsonIgnore]
         public Assembly Assembly { get; set; }
+
         public string DLL { get; set; }
         public string DLLEntryPoint { get; set; }
 
@@ -71,31 +77,39 @@ namespace ModTek.Mods
         public bool LoadImplicitManifest { get; set; } = true;
 
         // custom resources types that will be passed into FinishedLoading method
-        public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
+        public HashSet<string> CustomResourceTypes { get; set; } = new();
+
         // palce for add enum files
-        public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new List<DataAddendumEntry>();
+        public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new();
+
         // manifest, for including any kind of things to add to the game's manifest
-        public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
+        public List<ModEntry> Manifest { get; set; } = new();
+
         // remove these entries by ID from the game
-        public List<string> RemoveManifestEntries { get; set; } = new List<string>();
+        public List<string> RemoveManifestEntries { get; set; } = new();
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public JObject Settings { get; set; } = new JObject();
+        public JObject Settings { get; set; } = new();
 
         [JsonIgnore]
         public bool LoadFail { get; set; } = false;
+
         [JsonIgnore]
         public bool PendingEnable { get; set; } = false;
+
         [JsonIgnore]
         public string FailReason { get; set; }
-        public void SaveState() {
-            string modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
-            ModState state = new ModState();
-            state.Enabled = this.Enabled;
-            RuntimeLog.RLog.M.WL(2,"writing to FS:"+this.Name+"->"+state.Enabled);
+
+        public void SaveState()
+        {
+            var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
+            var state = new ModState();
+            state.Enabled = Enabled;
+            RuntimeLog.RLog.M.WL(2, "writing to FS:" + Name + "->" + state.Enabled);
             state.SaveToPath(modStatePath);
         }
+
         /// <summary>
         /// Creates a ModDef from a path to a mod.json
         /// </summary>
@@ -105,7 +119,7 @@ namespace ModTek.Mods
             modDef.Directory = Path.GetDirectoryName(path);
             modDef.LoadFail = false;
             modDef.FailReason = string.Empty;
-            string statepath = Path.Combine(Path.GetDirectoryName(path),ModTek.MOD_STATE_JSON_NAME);
+            var statepath = Path.Combine(Path.GetDirectoryName(path), ModTek.MOD_STATE_JSON_NAME);
             if (File.Exists(statepath))
             {
                 try
@@ -115,17 +129,18 @@ namespace ModTek.Mods
                 }
                 catch (Exception)
                 {
-                    ModState state = new ModState();
+                    var state = new ModState();
                     state.Enabled = modDef.Enabled;
                     state.SaveToPath(statepath);
                 }
             }
             else
             {
-                ModState state = new ModState();
+                var state = new ModState();
                 state.Enabled = modDef.Enabled;
                 state.SaveToPath(statepath);
             }
+
             modDef.PendingEnable = modDef.Enabled;
             return modDef;
         }
@@ -134,6 +149,7 @@ namespace ModTek.Mods
         {
             return JsonConvert.SerializeObject(this);
         }
+
         /// <summary>
         /// Checks if all dependencies are present in param loaded
         /// </summary>
@@ -141,6 +157,7 @@ namespace ModTek.Mods
         {
             return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
+
         /// <summary>
         /// Checks against provided list of mods to see if any of them conflict
         /// </summary>
@@ -161,6 +178,7 @@ namespace ModTek.Mods
                 shouldAddToList = true;
                 return false;
             }
+
             shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {

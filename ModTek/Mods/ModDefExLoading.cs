@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace ModTek.Mods
 {
-    class ModDefExLoading
+    internal class ModDefExLoading
     {
         internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
         internal const string CustomType_DebugSettings = "DebugSettings";
@@ -22,10 +22,17 @@ namespace ModTek.Mods
 
         private static readonly string[] MODTEK_TYPES =
         {
-            CustomType_Video, CustomType_AdvancedJSONMerge,
-            CustomType_GameTip, CustomType_SoundBank, CustomType_SoundBankDef,
-            CustomType_DebugSettings, CustomType_FixedSVGAsset, CustomType_Tag, CustomType_TagSet
+            CustomType_Video,
+            CustomType_AdvancedJSONMerge,
+            CustomType_GameTip,
+            CustomType_SoundBank,
+            CustomType_SoundBankDef,
+            CustomType_DebugSettings,
+            CustomType_FixedSVGAsset,
+            CustomType_Tag,
+            CustomType_TagSet
         };
+
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         public static bool LoadMod(ModDefEx modDef, out string reason)
@@ -42,7 +49,9 @@ namespace ModTek.Mods
                 }
 
                 if (!ModTek.CustomResources.ContainsKey(customResourceType))
+                {
                     ModTek.CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
+                }
             }
 
             // expand the manifest (parses all JSON as well)
@@ -52,15 +61,20 @@ namespace ModTek.Mods
                 reason = "Can't expand manifest";
                 return false;
             }
+
             // load the mod assembly
             if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
             {
                 reason = "Fail to call init method";
                 return false;
             }
+
             // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
             if (expandedManifest.Count > 0)
+            {
                 Logger.Log((string) $"\t{expandedManifest.Count} manifest entries");
+            }
+
             modDef.Manifest = expandedManifest;
             reason = "Success";
             return true;
@@ -72,7 +86,10 @@ namespace ModTek.Mods
             var expandedManifest = new List<ModEntry>();
 
             if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
+            {
                 modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
+            }
+
             Logger.Log((string) $"Expanding manifest {modDef.Name}:");
             foreach (var modEntry in modDef.Manifest)
             {
@@ -114,10 +131,7 @@ namespace ModTek.Mods
                     return null;
                 }
 
-                if (!string.IsNullOrEmpty(modEntry.Type)
-                    && !VANILLA_TYPES.Contains(modEntry.Type)
-                    && !MODTEK_TYPES.Contains(modEntry.Type)
-                    && !ModTek.CustomResources.ContainsKey(modEntry.Type))
+                if (!string.IsNullOrEmpty(modEntry.Type) && !VANILLA_TYPES.Contains(modEntry.Type) && !MODTEK_TYPES.Contains(modEntry.Type) && !ModTek.CustomResources.ContainsKey(modEntry.Type))
                 {
                     Logger.Log((string) $"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
                     return null;
@@ -128,13 +142,18 @@ namespace ModTek.Mods
                 if (Directory.Exists(entryPath))
                 {
                     // path is a directory, add all the files there
-                    List<string> files = new List<string>();
+                    var files = new List<string>();
                     switch (modEntry.Type)
                     {
                         // TODO too much code clone
-                        case nameof(SoundBankDef): files = Directory.GetFiles(entryPath, "*.json", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList(); break;
-                        default: files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList(); break;
+                        case nameof(SoundBankDef):
+                            files = Directory.GetFiles(entryPath, "*.json", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
+                            break;
+                        default:
+                            files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
+                            break;
                     }
+
                     foreach (var filePath in files)
                     {
                         var path = Path.GetFullPath(filePath);
@@ -176,7 +195,7 @@ namespace ModTek.Mods
 
             return expandedManifest;
         }
-        
+
         private static string InferIDFromFile(string path)
         {
             return Path.GetFileNameWithoutExtension(path);
@@ -237,16 +256,27 @@ namespace ModTek.Mods
                     { "settingsJson", settings },
                     { "settingsJSON", settings },
                     { "JSON", settings },
-                    { "json", settings },
+                    { "json", settings }
                 };
 
                 try
                 {
                     if (AssemblyUtil.InvokeMethodByParameterNames(method, parameterDictionary))
+                    {
                         continue;
+                    }
 
-                    if (AssemblyUtil.InvokeMethodByParameterTypes(method, new object[] { directory, settings }))
+                    if (AssemblyUtil.InvokeMethodByParameterTypes(
+                        method,
+                        new object[]
+                        {
+                            directory,
+                            settings
+                        }
+                    ))
+                    {
                         continue;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -261,7 +291,9 @@ namespace ModTek.Mods
             modDef.Assembly = assembly;
 
             if (!modDef.EnableAssemblyVersionCheck)
+            {
                 ModTek.TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
+            }
 
             return true;
         }

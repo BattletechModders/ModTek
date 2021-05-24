@@ -14,15 +14,22 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(MainMenu), "Init")]
     public static class MainMenu_Init_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
             if (ModTek.FailedToLoadMods.Count <= 0)
+            {
                 return;
+            }
 
-            GenericPopupBuilder.Create("Some Mods Didn't Load",
-                    $"Check \"{FileUtils.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n"
-                    + string.Join(", ", ModTek.FailedToLoadMods.ToArray()))
+            GenericPopupBuilder.Create(
+                    "Some Mods Didn't Load",
+                    $"Check \"{FileUtils.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n" + string.Join(", ", ModTek.FailedToLoadMods.ToArray())
+                )
                 .AddButton("Continue")
                 .Render();
             ModTek.FailedToLoadMods.Clear();

@@ -29,7 +29,9 @@ namespace ModTek.Caches
 
             // delete mod db if it exists the cache does not
             if (File.Exists(modMDDBPath))
+            {
                 File.Delete(modMDDBPath);
+            }
 
             File.Copy(mddbPath, modMDDBPath);
 
@@ -46,7 +48,9 @@ namespace ModTek.Caches
             foreach (var path in Entries.Keys)
             {
                 if (!Path.IsPathRooted(path))
+                {
                     continue;
+                }
 
                 var relativePath = FileUtils.GetRelativePath(path, ModTek.GameDirectory);
                 toAdd[relativePath] = Entries[path];
@@ -54,10 +58,14 @@ namespace ModTek.Caches
             }
 
             foreach (var addKVP in toAdd)
+            {
                 Entries.Add(addKVP.Key, addKVP.Value);
+            }
 
             foreach (var path in toRemove)
+            {
                 Entries.Remove(path);
+            }
         }
 
         public void ToFile(string path)

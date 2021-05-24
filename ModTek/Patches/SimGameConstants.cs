@@ -9,7 +9,10 @@ namespace ModTek
     [HarmonyPatch(MethodType.Normal)]
     public static class SimGameConstants_FromJSON
     {
-        public static bool Prepare() => ModTek.Enabled && ModTek.Config.EnableDebugLogging;
+        public static bool Prepare()
+        {
+            return ModTek.Enabled && ModTek.Config.EnableDebugLogging;
+        }
 
         public static void Postfix(SimGameConstants __instance, string json)
         {
@@ -17,5 +20,4 @@ namespace ModTek
             RLog.M.WL(1, json);
         }
     }
-
 }

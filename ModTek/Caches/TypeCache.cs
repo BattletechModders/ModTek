@@ -41,35 +41,47 @@ namespace ModTek.Caches
                 var id = Path.GetFileNameWithoutExtension(path);
 
                 if (id == null || id == path || toAdd.ContainsKey(id) || entries.ContainsKey(id))
+                {
                     continue;
+                }
 
                 toAdd[id] = entries[path];
                 toRemove.Add(path);
             }
 
             foreach (var addKVP in toAdd)
+            {
                 entries.Add(addKVP.Key, addKVP.Value);
+            }
 
             foreach (var path in toRemove)
+            {
                 entries.Remove(path);
+            }
         }
 
         public List<string> GetTypes(string id, VersionManifest manifest = null)
         {
             if (entries.ContainsKey(id))
+            {
                 return entries[id];
+            }
 
             if (manifest != null)
             {
                 // get the types from the manifest
                 var matchingEntries = manifest.FindAll(x => x.Id == id);
                 if (matchingEntries == null || matchingEntries.Count == 0)
+                {
                     return null;
+                }
 
                 var types = new List<string>();
 
                 foreach (var existingEntry in matchingEntries)
+                {
                     types.Add(existingEntry.Type);
+                }
 
                 entries[id] = types;
                 return entries[id];
@@ -82,7 +94,9 @@ namespace ModTek.Caches
         {
             var types = GetTypes(id);
             if (types != null && types.Contains(type))
+            {
                 return;
+            }
 
             if (types != null && !types.Contains(type))
             {

@@ -17,20 +17,34 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(BinkMediaPlayer), "Play")]
     public static class BinkMediaPlayer_Play_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(BinkMediaPlayer __instance, string videoName)
         {
-            var videoEntry = ModTek.CustomResources["Video"].Values.LastOrDefault(entry =>
-                entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
+            var videoEntry = ModTek.CustomResources["Video"]
+                .Values.LastOrDefault(
+                    entry =>
+                        entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName)
+                );
 
             if (videoEntry == null)
+            {
                 return true;
+            }
 
             var iTraverse = Traverse.Create(__instance);
 
             // some code taken from HBS decompiled code, license does not apply here
-            var bink = Bink.Open(videoEntry.FilePath, Bink.SoundTrackTypes.SndSimple,
-                0, Bink.BufferingTypes.Stream, 0UL);
+            var bink = Bink.Open(
+                videoEntry.FilePath,
+                Bink.SoundTrackTypes.SndSimple,
+                0,
+                Bink.BufferingTypes.Stream,
+                0UL
+            );
             iTraverse.Field("bink").SetValue(bink);
 
             if (bink == IntPtr.Zero)
@@ -52,7 +66,9 @@ namespace ModTek.Patches
             var bmpTraverse = Traverse.Create(typeof(BinkMediaPlayer));
             var cr = bmpTraverse.Field("cr").GetValue<Coroutine>();
             if (cr == null)
+            {
                 bmpTraverse.Field("cr").SetValue(__instance.StartCoroutine("EndOfFrame"));
+            }
 
             var cr_num = bmpTraverse.Field("cr_num").GetValue<int>();
             bmpTraverse.Field("cr_num").SetValue(cr_num + 1);

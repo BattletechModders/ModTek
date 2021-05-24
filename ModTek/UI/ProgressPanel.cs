@@ -43,7 +43,7 @@ namespace ModTek.UI
             public Slider Slider { get; set; }
             public Action FinishAction { get; set; }
 
-            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
+            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new();
 
             private void Start()
             {
@@ -86,7 +86,9 @@ namespace ModTek.UI
                         var report = workEnumerator.Current;
 
                         if (sw.ElapsedMilliseconds <= FRAME_TIME && !report.ForceFrame)
+                        {
                             continue;
+                        }
 
                         Slider.value = report.Progress;
                         SliderText.text = report.SliderText;

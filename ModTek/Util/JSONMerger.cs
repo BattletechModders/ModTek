@@ -13,8 +13,7 @@ namespace ModTek.Util
     {
         private static bool IsAdvancedJSONMerge(JObject merge)
         {
-            return (merge[nameof(AdvancedJSONMerge.TargetID)] != null || merge[nameof(AdvancedJSONMerge.TargetIDs)] != null)
-                && merge[nameof(AdvancedJSONMerge.Instructions)] != null;
+            return (merge[nameof(AdvancedJSONMerge.TargetID)] != null || merge[nameof(AdvancedJSONMerge.TargetIDs)] != null) && merge[nameof(AdvancedJSONMerge.Instructions)] != null;
         }
 
         private static void DoAdvancedMerge(JObject target, JObject merge)
@@ -23,7 +22,9 @@ namespace ModTek.Util
             foreach (var instruction in instructions)
             {
                 if (!instruction.Process(target))
+                {
                     Log($"Warning: An instruction (Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') did not perform anything.");
+                }
             }
         }
 
@@ -68,7 +69,9 @@ namespace ModTek.Util
                 var jTokens = root.SelectTokens(JSONPath).ToList();
 
                 if (jTokens.Count == 0)
+                {
                     return false;
+                }
 
                 foreach (var jToken in jTokens)
                 {
@@ -77,9 +80,13 @@ namespace ModTek.Util
                         case MergeAction.Remove:
                         {
                             if (jToken.Parent is JProperty)
+                            {
                                 jToken.Parent.Remove();
+                            }
                             else
+                            {
                                 jToken.Remove();
+                            }
 
                             break;
                         }
@@ -91,7 +98,9 @@ namespace ModTek.Util
                         case MergeAction.ArrayAdd:
                         {
                             if (!(jToken is JArray jArray))
+                            {
                                 throw new Exception("JSONPath needs to point an array");
+                            }
 
                             jArray.Add(Value);
                             break;
@@ -109,7 +118,9 @@ namespace ModTek.Util
                         case MergeAction.ObjectMerge:
                         {
                             if (!(jToken is JObject jObject1) || !(Value is JObject jObject2))
+                            {
                                 throw new Exception("JSONPath has to point to an object and Value has to be an object");
+                            }
 
                             // same behavior as partial json merging
                             jObject1.Merge(jObject2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
@@ -118,7 +129,9 @@ namespace ModTek.Util
                         case MergeAction.ArrayConcat:
                         {
                             if (!(jToken is JArray jArray1) || !(Value is JArray jArray2))
+                            {
                                 throw new Exception("JSONPath has to point to an array and Value has to be an array");
+                            }
 
                             jArray1.Merge(jArray2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
                             break;
@@ -144,7 +157,9 @@ namespace ModTek.Util
         public static AdvancedJSONMerge FromFile(string path)
         {
             if (!File.Exists(path))
+            {
                 return null;
+            }
 
             try
             {

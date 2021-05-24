@@ -33,9 +33,9 @@ namespace ModTek.CustomTypes
 
         public Tag_MDD ToTagMDD()
         {
-            return new Tag_MDD(
-                name: Name, important: Important, playerVisible: PlayerVisible,
-                friendlyName: FriendlyName, description: Description
+            return new(
+                Name, Important, PlayerVisible,
+                FriendlyName, Description
             );
         }
     }

@@ -21,7 +21,7 @@ namespace ModTek.CustomTypes
 
         public override string ToString()
         {
-            return $"CustomTagSet => ID: {ID}  TypeID: {TypeID}  Tags: ({String.Join(", ", Tags)})";
+            return $"CustomTagSet => ID: {ID}  TypeID: {TypeID}  Tags: ({string.Join(", ", Tags)})";
         }
     }
 }

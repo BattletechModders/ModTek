@@ -10,7 +10,7 @@ namespace ModTek.Caches
 {
     internal class MergeCache
     {
-        public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new Dictionary<string, CacheEntry>();
+        public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new();
 
         public string GetOrCreateCachedEntry(string absolutePath, List<string> mergePaths)
         {
@@ -25,7 +25,9 @@ namespace ModTek.Caches
                 var cachedEntry = new CacheEntry(cachedAbsolutePath, absolutePath, mergePaths);
 
                 if (cachedEntry.HasErrors)
+                {
                     return null;
+                }
 
                 CachedEntries[relativePath] = cachedEntry;
 
@@ -39,7 +41,9 @@ namespace ModTek.Caches
             Log($"\t{relativePath}");
 
             foreach (var contributingPath in mergePaths)
+            {
                 Log($"\t{FileUtils.GetRelativePath(contributingPath, ModTek.GameDirectory)}");
+            }
 
             Log("");
 
@@ -60,11 +64,15 @@ namespace ModTek.Caches
             foreach (var cachedEntryKVP in CachedEntries)
             {
                 if (!cachedEntryKVP.Value.CacheHit)
+                {
                     unusedMergePaths.Add(cachedEntryKVP.Key);
+                }
             }
 
             if (unusedMergePaths.Count > 0)
+            {
                 Log("");
+            }
 
             foreach (var unusedMergePath in unusedMergePaths)
             {
@@ -72,7 +80,9 @@ namespace ModTek.Caches
                 CachedEntries.Remove(unusedMergePath);
 
                 if (File.Exists(cacheAbsolutePath))
+                {
                     File.Delete(cacheAbsolutePath);
+                }
 
                 Log($"Old Merge Deleted: {cacheAbsolutePath}");
 
@@ -104,15 +114,21 @@ namespace ModTek.Caches
 
                     toAdd[relativePath].CachePath = FileUtils.GetRelativePath(toAdd[relativePath].CachePath, ModTek.GameDirectory);
                     foreach (var merge in toAdd[relativePath].Merges)
+                    {
                         merge.Path = FileUtils.GetRelativePath(merge.Path, ModTek.GameDirectory);
+                    }
                 }
             }
 
             foreach (var addKVP in toAdd)
+            {
                 CachedEntries.Add(addKVP.Key, addKVP.Value);
+            }
 
             foreach (var path in toRemove)
+            {
                 CachedEntries.Remove(path);
+            }
         }
 
         public static MergeCache FromFile(string path)
@@ -141,13 +157,21 @@ namespace ModTek.Caches
 
         internal class CacheEntry
         {
-            [JsonIgnore] private string cacheAbsolutePath;
-            [JsonIgnore] internal bool CacheHit; // default is false
-            [JsonIgnore] internal string ContainingDirectory;
-            [JsonIgnore] internal bool HasErrors; // default is false
+            [JsonIgnore]
+            private string cacheAbsolutePath;
+
+            [JsonIgnore]
+            internal bool CacheHit; // default is false
+
+            [JsonIgnore]
+            internal string ContainingDirectory;
+
+            [JsonIgnore]
+            internal bool HasErrors; // default is false
+
             public string CachePath { get; set; }
             public DateTime OriginalTime { get; set; }
-            public List<PathTimeTuple> Merges { get; set; } = new List<PathTimeTuple>();
+            public List<PathTimeTuple> Merges { get; set; } = new();
 
             [JsonIgnore]
             internal string CacheAbsolutePath
@@ -155,7 +179,9 @@ namespace ModTek.Caches
                 get
                 {
                     if (string.IsNullOrEmpty(cacheAbsolutePath))
+                    {
                         cacheAbsolutePath = FileUtils.ResolvePath(CachePath, ModTek.GameDirectory);
+                    }
 
                     return cacheAbsolutePath;
                 }
@@ -180,7 +206,9 @@ namespace ModTek.Caches
                 }
 
                 foreach (var mergePath in mergePaths)
+                {
                     Merges.Add(new PathTimeTuple(FileUtils.GetRelativePath(mergePath, ModTek.GameDirectory), File.GetLastWriteTimeUtc(mergePath)));
+                }
 
                 Directory.CreateDirectory(ContainingDirectory);
 
@@ -231,7 +259,9 @@ namespace ModTek.Caches
                     writer.Write(File.ReadAllText(originalAbsolutePath));
 
                     foreach (var mergePath in mergePaths)
+                    {
                         writer.Write(File.ReadAllText(mergePath));
+                    }
                 }
             }
 
@@ -239,15 +269,21 @@ namespace ModTek.Caches
             {
                 // must have an existing cached json
                 if (!File.Exists(CacheAbsolutePath))
+                {
                     return false;
+                }
 
                 // must have the same original file
                 if (File.GetLastWriteTimeUtc(originalPath) != OriginalTime)
+                {
                     return false;
+                }
 
                 // must match number of merges
                 if (mergePaths.Count != Merges.Count)
+                {
                     return false;
+                }
 
                 // if all paths match with write times, we match
                 for (var index = 0; index < mergePaths.Count; index++)
@@ -258,7 +294,9 @@ namespace ModTek.Caches
                     var cachedMergeTime = Merges[index].Time;
 
                     if (mergeAbsolutePath != cachedMergeAbsolutePath || mergeTime != cachedMergeTime)
+                    {
                         return false;
+                    }
                 }
 
                 return true;
