@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ModTek.Util;
+using ModTek.Logging;
 using Newtonsoft.Json;
 
 namespace ModTek.Misc

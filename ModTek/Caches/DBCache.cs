@@ -4,7 +4,7 @@ using System.IO;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Caches
 {

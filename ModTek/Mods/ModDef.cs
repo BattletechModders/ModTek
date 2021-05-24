@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.Util;
@@ -108,7 +109,7 @@ namespace ModTek.Mods
             var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
             var state = new ModState();
             state.Enabled = Enabled;
-            RuntimeLog.RLog.M.WL(2, "writing to FS:" + Name + "->" + state.Enabled);
+            RLog.M.WL(2, "writing to FS:" + Name + "->" + state.Enabled);
             state.SaveToPath(modStatePath);
         }
 

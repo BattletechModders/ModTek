@@ -8,7 +8,7 @@ using ModTek.Misc;
 using ModTek.Util;
 using UnityEngine;
 using UnityEngine.UI;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 // ReSharper disable UnusedMember.Local
 

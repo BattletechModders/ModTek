@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.SoundBanks;

@@ -2,9 +2,7 @@ using BattleTech;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
-using HBS;
 using ModTek.Caches;
-using ModTek.RuntimeLog;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -17,20 +15,25 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ModTek.AdvMerge;
 using ModTek.CustomTypes;
+using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.SoundBanks;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek
 {
-    internal static class ModTek
+    public static class ModTek
     {
+        // public - backwards compatibility
+
+        public static Dictionary<string, SoundBankDef> soundBanks = SoundBanksFeature.soundBanks;
+
+        // non-public follows
+
         internal static bool HasLoaded { get; private set; }
 
-        // TODO Move
-        // game paths/directories
         internal static ModDefEx SettingsDef { get; private set; }
 
         internal static bool Enabled => SettingsDef.Enabled;

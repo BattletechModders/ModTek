@@ -90,7 +90,8 @@
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
     <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
-    <Compile Include="Log.cs" />
+    <Compile Include="Logging\Log.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Misc\Configuration.cs" />
     <Compile Include="Misc\FilePaths.cs" />
@@ -108,8 +109,10 @@
     <Compile Include="Patches\VersionManifestAddendum.cs" />
     <Compile Include="CustomTypes\CustomTagSet.cs" />
     <Compile Include="CustomTypes\CustomTag.cs" />
+    <Compile Include="SoundBanks\ProcessParameters.cs" />
     <Compile Include="SoundBanks\SoundBanksFeature.cs" />
     <Compile Include="SoundBanks\SoundBanksPatches.cs" />
+    <Compile Include="SoundBanks\SoundBanksProcessHelper.cs" />
     <Compile Include="Util\AddendumUtils.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Mods\ModDefExExtensions.cs" />
@@ -134,7 +137,6 @@
     <Compile Include="Patches\VersionManifestUtilities.cs" />
     <Compile Include="UI\ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\Logger.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -5,7 +5,7 @@ using System.Reflection;
 using HBS;
 using ModTek.UI;
 using Newtonsoft.Json;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.SoundBanks
 {
@@ -23,41 +23,41 @@ namespace ModTek.SoundBanks
                 if (soundBanks.ContainsKey(def.name))
                 {
                     soundBanks[def.name] = def;
-                    Log($"\t\tReplace:" + def.name);
+                    Log("\t\tReplace:" + def.name);
                 }
                 else
                 {
                     soundBanks.Add(def.name, def);
-                    Log($"\t\tAdd:" + def.name);
+                    Log("\t\tAdd:" + def.name);
                 }
             }
             catch (Exception e)
             {
-                Log($"\tError while reading SoundBankDef:" + e);
+                Log("\tError while reading SoundBankDef:" + e);
             }
         }
 
         internal static IEnumerator<ProgressReport> SoundBanksProcessing()
         {
-            Log($"Processing sound banks ({SoundBanksFeature.soundBanks.Count}):");
+            Log($"Processing sound banks ({soundBanks.Count}):");
             if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
             {
-                Log($"\tWWise manager not inited");
+                Log("\tWWise manager not inited");
                 yield break;
             }
 
             yield return new ProgressReport(0, "Processing sound banks", "");
-            if (SoundBanksFeature.soundBanks.Count == 0)
+            if (soundBanks.Count == 0)
             {
                 yield break;
             }
 
             var loadedBanks = (List<LoadedAudioBank>) typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance);
             var progeress = 0;
-            foreach (var soundBank in SoundBanksFeature.soundBanks)
+            foreach (var soundBank in soundBanks)
             {
                 ++progeress;
-                yield return new ProgressReport(progeress / (float) SoundBanksFeature.soundBanks.Count, $"Processing sound bank", soundBank.Key, true);
+                yield return new ProgressReport(progeress / (float) soundBanks.Count, "Processing sound bank", soundBank.Key, true);
                 Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
                 if (soundBank.Value.type != SoundBankType.Default)
                 {
@@ -70,7 +70,7 @@ namespace ModTek.SoundBanks
                     continue;
                 }
 
-                loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
+                loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true));
             }
         }
     }

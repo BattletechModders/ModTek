@@ -1,9 +1,9 @@
 using BattleTech;
 using Harmony;
-using ModTek.RuntimeLog;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using ModTek.Logging;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

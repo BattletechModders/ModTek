@@ -1,6 +1,6 @@
 using BattleTech;
 using Harmony;
-using ModTek.RuntimeLog;
+using ModTek.Logging;
 
 namespace ModTek
 {

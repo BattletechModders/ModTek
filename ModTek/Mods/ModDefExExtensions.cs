@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ModTek.Util;
+using ModTek.Logging;
 
 namespace ModTek.Mods
 {
@@ -24,8 +24,6 @@ namespace ModTek.Mods
                     deps.Add(dmod, false);
                     GatherAffectingOfflineRec(dmod, ref deps, level + 1);
                 }
-
-                ;
             }
         }
 

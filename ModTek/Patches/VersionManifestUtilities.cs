@@ -1,5 +1,6 @@
 using BattleTech;
 using Harmony;
+using ModTek.Logging;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -34,7 +35,7 @@ namespace ModTek.Patches
             if (ModTek.CachedVersionManifest == null)
             {
                 ModTek.CachedVersionManifest = __result;
-                RuntimeLog.RLog.M.TWL(0, "Updating CachedVersionManifest");
+                RLog.M.TWL(0, "Updating CachedVersionManifest");
             }
         }
     }

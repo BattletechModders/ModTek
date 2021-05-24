@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using BattleTech;
 using Newtonsoft.Json;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Caches
 {

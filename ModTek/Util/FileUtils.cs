@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using ModTek.RuntimeLog;
+using ModTek.Logging;
 
 namespace ModTek.Util
 {

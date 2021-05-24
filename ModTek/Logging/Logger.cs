@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using ModTek.Misc;
 
-namespace ModTek.Util
+namespace ModTek.Logging
 {
     internal static class Logger
     {

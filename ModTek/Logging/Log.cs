@@ -4,14 +4,14 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace ModTek.RuntimeLog
+namespace ModTek.Logging
 {
-    public enum LogFileType
+    internal enum LogFileType
     {
         Main
     }
 
-    public class LogFile
+    internal class LogFile
     {
         private string m_logfile;
         private Mutex mutex;

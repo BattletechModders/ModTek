@@ -1,9 +1,8 @@
-using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using ModTek.RuntimeLog;
 using BattleTech;
+using ModTek.Logging;
 
 namespace ModTek.Patches
 {

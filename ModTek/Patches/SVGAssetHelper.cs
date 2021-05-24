@@ -3,13 +3,13 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
-using ModTek.RuntimeLog;
 using SVGImporter;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using ModTek.Logging;
 using static BattleTech.Data.DataManager;
 
 namespace ModTek

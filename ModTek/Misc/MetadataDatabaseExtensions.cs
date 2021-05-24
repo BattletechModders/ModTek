@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using BattleTech.Data;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Misc
 {

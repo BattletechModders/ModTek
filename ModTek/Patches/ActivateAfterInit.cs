@@ -1,6 +1,5 @@
 using Harmony;
 using UnityEngine;
-using static ModTek.Util.Logger;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

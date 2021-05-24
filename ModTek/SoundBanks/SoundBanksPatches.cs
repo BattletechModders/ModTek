@@ -9,7 +9,7 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using ModTek.RuntimeLog;
+using ModTek.Logging;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -230,45 +230,6 @@ namespace ModTek.SoundBanks
             {
                 SoundBanksFeature.soundBanks[__instance.name].loaded = false;
             }
-        }
-    }
-
-    public class ProcessParameters
-    {
-        public string param1 { get; set; }
-        public string param2 { get; set; }
-
-        public ProcessParameters(string p1, string p2)
-        {
-            param1 = p1;
-            param2 = p2;
-        }
-    }
-
-    internal static class SoundBanksProcessHelper
-    {
-        private static Dictionary<string, ProcessParameters> procParams = new();
-
-        public static void RegisterProcessParams(string soundbank, string param1, string param2)
-        {
-            if (procParams.ContainsKey(soundbank))
-            {
-                procParams[soundbank] = new ProcessParameters(param1, param2);
-            }
-            else
-            {
-                procParams.Add(soundbank, new ProcessParameters(param1, param2));
-            }
-        }
-
-        public static ProcessParameters GetRegistredProcParams(string soundbank)
-        {
-            if (procParams.TryGetValue(soundbank, out var p))
-            {
-                return p;
-            }
-
-            return null;
         }
     }
 

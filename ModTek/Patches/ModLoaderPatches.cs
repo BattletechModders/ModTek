@@ -1,22 +1,17 @@
 using BattleTech.ModSupport;
-using BattleTech.Save;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
-using ModTek.RuntimeLog;
-using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ModTek.Logging;
 using ModTek.Misc;
 using ModTek.Mods;
-using ModTek.Util;
 using UnityEngine;
-using static ModTek.Util.Logger;
 
 namespace ModTek.Patches
 {

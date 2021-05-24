@@ -4,7 +4,7 @@ using BattleTech.Data;
 using HBS.Collections;
 using ModTek.Misc;
 using Newtonsoft.Json;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.CustomTypes
 {
