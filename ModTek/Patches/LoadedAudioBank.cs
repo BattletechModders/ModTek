@@ -1,6 +1,7 @@
 using System.IO;
 using Harmony;
 using System.IO.Compression;
+using ModTek.Manifest;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -20,12 +21,12 @@ namespace ModTek.Patches
 
         public static void Prefix(string ___name)
         {
-            if (!ModTek.CustomResources["SoundBank"].ContainsKey(___name))
+            if (!ModsManifest.CustomResources["SoundBank"].ContainsKey(___name))
             {
                 return;
             }
 
-            var directory = Path.GetDirectoryName(ModTek.CustomResources["SoundBank"][___name].FilePath);
+            var directory = Path.GetDirectoryName(ModsManifest.CustomResources["SoundBank"][___name].FilePath);
             AkSoundEngine.SetBasePath(directory);
         }
 
@@ -33,7 +34,7 @@ namespace ModTek.Patches
         //System.IO.Compression.ZipFile.CreateFromDirectory("","",CompressionLevel.Fastest,true);
         public static void Postfix(string ___name)
         {
-            if (!ModTek.CustomResources["SoundBank"].ContainsKey(___name))
+            if (!ModsManifest.CustomResources["SoundBank"].ContainsKey(___name))
             {
                 return;
             }

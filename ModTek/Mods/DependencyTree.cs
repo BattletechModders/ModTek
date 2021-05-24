@@ -9,22 +9,22 @@ namespace ModTek.Mods
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             yield return new ProgressReport(0, "Gathering dependencies trees", "");
-            if (ModTek.allModDefs.Count == 0)
+            if (ModDefsDatabase.allModDefs.Count == 0)
             {
                 yield break;
             }
 
             var progress = 0;
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 ++progress;
                 foreach (var depname in mod.Value.DependsOn)
                 {
-                    if (ModTek.allModDefs.ContainsKey(depname))
+                    if (ModDefsDatabase.allModDefs.ContainsKey(depname))
                     {
-                        if (ModTek.allModDefs[depname].DependsOnMe.Contains(mod.Value) == false)
+                        if (ModDefsDatabase.allModDefs[depname].DependsOnMe.Contains(mod.Value) == false)
                         {
-                            ModTek.allModDefs[depname].DependsOnMe.Add(mod.Value);
+                            ModDefsDatabase.allModDefs[depname].DependsOnMe.Add(mod.Value);
                         }
                     }
                 }
@@ -32,7 +32,7 @@ namespace ModTek.Mods
 
             yield return new ProgressReport(1 / 3f, $"Gather depends on me", string.Empty, true);
             progress = 0;
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 ++progress;
                 mod.Value.GatherAffectingOfflineRec();
@@ -40,7 +40,7 @@ namespace ModTek.Mods
 
             yield return new ProgressReport(2 / 3f, $"Gather disable influence tree", string.Empty, true);
             progress = 0;
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 ++progress;
                 mod.Value.GatherAffectingOnline();
@@ -48,7 +48,7 @@ namespace ModTek.Mods
 
             yield return new ProgressReport(1, $"Gather enable influence tree", string.Empty, true);
             Logger.Log((string) $"FAIL LIST:");
-            foreach (var mod in ModTek.allModDefs.Values)
+            foreach (var mod in ModDefsDatabase.allModDefs.Values)
             {
                 if (mod.Enabled == false)
                 {
@@ -73,7 +73,7 @@ namespace ModTek.Mods
 
                 foreach (var deps in mod.DependsOn)
                 {
-                    if (ModTek.allModDefs.ContainsKey(deps) == false)
+                    if (ModDefsDatabase.allModDefs.ContainsKey(deps) == false)
                     {
                         Logger.Log((string) $"\t\tdepends on {deps} but abcent");
                     }

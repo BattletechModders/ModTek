@@ -32,13 +32,13 @@ namespace ModTek.Mods
             foreach (var dep in mod.DependsOn)
             {
                 var i = new string(' ', level);
-                if (ModTek.allModDefs.ContainsKey(dep) == false)
+                if (ModDefsDatabase.allModDefs.ContainsKey(dep) == false)
                 {
                     Logger.Log(i + dep + " state:Absent!");
                     continue;
                 }
 
-                var dmod = ModTek.allModDefs[dep];
+                var dmod = ModDefsDatabase.allModDefs[dep];
                 if (deps.ContainsKey(dmod) == false)
                 {
                     Logger.Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
@@ -52,13 +52,13 @@ namespace ModTek.Mods
         {
             foreach (var dep in mod.ConflictsWith)
             {
-                if (ModTek.allModDefs.ContainsKey(dep) == false)
+                if (ModDefsDatabase.allModDefs.ContainsKey(dep) == false)
                 {
                     Logger.Log("  due to " + mod.Name + " with " + dep + " state:Abcent");
                     continue;
                 }
 
-                var dmod = ModTek.allModDefs[dep];
+                var dmod = ModDefsDatabase.allModDefs[dep];
                 Logger.Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
                 if (deps.ContainsKey(dmod) == false)
                 {

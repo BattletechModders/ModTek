@@ -8,7 +8,9 @@ using BattleTech;
 using BattleTech.Data;
 using Harmony;
 using ModTek.Logging;
+using ModTek.Manifest;
 using ModTek.Misc;
+using ModTek.Mods;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -107,14 +109,14 @@ namespace ModTek.Patches
             {
                 RLog.M.TWL(0, "BattleTechResourceLocator.RefreshTypedEntries");
                 RLog.M.TWL(0, $"  typedEntriesCount: {___typedEntriesCount}  versionManifest.Count: {versionManifest.Count}");
-                RLog.M.TWL(0, $"  addBTRLEntries: {ModTek.AddBTRLEntries.Count}  removeBTRLEntries: {ModTek.RemoveBTRLEntries.Count}");
+                RLog.M.TWL(0, $"  addBTRLEntries: {ModsManifest.AddBTRLEntries.Count}  removeBTRLEntries: {ModsManifest.RemoveBTRLEntries.Count}");
             }
 
 
-            if (versionManifest != ModTek.CachedVersionManifest)
+            if (versionManifest != ModDefsDatabase.CachedVersionManifest)
             {
                 RLog.M.TWL(0, "WARNING! STRANGE BEHAVIOR cachedManifest does not much locator manifest. Resolving");
-                __instance.manifest(ModTek.CachedVersionManifest);
+                __instance.manifest(ModDefsDatabase.CachedVersionManifest);
             }
         }
 
@@ -130,7 +132,7 @@ namespace ModTek.Patches
         {
             var sw = new Stopwatch();
             sw.Start();
-            foreach (var entry in ModTek.AddBTRLEntries)
+            foreach (var entry in ModsManifest.AddBTRLEntries)
             {
                 var versionManifestEntry = entry.GetVersionManifestEntry();
                 var resourceType = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), entry.Type);
@@ -181,7 +183,7 @@ namespace ModTek.Patches
                 }
 
                 // add to addendumsManifest
-                var addendum = ModTek.CachedVersionManifest.GetAddendumByName(entry.AddToAddendum);
+                var addendum = ModDefsDatabase.CachedVersionManifest.GetAddendumByName(entry.AddToAddendum);
                 //var addendum = __instance.GetAddendumByName(entry.AddToAddendum);
                 if (addendum != null)
                 {
@@ -216,7 +218,7 @@ namespace ModTek.Patches
             //RLog.M.WL(0, $"BTRL ADD took: {sw.ElapsedMilliseconds}ms");
 
             sw.Restart();
-            foreach (var entry in ModTek.RemoveBTRLEntries)
+            foreach (var entry in ModsManifest.RemoveBTRLEntries)
             {
                 var resourceType = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), entry.Type);
                 // entry.RemoveFromModTekManifest(resourceType); THIS WAS A NOP

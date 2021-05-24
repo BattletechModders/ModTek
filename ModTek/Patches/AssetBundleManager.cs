@@ -1,5 +1,6 @@
 using BattleTech.Assetbundles;
 using Harmony;
+using ModTek.Manifest;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -19,12 +20,12 @@ namespace ModTek.Patches
 
         public static void Postfix(string assetBundleName, ref string __result)
         {
-            if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+            if (!ModsManifest.ModAssetBundlePaths.ContainsKey(assetBundleName))
             {
                 return;
             }
 
-            __result = ModTek.ModAssetBundlePaths[assetBundleName];
+            __result = ModsManifest.ModAssetBundlePaths[assetBundleName];
         }
     }
 
@@ -41,12 +42,12 @@ namespace ModTek.Patches
 
         public static void Postfix(string assetBundleName, ref string __result)
         {
-            if (!ModTek.ModAssetBundlePaths.ContainsKey(assetBundleName))
+            if (!ModsManifest.ModAssetBundlePaths.ContainsKey(assetBundleName))
             {
                 return;
             }
 
-            __result = $"file://{ModTek.ModAssetBundlePaths[assetBundleName]}";
+            __result = $"file://{ModsManifest.ModAssetBundlePaths[assetBundleName]}";
         }
     }
 }

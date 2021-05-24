@@ -34,22 +34,22 @@ namespace ModTek.Manifest
             }
 
             // since we're adding a new entry here, we want to remove anything that would remove it again after the fact
-            if (ModTek.RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
+            if (RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
             {
                 Logger.Log((string) $"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
             }
 
-            if (ModTek.CustomResources.ContainsKey(modEntry.Type))
+            if (CustomResources.ContainsKey(modEntry.Type))
             {
                 Logger.Log((string) $"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                ModTek.CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
+                CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
                 return;
             }
 
             VersionManifestAddendum addendum = null;
             if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
             {
-                addendum = ModTek.CachedVersionManifest.GetAddendumByName(modEntry.AddToAddendum);
+                addendum = ModDefsDatabase.CachedVersionManifest.GetAddendumByName(modEntry.AddToAddendum);
 
                 if (addendum == null)
                 {
@@ -62,7 +62,7 @@ namespace ModTek.Manifest
             switch (modEntry.Type)
             {
                 case "AssetBundle":
-                    ModTek.ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
+                    ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     break;
                 case nameof(SoundBankDef):
                     SoundBanksFeature.AddSoundBankDef(modEntry.Path);
@@ -76,10 +76,10 @@ namespace ModTek.Manifest
 
                     break;
                 case ModDefExLoading.CustomType_Tag:
-                    ModTek.CustomTags.Add(modEntry);
+                    CustomTags.Add(modEntry);
                     return; // Do not process further and do when the DB is updated
                 case ModDefExLoading.CustomType_TagSet:
-                    ModTek.CustomTagSets.Add(modEntry);
+                    CustomTagSets.Add(modEntry);
                     return; // Do no process further and do when the DB is updated
             }
 
@@ -94,14 +94,14 @@ namespace ModTek.Manifest
             }
 
             // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
-            ModTek.AddBTRLEntries.Add(modEntry);
+            AddBTRLEntries.Add(modEntry);
         }
 
         internal static bool RemoveEntry(string id, TypeCache typeCache)
         {
             var removedEntry = false;
 
-            var containingCustomTypes = ModTek.CustomResources.Where(pair => pair.Value.ContainsKey(id)).ToList();
+            var containingCustomTypes = Enumerable.Where<KeyValuePair<string, Dictionary<string, VersionManifestEntry>>>(CustomResources, pair => pair.Value.ContainsKey(id)).ToList();
             foreach (var pair in containingCustomTypes)
             {
                 Logger.Log((string) $"\tRemove: \"{pair.Value[id].Id}\" ({pair.Value[id].Type}) - Custom Resource");
@@ -109,33 +109,33 @@ namespace ModTek.Manifest
                 removedEntry = true;
             }
 
-            var modEntries = ModTek.AddBTRLEntries.FindAll(entry => entry.Id == id);
+            var modEntries = AddBTRLEntries.FindAll(entry => entry.Id == id);
             foreach (var modEntry in modEntries)
             {
                 Logger.Log((string) $"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
-                ModTek.AddBTRLEntries.Remove(modEntry);
-                ModTek.BTRLEntriesPathes.Remove(modEntry.Path);
+                AddBTRLEntries.Remove(modEntry);
+                BTRLEntriesPathes.Remove(modEntry.Path);
                 removedEntry = true;
             }
 
-            var vanillaEntries = ModTek.CachedVersionManifest.FindAll(entry => entry.Id == id);
+            var vanillaEntries = ModDefsDatabase.CachedVersionManifest.FindAll(entry => entry.Id == id);
             foreach (var vanillaEntry in vanillaEntries)
             {
                 Logger.Log((string) $"\tRemove: \"{vanillaEntry.Id}\" ({vanillaEntry.Type}) - Vanilla Entry");
-                ModTek.RemoveBTRLEntries.Add(vanillaEntry);
+                RemoveBTRLEntries.Add(vanillaEntry);
                 removedEntry = true;
             }
 
-            var types = typeCache.GetTypes(id, ModTek.CachedVersionManifest);
+            var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
             foreach (var type in types)
             {
-                if (!ModTek.merges.ContainsKey(type) || !ModTek.merges[type].ContainsKey(id))
+                if (!MergesDatabase.merges.ContainsKey(type) || !MergesDatabase.merges[type].ContainsKey(id))
                 {
                     continue;
                 }
 
                 Logger.Log((string) $"\t\tAlso removing JSON merges for {id} ({type})");
-                ModTek.merges[type].Remove(id);
+                MergesDatabase.merges[type].Remove(id);
             }
 
             return removedEntry;
@@ -143,18 +143,18 @@ namespace ModTek.Manifest
 
         internal static void PrepareManifestAndCustomResources()
         {
-            ModTek.CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
+            ModDefsDatabase.CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
 
             // setup custom resources for ModTek types with fake VersionManifestEntries
-            ModTek.CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
-            ModTek.CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
 
             // We intentionally DO NOT add tags and tagsets here, because AddModEntry() will skip values found in here
             //CustomResources[CustomType_Tag] = new Dictionary<string, VersionManifestEntry>();
             //CustomResources[CustomType_TagSet] = new Dictionary<string, VersionManifestEntry>();
 
-            ModTek.CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
-            ModTek.CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
+            CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
+            CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
                 "settings",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath),
                 "DebugSettings",
@@ -162,29 +162,29 @@ namespace ModTek.Manifest
                 "1"
             );
 
-            ModTek.CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
-            ModTek.CustomResources["GameTip"]["general"] = new VersionManifestEntry(
+            CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
+            CustomResources["GameTip"]["general"] = new VersionManifestEntry(
                 "general",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            ModTek.CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
+            CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
                 "combat",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            ModTek.CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
+            CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
                 "lore",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            ModTek.CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
+            CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
                 "sim",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
                 "GameTip",
@@ -209,12 +209,12 @@ namespace ModTek.Manifest
             // progress panel setup
             var entryCount = 0;
             var numEntries = 0;
-            ModTek.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
+            ModDefsDatabase.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModTek.ModDefs.ContainsKey(name) && (ModTek.ModDefs[name].Manifest.Count > 0 || ModTek.ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
+            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && (ModDefsDatabase.ModDefs[name].Manifest.Count > 0 || ModDefsDatabase.ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
             foreach (var modName in manifestMods)
             {
-                var modDef = ModTek.ModDefs[modName];
+                var modDef = ModDefsDatabase.ModDefs[modName];
 
                 Logger.Log((string) $"{modName}:");
                 yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
@@ -245,7 +245,7 @@ namespace ModTek.Manifest
                             continue;
                         }
 
-                        var types = typeCache.GetTypes(modEntry.Id, ModTek.CachedVersionManifest);
+                        var types = typeCache.GetTypes(modEntry.Id, ModDefsDatabase.CachedVersionManifest);
                         if (types == null)
                         {
                             Logger.Log((string) $"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
@@ -260,7 +260,7 @@ namespace ModTek.Manifest
                             // this assumes that vanilla .json can only have a single type
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
-                            Merges.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
+                            MergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                             Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
                             continue;
                         }
@@ -272,7 +272,7 @@ namespace ModTek.Manifest
                             var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(subModEntry);
-                            Merges.RemoveMerge(type, modEntry.Id);
+                            MergesDatabase.RemoveMerge(type, modEntry.Id);
                         }
 
                         continue;
@@ -302,7 +302,7 @@ namespace ModTek.Manifest
                                 var type = advancedJSONMerge.TargetType;
                                 if (string.IsNullOrEmpty(type))
                                 {
-                                    var types = typeCache.GetTypes(id, ModTek.CachedVersionManifest);
+                                    var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
                                     if (types == null || types.Count == 0)
                                     {
                                         Logger.Log((string) $"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
@@ -320,7 +320,7 @@ namespace ModTek.Manifest
                                     continue;
                                 }
 
-                                Merges.AddMerge(type, id, modEntry.Path);
+                                MergesDatabase.AddMerge(type, id, modEntry.Path);
                                 Logger.Log((string) $"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" targeting '{id}' ({type})");
                             }
 
@@ -366,16 +366,16 @@ namespace ModTek.Manifest
                         // this assumes that .json can only have a single type
                         typeCache.TryAddType(modEntry.Id, modEntry.Type);
                         Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                        Merges.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
+                        MergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                         continue;
                     }
 
                     typeCache.TryAddType(modEntry.Id, modEntry.Type);
                     AddModEntry(modEntry);
-                    Merges.RemoveMerge(modEntry.Type, modEntry.Id);
+                    MergesDatabase.RemoveMerge(modEntry.Type, modEntry.Id);
                 }
 
-                foreach (var removeID in ModTek.ModDefs[modName].RemoveManifestEntries)
+                foreach (var removeID in ModDefsDatabase.ModDefs[modName].RemoveManifestEntries)
                 {
                     if (!RemoveEntry(removeID, typeCache))
                     {
@@ -385,26 +385,34 @@ namespace ModTek.Manifest
             }
 
             typeCache.ToFile(FilePaths.TypeCachePath);
-            ModTek.BTRLEntriesPathes = new HashSet<string>(ModTek.AddBTRLEntries.Select(e => e.Path));
+            BTRLEntriesPathes = new HashSet<string>((IEnumerable<string>) AddBTRLEntries.Select(e => e.Path));
         }
 
         internal static VersionManifestEntry FindEntry(string type, string id)
         {
-            if (ModTek.CustomResources.ContainsKey(type) && ModTek.CustomResources[type].ContainsKey(id))
+            if (CustomResources.ContainsKey(type) && CustomResources[type].ContainsKey(id))
             {
-                return ModTek.CustomResources[type][id];
+                return CustomResources[type][id];
             }
 
-            var modEntry = ModTek.AddBTRLEntries.FindLast(x => x.Type == type && x.Id == id)?.GetVersionManifestEntry();
+            var modEntry = AddBTRLEntries.FindLast(x => x.Type == type && x.Id == id)?.GetVersionManifestEntry();
             if (modEntry != null)
             {
                 return modEntry;
             }
 
             // if we're slating to remove an entry, then we don't want to return it here from the manifest
-            return !ModTek.RemoveBTRLEntries.Exists(entry => entry.Type == type && entry.Id == id)
-                ? ModTek.CachedVersionManifest.Find(entry => entry.Type == type && entry.Id == id)
+            return !RemoveBTRLEntries.Exists(entry => entry.Type == type && entry.Id == id)
+                ? ModDefsDatabase.CachedVersionManifest.Find(entry => entry.Type == type && entry.Id == id)
                 : null;
         }
+
+        internal static HashSet<ModEntry> CustomTags = new();
+        internal static HashSet<ModEntry> CustomTagSets = new();
+        internal static List<ModEntry> AddBTRLEntries = new();
+        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
+        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
+        internal static HashSet<string> BTRLEntriesPathes;
+        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
     }
 }

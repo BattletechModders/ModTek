@@ -92,7 +92,7 @@
     <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Manifest\Merges.cs" />
+    <Compile Include="Manifest\MergesDatabase.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Manifest\ModsManifest.cs" />
     <Compile Include="MDDTools\MDDHelper.cs" />

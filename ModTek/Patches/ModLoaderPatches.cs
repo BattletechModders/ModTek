@@ -111,7 +111,7 @@ namespace ModTek.Patches
         public static bool Prefix()
         {
             ModLoader.loadedGameModStatus = new Dictionary<string, ModStatusItem>();
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 if (mod.Key == ModTek.MODTEK_DEF_NAME)
                 {
@@ -208,7 +208,7 @@ namespace ModTek.Patches
         public static void Postfix(ref Dictionary<string, ModStatusItem> __result)
         {
             __result = new Dictionary<string, ModStatusItem>();
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 if (mod.Key == ModTek.MODTEK_DEF_NAME)
                 {
@@ -267,7 +267,7 @@ namespace ModTek.Patches
         {
             RLog.M.TWL(0, "SaveModStatusToFile");
             var changed = false;
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 RLog.M.W(1, mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
@@ -313,7 +313,7 @@ namespace ModTek.Patches
         public static bool Prefix(ModManagerScreen __instance, ref bool __result)
         {
             __result = false;
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
@@ -340,7 +340,7 @@ namespace ModTek.Patches
         {
             if (button == "revert")
             {
-                foreach (var mod in ModTek.allModDefs)
+                foreach (var mod in ModDefsDatabase.allModDefs)
                 {
                     mod.Value.PendingEnable = mod.Value.Enabled;
                 }
@@ -391,14 +391,14 @@ namespace ModTek.Patches
 
         public static bool Prefix(ModManagerListViewItem __instance, HBSDOTweenToggle ___toggleBox, ModManagerScreen ____screen)
         {
-            if (ModTek.allModDefs.ContainsKey(__instance.ModStatusItem.name) == false)
+            if (ModDefsDatabase.allModDefs.ContainsKey(__instance.ModStatusItem.name) == false)
             {
                 //if (ModTek.allModDefs[modDef.Name].Enabled == false) { ___modNameText.color = Color.red; };
                 ___toggleBox.SetToggled(false);
             }
             else
             {
-                var mod = ModTek.allModDefs[__instance.ModStatusItem.name];
+                var mod = ModDefsDatabase.allModDefs[__instance.ModStatusItem.name];
                 if (mod.Locked)
                 {
                     ___toggleBox.SetToggled(mod.PendingEnable);
@@ -543,9 +543,9 @@ namespace ModTek.Patches
 
         public static void Postfix(ModManagerListViewItem __instance, ModStatusItem modStatusItem, LocalizableText ___modNameText, HBSDOTweenToggle ___toggleBox)
         {
-            if (ModTek.allModDefs.ContainsKey(modStatusItem.name))
+            if (ModDefsDatabase.allModDefs.ContainsKey(modStatusItem.name))
             {
-                var mod = ModTek.allModDefs[modStatusItem.name];
+                var mod = ModDefsDatabase.allModDefs[modStatusItem.name];
                 ___toggleBox.SetToggled(mod.PendingEnable);
                 if (mod.LoadFail)
                 {
@@ -625,7 +625,7 @@ namespace ModTek.Patches
                     }
                 );
             __instance.SetSort(0);
-            if (ModTek.allModDefs.Count == 0)
+            if (ModDefsDatabase.allModDefs.Count == 0)
             {
                 __result = false;
                 return false;
@@ -633,7 +633,7 @@ namespace ModTek.Patches
 
             ;
             RLog.M.TWL(0, "InitializeList");
-            foreach (var mod in ModTek.allModDefs)
+            foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 mod.Value.PendingEnable = mod.Value.Enabled;
                 if (mod.Value.Hidden == false)

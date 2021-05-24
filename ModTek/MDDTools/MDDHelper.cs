@@ -9,6 +9,7 @@ using Harmony;
 using ModTek.Caches;
 using ModTek.CustomTypes;
 using ModTek.Logging;
+using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.UI;
@@ -97,7 +98,7 @@ namespace ModTek.MDDTools
                 var absolutePath = FileUtils.ResolvePath(path, FilePaths.GameDirectory);
 
                 // check if the file in the db cache is still used
-                if (ModTek.BTRLEntriesPathes.Contains(absolutePath))
+                if (ModsManifest.BTRLEntriesPathes.Contains(absolutePath))
                 {
                     continue;
                 }
@@ -106,7 +107,7 @@ namespace ModTek.MDDTools
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = ModTek.AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry() ?? ModTek.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+                var existingEntry = ModsManifest.AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry() ?? ModDefsDatabase.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
 
                 // TODO: DOES NOT HANDLE CASE WHERE REMOVING VANILLA CONTENT IN DB
 
@@ -151,12 +152,12 @@ namespace ModTek.MDDTools
             var mods = new List<ModDefEx>();
             foreach (var modname in ModDefsDatabase.ModLoadOrder)
             {
-                if (ModTek.ModDefs.ContainsKey(modname) == false)
+                if (ModDefsDatabase.ModDefs.ContainsKey(modname) == false)
                 {
                     continue;
                 }
 
-                mods.Add(ModTek.ModDefs[modname]);
+                mods.Add(ModDefsDatabase.ModDefs[modname]);
             }
 
             foreach (var moddef in mods)
@@ -180,11 +181,11 @@ namespace ModTek.MDDTools
 
             // add needed files to db
             addCount = 0;
-            foreach (var modEntry in ModTek.AddBTRLEntries)
+            foreach (var modEntry in ModsManifest.AddBTRLEntries)
             {
                 if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
                 {
-                    yield return new ProgressReport(addCount / (float) ModTek.AddBTRLEntries.Count, "Populating Database", modEntry.Id);
+                    yield return new ProgressReport(addCount / (float) ModsManifest.AddBTRLEntries.Count, "Populating Database", modEntry.Id);
                     Logger.Log((string) $"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     shouldWriteDB = true;
                 }
@@ -193,22 +194,22 @@ namespace ModTek.MDDTools
             }
 
             // Add any custom tags to DB
-            if (ModTek.CustomTags.Count > 0)
+            if (ModsManifest.CustomTags.Count > 0)
             {
                 Logger.Log((string) $"Processing CustomTags:");
             }
 
-            foreach (var modEntry in ModTek.CustomTags)
+            foreach (var modEntry in ModsManifest.CustomTags)
             {
                 CustomTypeProcessor.AddOrUpdateTag(modEntry.Path);
             }
 
-            if (ModTek.CustomTagSets.Count > 0)
+            if (ModsManifest.CustomTagSets.Count > 0)
             {
                 Logger.Log((string) $"Processing CustomTagSets:");
             }
 
-            foreach (var modEntry in ModTek.CustomTagSets)
+            foreach (var modEntry in ModsManifest.CustomTagSets)
             {
                 CustomTypeProcessor.AddOrUpdateTagSet(modEntry.Path);
             }

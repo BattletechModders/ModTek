@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using BattleTech;
 using ModTek.Logging;
 using ModTek.Manifest;
@@ -62,21 +63,21 @@ namespace ModTek.Mods
             Logger.Log((string) "");
             foreach (var modName in ModDefsDatabase.ModLoadOrder)
             {
-                var modDef = ModTek.ModDefs[modName];
+                var modDef = ModDefsDatabase.ModDefs[modName];
 
-                if (modDef.DependsOn.Intersect(ModTek.FailedToLoadMods).Any())
+                if (modDef.DependsOn.Intersect(ModDefsDatabase.FailedToLoadMods).Any())
                 {
-                    ModTek.ModDefs.Remove(modName);
+                    ModDefsDatabase.ModDefs.Remove(modName);
                     if (!modDef.IgnoreLoadFailure)
                     {
                         Logger.Log((string) $"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
-                        if (ModTek.allModDefs.ContainsKey(modName))
+                        if (ModDefsDatabase.allModDefs.ContainsKey(modName))
                         {
-                            ModTek.allModDefs[modName].LoadFail = true;
-                            ModTek.allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                            ModDefsDatabase.allModDefs[modName].LoadFail = true;
+                            ModDefsDatabase.allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
                         }
 
-                        ModTek.FailedToLoadMods.Add(modName);
+                        ModDefsDatabase.FailedToLoadMods.Add(modName);
                     }
 
                     continue;
@@ -88,22 +89,22 @@ namespace ModTek.Mods
                 {
                     if (!LoadMod(modDef, out var reason))
                     {
-                        ModTek.ModDefs.Remove(modName);
+                        ModDefsDatabase.ModDefs.Remove(modName);
 
                         if (!modDef.IgnoreLoadFailure)
                         {
-                            ModTek.FailedToLoadMods.Add(modName);
-                            if (ModTek.allModDefs.ContainsKey(modName))
+                            ModDefsDatabase.FailedToLoadMods.Add(modName);
+                            if (ModDefsDatabase.allModDefs.ContainsKey(modName))
                             {
-                                ModTek.allModDefs[modName].LoadFail = true;
-                                ModTek.allModDefs[modName].FailReason = reason;
+                                ModDefsDatabase.allModDefs[modName].LoadFail = true;
+                                ModDefsDatabase.allModDefs[modName].FailReason = reason;
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    ModTek.ModDefs.Remove(modName);
+                    ModDefsDatabase.ModDefs.Remove(modName);
 
                     if (modDef.IgnoreLoadFailure)
                     {
@@ -111,11 +112,11 @@ namespace ModTek.Mods
                     }
 
                     Logger.LogException((string) $"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
-                    ModTek.FailedToLoadMods.Add(modName);
-                    if (ModTek.allModDefs.ContainsKey(modName))
+                    ModDefsDatabase.FailedToLoadMods.Add(modName);
+                    if (ModDefsDatabase.allModDefs.ContainsKey(modName))
                     {
-                        ModTek.allModDefs[modName].LoadFail = true;
-                        ModTek.allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                        ModDefsDatabase.allModDefs[modName].LoadFail = true;
+                        ModDefsDatabase.allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
                     }
                 }
             }
@@ -134,9 +135,9 @@ namespace ModTek.Mods
                     continue;
                 }
 
-                if (!ModTek.CustomResources.ContainsKey(customResourceType))
+                if (!ModsManifest.CustomResources.ContainsKey(customResourceType))
                 {
-                    ModTek.CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
+                    ModsManifest.CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
                 }
             }
 
@@ -217,7 +218,7 @@ namespace ModTek.Mods
                     return null;
                 }
 
-                if (!string.IsNullOrEmpty(modEntry.Type) && !VANILLA_TYPES.Contains(modEntry.Type) && !MODTEK_TYPES.Contains(modEntry.Type) && !ModTek.CustomResources.ContainsKey(modEntry.Type))
+                if (!string.IsNullOrEmpty(modEntry.Type) && !VANILLA_TYPES.Contains(modEntry.Type) && !MODTEK_TYPES.Contains(modEntry.Type) && !ModsManifest.CustomResources.ContainsKey(modEntry.Type))
                 {
                     Logger.Log((string) $"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
                     return null;
@@ -378,7 +379,7 @@ namespace ModTek.Mods
 
             if (!modDef.EnableAssemblyVersionCheck)
             {
-                ModTek.TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
+                TryResolveAssemblies.Add(assembly.GetName().Name, assembly);
             }
 
             return true;
@@ -413,6 +414,29 @@ namespace ModTek.Mods
                     Logger.Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
+        }
+
+        internal static Dictionary<string, Assembly> TryResolveAssemblies = new();
+
+        internal static void FinishedLoadingMods()
+        {
+            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count <= 0)
+            {
+                return;
+            }
+
+            {
+                Logger.Log("\nCalling FinishedLoading:");
+                foreach (var modDef in ModDefsDatabase.ModLoadOrder
+                    .Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && ModDefsDatabase.ModDefs[name].Assembly != null)
+                    .Select(assemblyMod => ModDefsDatabase.ModDefs[assemblyMod])
+                )
+                {
+                    FinishedLoading(modDef, ModDefsDatabase.ModLoadOrder, ModsManifest.CustomResources);
+                }
+            }
+            HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
+            LoadOrder.ToFile(ModDefsDatabase.ModLoadOrder, FilePaths.LoadOrderPath);
         }
     }
 }

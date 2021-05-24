@@ -4,6 +4,7 @@ using System.Linq;
 using BattleTech.BinkMedia;
 using BinkPlugin;
 using Harmony;
+using ModTek.Manifest;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming
@@ -24,7 +25,7 @@ namespace ModTek.Patches
 
         public static bool Prefix(BinkMediaPlayer __instance, string videoName)
         {
-            var videoEntry = ModTek.CustomResources["Video"]
+            var videoEntry = ModsManifest.CustomResources["Video"]
                 .Values.LastOrDefault(
                     entry =>
                         entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName)

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using ModTek.SoundBanks;
 
-namespace ModTek
+namespace ModTek.SoundBanks
 {
     public static class SoundBanksProcessHelper
     {

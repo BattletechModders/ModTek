@@ -2,6 +2,7 @@ using System.Linq;
 using BattleTech.UI;
 using Harmony;
 using ModTek.Misc;
+using ModTek.Mods;
 using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
@@ -22,18 +23,18 @@ namespace ModTek.Patches
 
         public static void Postfix()
         {
-            if (ModTek.FailedToLoadMods.Count <= 0)
+            if (ModDefsDatabase.FailedToLoadMods.Count <= 0)
             {
                 return;
             }
 
             GenericPopupBuilder.Create(
                     "Some Mods Didn't Load",
-                    $"Check \"{FileUtils.GetRelativePath(FilePaths.LogPath, FilePaths.GameDirectory)}\" for more info\n\n" + string.Join(", ", ModTek.FailedToLoadMods.ToArray())
+                    $"Check \"{FileUtils.GetRelativePath(FilePaths.LogPath, FilePaths.GameDirectory)}\" for more info\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
                 )
                 .AddButton("Continue")
                 .Render();
-            ModTek.FailedToLoadMods.Clear();
+            ModDefsDatabase.FailedToLoadMods.Clear();
         }
     }
 }

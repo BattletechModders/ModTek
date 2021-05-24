@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using Harmony;
+using ModTek.Manifest;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -22,7 +23,7 @@ namespace ModTek.Patches
 
         public static void Postfix(string filename, List<string> ___tips)
         {
-            var tipEntry = ModTek.CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
+            var tipEntry = ModsManifest.CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
             if (tipEntry == null)
             {
                 return;

@@ -27,10 +27,6 @@ namespace ModTek
 {
     public static class ModTek
     {
-        // public - backwards compatibility
-
-        public static Dictionary<string, SoundBankDef> soundBanks = SoundBanksFeature.soundBanks;
-
         // ok fields
         internal static Configuration Config;
 
@@ -49,24 +45,8 @@ namespace ModTek
 
         // internal temp structures
         private static System.Diagnostics.Stopwatch stopwatch = new();
-        internal static Dictionary<string, Dictionary<string, List<string>>> merges = new();
-        internal static HashSet<string> BTRLEntriesPathes;
-
-        // internal structures
-        internal static Dictionary<string, ModDefEx> ModDefs = new();
-        internal static Dictionary<string, ModDefEx> allModDefs = new();
-        internal static HashSet<string> FailedToLoadMods { get; } = new();
-        internal static Dictionary<string, Assembly> TryResolveAssemblies = new();
 
         // the end result of loading mods, these are used to push into game data through patches
-        internal static VersionManifest CachedVersionManifest;
-        internal static List<ModEntry> AddBTRLEntries = new();
-        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
-        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
-        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
-
-        internal static HashSet<ModEntry> CustomTags = new();
-        internal static HashSet<ModEntry> CustomTagSets = new();
 
         // INITIALIZATION (called by injected code)
         public static void Init()
@@ -152,11 +132,11 @@ namespace ModTek
             Config = Configuration.FromFile(FilePaths.ConfigPath);
 
             // setup assembly resolver
-            TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
+            ModDefExLoading.TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 var resolvingName = new AssemblyName(args.Name);
-                return !TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+                return !ModDefExLoading.TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
             };
 
             try
@@ -196,7 +176,7 @@ namespace ModTek
 
             // clear temp objects
             JObjectCache.Clear();
-            merges = null;
+            MergesDatabase.merges = null;
             stopwatch = null;
         }
 
@@ -206,7 +186,7 @@ namespace ModTek
         {
             ProgressPanel.SubmitWork(ModDefExLoading.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
-            ProgressPanel.SubmitWork(Merges.MergeFilesLoop);
+            ProgressPanel.SubmitWork(MergesDatabase.MergeFilesLoop);
             ProgressPanel.SubmitWork(MDDHelper.AddToDBLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(DependencyTree.GatherDependencyTreeLoop);
@@ -219,26 +199,12 @@ namespace ModTek
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
-            if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath))
+            if (ModsManifest.CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath))
             {
-                DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
+                DebugBridge.LoadSettings(ModsManifest.CustomResources["DebugSettings"]["settings"].FilePath);
             }
 
-            if (ModDefsDatabase.ModLoadOrder != null && ModDefsDatabase.ModLoadOrder.Count > 0)
-            {
-                {
-                    Log("\nCalling FinishedLoading:");
-                    foreach (var modDef in ModDefsDatabase.ModLoadOrder
-                        .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
-                        .Select(assemblyMod => ModDefs[assemblyMod])
-                    )
-                    {
-                        ModDefExLoading.FinishedLoading(modDef, ModDefsDatabase.ModLoadOrder, CustomResources);
-                    }
-                }
-                HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
-                LoadOrder.ToFile(ModDefsDatabase.ModLoadOrder, FilePaths.LoadOrderPath);
-            }
+            ModDefExLoading.FinishedLoadingMods();
 
             Config?.ToFile(FilePaths.ConfigPath);
 

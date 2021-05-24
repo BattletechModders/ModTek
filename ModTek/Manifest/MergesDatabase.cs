@@ -9,36 +9,36 @@ using ModTek.UI;
 
 namespace ModTek.Manifest
 {
-    internal static class Merges
+    internal static class MergesDatabase
     {
         internal static void AddMerge(string type, string id, string path)
         {
-            if (!ModTek.merges.ContainsKey(type))
+            if (!merges.ContainsKey(type))
             {
-                ModTek.merges[type] = new Dictionary<string, List<string>>();
+                merges[type] = new Dictionary<string, List<string>>();
             }
 
-            if (!ModTek.merges[type].ContainsKey(id))
+            if (!merges[type].ContainsKey(id))
             {
-                ModTek.merges[type][id] = new List<string>();
+                merges[type][id] = new List<string>();
             }
 
-            if (ModTek.merges[type][id].Contains(path))
+            if (merges[type][id].Contains(path))
             {
                 return;
             }
 
-            ModTek.merges[type][id].Add(path);
+            merges[type][id].Add(path);
         }
 
         internal static void RemoveMerge(string type, string id)
         {
-            if (!ModTek.merges.ContainsKey(type) || !ModTek.merges[type].ContainsKey(id))
+            if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
             {
                 return;
             }
 
-            ModTek.merges[type].Remove(id);
+            merges[type].Remove(id);
             Logger.Log((string) $"\t\tHad merges for {id} but had to toss, since original file is being replaced");
         }
 
@@ -60,11 +60,11 @@ namespace ModTek.Manifest
             // progress panel setup
             var mergeCount = 0;
             var numEntries = 0;
-            ModTek.merges.Do(pair => numEntries += pair.Value.Count);
+            CollectionExtensions.Do<KeyValuePair<string, Dictionary<string, List<string>>>>(merges, pair => numEntries += pair.Value.Count);
 
-            foreach (var type in ModTek.merges.Keys)
+            foreach (var type in merges.Keys)
             {
-                foreach (var id in ModTek.merges[type].Keys)
+                foreach (var id in merges[type].Keys)
                 {
                     var existingEntry = ModsManifest.FindEntry(type, id);
                     if (existingEntry == null)
@@ -74,7 +74,7 @@ namespace ModTek.Manifest
                     }
 
                     var originalPath = Path.GetFullPath(existingEntry.FilePath);
-                    var mergePaths = ModTek.merges[type][id];
+                    var mergePaths = merges[type][id];
 
                     if (!mergeCache.HasCachedEntry(originalPath, mergePaths))
                     {
@@ -97,5 +97,7 @@ namespace ModTek.Manifest
 
             mergeCache.ToFile(FilePaths.MergeCachePath);
         }
+
+        internal static Dictionary<string, Dictionary<string, List<string>>> merges = new();
     }
 }
