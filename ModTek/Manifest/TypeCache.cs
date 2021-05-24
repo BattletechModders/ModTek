@@ -5,7 +5,7 @@ using BattleTech;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Caches
+namespace ModTek.Manifest
 {
     internal class TypeCache
     {

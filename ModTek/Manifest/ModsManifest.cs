@@ -5,7 +5,6 @@ using System.Linq;
 using BattleTech;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Caches;
 using ModTek.Logging;
 using ModTek.Manifest.AdvMerge;
 using ModTek.Manifest.Merges;
@@ -20,6 +19,8 @@ namespace ModTek.Manifest
 {
     internal static class ModsManifest
     {
+        private static MergesDatabase mergesDatabase = new();
+
         private static HashSet<string> systemIcons = new();
         internal static HashSet<ModEntry> CustomTags = new();
         internal static HashSet<ModEntry> CustomTagSets = new();
@@ -30,6 +31,11 @@ namespace ModTek.Manifest
 
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
+
+        internal static void ClearTemp()
+        {
+            mergesDatabase.Clear();
+        }
 
         internal static bool isInSystemIcons(string id)
         {
@@ -139,7 +145,7 @@ namespace ModTek.Manifest
             var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
             foreach (var type in types)
             {
-                MergesDatabase.RemoveMerge(type, id);
+                mergesDatabase.RemoveMerge(type, id);
             }
 
             return removedEntry;
@@ -197,7 +203,12 @@ namespace ModTek.Manifest
             );
         }
 
-        internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
+        internal static IEnumerator<ProgressReport> ProcessLoop()
+        {
+            return CSharpUtils.Enumerate(HandleModManifestsLoop(), mergesDatabase.MergeFilesLoop());
+        }
+
+        private static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             // there are no mods loaded, just return
             if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
@@ -265,7 +276,7 @@ namespace ModTek.Manifest
                             // this assumes that vanilla .json can only have a single type
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
-                            MergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
+                            mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                             Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
                             continue;
                         }
@@ -277,7 +288,7 @@ namespace ModTek.Manifest
                             var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
                             AddModEntry(subModEntry);
-                            MergesDatabase.RemoveMerge(type, modEntry.Id);
+                            mergesDatabase.RemoveMerge(type, modEntry.Id);
                         }
 
                         continue;
@@ -325,7 +336,7 @@ namespace ModTek.Manifest
                                     continue;
                                 }
 
-                                MergesDatabase.AddMerge(type, id, modEntry.Path);
+                                mergesDatabase.AddMerge(type, id, modEntry.Path);
                                 Logger.Log((string) $"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" targeting '{id}' ({type})");
                             }
 
@@ -371,26 +382,26 @@ namespace ModTek.Manifest
                         // this assumes that .json can only have a single type
                         typeCache.TryAddType(modEntry.Id, modEntry.Type);
                         Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                        MergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
+                        mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                         continue;
                     }
 
                     typeCache.TryAddType(modEntry.Id, modEntry.Type);
                     AddModEntry(modEntry);
-                    MergesDatabase.RemoveMerge(modEntry.Type, modEntry.Id);
+                    mergesDatabase.RemoveMerge(modEntry.Type, modEntry.Id);
                 }
 
                 foreach (var removeID in ModDefsDatabase.ModDefs[modName].RemoveManifestEntries)
                 {
                     if (!RemoveEntry(removeID, typeCache))
                     {
-                        Logger.Log((string) $"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
+                        Logger.Log($"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
                     }
                 }
             }
 
             typeCache.ToFile(FilePaths.TypeCachePath);
-            BTRLEntriesPathes = new HashSet<string>((IEnumerable<string>) AddBTRLEntries.Select(e => e.Path));
+            BTRLEntriesPathes = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
         internal static VersionManifestEntry FindEntry(string type, string id)

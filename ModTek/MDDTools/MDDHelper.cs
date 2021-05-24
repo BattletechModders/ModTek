@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
-using ModTek.Caches;
 using ModTek.CustomTypes;
 using ModTek.Logging;
 using ModTek.Manifest;

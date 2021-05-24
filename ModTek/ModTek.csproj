@@ -83,8 +83,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Caches\DBCache.cs" />
-    <Compile Include="Caches\TypeCache.cs" />
     <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
@@ -96,6 +94,8 @@
     <Compile Include="Manifest\Merges\MergesDatabase.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Manifest\ModsManifest.cs" />
+    <Compile Include="Manifest\TypeCache.cs" />
+    <Compile Include="MDDTools\DBCache.cs" />
     <Compile Include="MDDTools\MDDHelper.cs" />
     <Compile Include="MDDTools\MetadataDatabaseExtensions.cs" />
     <Compile Include="Misc\Configuration.cs" />
@@ -122,6 +122,7 @@
     <Compile Include="Util\AddendumUtils.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Mods\ModDefExExtensions.cs" />
+    <Compile Include="Util\CSharpUtils.cs" />
     <Compile Include="Util\FileUtils.cs" />
     <Compile Include="Util\HarmonyUtils.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />

@@ -161,9 +161,8 @@ namespace ModTek
 
             CloseLogStream();
 
-            // clear temp objects
-            JObjectCache.Clear();
-            MergesDatabase.Clear();
+            JObjectCache.ClearTemp();
+            ModsManifest.ClearTemp();
             stopwatch = null;
         }
 
@@ -172,8 +171,7 @@ namespace ModTek
         private static void LoadMods()
         {
             ProgressPanel.SubmitWork(ModDefExLoading.InitModsLoop);
-            ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
-            ProgressPanel.SubmitWork(MergesDatabase.MergeFilesLoop);
+            ProgressPanel.SubmitWork(ModsManifest.ProcessLoop);
             ProgressPanel.SubmitWork(MDDHelper.AddToDBLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(DependencyTree.GatherDependencyTreeLoop);

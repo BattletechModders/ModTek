@@ -8,11 +8,11 @@ using ModTek.UI;
 
 namespace ModTek.Manifest.Merges
 {
-    internal static class MergesDatabase
+    internal class MergesDatabase
     {
-        private static Dictionary<string, Dictionary<string, List<string>>> merges = new();
+        private Dictionary<string, Dictionary<string, List<string>>> merges = new();
 
-        internal static void AddMerge(string type, string id, string path)
+        internal void AddMerge(string type, string id, string path)
         {
             if (!merges.ContainsKey(type))
             {
@@ -32,7 +32,7 @@ namespace ModTek.Manifest.Merges
             merges[type][id].Add(path);
         }
 
-        internal static void RemoveMerge(string type, string id)
+        internal void RemoveMerge(string type, string id)
         {
             if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
             {
@@ -40,15 +40,15 @@ namespace ModTek.Manifest.Merges
             }
 
             merges[type].Remove(id);
-            Logger.Log((string) $"\t\tHad merges for {id} but had to toss, since original file is being replaced");
+            Logger.Log($"\t\tHad merges for {id} but had to toss, since original file is being replaced");
         }
 
-        internal static void Clear()
+        internal void Clear()
         {
             merges = null;
         }
 
-        internal static IEnumerator<ProgressReport> MergeFilesLoop()
+        internal IEnumerator<ProgressReport> MergeFilesLoop()
         {
             // there are no mods loaded, just return
             if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
@@ -57,7 +57,7 @@ namespace ModTek.Manifest.Merges
             }
 
             // perform merges into cache
-            Logger.Log((string) "\nDoing merges...");
+            Logger.Log("\nDoing merges...");
             yield return new ProgressReport(1, "Merging", "", true);
 
             var mergeCache = MergeCache.FromFile(FilePaths.MergeCachePath);
@@ -66,7 +66,7 @@ namespace ModTek.Manifest.Merges
             // progress panel setup
             var mergeCount = 0;
             var numEntries = 0;
-            CollectionExtensions.Do<KeyValuePair<string, Dictionary<string, List<string>>>>(merges, pair => numEntries += pair.Value.Count);
+            CollectionExtensions.Do(merges, pair => numEntries += pair.Value.Count);
 
             foreach (var type in merges.Keys)
             {
@@ -75,7 +75,7 @@ namespace ModTek.Manifest.Merges
                     var existingEntry = ModsManifest.FindEntry(type, id);
                     if (existingEntry == null)
                     {
-                        Logger.Log((string) $"\tWarning: Have merges for {id} but cannot find an original file! Skipping.");
+                        Logger.Log($"\tWarning: Have merges for {id} but cannot find an original file! Skipping.");
                         continue;
                     }
 

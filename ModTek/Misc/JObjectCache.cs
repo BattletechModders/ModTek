@@ -12,7 +12,7 @@ namespace ModTek.Misc
     {
         private static Dictionary<string, JObject> cachedJObjects = new();
 
-        internal static void Clear()
+        internal static void ClearTemp()
         {
             cachedJObjects = null;
         }

@@ -6,7 +6,7 @@ using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Caches
+namespace ModTek.MDDTools
 {
     internal class DBCache
     {
