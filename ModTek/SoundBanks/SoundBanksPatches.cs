@@ -1,9 +1,3 @@
-using BattleTech;
-using BattleTech.UI;
-using Harmony;
-using HBS;
-using ModTek.RuntimeLog;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,9 +5,15 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
+using BattleTech;
+using BattleTech.UI;
+using Harmony;
+using HBS;
+using ModTek.RuntimeLog;
+using Newtonsoft.Json;
 using UnityEngine;
 
-namespace ModTek
+namespace ModTek.SoundBanks
 {
     public enum SoundBankType
     {
@@ -109,7 +109,7 @@ namespace ModTek
         public static void Postfix()
         {
             RLog.M.TWL(0, "AudioEventManager.LoadAudioSettings");
-            foreach (var soundBank in ModTek.soundBanks)
+            foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
                 {
@@ -134,7 +134,7 @@ namespace ModTek
         public static void Postfix(AudioSettingsModule __instance)
         {
             RLog.M.TWL(0, "AudioSettingsModule.SaveSettings");
-            foreach (var soundBank in ModTek.soundBanks)
+            foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
                 {
@@ -159,7 +159,7 @@ namespace ModTek
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
             RLog.M.TWL(0, "WwiseManager.LoadCombatBanks");
-            foreach (var soundBank in ModTek.soundBanks)
+            foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
                 {
@@ -190,7 +190,7 @@ namespace ModTek
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
             RLog.M.TWL(0, "WwiseManager.UnloadCombatBanks");
-            foreach (var soundBank in ModTek.soundBanks)
+            foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
                 {
@@ -226,9 +226,9 @@ namespace ModTek
         public static void Postfix(LoadedAudioBank __instance)
         {
             RLog.M.TWL(0, "LoadedAudioBank.UnloadBank " + __instance.name);
-            if (ModTek.soundBanks.ContainsKey(__instance.name))
+            if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name))
             {
-                ModTek.soundBanks[__instance.name].loaded = false;
+                SoundBanksFeature.soundBanks[__instance.name].loaded = false;
             }
         }
     }
@@ -286,12 +286,12 @@ namespace ModTek
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
         {
             RLog.M.TWL(0, "LoadedAudioBank.LoadBankExternal " + __instance.name);
-            if (ModTek.soundBanks.ContainsKey(__instance.name) == false)
+            if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name) == false)
             {
                 return false;
             }
 
-            var uri = new Uri(ModTek.soundBanks[__instance.name].filename).AbsoluteUri;
+            var uri = new Uri(SoundBanksFeature.soundBanks[__instance.name].filename).AbsoluteUri;
             RLog.M.WL(1, uri);
             var www = new WWW(uri);
             while (!www.isDone)
@@ -347,8 +347,8 @@ namespace ModTek
                 ___id = id;
                 if (__result == AKRESULT.AK_Success)
                 {
-                    ModTek.soundBanks[__instance.name].registerEvents();
-                    ModTek.soundBanks[__instance.name].setVolume();
+                    SoundBanksFeature.soundBanks[__instance.name].registerEvents();
+                    SoundBanksFeature.soundBanks[__instance.name].setVolume();
                 }
 
                 ;

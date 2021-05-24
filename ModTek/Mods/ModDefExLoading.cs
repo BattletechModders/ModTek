@@ -5,6 +5,7 @@ using System.Linq;
 using BattleTech;
 using ModTek.Manifest;
 using ModTek.Misc;
+using ModTek.SoundBanks;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -298,6 +299,37 @@ namespace ModTek.Mods
             }
 
             return true;
+        }
+
+        public static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder, Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources)
+        {
+            var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
+
+            if (methods == null || methods.Length == 0)
+            {
+                return;
+            }
+
+            var paramsDictionary = new Dictionary<string, object> { { "loadOrder", new List<string>(ModLoadOrder) } };
+
+            if (modDef.CustomResourceTypes.Count > 0)
+            {
+                var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
+                foreach (var resourceType in modDef.CustomResourceTypes)
+                {
+                    customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
+                }
+
+                paramsDictionary.Add("customResources", customResources);
+            }
+
+            foreach (var method in methods)
+            {
+                if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                {
+                    Logger.Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                }
+            }
         }
     }
 }

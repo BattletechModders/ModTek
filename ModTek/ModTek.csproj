@@ -103,12 +103,13 @@
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
     <Compile Include="Patches\SimGameConstants.cs" />
-    <Compile Include="Patches\SoundBanks.cs" />
     <Compile Include="Patches\SVGAssetHelper.cs" />
     <Compile Include="Patches\UIManagerPatches.cs" />
     <Compile Include="Patches\VersionManifestAddendum.cs" />
     <Compile Include="CustomTypes\CustomTagSet.cs" />
     <Compile Include="CustomTypes\CustomTag.cs" />
+    <Compile Include="SoundBanks\SoundBanksFeature.cs" />
+    <Compile Include="SoundBanks\SoundBanksPatches.cs" />
     <Compile Include="Util\AddendumUtils.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Mods\ModDefExExtensions.cs" />

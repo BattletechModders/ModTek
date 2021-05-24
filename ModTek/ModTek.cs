@@ -20,6 +20,7 @@ using ModTek.CustomTypes;
 using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.Mods;
+using ModTek.SoundBanks;
 using static ModTek.Util.Logger;
 
 namespace ModTek
@@ -48,7 +49,6 @@ namespace ModTek
 
         // internal temp structures
         private static System.Diagnostics.Stopwatch stopwatch = new();
-        internal static Dictionary<string, SoundBankDef> soundBanks = new();
         private static Dictionary<string, Dictionary<string, List<string>>> merges = new();
         private static HashSet<string> BTRLEntriesPathes;
 
@@ -224,68 +224,12 @@ namespace ModTek
 
         private static void CallFinishedLoadMethods()
         {
-            var hasPrinted = false;
+            Log("\nCalling FinishedLoading:");
             var assemblyMods = ModLoadOrder.Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null).ToList();
             foreach (var assemblyMod in assemblyMods)
             {
                 var modDef = ModDefs[assemblyMod];
-                var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
-
-                if (methods == null || methods.Length == 0)
-                {
-                    continue;
-                }
-
-                if (!hasPrinted)
-                {
-                    Log("\nCalling FinishedLoading:");
-                    hasPrinted = true;
-                }
-
-                var paramsDictionary = new Dictionary<string, object> { { "loadOrder", new List<string>(ModLoadOrder) } };
-
-                if (modDef.CustomResourceTypes.Count > 0)
-                {
-                    var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
-                    foreach (var resourceType in modDef.CustomResourceTypes)
-                    {
-                        customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
-                    }
-
-                    paramsDictionary.Add("customResources", customResources);
-                }
-
-                foreach (var method in methods)
-                {
-                    if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
-                    {
-                        Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
-                    }
-                }
-            }
-        }
-
-        private static void AddSoundBankDef(string path)
-        {
-            try
-            {
-                Log($"\tAdd SoundBankDef {path}");
-                var def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
-                def.filename = Path.Combine(Path.GetDirectoryName(path), def.filename);
-                if (soundBanks.ContainsKey(def.name))
-                {
-                    soundBanks[def.name] = def;
-                    Log($"\t\tReplace:" + def.name);
-                }
-                else
-                {
-                    soundBanks.Add(def.name, def);
-                    Log($"\t\tAdd:" + def.name);
-                }
-            }
-            catch (Exception e)
-            {
-                Log($"\tError while reading SoundBankDef:" + e.ToString());
+                ModDefExLoading.FinishedLoading(modDef, ModLoadOrder, CustomResources);
             }
         }
 
@@ -329,7 +273,7 @@ namespace ModTek
                     ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
                     break;
                 case nameof(SoundBankDef):
-                    AddSoundBankDef(modEntry.Path);
+                    SoundBanks.SoundBanksFeature.AddSoundBankDef(modEntry.Path);
                     return;
                 case nameof(SVGAsset):
                     Log($"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
@@ -541,46 +485,9 @@ namespace ModTek
             ProgressPanel.SubmitWork(HandleModManifestsLoop);
             ProgressPanel.SubmitWork(MergeFilesLoop);
             ProgressPanel.SubmitWork(AddToDBLoop);
-            ProgressPanel.SubmitWork(SoundBanksProcessing);
+            ProgressPanel.SubmitWork(SoundBanks.SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
-        }
-
-        private static IEnumerator<ProgressReport> SoundBanksProcessing()
-        {
-            Log($"Processing sound banks ({soundBanks.Count}):");
-            if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
-            {
-                Log($"\tWWise manager not inited");
-                yield break;
-            }
-
-            yield return new ProgressReport(0, "Processing sound banks", "");
-            if (soundBanks.Count == 0)
-            {
-                yield break;
-            }
-
-            var loadedBanks = (List<LoadedAudioBank>) typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance);
-            var progeress = 0;
-            foreach (var soundBank in soundBanks)
-            {
-                ++progeress;
-                yield return new ProgressReport(progeress / (float) soundBanks.Count, $"Processing sound bank", soundBank.Key, true);
-                Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
-                if (soundBank.Value.type != SoundBankType.Default)
-                {
-                    continue;
-                }
-
-                ;
-                if (soundBank.Value.loaded)
-                {
-                    continue;
-                }
-
-                loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
-            }
         }
 
         private static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
