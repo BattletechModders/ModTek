@@ -1,11 +1,14 @@
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable InconsistentNaming
-#pragma warning disable 649
+using Newtonsoft.Json;
+
 namespace ModTek.Mods
 {
+    [JsonObject]
     internal class DataAddendumEntry
     {
+        [JsonProperty]
         public string name;
+
+        [JsonProperty]
         public string path;
     }
 }
