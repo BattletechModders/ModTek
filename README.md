@@ -1,6 +1,6 @@
 # ModTek
 
-ModTek is a mod-loader for []HBS's BattleTech PC game](https://harebrained-schemes.com/battletech/). It allows modders to create self-contained mods that do not over-write game files. ModTek is run at game startup and dynamically loads mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). Mod dependencies are resolved and load order enforced without needing to edit the dreaded `VersionManifest.csv`. It also provides for incremental patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a mod-loader for [HBS's BattleTech PC game](https://harebrained-schemes.com/battletech/). It allows modders to create self-contained mods that do not over-write game files. ModTek is run at game startup and dynamically loads mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). Mod dependencies are resolved and load order enforced without needing to edit the dreaded `VersionManifest.csv`. It also provides for incremental patching of stock game files that are easy to remove, version, and persist through patches.
 
 In version 1.7 HBS introduced an internal mod-loader. The in-game mod-loader shares many similarities to ModTek, but has fewer features and less robust handling. We strongly recommend using a stand-alone copy of ModTek instead of the in-game mod-loader. You'll have a better experience and be more in-line with current community best practices.
 
