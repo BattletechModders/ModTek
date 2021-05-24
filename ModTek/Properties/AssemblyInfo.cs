@@ -15,4 +15,4 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("8d955c2c-d75b-453c-99d1-b337bbf82cca")]
 
-[assembly:InternalsVisibleTo("ModTekUnitTests")]
+[assembly: InternalsVisibleTo("ModTekUnitTests")]

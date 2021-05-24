@@ -86,7 +86,7 @@ namespace ModTek.Mods
 
                 try
                 {
-                    if (!ModDefExLoading.LoadMod(modDef, out var reason))
+                    if (!LoadMod(modDef, out var reason))
                     {
                         ModTek.ModDefs.Remove(modName);
 

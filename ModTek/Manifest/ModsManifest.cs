@@ -271,7 +271,7 @@ namespace ModTek.Manifest
                         {
                             var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
                             subModEntry.Type = type;
-                            ModsManifest.AddModEntry(subModEntry);
+                            AddModEntry(subModEntry);
                             Merges.RemoveMerge(type, modEntry.Id);
                         }
 
@@ -328,24 +328,24 @@ namespace ModTek.Manifest
                         }
                         case nameof(SoundBankDef):
                         {
-                            ModsManifest.AddModEntry(modEntry);
+                            AddModEntry(modEntry);
                             continue;
                         }
                         case ModDefExLoading.CustomType_FixedSVGAsset:
                         {
-                            ModsManifest.AddModEntry(modEntry);
+                            AddModEntry(modEntry);
                             continue;
                         }
                         case ModDefExLoading.CustomType_Tag:
                         {
                             Logger.Log((string) $"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                            ModsManifest.AddModEntry(modEntry);
+                            AddModEntry(modEntry);
                             continue;
                         }
                         case ModDefExLoading.CustomType_TagSet:
                         {
                             Logger.Log((string) $"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                            ModsManifest.AddModEntry(modEntry);
+                            AddModEntry(modEntry);
                             continue;
                         }
                     }
@@ -371,13 +371,13 @@ namespace ModTek.Manifest
                     }
 
                     typeCache.TryAddType(modEntry.Id, modEntry.Type);
-                    ModsManifest.AddModEntry(modEntry);
+                    AddModEntry(modEntry);
                     Merges.RemoveMerge(modEntry.Type, modEntry.Id);
                 }
 
                 foreach (var removeID in ModTek.ModDefs[modName].RemoveManifestEntries)
                 {
-                    if (!ModsManifest.RemoveEntry(removeID, typeCache))
+                    if (!RemoveEntry(removeID, typeCache))
                     {
                         Logger.Log((string) $"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
                     }

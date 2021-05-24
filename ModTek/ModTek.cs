@@ -230,7 +230,8 @@ namespace ModTek
                     foreach (var modDef in ModLoadOrder
                         .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
                         .Select(assemblyMod => ModDefs[assemblyMod])
-                    ) {
+                    )
+                    {
                         ModDefExLoading.FinishedLoading(modDef, ModLoadOrder, CustomResources);
                     }
                 }

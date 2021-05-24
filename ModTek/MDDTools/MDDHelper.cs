@@ -132,7 +132,7 @@ namespace ModTek.MDDTools
 
                 foreach (var replacementEntry in replacementEntries)
                 {
-                    if (MDDHelper.AddModEntryToDB(MetadataDatabase.Instance, dbCache, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
+                    if (AddModEntryToDB(MetadataDatabase.Instance, dbCache, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
                     {
                         Logger.Log((string) $"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, FilePaths.GameDirectory)}");
                         shouldWriteDB = true;
@@ -182,7 +182,7 @@ namespace ModTek.MDDTools
             addCount = 0;
             foreach (var modEntry in ModTek.AddBTRLEntries)
             {
-                if (modEntry.AddToDB && MDDHelper.AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
+                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
                 {
                     yield return new ProgressReport(addCount / (float) ModTek.AddBTRLEntries.Count, "Populating Database", modEntry.Id);
                     Logger.Log((string) $"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
