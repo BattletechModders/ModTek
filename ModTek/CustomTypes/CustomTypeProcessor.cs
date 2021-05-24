@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using BattleTech.Data;
 using HBS.Collections;
+using ModTek.MDDTools;
 using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;

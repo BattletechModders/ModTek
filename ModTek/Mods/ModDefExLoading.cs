@@ -7,12 +7,13 @@ using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.SoundBanks;
+using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
 
 namespace ModTek.Mods
 {
-    internal class ModDefExLoading
+    internal static class ModDefExLoading
     {
         internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
         internal const string CustomType_DebugSettings = "DebugSettings";
@@ -39,7 +40,88 @@ namespace ModTek.Mods
 
         private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
-        public static bool LoadMod(ModDefEx modDef, out string reason)
+        internal static IEnumerator<ProgressReport> InitModsLoop()
+        {
+            yield return new ProgressReport(1, "Initializing Mods", "");
+
+            // find all sub-directories that have a mod.json file
+            var modDirectories = Directory.GetDirectories(FilePaths.ModsDirectory).Where(x => File.Exists(Path.Combine(x, FilePaths.MOD_JSON_NAME))).ToArray();
+            //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
+
+            if (modDirectories.Length == 0)
+            {
+                Logger.Log((string) "No ModTek-compatible mods found.");
+                yield break;
+            }
+
+            ModDefsDatabase.CreateModDefs(modDirectories);
+            ModDefsDatabase.SetupModLoadOrderAndRemoveUnloadableMods();
+
+            // try loading each mod
+            var numModsLoaded = 0;
+            Logger.Log((string) "");
+            foreach (var modName in ModTek.ModLoadOrder)
+            {
+                var modDef = ModTek.ModDefs[modName];
+
+                if (modDef.DependsOn.Intersect(ModTek.FailedToLoadMods).Any())
+                {
+                    ModTek.ModDefs.Remove(modName);
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        Logger.Log((string) $"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
+                        if (ModTek.allModDefs.ContainsKey(modName))
+                        {
+                            ModTek.allModDefs[modName].LoadFail = true;
+                            ModTek.allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                        }
+
+                        ModTek.FailedToLoadMods.Add(modName);
+                    }
+
+                    continue;
+                }
+
+                yield return new ProgressReport(numModsLoaded++ / (float) ModTek.ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+
+                try
+                {
+                    if (!ModDefExLoading.LoadMod(modDef, out var reason))
+                    {
+                        ModTek.ModDefs.Remove(modName);
+
+                        if (!modDef.IgnoreLoadFailure)
+                        {
+                            ModTek.FailedToLoadMods.Add(modName);
+                            if (ModTek.allModDefs.ContainsKey(modName))
+                            {
+                                ModTek.allModDefs[modName].LoadFail = true;
+                                ModTek.allModDefs[modName].FailReason = reason;
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ModTek.ModDefs.Remove(modName);
+
+                    if (modDef.IgnoreLoadFailure)
+                    {
+                        continue;
+                    }
+
+                    Logger.LogException((string) $"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    ModTek.FailedToLoadMods.Add(modName);
+                    if (ModTek.allModDefs.ContainsKey(modName))
+                    {
+                        ModTek.allModDefs[modName].LoadFail = true;
+                        ModTek.allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e.ToString();
+                    }
+                }
+            }
+        }
+
+        private static bool LoadMod(ModDefEx modDef, out string reason)
         {
             Logger.Log((string) $"{modDef.Name} {modDef.Version}");
 
@@ -302,7 +384,7 @@ namespace ModTek.Mods
             return true;
         }
 
-        public static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder, Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources)
+        internal static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder, Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources)
         {
             var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
 

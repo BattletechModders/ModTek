@@ -10,6 +10,7 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using ModTek.Logging;
+using ModTek.Manifest;
 using static BattleTech.Data.DataManager;
 
 namespace ModTek
@@ -59,7 +60,7 @@ namespace ModTek
                     }
 
                     var id = "UILookAndColorConstants." + field.Name;
-                    if (ModTek.isInSystemIcons(id))
+                    if (ModsManifest.isInSystemIcons(id))
                     {
                         svgs.Add(id);
                     }
