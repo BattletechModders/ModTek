@@ -84,25 +84,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
+    <Compile Include="CustomTypes\MetadataDatabaseExtensions.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Manifest\AdvMerge\AdvancedJSONMerge.cs" />
     <Compile Include="Manifest\AdvMerge\Instruction.cs" />
     <Compile Include="Manifest\AdvMerge\JSONMerger.cs" />
     <Compile Include="Manifest\AdvMerge\MergeAction.cs" />
+    <Compile Include="Manifest\MDD\DBCache.cs" />
+    <Compile Include="Manifest\MDD\MDDHelper.cs" />
     <Compile Include="Manifest\Merges\MergeCache.cs" />
     <Compile Include="Manifest\Merges\MergesDatabase.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Manifest\ModsManifest.cs" />
     <Compile Include="Manifest\TypeCache.cs" />
-    <Compile Include="MDDTools\DBCache.cs" />
-    <Compile Include="MDDTools\MDDHelper.cs" />
-    <Compile Include="MDDTools\MetadataDatabaseExtensions.cs" />
     <Compile Include="Misc\Configuration.cs" />
     <Compile Include="Misc\FilePaths.cs" />
     <Compile Include="Misc\JObjectCache.cs" />
     <Compile Include="Mods\DataAddendumEntry.cs" />
-    <Compile Include="Mods\DependencyTree.cs" />
     <Compile Include="Mods\ModDefExLoading.cs" />
     <Compile Include="Mods\ModDefsDatabase.cs" />
     <Compile Include="Mods\ModState.cs" />

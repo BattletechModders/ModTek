@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using ModTek.Logging;
 using ModTek.Manifest;
+using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
 using ModTek.MDDTools;
 using ModTek.Misc;
@@ -172,9 +173,8 @@ namespace ModTek
         {
             ProgressPanel.SubmitWork(ModDefExLoading.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.ProcessLoop);
-            ProgressPanel.SubmitWork(MDDHelper.AddToDBLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
-            ProgressPanel.SubmitWork(DependencyTree.GatherDependencyTreeLoop);
+            ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
         }
 

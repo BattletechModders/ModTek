@@ -5,6 +5,7 @@ using System.Linq;
 using BattleTech;
 using ModTek.Logging;
 using ModTek.Misc;
+using ModTek.UI;
 using ModTek.Util;
 
 namespace ModTek.Mods
@@ -35,7 +36,7 @@ namespace ModTek.Mods
                 catch (Exception e)
                 {
                     FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, FilePaths.ModsDirectory));
-                    Logger.LogException((string) $"Error: Caught exception while parsing {modDefPath}", e);
+                    Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }
 
@@ -52,7 +53,7 @@ namespace ModTek.Mods
                         ++counter;
                         tmpname = modDef.Name + "{dublicate " + counter + "}";
                     }
-                    while (allModDefs.ContainsKey(tmpname) == true);
+                    while (allModDefs.ContainsKey(tmpname));
 
                     modDef.Name = tmpname;
                     modDef.Enabled = false;
@@ -62,9 +63,9 @@ namespace ModTek.Mods
                     continue;
                 }
 
-                if (!modDef.ShouldTryLoad(Enumerable.ToList<string>(ModDefs.Keys), out var reason, out _))
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out _))
                 {
-                    Logger.Log((string) $"Not loading {modDef.Name} because {reason}");
+                    Logger.Log($"Not loading {modDef.Name} because {reason}");
                     if (!modDef.IgnoreLoadFailure)
                     {
                         FailedToLoadMods.Add(modDef.Name);
@@ -101,8 +102,84 @@ namespace ModTek.Mods
                     allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
                 }
 
-                Logger.Log((string) $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
+                Logger.Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
+            }
+        }
+
+        // TODO is this needed?
+        internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
+        {
+            yield return new ProgressReport(0, "Gathering dependencies trees", "");
+            if (allModDefs.Count == 0)
+            {
+                yield break;
+            }
+
+            var progress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progress;
+                foreach (var depname in mod.Value.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(depname))
+                    {
+                        if (allModDefs[depname].DependsOnMe.Contains(mod.Value) == false)
+                        {
+                            allModDefs[depname].DependsOnMe.Add(mod.Value);
+                        }
+                    }
+                }
+            }
+
+            yield return new ProgressReport(1 / 3f, "Gather depends on me", string.Empty, true);
+            progress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progress;
+                mod.Value.GatherAffectingOfflineRec();
+            }
+
+            yield return new ProgressReport(2 / 3f, "Gather disable influence tree", string.Empty, true);
+            progress = 0;
+            foreach (var mod in allModDefs)
+            {
+                ++progress;
+                mod.Value.GatherAffectingOnline();
+            }
+
+            yield return new ProgressReport(1, "Gather enable influence tree", string.Empty, true);
+            Logger.Log("FAIL LIST:");
+            foreach (var mod in allModDefs.Values)
+            {
+                if (mod.Enabled == false)
+                {
+                    continue;
+                }
+
+                ;
+                if (mod.LoadFail == false)
+                {
+                    continue;
+                }
+
+                Logger.Log($"\t{mod.Name} fail {mod.FailReason}");
+                foreach (var dmod in mod.AffectingOnline)
+                {
+                    var state = dmod.Key.Enabled && dmod.Key.LoadFail == false;
+                    if (state != dmod.Value)
+                    {
+                        Logger.Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                    }
+                }
+
+                foreach (var deps in mod.DependsOn)
+                {
+                    if (allModDefs.ContainsKey(deps) == false)
+                    {
+                        Logger.Log($"\t\tdepends on {deps} but abcent");
+                    }
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ using BattleTech.UI;
 using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest.AdvMerge;
+using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
 using ModTek.Misc;
 using ModTek.Mods;
@@ -205,17 +206,21 @@ namespace ModTek.Manifest
 
         internal static IEnumerator<ProgressReport> ProcessLoop()
         {
-            return CSharpUtils.Enumerate(HandleModManifestsLoop(), mergesDatabase.MergeFilesLoop());
+            // there are no mods loaded, just return
+            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
+            {
+                return Enumerable.Empty<ProgressReport>().GetEnumerator();
+            }
+
+            return CSharpUtils.Enumerate(
+                HandleModManifestsLoop(),
+                mergesDatabase.MergeFilesLoop(),
+                MDDHelper.AddToDBLoop()
+                );
         }
 
         private static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
-            // there are no mods loaded, just return
-            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
-            {
-                yield break;
-            }
-
             Logger.Log((string) "\nAdding Mod Content...");
             var typeCache = new TypeCache(FilePaths.TypeCachePath);
             typeCache.UpdateToIDBased();

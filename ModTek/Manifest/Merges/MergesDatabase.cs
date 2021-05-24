@@ -50,12 +50,6 @@ namespace ModTek.Manifest.Merges
 
         internal IEnumerator<ProgressReport> MergeFilesLoop()
         {
-            // there are no mods loaded, just return
-            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
-            {
-                yield break;
-            }
-
             // perform merges into cache
             Logger.Log("\nDoing merges...");
             yield return new ProgressReport(1, "Merging", "", true);

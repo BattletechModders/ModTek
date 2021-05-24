@@ -8,17 +8,17 @@ using BattleTech.Data;
 using Harmony;
 using ModTek.CustomTypes;
 using ModTek.Logging;
-using ModTek.Manifest;
+using ModTek.MDDTools;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.UI;
 using ModTek.Util;
 
-namespace ModTek.MDDTools
+namespace ModTek.Manifest.MDD
 {
     internal static class MDDHelper
     {
-        internal static bool AddModEntryToDB(MetadataDatabase db, DBCache dbCache, string absolutePath, string typeStr)
+        private static bool AddModEntryToDB(MetadataDatabase db, DBCache dbCache, string absolutePath, string typeStr)
         {
             if (Path.GetExtension(absolutePath)?.ToLowerInvariant() != ".json")
             {
@@ -69,12 +69,6 @@ namespace ModTek.MDDTools
 
         internal static IEnumerator<ProgressReport> AddToDBLoop()
         {
-            // there are no mods loaded, just return
-            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
-            {
-                yield break;
-            }
-
             Logger.Log((string) "\nSyncing Database...");
             yield return new ProgressReport(1, "Syncing Database", "", true);
 
