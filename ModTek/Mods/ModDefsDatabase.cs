@@ -11,6 +11,12 @@ namespace ModTek.Mods
 {
     internal static class ModDefsDatabase
     {
+        internal static List<string> ModLoadOrder;
+        internal static Dictionary<string, ModDefEx> ModDefs = new();
+        internal static Dictionary<string, ModDefEx> allModDefs = new();
+        internal static HashSet<string> FailedToLoadMods { get; } = new();
+        internal static VersionManifest CachedVersionManifest;
+
         internal static void CreateModDefs(string[] modDirectories)
         {
             // create ModDef objects for each mod.json file
@@ -99,11 +105,5 @@ namespace ModTek.Mods
                 FailedToLoadMods.Add(modName);
             }
         }
-
-        internal static List<string> ModLoadOrder;
-        internal static Dictionary<string, ModDefEx> ModDefs = new();
-        internal static Dictionary<string, ModDefEx> allModDefs = new();
-        internal static HashSet<string> FailedToLoadMods { get; } = new();
-        internal static VersionManifest CachedVersionManifest;
     }
 }

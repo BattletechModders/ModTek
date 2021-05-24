@@ -20,6 +20,15 @@ namespace ModTek.Manifest
     internal static class ModsManifest
     {
         private static HashSet<string> systemIcons = new();
+        internal static HashSet<ModEntry> CustomTags = new();
+        internal static HashSet<ModEntry> CustomTagSets = new();
+
+        internal static List<ModEntry> AddBTRLEntries = new();
+        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
+        internal static HashSet<string> BTRLEntriesPathes;
+
+        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
+        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
 
         internal static bool isInSystemIcons(string id)
         {
@@ -406,14 +415,6 @@ namespace ModTek.Manifest
                 ? ModDefsDatabase.CachedVersionManifest.Find(entry => entry.Type == type && entry.Id == id)
                 : null;
         }
-
-        internal static HashSet<ModEntry> CustomTags = new();
-        internal static HashSet<ModEntry> CustomTagSets = new();
-        internal static List<ModEntry> AddBTRLEntries = new();
-        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
-        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
-        internal static HashSet<string> BTRLEntriesPathes;
-        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
 
         internal static void FinalizeResourceLoading()
         {

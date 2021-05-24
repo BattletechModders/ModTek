@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BattleTech;
+using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Misc;
@@ -416,7 +417,7 @@ namespace ModTek.Mods
             }
         }
 
-        internal static Dictionary<string, Assembly> TryResolveAssemblies = new();
+        private static Dictionary<string, Assembly> TryResolveAssemblies = new();
 
         internal static void FinishedLoadingMods()
         {
@@ -437,6 +438,17 @@ namespace ModTek.Mods
             }
             HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
             LoadOrder.ToFile(ModDefsDatabase.ModLoadOrder, FilePaths.LoadOrderPath);
+        }
+
+        internal static void Setup()
+        {
+            // setup assembly resolver
+            TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var resolvingName = new AssemblyName(args.Name);
+                return !TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
+            };
         }
     }
 }

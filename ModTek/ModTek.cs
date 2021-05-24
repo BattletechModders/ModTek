@@ -131,13 +131,7 @@ namespace ModTek
             // read config
             Config = Configuration.FromFile(FilePaths.ConfigPath);
 
-            // setup assembly resolver
-            ModDefExLoading.TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                var resolvingName = new AssemblyName(args.Name);
-                return !ModDefExLoading.TryResolveAssemblies.TryGetValue(resolvingName.Name, out var assembly) ? null : assembly;
-            };
+            ModDefExLoading.Setup();
 
             try
             {
