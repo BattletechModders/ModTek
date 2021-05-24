@@ -4,6 +4,7 @@ using Harmony;
 using ModTek.Caches;
 using ModTek.Logging;
 using ModTek.Misc;
+using ModTek.Mods;
 using ModTek.UI;
 
 namespace ModTek.Manifest
@@ -44,7 +45,7 @@ namespace ModTek.Manifest
         internal static IEnumerator<ProgressReport> MergeFilesLoop()
         {
             // there are no mods loaded, just return
-            if (ModTek.ModLoadOrder == null || ModTek.ModLoadOrder.Count == 0)
+            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
             {
                 yield break;
             }

@@ -196,7 +196,7 @@ namespace ModTek.Manifest
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             // there are no mods loaded, just return
-            if (ModTek.ModLoadOrder == null || ModTek.ModLoadOrder.Count == 0)
+            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
             {
                 yield break;
             }
@@ -211,7 +211,7 @@ namespace ModTek.Manifest
             var numEntries = 0;
             ModTek.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            var manifestMods = ModTek.ModLoadOrder.Where(name => ModTek.ModDefs.ContainsKey(name) && (ModTek.ModDefs[name].Manifest.Count > 0 || ModTek.ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
+            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModTek.ModDefs.ContainsKey(name) && (ModTek.ModDefs[name].Manifest.Count > 0 || ModTek.ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
             foreach (var modName in manifestMods)
             {
                 var modDef = ModTek.ModDefs[modName];

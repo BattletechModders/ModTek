@@ -31,7 +31,10 @@ namespace ModTek
 
         public static Dictionary<string, SoundBankDef> soundBanks = SoundBanksFeature.soundBanks;
 
-        // non-public follows
+        // ok fields
+        internal static Configuration Config;
+
+        // TBD fields below
 
         internal static bool HasLoaded { get; private set; }
 
@@ -50,8 +53,6 @@ namespace ModTek
         internal static HashSet<string> BTRLEntriesPathes;
 
         // internal structures
-        internal static Configuration Config;
-        internal static List<string> ModLoadOrder;
         internal static Dictionary<string, ModDefEx> ModDefs = new();
         internal static Dictionary<string, ModDefEx> allModDefs = new();
         internal static HashSet<string> FailedToLoadMods { get; } = new();
@@ -223,20 +224,20 @@ namespace ModTek
                 DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
             }
 
-            if (ModLoadOrder != null && ModLoadOrder.Count > 0)
+            if (ModDefsDatabase.ModLoadOrder != null && ModDefsDatabase.ModLoadOrder.Count > 0)
             {
                 {
                     Log("\nCalling FinishedLoading:");
-                    foreach (var modDef in ModLoadOrder
+                    foreach (var modDef in ModDefsDatabase.ModLoadOrder
                         .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
                         .Select(assemblyMod => ModDefs[assemblyMod])
                     )
                     {
-                        ModDefExLoading.FinishedLoading(modDef, ModLoadOrder, CustomResources);
+                        ModDefExLoading.FinishedLoading(modDef, ModDefsDatabase.ModLoadOrder, CustomResources);
                     }
                 }
                 HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
-                LoadOrder.ToFile(ModLoadOrder, FilePaths.LoadOrderPath);
+                LoadOrder.ToFile(ModDefsDatabase.ModLoadOrder, FilePaths.LoadOrderPath);
             }
 
             Config?.ToFile(FilePaths.ConfigPath);

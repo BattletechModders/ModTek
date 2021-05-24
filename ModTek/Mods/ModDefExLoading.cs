@@ -60,7 +60,7 @@ namespace ModTek.Mods
             // try loading each mod
             var numModsLoaded = 0;
             Logger.Log((string) "");
-            foreach (var modName in ModTek.ModLoadOrder)
+            foreach (var modName in ModDefsDatabase.ModLoadOrder)
             {
                 var modDef = ModTek.ModDefs[modName];
 
@@ -82,7 +82,7 @@ namespace ModTek.Mods
                     continue;
                 }
 
-                yield return new ProgressReport(numModsLoaded++ / (float) ModTek.ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+                yield return new ProgressReport(numModsLoaded++ / (float) ModDefsDatabase.ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
                 try
                 {

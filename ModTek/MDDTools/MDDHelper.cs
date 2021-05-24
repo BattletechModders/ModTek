@@ -70,7 +70,7 @@ namespace ModTek.MDDTools
         internal static IEnumerator<ProgressReport> AddToDBLoop()
         {
             // there are no mods loaded, just return
-            if (ModTek.ModLoadOrder == null || ModTek.ModLoadOrder.Count == 0)
+            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
             {
                 yield break;
             }
@@ -149,7 +149,7 @@ namespace ModTek.MDDTools
             Logger.Log((string) $"\nAdding dynamic enums:");
             var addCount = 0;
             var mods = new List<ModDefEx>();
-            foreach (var modname in ModTek.ModLoadOrder)
+            foreach (var modname in ModDefsDatabase.ModLoadOrder)
             {
                 if (ModTek.ModDefs.ContainsKey(modname) == false)
                 {

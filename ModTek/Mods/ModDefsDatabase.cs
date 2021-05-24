@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ModTek.Logging;
@@ -77,7 +78,7 @@ namespace ModTek.Mods
         public static void SetupModLoadOrderAndRemoveUnloadableMods()
         {
             // get a load order and remove mods that won't be loaded
-            ModTek.ModLoadOrder = LoadOrder.CreateLoadOrder(ModTek.ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModTek.ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
             foreach (var modName in notLoaded)
             {
                 var modDef = ModTek.ModDefs[modName];
@@ -97,5 +98,7 @@ namespace ModTek.Mods
                 ModTek.FailedToLoadMods.Add(modName);
             }
         }
+
+        internal static List<string> ModLoadOrder;
     }
 }
