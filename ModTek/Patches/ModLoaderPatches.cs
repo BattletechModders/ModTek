@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ModTek.Mods;
 using UnityEngine;
 using static ModTek.Util.Logger;
 

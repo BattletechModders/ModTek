@@ -21,7 +21,7 @@ namespace ModTek.Patches
                 return;
 
             GenericPopupBuilder.Create("Some Mods Didn't Load",
-                    $"Check \"{ModTek.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n"
+                    $"Check \"{FileUtils.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n"
                     + string.Join(", ", ModTek.FailedToLoadMods.ToArray()))
                 .AddButton("Continue")
                 .Render();

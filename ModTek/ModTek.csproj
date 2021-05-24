@@ -87,6 +87,9 @@
     <Compile Include="Caches\TypeCache.cs" />
     <Compile Include="Extensions\MetadataDatabaseExtensions.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Mods\DataAddendumEntry.cs" />
+    <Compile Include="Mods\ModDefExLoading.cs" />
+    <Compile Include="Mods\ModState.cs" />
     <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\GameTipList.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
@@ -97,8 +100,12 @@
     <Compile Include="Patches\VersionManifestAddendum.cs" />
     <Compile Include="CustomTypes\CustomTagSet.cs" />
     <Compile Include="CustomTypes\CustomTag.cs" />
+    <Compile Include="Util\AddendumUtils.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\CustomTypeProcessor.cs" />
+    <Compile Include="Mods\ModDefExExtensions.cs" />
+    <Compile Include="Util\FileUtils.cs" />
+    <Compile Include="Util\HarmonyUtils.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
@@ -106,7 +113,7 @@
     <Compile Include="Util\Logger.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Caches\MergeCache.cs" />
-    <Compile Include="ModDef.cs" />
+    <Compile Include="Mods\ModDef.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Injection.cs" />
     <Compile Include="Patches\ActivateAfterInit.cs" />

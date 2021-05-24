@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Harmony;
+using ModTek.Util;
 using UnityEngine;
 using UnityEngine.UI;
 using static ModTek.Util.Logger;
@@ -75,7 +76,7 @@ namespace ModTek.UI
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
-                            LoadingText.text = $"See \"{ModTek.GetRelativePath(LogPath, ModTek.GameDirectory)}\"";
+                            LoadingText.text = $"See \"{FileUtils.GetRelativePath(LogPath, ModTek.GameDirectory)}\"";
 
                             ModTek.Finish();
 

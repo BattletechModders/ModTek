@@ -207,6 +207,7 @@ namespace ModTek
     [HarmonyPatch(new Type[] { })]
     public static class LoadedAudioBank_LoadBankExternal
     {
+        [Obsolete]
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
         {
             RLog.M.TWL(0, "LoadedAudioBank.LoadBankExternal " + __instance.name);

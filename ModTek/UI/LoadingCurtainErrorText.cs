@@ -1,4 +1,5 @@
 using System.IO;
+using ModTek.Util;
 using TMPro;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ namespace ModTek.UI
 
             var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
-                currentMessage += $"\"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
             else
                 currentMessage += $"\"output_log.txt\"\n";
         }

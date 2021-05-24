@@ -4,31 +4,15 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace ModTek{
-    public class ModState
-    {
-        [DefaultValue(true)]
-        public bool Enabled { get; set; } = true;
-        public static ModState CreateFromPath(string path)
-        {
-            var modState = JsonConvert.DeserializeObject<ModState>(File.ReadAllText(path));
-            return modState;
-        }
-        public void SaveToPath(string path)
-        {
-            File.WriteAllText(path, JsonConvert.SerializeObject(this));
-        }
-    }
-    public class DataAddendumEntry{
-        public string name;
-        public string path;
-    }
+namespace ModTek.Mods
+{
     public class ModDefEx
     {
         // this path will be set at runtime by ModTek
@@ -180,7 +164,7 @@ namespace ModTek{
             shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {
-                reason = $"ModTek already loaded with the same name. Skipping load from {ModTek.GetRelativePath(ModTek.ModsDirectory, Directory)}.";
+                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(ModTek.ModsDirectory, Directory)}.";
                 return false;
             }
 
