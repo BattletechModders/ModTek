@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using ModTek.Logging;
 using ModTek.Manifest;
+using ModTek.Manifest.Merges;
 using ModTek.MDDTools;
 using ModTek.Misc;
 using ModTek.Mods;
@@ -162,7 +163,7 @@ namespace ModTek
 
             // clear temp objects
             JObjectCache.Clear();
-            MergesDatabase.merges = null;
+            MergesDatabase.Clear();
             stopwatch = null;
         }
 

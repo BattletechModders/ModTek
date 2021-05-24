@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Harmony;
-using ModTek.Caches;
 using ModTek.Logging;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.UI;
 
-namespace ModTek.Manifest
+namespace ModTek.Manifest.Merges
 {
     internal static class MergesDatabase
     {
+        private static Dictionary<string, Dictionary<string, List<string>>> merges = new();
+
         internal static void AddMerge(string type, string id, string path)
         {
             if (!merges.ContainsKey(type))
@@ -40,6 +41,11 @@ namespace ModTek.Manifest
 
             merges[type].Remove(id);
             Logger.Log((string) $"\t\tHad merges for {id} but had to toss, since original file is being replaced");
+        }
+
+        internal static void Clear()
+        {
+            merges = null;
         }
 
         internal static IEnumerator<ProgressReport> MergeFilesLoop()
@@ -97,7 +103,5 @@ namespace ModTek.Manifest
 
             mergeCache.ToFile(FilePaths.MergeCachePath);
         }
-
-        internal static Dictionary<string, Dictionary<string, List<string>>> merges = new();
     }
 }

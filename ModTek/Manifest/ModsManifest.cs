@@ -5,9 +5,10 @@ using System.Linq;
 using BattleTech;
 using BattleTech.UI;
 using Harmony;
-using ModTek.AdvMerge;
 using ModTek.Caches;
 using ModTek.Logging;
+using ModTek.Manifest.AdvMerge;
+using ModTek.Manifest.Merges;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.SoundBanks;
@@ -138,13 +139,7 @@ namespace ModTek.Manifest
             var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
             foreach (var type in types)
             {
-                if (!MergesDatabase.merges.ContainsKey(type) || !MergesDatabase.merges[type].ContainsKey(id))
-                {
-                    continue;
-                }
-
-                Logger.Log((string) $"\t\tAlso removing JSON merges for {id} ({type})");
-                MergesDatabase.merges[type].Remove(id);
+                MergesDatabase.RemoveMerge(type, id);
             }
 
             return removedEntry;

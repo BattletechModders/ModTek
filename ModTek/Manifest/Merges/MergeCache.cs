@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ModTek.AdvMerge;
+using ModTek.Manifest.AdvMerge;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Caches
+namespace ModTek.Manifest.Merges
 {
     internal class MergeCache
     {
-        public Dictionary<string, CacheEntry> CachedEntries { get; set; } = new();
+        private Dictionary<string, CacheEntry> CachedEntries { get; set; } = new();
 
         public string GetOrCreateCachedEntry(string absolutePath, List<string> mergePaths)
         {

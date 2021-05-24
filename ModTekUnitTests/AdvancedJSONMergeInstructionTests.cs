@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ModTek.AdvMerge;
+using ModTek.Manifest.AdvMerge;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

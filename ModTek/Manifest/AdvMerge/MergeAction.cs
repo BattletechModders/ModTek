@@ -1,4 +1,4 @@
-﻿namespace ModTek.AdvMerge
+﻿namespace ModTek.Manifest.AdvMerge
 {
     internal enum MergeAction
     {

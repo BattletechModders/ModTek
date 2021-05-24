@@ -4,7 +4,7 @@ using System.IO;
 using ModTek.Logging;
 using Newtonsoft.Json;
 
-namespace ModTek.AdvMerge
+namespace ModTek.Manifest.AdvMerge
 {
     internal class AdvancedJSONMerge
     {

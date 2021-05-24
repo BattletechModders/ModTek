@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.AdvMerge
+namespace ModTek.Manifest.AdvMerge
 {
     internal static class JSONMerger
     {

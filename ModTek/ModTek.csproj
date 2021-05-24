@@ -83,16 +83,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdvMerge\AdvancedJSONMerge.cs" />
-    <Compile Include="AdvMerge\Instruction.cs" />
-    <Compile Include="AdvMerge\JSONMerger.cs" />
-    <Compile Include="AdvMerge\MergeAction.cs" />
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
     <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Manifest\MergesDatabase.cs" />
+    <Compile Include="Manifest\AdvMerge\AdvancedJSONMerge.cs" />
+    <Compile Include="Manifest\AdvMerge\Instruction.cs" />
+    <Compile Include="Manifest\AdvMerge\JSONMerger.cs" />
+    <Compile Include="Manifest\AdvMerge\MergeAction.cs" />
+    <Compile Include="Manifest\Merges\MergeCache.cs" />
+    <Compile Include="Manifest\Merges\MergesDatabase.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Manifest\ModsManifest.cs" />
     <Compile Include="MDDTools\MDDHelper.cs" />
@@ -125,7 +126,6 @@
     <Compile Include="Util\HarmonyUtils.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
     <Compile Include="Util\LoadOrder.cs" />
-    <Compile Include="Caches\MergeCache.cs" />
     <Compile Include="Mods\ModDef.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Injection.cs" />
