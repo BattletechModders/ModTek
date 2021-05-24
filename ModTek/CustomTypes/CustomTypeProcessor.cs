@@ -1,17 +1,12 @@
-using BattleTech.Data;
-using HBS.Collections;
-using ModTek.Extensions;
-using ModTek.CustomTypes;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BattleTech.Data;
+using HBS.Collections;
+using ModTek.Misc;
+using Newtonsoft.Json;
 using static ModTek.Util.Logger;
 
-namespace ModTek
+namespace ModTek.CustomTypes
 {
     internal static class CustomTypeProcessor
     {

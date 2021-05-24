@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.Util;
 using UnityEngine;
@@ -277,7 +278,7 @@ namespace ModTek.Patches
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     changed = true;
-                    var moddefpath = Path.Combine(mod.Value.Directory, FileUtils.MOD_JSON_NAME);
+                    var moddefpath = Path.Combine(mod.Value.Directory, FilePaths.MOD_JSON_NAME);
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
@@ -295,7 +296,7 @@ namespace ModTek.Patches
 
             if (changed)
             {
-                File.WriteAllText(FileUtils.ChangedFlagPath, "changed");
+                File.WriteAllText(FilePaths.ChangedFlagPath, "changed");
             }
 
             RLog.M.flush();

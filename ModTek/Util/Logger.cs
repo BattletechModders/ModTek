@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ModTek.Misc;
 
 namespace ModTek.Util
 {
@@ -9,9 +10,9 @@ namespace ModTek.Util
 
         private static StreamWriter GetOrCreateStream()
         {
-            if (logStream == null && !string.IsNullOrEmpty(FileUtils.LogPath))
+            if (logStream == null && !string.IsNullOrEmpty(FilePaths.LogPath))
             {
-                logStream = File.AppendText(FileUtils.LogPath);
+                logStream = File.AppendText(FilePaths.LogPath);
             }
 
             return logStream;

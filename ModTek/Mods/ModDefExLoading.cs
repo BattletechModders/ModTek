@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using ModTek.Manifest;
+using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -165,7 +167,7 @@ namespace ModTek.Mods
                         }
                         catch (Exception e)
                         {
-                            Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(path, FileUtils.GameDirectory)}", e);
+                            Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(path, FilePaths.GameDirectory)}", e);
                             return null;
                         }
                     }
@@ -182,7 +184,7 @@ namespace ModTek.Mods
                     }
                     catch (Exception e)
                     {
-                        Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(entryPath, FileUtils.GameDirectory)}", e);
+                        Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(entryPath, FilePaths.GameDirectory)}", e);
                         return null;
                     }
                 }

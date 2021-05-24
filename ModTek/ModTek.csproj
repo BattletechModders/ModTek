@@ -83,10 +83,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdvMerge\AdvancedJSONMerge.cs" />
+    <Compile Include="AdvMerge\Instruction.cs" />
+    <Compile Include="AdvMerge\JSONMerger.cs" />
+    <Compile Include="AdvMerge\MergeAction.cs" />
     <Compile Include="Caches\DBCache.cs" />
     <Compile Include="Caches\TypeCache.cs" />
-    <Compile Include="Extensions\MetadataDatabaseExtensions.cs" />
+    <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Manifest\ModEntry.cs" />
+    <Compile Include="Misc\Configuration.cs" />
+    <Compile Include="Misc\FilePaths.cs" />
+    <Compile Include="Misc\JObjectCache.cs" />
+    <Compile Include="Misc\MetadataDatabaseExtensions.cs" />
     <Compile Include="Mods\DataAddendumEntry.cs" />
     <Compile Include="Mods\ModDefExLoading.cs" />
     <Compile Include="Mods\ModState.cs" />
@@ -102,17 +111,11 @@
     <Compile Include="CustomTypes\CustomTag.cs" />
     <Compile Include="Util\AddendumUtils.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
-    <Compile Include="Util\CustomTypeProcessor.cs" />
     <Compile Include="Mods\ModDefExExtensions.cs" />
     <Compile Include="Util\FileUtils.cs" />
     <Compile Include="Util\HarmonyUtils.cs" />
-    <Compile Include="Util\JObjectCache.cs" />
-    <Compile Include="Util\JSONMerger.cs" />
-    <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
     <Compile Include="Util\LoadOrder.cs" />
-    <Compile Include="Util\Logger.cs" />
-    <Compile Include="ModEntry.cs" />
     <Compile Include="Caches\MergeCache.cs" />
     <Compile Include="Mods\ModDef.cs" />
     <Compile Include="ModTek.cs" />
@@ -130,11 +133,11 @@
     <Compile Include="Patches\VersionManifestUtilities.cs" />
     <Compile Include="UI\ProgressPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\Logger.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
   </PropertyGroup>

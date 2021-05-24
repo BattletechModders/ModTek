@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Manifest;
+using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -182,7 +184,7 @@ namespace ModTek.Mods
             shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {
-                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(FileUtils.ModsDirectory, Directory)}.";
+                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(FilePaths.ModsDirectory, Directory)}.";
                 return false;
             }
 

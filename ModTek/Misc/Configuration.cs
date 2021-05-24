@@ -1,10 +1,10 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using ModTek.Util;
+using Newtonsoft.Json;
 
-namespace ModTek
+namespace ModTek.Misc
 {
     internal class Configuration
     {

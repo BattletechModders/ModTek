@@ -1,4 +1,5 @@
 using System.IO;
+using ModTek.Misc;
 using ModTek.Util;
 using TMPro;
 using UnityEngine;
@@ -29,10 +30,10 @@ namespace ModTek.UI
             tmProText.text = "";
             currentMessage = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
-            var cleanLogPath = Path.Combine(FileUtils.ModsDirectory, "cleaned_output_log.txt");
+            var cleanLogPath = Path.Combine(FilePaths.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
             {
-                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, FileUtils.GameDirectory)}\"\n";
+                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, FilePaths.GameDirectory)}\"\n";
             }
             else
             {

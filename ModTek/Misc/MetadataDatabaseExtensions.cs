@@ -1,12 +1,9 @@
-using BattleTech.Data;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BattleTech.Data;
 using static ModTek.Util.Logger;
 
-namespace ModTek.Extensions
+namespace ModTek.Misc
 {
     internal static class MetadataDatabaseExtensions
     {

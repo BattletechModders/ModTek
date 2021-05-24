@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Util.Logger;
@@ -52,7 +53,7 @@ namespace ModTek.Caches
                     continue;
                 }
 
-                var relativePath = FileUtils.GetRelativePath(path, FileUtils.GameDirectory);
+                var relativePath = FileUtils.GetRelativePath(path, FilePaths.GameDirectory);
                 toAdd[relativePath] = Entries[path];
                 toRemove.Add(path);
             }

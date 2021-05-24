@@ -3,9 +3,9 @@ using System.ComponentModel;
 using BattleTech;
 using Newtonsoft.Json;
 
-namespace ModTek
+namespace ModTek.Manifest
 {
-    public class ModEntry
+    internal class ModEntry
     {
         [JsonConstructor]
         public ModEntry(string path, bool shouldMergeJSON = false)

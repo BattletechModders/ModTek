@@ -6,9 +6,9 @@ using Harmony;
 using HBS.Util;
 using Newtonsoft.Json.Linq;
 
-namespace ModTek.Util
+namespace ModTek.Misc
 {
-    internal class JObjectCache
+    internal static class JObjectCache
     {
         private static Dictionary<string, JObject> cachedJObjects = new();
 

@@ -1,5 +1,6 @@
 using BattleTech.Data;
 using Harmony;
+using ModTek.Misc;
 using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
@@ -21,12 +22,12 @@ namespace ModTek.Patches
 
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(FileUtils.ModMDDBPath))
+            if (string.IsNullOrEmpty(FilePaths.ModMDDBPath))
             {
                 return;
             }
 
-            __result = FileUtils.ModMDDBPath;
+            __result = FilePaths.ModMDDBPath;
         }
     }
 
@@ -44,12 +45,12 @@ namespace ModTek.Patches
 
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(FileUtils.ModMDDBPath))
+            if (string.IsNullOrEmpty(FilePaths.ModMDDBPath))
             {
                 return;
             }
 
-            __result = FileUtils.ModMDDBPath + ".tmp";
+            __result = FilePaths.ModMDDBPath + ".tmp";
         }
     }
 }
