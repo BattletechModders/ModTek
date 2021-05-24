@@ -5,10 +5,10 @@ namespace ModTek.Mods
     [JsonObject]
     internal class DataAddendumEntry
     {
-        [JsonProperty]
-        public string name;
+        [JsonProperty("name")]
+        public string Name { get; set; }
 
-        [JsonProperty]
-        public string path;
+        [JsonProperty("path")]
+        public string Path { get; set; }
     }
 }

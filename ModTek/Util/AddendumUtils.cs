@@ -19,10 +19,10 @@ namespace ModTek.Util
         {
             try
             {
-                var type = typeof(FactionEnumeration).Assembly.GetType(dataAddendumEntry.name);
+                var type = typeof(FactionEnumeration).Assembly.GetType(dataAddendumEntry.Name);
                 if (type == (Type) null)
                 {
-                    Logger.Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.name);
+                    Logger.Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.Name);
                     return false;
                 }
                 else
@@ -30,7 +30,7 @@ namespace ModTek.Util
                     var property = type.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty);
                     if (property == (PropertyInfo) null)
                     {
-                        Logger.Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.name + "]");
+                        Logger.Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.Name + "]");
                         return false;
                     }
                     else
@@ -39,25 +39,25 @@ namespace ModTek.Util
                         var pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
                         if (pCachedEnumerationValueList == null)
                         {
-                            Logger.Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
 
                         var f_enumerationValueList = type.BaseType.GetField("enumerationValueList", BindingFlags.Instance | BindingFlags.NonPublic);
                         if (f_enumerationValueList == null)
                         {
-                            Logger.Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
 
                         var enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
                         if (enumList == null)
                         {
-                            Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
 
-                        Logger.Log("\tCurrent values [" + dataAddendumEntry.name + "]");
+                        Logger.Log("\tCurrent values [" + dataAddendumEntry.Name + "]");
                         var maxIndex = 0;
                         var names = new Dictionary<string, int>();
                         var ids = new Dictionary<int, string>();
@@ -99,29 +99,29 @@ namespace ModTek.Util
                         var pRefreshStaticData = type.GetMethod("RefreshStaticData");
                         if (pRefreshStaticData == null)
                         {
-                            Logger.Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
 
                         var jdataAddEnum = bdataAddendum as IJsonTemplated;
                         if (jdataAddEnum == null)
                         {
-                            Logger.Log("\tError: not IJsonTemplated [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: not IJsonTemplated [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
 
-                        var fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.path));
+                        var fileData = File.ReadAllText(Path.Combine(modDefDirectory, dataAddendumEntry.Path));
                         jdataAddEnum.FromJSON(fileData);
                         enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
                         if (enumList == null)
                         {
-                            Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.name + "]");
+                            Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
                             return false;
                         }
                         else
                         {
                             var needFlush = false;
-                            Logger.Log("\tLoading values [" + dataAddendumEntry.name + "] from " + dataAddendumEntry.path);
+                            Logger.Log("\tLoading values [" + dataAddendumEntry.Name + "] from " + dataAddendumEntry.Path);
                             for (var index = 0; index < enumList.Count; ++index)
                             {
                                 var val = enumList[index] as EnumValue;
@@ -203,7 +203,7 @@ namespace ModTek.Util
 
                             if (needFlush)
                             {
-                                Logger.Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.name + "] path[" + dataAddendumEntry.path + "]");
+                                Logger.Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.Name + "] path[" + dataAddendumEntry.Path + "]");
                                 pRefreshStaticData.Invoke(
                                     bdataAddendum,
                                     new object[]
@@ -212,7 +212,7 @@ namespace ModTek.Util
                                 );
                                 f_enumerationValueList.SetValue(bdataAddendum, null);
                                 enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
-                                Logger.Log("\tUpdated values [" + dataAddendumEntry.name + "]");
+                                Logger.Log("\tUpdated values [" + dataAddendumEntry.Name + "]");
                                 for (var index = 0; index < enumList.Count; ++index)
                                 {
                                     var val = enumList[index] as EnumValue;
@@ -233,7 +233,7 @@ namespace ModTek.Util
             }
             catch (Exception ex)
             {
-                Logger.Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.name + "]");
+                Logger.Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.Name + "]");
                 Logger.Log(ex.ToString());
                 return false;
             }
