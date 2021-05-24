@@ -220,7 +220,8 @@ namespace ModTek.Manifest
             var numEntries = 0;
             ModDefsDatabase.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && (ModDefsDatabase.ModDefs[name].Manifest.Count > 0 || ModDefsDatabase.ModDefs[name].RemoveManifestEntries.Count > 0)).ToList();
+            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && (ModDefsDatabase.ModDefs[name].Manifest.Count > 0 || ModDefsDatabase.ModDefs[name].RemoveManifestEntries.Count > 0))
+                .ToList();
             foreach (var modName in manifestMods)
             {
                 var modDef = ModDefsDatabase.ModDefs[modName];
