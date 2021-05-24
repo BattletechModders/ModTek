@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace ModTek.Mods
 {
-    public class ModState
+    internal class ModState
     {
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;

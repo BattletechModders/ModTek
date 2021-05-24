@@ -52,7 +52,7 @@ namespace ModTek.Caches
                     continue;
                 }
 
-                var relativePath = FileUtils.GetRelativePath(path, ModTek.GameDirectory);
+                var relativePath = FileUtils.GetRelativePath(path, FileUtils.GameDirectory);
                 toAdd[relativePath] = Entries[path];
                 toRemove.Add(path);
             }

@@ -12,7 +12,7 @@ namespace ModTek.Patches
     /// If this wasn't done, all mod contracts would be incorrectly added to the DB
     /// </summary>
     [HarmonyPatch(typeof(SimGame_MDDExtensions), "UpdateContract")]
-    public static class SimGame_MDDExtensions_UpdateContract_Patch
+    internal static class SimGame_MDDExtensions_UpdateContract_Patch
     {
         public static bool Prepare()
         {

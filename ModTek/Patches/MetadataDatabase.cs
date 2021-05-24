@@ -1,5 +1,6 @@
 using BattleTech.Data;
 using Harmony;
+using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -11,7 +12,7 @@ namespace ModTek.Patches
     /// </summary>
     [HarmonyPatch(typeof(MetadataDatabase))]
     [HarmonyPatch("MDD_DB_PATH", MethodType.Getter)]
-    public static class MetadataDatabase_MDD_DB_PATH_Patch
+    internal static class MetadataDatabase_MDD_DB_PATH_Patch
     {
         public static bool Prepare()
         {
@@ -20,12 +21,12 @@ namespace ModTek.Patches
 
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(ModTek.ModMDDBPath))
+            if (string.IsNullOrEmpty(FileUtils.ModMDDBPath))
             {
                 return;
             }
 
-            __result = ModTek.ModMDDBPath;
+            __result = FileUtils.ModMDDBPath;
         }
     }
 
@@ -34,7 +35,7 @@ namespace ModTek.Patches
     /// </summary>
     [HarmonyPatch(typeof(MetadataDatabase))]
     [HarmonyPatch("MDD_TMP_PATH", MethodType.Getter)]
-    public static class MetadataDatabase_MDD_TMP_PATH_Patch
+    internal static class MetadataDatabase_MDD_TMP_PATH_Patch
     {
         public static bool Prepare()
         {
@@ -43,12 +44,12 @@ namespace ModTek.Patches
 
         public static void Postfix(ref string __result)
         {
-            if (string.IsNullOrEmpty(ModTek.ModMDDBPath))
+            if (string.IsNullOrEmpty(FileUtils.ModMDDBPath))
             {
                 return;
             }
 
-            __result = ModTek.ModMDDBPath + ".tmp";
+            __result = FileUtils.ModMDDBPath + ".tmp";
         }
     }
 }

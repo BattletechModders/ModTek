@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace ModTek.Mods
 {
-    public class ModDefEx
+    internal class ModDefEx
     {
         // this path will be set at runtime by ModTek
         [JsonIgnore]
@@ -182,7 +182,7 @@ namespace ModTek.Mods
             shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {
-                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(ModTek.ModsDirectory, Directory)}.";
+                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(FileUtils.ModsDirectory, Directory)}.";
                 return false;
             }
 

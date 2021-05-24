@@ -9,7 +9,7 @@ using static ModTek.Util.Logger;
 
 namespace ModTek.Util
 {
-    public static class JSONMerger
+    internal static class JSONMerger
     {
         private static bool IsAdvancedJSONMerge(JObject merge)
         {

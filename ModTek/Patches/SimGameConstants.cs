@@ -7,7 +7,7 @@ namespace ModTek
     [HarmonyPatch(typeof(SimGameConstants))]
     [HarmonyPatch("FromJSON")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class SimGameConstants_FromJSON
+    internal static class SimGameConstants_FromJSON
     {
         public static bool Prepare()
         {

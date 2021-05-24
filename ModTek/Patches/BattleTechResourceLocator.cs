@@ -15,7 +15,7 @@ using ModTek.RuntimeLog;
 namespace ModTek.Patches
 {
     [HarmonyPatch(typeof(BattleTechResourceLocator), "AllEntriesOfResourceFromAddendum")]
-    public static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_Patch
+    internal static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_Patch
     {
         public static bool Prepare()
         {
@@ -37,7 +37,7 @@ namespace ModTek.Patches
     }
 
     [HarmonyPatch(typeof(BattleTechResourceLocator), "EntryByID")]
-    public static class BattleTechResourceLocator_EntryByID_Patch
+    internal static class BattleTechResourceLocator_EntryByID_Patch
     {
         private static Dictionary<BattleTechResourceType, Dictionary<string, VersionManifestEntry>> modtekManifest = new();
 
@@ -77,7 +77,7 @@ namespace ModTek.Patches
     /// This is instead of patching the VersionManifest, which is skipped for content from DLCs
     /// </summary>
     [HarmonyPatch(typeof(BattleTechResourceLocator), "RefreshTypedEntries")]
-    public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
+    internal static class BattleTechResourceLocator_RefreshTypedEntries_Patch
     {
         public static bool Prepare()
         {

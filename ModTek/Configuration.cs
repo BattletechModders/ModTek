@@ -6,7 +6,7 @@ using ModTek.Util;
 
 namespace ModTek
 {
-    public class Configuration
+    internal class Configuration
     {
         public bool ShowLoadingScreenErrors = true;
         public bool ShowErrorPopup = true;

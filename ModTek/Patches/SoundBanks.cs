@@ -44,7 +44,7 @@ namespace ModTek
         }
     }
 
-    public static class CustomSoundHelper
+    internal static class CustomSoundHelper
     {
         private static FieldInfo f_guidIdMap = typeof(WwiseManager).GetField("guidIdMap", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -104,7 +104,7 @@ namespace ModTek
         {
         }
     )]
-    public static class AudioEventManager_LoadAudioSettings
+    internal static class AudioEventManager_LoadAudioSettings
     {
         public static void Postfix()
         {
@@ -129,7 +129,7 @@ namespace ModTek
         {
         }
     )]
-    public static class AudioSettingsModule_SaveSettings
+    internal static class AudioSettingsModule_SaveSettings
     {
         public static void Postfix(AudioSettingsModule __instance)
         {
@@ -154,7 +154,7 @@ namespace ModTek
         {
         }
     )]
-    public static class WwiseManager_LoadCombatBanks
+    internal static class WwiseManager_LoadCombatBanks
     {
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
@@ -185,7 +185,7 @@ namespace ModTek
         {
         }
     )]
-    public static class WwiseManager_UnloadCombatBanks
+    internal static class WwiseManager_UnloadCombatBanks
     {
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
@@ -221,7 +221,7 @@ namespace ModTek
         {
         }
     )]
-    public static class LoadedAudioBank_UnloadBank
+    internal static class LoadedAudioBank_UnloadBank
     {
         public static void Postfix(LoadedAudioBank __instance)
         {
@@ -245,7 +245,7 @@ namespace ModTek
         }
     }
 
-    public static class SoundBanksProcessHelper
+    internal static class SoundBanksProcessHelper
     {
         private static Dictionary<string, ProcessParameters> procParams = new();
 
@@ -280,7 +280,7 @@ namespace ModTek
         {
         }
     )]
-    public static class LoadedAudioBank_LoadBankExternal
+    internal static class LoadedAudioBank_LoadBankExternal
     {
         [Obsolete]
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)

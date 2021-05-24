@@ -23,7 +23,7 @@ namespace ModTek
             typeof(string)
         }
     )]
-    public static class ApplicationConstants_FromJSON
+    internal static class ApplicationConstants_FromJSON
     {
         public static void Postfix(ApplicationConstants __instance)
         {
@@ -99,7 +99,7 @@ namespace ModTek
     [HarmonyPatch(typeof(DataManager))]
     [HarmonyPatch("PrewarmComplete")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class DataManager_PrewarmComplete
+    internal static class DataManager_PrewarmComplete
     {
         public static DataManager dataManager { get; private set; } = null;
 
@@ -141,7 +141,7 @@ namespace ModTek
     [HarmonyPatch(typeof(AmmoCategoryValue))]
     [HarmonyPatch("GetIcon")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class AmmoCategory_GetIcon
+    internal static class AmmoCategory_GetIcon
     {
         public static bool Prepare()
         {
@@ -166,7 +166,7 @@ namespace ModTek
     [HarmonyPatch(typeof(WeaponCategoryValue))]
     [HarmonyPatch("GetIcon")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class WeaponCategoryValue_GetIcon
+    internal static class WeaponCategoryValue_GetIcon
     {
         public static bool Prepare()
         {
@@ -188,7 +188,7 @@ namespace ModTek
         }
     }
 
-    public static class SVGAssetLoadRequest_Load
+    internal static class SVGAssetLoadRequest_Load
     {
         private static HashSet<string> UILookAndColorConstantsIcons = new();
 

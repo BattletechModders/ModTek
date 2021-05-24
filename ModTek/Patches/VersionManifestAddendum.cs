@@ -87,7 +87,7 @@ namespace ModTek.Patches
         }
     }
 
-    public static class VersionManifestAddendumCache
+    internal static class VersionManifestAddendumCache
     {
         private static Dictionary<string, VersionManifestAddendum> lookupCache = new();
 

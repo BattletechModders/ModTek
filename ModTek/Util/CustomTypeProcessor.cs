@@ -13,7 +13,7 @@ using static ModTek.Util.Logger;
 
 namespace ModTek
 {
-    public static class CustomTypeProcessor
+    internal static class CustomTypeProcessor
     {
         public static void AddOrUpdateTag(string pathToFile)
         {

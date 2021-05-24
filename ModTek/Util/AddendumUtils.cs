@@ -13,7 +13,7 @@ using ModTek.Mods;
 
 namespace ModTek.Util
 {
-    internal class AddendumUtils
+    internal static class AddendumUtils
     {
         public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {

@@ -8,7 +8,7 @@ using static ModTek.Util.Logger;
 
 namespace ModTek.Extensions
 {
-    public static class MetadataDatabaseExtensions
+    internal static class MetadataDatabaseExtensions
     {
         public static bool AddOrUpdate(this MetadataDatabase mdd, Tag_MDD tag)
         {

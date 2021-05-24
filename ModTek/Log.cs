@@ -111,7 +111,7 @@ namespace ModTek.RuntimeLog
         }
     }
 
-    public static class RLog
+    internal static class RLog
     {
         private static Dictionary<LogFileType, LogFile> logs = new();
 

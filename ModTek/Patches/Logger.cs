@@ -12,7 +12,7 @@ namespace ModTek.Patches
     /// Patch the logger to spit out errors to the loading screen curtain
     /// </summary>
     [HarmonyPatch(typeof(HBS.Logging.Logger), "HandleUnityLog")]
-    public static class Logger_HandleUnityLog_Patch
+    internal static class Logger_HandleUnityLog_Patch
     {
         public static bool Prepare()
         {

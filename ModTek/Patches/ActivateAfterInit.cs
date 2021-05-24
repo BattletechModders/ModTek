@@ -12,7 +12,7 @@ namespace ModTek.Patches
     /// This stops the main game object from loading immediately -- so work can be done beforehand
     /// </summary>
     [HarmonyPatch(typeof(ActivateAfterInit), "Start")]
-    public static class ActivateAfterInit_Start_Patch
+    internal static class ActivateAfterInit_Start_Patch
     {
         public static bool Prepare()
         {

@@ -5,7 +5,7 @@ using Harmony;
 
 namespace ModTek.Util
 {
-    internal class HarmonyUtils
+    internal static class HarmonyUtils
     {
         internal static void PrintHarmonySummary(string path)
         {

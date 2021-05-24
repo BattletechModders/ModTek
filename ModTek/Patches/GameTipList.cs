@@ -13,7 +13,7 @@ namespace ModTek.Patches
     /// Patch the GameTipList to use modded tip list if existing.
     /// </summary>
     [HarmonyPatch(typeof(GameTipList), MethodType.Constructor, typeof(string), typeof(int))]
-    public static class GameTipList_ctor_Patch
+    internal static class GameTipList_ctor_Patch
     {
         public static bool Prepare()
         {

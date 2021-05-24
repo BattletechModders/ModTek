@@ -10,7 +10,7 @@ namespace ModTek.Patches
     /// Patch AssetBundleNameToFilepath to load asset bundles from mod paths
     /// </summary>
     [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
-    public static class AssetBundleManager_AssetBundleNameToFilepath_Patch
+    internal static class AssetBundleManager_AssetBundleNameToFilepath_Patch
     {
         public static bool Prepare()
         {
@@ -32,7 +32,7 @@ namespace ModTek.Patches
     /// Patch AssetBundleNameToFileURL to load asset bundles from mod paths
     /// </summary>
     [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFileURL")]
-    public static class AssetBundleManager_AssetBundleNameToFileURL_Patch
+    internal static class AssetBundleManager_AssetBundleNameToFileURL_Patch
     {
         public static bool Prepare()
         {

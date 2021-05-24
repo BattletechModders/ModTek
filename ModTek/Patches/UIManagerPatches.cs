@@ -18,10 +18,10 @@ namespace ModTek.Patches
      *
      *   This patch forces a reload of the TypedEntries at the earliest point where I could detect activity from harmony patches. I
      *     logged access from ResourceLocator.EntryByID to find that spot, which ends up being the FaderController initialization in UIManager.Awake().
-     *     
+     *
      */
     [HarmonyPatch(typeof(UIManager), "Awake")]
-    public static class UIManager_Awake
+    internal static class UIManager_Awake
     {
         public static void Prefix()
         {

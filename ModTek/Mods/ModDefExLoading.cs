@@ -165,7 +165,7 @@ namespace ModTek.Mods
                         }
                         catch (Exception e)
                         {
-                            Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(path, ModTek.GameDirectory)}", e);
+                            Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(path, FileUtils.GameDirectory)}", e);
                             return null;
                         }
                     }
@@ -182,7 +182,7 @@ namespace ModTek.Mods
                     }
                     catch (Exception e)
                     {
-                        Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(entryPath, ModTek.GameDirectory)}", e);
+                        Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(entryPath, FileUtils.GameDirectory)}", e);
                         return null;
                     }
                 }

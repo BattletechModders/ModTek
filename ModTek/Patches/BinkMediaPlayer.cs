@@ -15,7 +15,7 @@ namespace ModTek.Patches
     /// Patch Play to allow for videos from mods to be played
     /// </summary>
     [HarmonyPatch(typeof(BinkMediaPlayer), "Play")]
-    public static class BinkMediaPlayer_Play_Patch
+    internal static class BinkMediaPlayer_Play_Patch
     {
         public static bool Prepare()
         {

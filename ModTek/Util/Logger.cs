@@ -5,14 +5,13 @@ namespace ModTek.Util
 {
     internal static class Logger
     {
-        internal static string LogPath { get; set; }
         private static StreamWriter logStream;
 
         private static StreamWriter GetOrCreateStream()
         {
-            if (logStream == null && !string.IsNullOrEmpty(LogPath))
+            if (logStream == null && !string.IsNullOrEmpty(FileUtils.LogPath))
             {
-                logStream = File.AppendText(LogPath);
+                logStream = File.AppendText(FileUtils.LogPath);
             }
 
             return logStream;

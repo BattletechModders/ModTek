@@ -106,6 +106,7 @@
     <Compile Include="Mods\ModDefExExtensions.cs" />
     <Compile Include="Util\FileUtils.cs" />
     <Compile Include="Util\HarmonyUtils.cs" />
+    <Compile Include="Util\JObjectCache.cs" />
     <Compile Include="Util\JSONMerger.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />

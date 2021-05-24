@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ModTek.UI
 {
-    public static class LoadingCurtainErrorText
+    internal static class LoadingCurtainErrorText
     {
         private static GameObject textGameObject;
         private static TextMeshProUGUI tmProText;
@@ -29,10 +29,10 @@ namespace ModTek.UI
             tmProText.text = "";
             currentMessage = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
-            var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
+            var cleanLogPath = Path.Combine(FileUtils.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
             {
-                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, FileUtils.GameDirectory)}\"\n";
             }
             else
             {

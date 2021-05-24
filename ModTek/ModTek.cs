@@ -3,97 +3,56 @@ using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using HBS.Util;
 using ModTek.Caches;
 using ModTek.RuntimeLog;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SVGImporter;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ModTek.Mods;
 using static ModTek.Util.Logger;
 
 namespace ModTek
 {
-    public static class ModTek
+    internal static class ModTek
     {
-        public static bool HasLoaded { get; private set; }
+        internal static bool HasLoaded { get; private set; }
 
+        // TODO Move
         // game paths/directories
-        public static string GameDirectory { get; private set; }
-        public static string ModsDirectory { get; private set; }
-        public static string StreamingAssetsDirectory { get; private set; }
-        public static ModDefEx SettingsDef { get; private set; }
+        internal static ModDefEx SettingsDef { get; private set; }
 
-        public static bool Enabled => SettingsDef.Enabled;
+        internal static bool Enabled => SettingsDef.Enabled;
 
-        // file/directory names
-        private const string MODS_DIRECTORY_NAME = "Mods";
-        public const string MOD_JSON_NAME = "mod.json";
-        public const string MOD_STATE_JSON_NAME = "modstate.json";
-        private const string MODTEK_DIRECTORY_NAME = "ModTek";
-        private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
-        private const string CACHE_DIRECTORY_NAME = "Cache";
-        private const string MERGE_CACHE_FILE_NAME = "merge_cache.json";
-        private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
-        private const string LOG_NAME = "ModTek.log";
-        private const string LOAD_ORDER_FILE_NAME = "load_order.json";
-        private const string DATABASE_DIRECTORY_NAME = "Database";
-        private const string MDD_FILE_NAME = "MetadataDatabase.db";
-        private const string DB_CACHE_FILE_NAME = "database_cache.json";
-        private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
-        private const string CONFIG_FILE_NAME = "config.json";
-        private const string CHANGED_FLAG_NAME = ".changed";
-        public const string MODTEK_DEF_NAME = "ModTek";
-        private static HashSet<string> EnumsLoadedFromFile = new();
+        internal const string MODTEK_DEF_NAME = "ModTek";
+        internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
-        // ModTek paths/directories
-        internal static string ModTekDirectory { get; private set; }
-        internal static string TempModTekDirectory { get; private set; }
-        internal static string CacheDirectory { get; private set; }
-        internal static string DatabaseDirectory { get; private set; }
-        internal static string MergeCachePath { get; private set; }
-        internal static string TypeCachePath { get; private set; }
-        internal static string MDDBPath { get; private set; }
-        internal static string ModMDDBPath { get; private set; }
-        internal static string DBCachePath { get; private set; }
-        internal static string LoadOrderPath { get; private set; }
-        internal static string HarmonySummaryPath { get; private set; }
-        internal static string ConfigPath { get; private set; }
-        internal static string ModTekSettingsPath { get; private set; }
-        internal static HashSet<string> systemIcons = new();
+        private static HashSet<string> systemIcons = new();
 
-        public static bool isInSystemIcons(string id)
+        internal static bool isInSystemIcons(string id)
         {
             return systemIcons.Contains(id);
         }
 
-        public static string ChangedFlagPath { get; private set; }
-
         // special StreamingAssets relative directories
-        internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
 
         // internal temp structures
         private static System.Diagnostics.Stopwatch stopwatch = new();
-        public static Dictionary<string, SoundBankDef> soundBanks = new();
-        private static Dictionary<string, JObject> cachedJObjects = new();
+        internal static Dictionary<string, SoundBankDef> soundBanks = new();
         private static Dictionary<string, Dictionary<string, List<string>>> merges = new();
         private static HashSet<string> BTRLEntriesPathes;
 
         // internal structures
         internal static Configuration Config;
-        internal static List<string> ModLoadOrder;
+        private static List<string> ModLoadOrder;
         internal static Dictionary<string, ModDefEx> ModDefs = new();
-        public static Dictionary<string, ModDefEx> allModDefs = new();
+        internal static Dictionary<string, ModDefEx> allModDefs = new();
         internal static HashSet<string> FailedToLoadMods { get; } = new();
         internal static Dictionary<string, Assembly> TryResolveAssemblies = new();
 
@@ -117,73 +76,41 @@ namespace ModTek
 
             stopwatch.Start();
 
-            // if the manifest directory is null, there is something seriously wrong
-            var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
-            if (manifestDirectory == null)
+            if (!FileUtils.SetupPaths())
             {
                 return;
             }
 
-            ;
-
-            // setup directories
-            ModsDirectory = Path.GetFullPath(
-                Path.Combine(
-                    manifestDirectory,
-                    Path.Combine(Path.Combine(Path.Combine("..", ".."), ".."), MODS_DIRECTORY_NAME)
-                )
-            );
-
-            StreamingAssetsDirectory = Path.GetFullPath(Path.Combine(manifestDirectory, ".."));
-            GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
-            MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
-
-            ModTekDirectory = Path.Combine(ModsDirectory, MODTEK_DIRECTORY_NAME);
-            TempModTekDirectory = Path.Combine(ModsDirectory, TEMP_MODTEK_DIRECTORY_NAME);
-            CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
-            DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
-
-            ChangedFlagPath = Path.Combine(TempModTekDirectory, CHANGED_FLAG_NAME);
-            LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
-            HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
-            LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
-            MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
-            TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
-            ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
-            DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
-            ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
-            ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
-
             // creates the directories above it as well
-            Directory.CreateDirectory(CacheDirectory);
-            Directory.CreateDirectory(DatabaseDirectory);
+            Directory.CreateDirectory(FileUtils.CacheDirectory);
+            Directory.CreateDirectory(FileUtils.DatabaseDirectory);
 
             var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
-            RLog.InitLog(TempModTekDirectory, true);
+            RLog.InitLog(FileUtils.TempModTekDirectory, true);
             RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
-            if (File.Exists(ChangedFlagPath))
+            if (File.Exists(FileUtils.ChangedFlagPath))
             {
-                File.Delete(ChangedFlagPath);
-                FileUtils.CleanModTekTempDir(new DirectoryInfo(TempModTekDirectory));
-                Directory.CreateDirectory(CacheDirectory);
-                Directory.CreateDirectory(DatabaseDirectory);
+                File.Delete(FileUtils.ChangedFlagPath);
+                FileUtils.CleanModTekTempDir(new DirectoryInfo(FileUtils.TempModTekDirectory));
+                Directory.CreateDirectory(FileUtils.CacheDirectory);
+                Directory.CreateDirectory(FileUtils.DatabaseDirectory);
             }
 
             // create log file, overwriting if it's already there
-            using (var logWriter = File.CreateText(LogPath))
+            using (var logWriter = File.CreateText(FileUtils.LogPath))
             {
                 logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
             }
 
-            if (File.Exists(ModTekSettingsPath))
+            if (File.Exists(FileUtils.ModTekSettingsPath))
             {
                 try
                 {
-                    SettingsDef = ModDefEx.CreateFromPath(ModTekSettingsPath);
+                    SettingsDef = ModDefEx.CreateFromPath(FileUtils.ModTekSettingsPath);
                 }
                 catch (Exception e)
                 {
-                    LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {ModTekSettingsPath}", e);
+                    LogException($"Error: Caught exception while parsing {FileUtils.ModTekSettingsPath}", e);
                     Finish();
                     return;
                 }
@@ -192,17 +119,19 @@ namespace ModTek
             }
             else
             {
-                Log("File not exists " + ModTekSettingsPath + " fallback to defaults");
-                SettingsDef = new ModDefEx();
-                SettingsDef.Enabled = true;
-                SettingsDef.PendingEnable = true;
-                SettingsDef.Name = MODTEK_DEF_NAME;
-                SettingsDef.Version = versionString;
-                SettingsDef.Description = "Mod system for HBS's PC game BattleTech.";
-                SettingsDef.Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum";
-                SettingsDef.Website = "https://github.com/BattletechModders/ModTek";
-                File.WriteAllText(ModTekSettingsPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
-                SettingsDef.Directory = ModTekDirectory;
+                Log("File not exists " + FileUtils.ModTekSettingsPath + " fallback to defaults");
+                SettingsDef = new ModDefEx
+                {
+                    Enabled = true,
+                    PendingEnable = true,
+                    Name = MODTEK_DEF_NAME,
+                    Version = versionString,
+                    Description = "Mod system for HBS's PC game BattleTech.",
+                    Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum",
+                    Website = "https://github.com/BattletechModders/ModTek"
+                };
+                File.WriteAllText(FileUtils.ModTekSettingsPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
+                SettingsDef.Directory = FileUtils.ModTekDirectory;
                 SettingsDef.SaveState();
             }
 
@@ -210,7 +139,7 @@ namespace ModTek
             // load progress bar
             if (Enabled)
             {
-                if (!ProgressPanel.Initialize(ModTekDirectory, $"ModTek v{versionString}"))
+                if (!ProgressPanel.Initialize(FileUtils.ModTekDirectory, $"ModTek v{versionString}"))
                 {
                     Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                     Finish();
@@ -218,7 +147,7 @@ namespace ModTek
             }
 
             // read config
-            Config = Configuration.FromFile(ConfigPath);
+            Config = Configuration.FromFile(FileUtils.ConfigPath);
 
             // setup assembly resolver
             TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
@@ -263,35 +192,12 @@ namespace ModTek
             CloseLogStream();
 
             // clear temp objects
-            cachedJObjects = null;
+            JObjectCache.Clear();
             merges = null;
             stopwatch = null;
         }
 
-
         // PATHS
-
-        internal static JObject ParseGameJSONFile(string path)
-        {
-            if (cachedJObjects.ContainsKey(path))
-            {
-                return cachedJObjects[path];
-            }
-
-            // because StripHBSCommentsFromJSON is private, use Harmony to call the method
-            var commentsStripped = Traverse.Create(typeof(JSONSerializationUtility)).Method("StripHBSCommentsFromJSON", File.ReadAllText(path)).GetValue<string>();
-            if (commentsStripped == null)
-            {
-                throw new Exception("StripHBSCommentsFromJSON returned null.");
-            }
-
-            // add missing commas, this only fixes if there is a newline
-            var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
-            var commasAdded = rgx.Replace(commentsStripped, "$1,\n$2");
-
-            cachedJObjects[path] = JObject.Parse(commasAdded);
-            return cachedJObjects[path];
-        }
 
         private static VersionManifestEntry FindEntry(string type, string id)
         {
@@ -395,7 +301,7 @@ namespace ModTek
 
             if (CustomResources.ContainsKey(modEntry.Type))
             {
-                Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+                Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" ({modEntry.Type})");
                 CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
                 return;
             }
@@ -440,11 +346,11 @@ namespace ModTek
             // add to addendum instead of adding to manifest
             if (addendum != null)
             {
-                Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
+                Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
             }
             else
             {
-                Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+                Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" ({modEntry.Type})");
             }
 
             // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
@@ -459,7 +365,7 @@ namespace ModTek
             }
 
             var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), typeStr);
-            var relativePath = FileUtils.GetRelativePath(absolutePath, GameDirectory);
+            var relativePath = FileUtils.GetRelativePath(absolutePath, FileUtils.GameDirectory);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
             {
@@ -480,7 +386,7 @@ namespace ModTek
                             VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, absolutePath, db);
 
                             // don't write game files to the dbCache, since they're assumed to be default in the db
-                            if (!absolutePath.Contains(StreamingAssetsDirectory))
+                            if (!absolutePath.Contains(FileUtils.StreamingAssetsDirectory))
                             {
                                 dbCache.Entries[relativePath] = writeTime;
                             }
@@ -591,7 +497,7 @@ namespace ModTek
             CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
             CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
                 "settings",
-                Path.Combine(StreamingAssetsDirectory, DebugSettingsPath),
+                Path.Combine(FileUtils.StreamingAssetsDirectory, FileUtils.DebugSettingsPath),
                 "DebugSettings",
                 DateTime.Now,
                 "1"
@@ -600,28 +506,28 @@ namespace ModTek
             CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
             CustomResources["GameTip"]["general"] = new VersionManifestEntry(
                 "general",
-                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
+                Path.Combine(FileUtils.StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
             CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
                 "combat",
-                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
+                Path.Combine(FileUtils.StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
             CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
                 "lore",
-                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
+                Path.Combine(FileUtils.StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
             CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
                 "sim",
-                Path.Combine(StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
+                Path.Combine(FileUtils.StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
@@ -757,7 +663,7 @@ namespace ModTek
             yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(ModsDirectory).Where(x => File.Exists(Path.Combine(x, MOD_JSON_NAME))).ToArray();
+            var modDirectories = Directory.GetDirectories(FileUtils.ModsDirectory).Where(x => File.Exists(Path.Combine(x, FileUtils.MOD_JSON_NAME))).ToArray();
             //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
 
             if (modDirectories.Length == 0)
@@ -771,7 +677,7 @@ namespace ModTek
             {
                 ModDefEx modDef;
                 //var modDirectory = Path.GetDirectoryName(modFile);
-                var modDefPath = Path.Combine(modDirectory, MOD_JSON_NAME);
+                var modDefPath = Path.Combine(modDirectory, FileUtils.MOD_JSON_NAME);
                 try
                 {
                     modDef = ModDefEx.CreateFromPath(modDefPath);
@@ -782,8 +688,8 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, ModsDirectory));
-                    LogException($"Error: Caught exception while parsing {MOD_JSON_NAME} at path {modDefPath}", e);
+                    FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, FileUtils.ModsDirectory));
+                    LogException($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }
 
@@ -832,7 +738,7 @@ namespace ModTek
             }
 
             // get a load order and remove mods that won't be loaded
-            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(LoadOrderPath));
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FileUtils.LoadOrderPath));
             foreach (var modName in notLoaded)
             {
                 var modDef = ModDefs[modName];
@@ -925,7 +831,7 @@ namespace ModTek
             }
 
             Log("\nAdding Mod Content...");
-            var typeCache = new TypeCache(TypeCachePath);
+            var typeCache = new TypeCache(FileUtils.TypeCachePath);
             typeCache.UpdateToIDBased();
             Log("");
 
@@ -951,7 +857,7 @@ namespace ModTek
                     {
                         var relativePath = FileUtils.GetRelativePath(modEntry.Path, Path.Combine(modDef.Directory, "StreamingAssets"));
 
-                        if (relativePath == DebugSettingsPath)
+                        if (relativePath == FileUtils.DebugSettingsPath)
                         {
                             modEntry.Type = "DebugSettings";
                         }
@@ -961,7 +867,7 @@ namespace ModTek
                     if (modEntry.Type == null)
                     {
                         var relativePath = FileUtils.GetRelativePath(modEntry.Path, Path.Combine(modDef.Directory, "StreamingAssets"));
-                        var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(StreamingAssetsDirectory, relativePath));
+                        var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(FileUtils.StreamingAssetsDirectory, relativePath));
                         if (!File.Exists(fakeStreamingAssetsPath))
                         {
                             Log($"\tWarning: Could not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
@@ -984,7 +890,7 @@ namespace ModTek
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
                             AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
-                            Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+                            Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" ({modEntry.Type})");
                             continue;
                         }
 
@@ -1016,7 +922,7 @@ namespace ModTek
 
                             if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
+                                Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
                                 continue;
                             }
 
@@ -1028,7 +934,7 @@ namespace ModTek
                                     var types = typeCache.GetTypes(id, CachedVersionManifest);
                                     if (types == null || types.Count == 0)
                                     {
-                                        Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                        Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
                                         continue;
                                     }
 
@@ -1039,12 +945,12 @@ namespace ModTek
                                 var entry = FindEntry(type, id);
                                 if (entry == null)
                                 {
-                                    Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
                                     continue;
                                 }
 
                                 AddMerge(type, id, modEntry.Path);
-                                Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" targeting '{id}' ({type})");
+                                Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" targeting '{id}' ({type})");
                             }
 
                             continue;
@@ -1088,7 +994,7 @@ namespace ModTek
 
                         // this assumes that .json can only have a single type
                         typeCache.TryAddType(modEntry.Id, modEntry.Type);
-                        Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, ModsDirectory)}\" ({modEntry.Type})");
+                        Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FileUtils.ModsDirectory)}\" ({modEntry.Type})");
                         AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                         continue;
                     }
@@ -1107,7 +1013,7 @@ namespace ModTek
                 }
             }
 
-            typeCache.ToFile(TypeCachePath);
+            typeCache.ToFile(FileUtils.TypeCachePath);
             BTRLEntriesPathes = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
@@ -1123,7 +1029,7 @@ namespace ModTek
             Log("\nDoing merges...");
             yield return new ProgressReport(1, "Merging", "", true);
 
-            var mergeCache = MergeCache.FromFile(MergeCachePath);
+            var mergeCache = MergeCache.FromFile(FileUtils.MergeCachePath);
             mergeCache.UpdateToRelativePaths();
 
             // progress panel setup
@@ -1164,7 +1070,7 @@ namespace ModTek
                 }
             }
 
-            mergeCache.ToFile(MergeCachePath);
+            mergeCache.ToFile(FileUtils.MergeCachePath);
         }
 
         private static IEnumerator<ProgressReport> AddToDBLoop()
@@ -1178,7 +1084,7 @@ namespace ModTek
             Log("\nSyncing Database...");
             yield return new ProgressReport(1, "Syncing Database", "", true);
 
-            var dbCache = new DBCache(DBCachePath, MDDBPath, ModMDDBPath);
+            var dbCache = new DBCache(FileUtils.DBCachePath, FileUtils.MDDBPath, FileUtils.ModMDDBPath);
             dbCache.UpdateToRelativePaths();
 
             // since DB instance is read at type init, before we patch the file location
@@ -1194,7 +1100,7 @@ namespace ModTek
             var removeEntries = new List<string>();
             foreach (var path in dbCache.Entries.Keys)
             {
-                var absolutePath = FileUtils.ResolvePath(path, GameDirectory);
+                var absolutePath = FileUtils.ResolvePath(path, FileUtils.GameDirectory);
 
                 // check if the file in the db cache is still used
                 if (BTRLEntriesPathes.Contains(absolutePath))
@@ -1234,7 +1140,7 @@ namespace ModTek
                 {
                     if (AddModEntryToDB(MetadataDatabase.Instance, dbCache, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
                     {
-                        Log($"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, GameDirectory)}");
+                        Log($"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, FileUtils.GameDirectory)}");
                         shouldWriteDB = true;
                     }
                 }
@@ -1243,7 +1149,7 @@ namespace ModTek
             // if an entry has been removed and we cannot find a replacement, have to rebuild the mod db
             if (shouldRebuildDB)
             {
-                dbCache = new DBCache(null, MDDBPath, ModMDDBPath);
+                dbCache = new DBCache(null, FileUtils.MDDBPath, FileUtils.ModMDDBPath);
             }
 
             Log($"\nAdding dynamic enums:");
@@ -1315,7 +1221,7 @@ namespace ModTek
 
             //ModLoadOrder.Count;
 
-            dbCache.ToFile(DBCachePath);
+            dbCache.ToFile(FileUtils.DBCachePath);
 
             if (shouldWriteDB)
             {
@@ -1341,7 +1247,7 @@ namespace ModTek
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
-            if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(StreamingAssetsDirectory, DebugSettingsPath))
+            if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FileUtils.StreamingAssetsDirectory, FileUtils.DebugSettingsPath))
             {
                 DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
             }
@@ -1349,11 +1255,11 @@ namespace ModTek
             if (ModLoadOrder != null && ModLoadOrder.Count > 0)
             {
                 CallFinishedLoadMethods();
-                HarmonyUtils.PrintHarmonySummary(HarmonySummaryPath);
-                LoadOrder.ToFile(ModLoadOrder, LoadOrderPath);
+                HarmonyUtils.PrintHarmonySummary(FileUtils.HarmonySummaryPath);
+                LoadOrder.ToFile(ModLoadOrder, FileUtils.LoadOrderPath);
             }
 
-            Config?.ToFile(ConfigPath);
+            Config?.ToFile(FileUtils.ConfigPath);
 
             Finish();
         }

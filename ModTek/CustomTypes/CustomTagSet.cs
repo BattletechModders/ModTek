@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace ModTek.CustomTypes
 {
     [JsonObject]
-    public class CustomTagSet
+    internal class CustomTagSet
     {
         [JsonProperty]
         public string ID { get; set; }

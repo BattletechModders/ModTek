@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ModTek.Mods;
+using ModTek.Util;
 using UnityEngine;
 using static ModTek.Util.Logger;
 
@@ -21,7 +22,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("AreModsEnabled")]
     [HarmonyPatch(MethodType.Getter)]
-    public static class ModLoader_AreModsEnabled
+    internal static class ModLoader_AreModsEnabled
     {
         public static bool Prepare()
         {
@@ -40,7 +41,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("LoadSystemModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_LoadSystemMods
+    internal static class ModLoader_LoadSystemMods
     {
         public static bool Prepare()
         {
@@ -73,7 +74,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("LoadSystemModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_LoadSystemModStatus
+    internal static class ModLoader_LoadSystemModStatus
     {
         public static bool Prepare()
         {
@@ -103,7 +104,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("LoadGameModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_LoadGameModStatus
+    internal static class ModLoader_LoadGameModStatus
     {
         public static bool Prepare()
         {
@@ -141,7 +142,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerScreen))]
     [HarmonyPatch("Init")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerScreen_InitModResources
+    internal static class ModManagerScreen_InitModResources
     {
         public static bool Prepare()
         {
@@ -158,7 +159,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerScreen))]
     [HarmonyPatch("Init")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerScreen_InitModResourcesDisabled
+    internal static class ModManagerScreen_InitModResourcesDisabled
     {
         public static bool Prepare()
         {
@@ -182,7 +183,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("GetCombinedModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerInstalledModsPanel_GetCombinedModStatusDisabled
+    internal static class ModManagerInstalledModsPanel_GetCombinedModStatusDisabled
     {
         public static bool Prepare()
         {
@@ -201,7 +202,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("GetCombinedModStatus")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerInstalledModsPanel_GetCombinedModStatus
+    internal static class ModManagerInstalledModsPanel_GetCombinedModStatus
     {
         public static bool Prepare()
         {
@@ -233,7 +234,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("SaveModStatusToFile")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_SaveSystemModStatusToFile
+    internal static class ModLoader_SaveSystemModStatusToFile
     {
         public static bool Prepare()
         {
@@ -258,7 +259,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("SaveModStatusToFile")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModLoader_SaveModStatusToFile
+    internal static class ModLoader_SaveModStatusToFile
     {
         //public static bool SaveModsState { get; set; } = false;
         public static bool Prepare()
@@ -276,7 +277,7 @@ namespace ModTek.Patches
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     changed = true;
-                    var moddefpath = Path.Combine(mod.Value.Directory, ModTek.MOD_JSON_NAME);
+                    var moddefpath = Path.Combine(mod.Value.Directory, FileUtils.MOD_JSON_NAME);
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
@@ -294,7 +295,7 @@ namespace ModTek.Patches
 
             if (changed)
             {
-                File.WriteAllText(ModTek.ChangedFlagPath, "changed");
+                File.WriteAllText(FileUtils.ChangedFlagPath, "changed");
             }
 
             RLog.M.flush();
@@ -306,7 +307,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerScreen))]
     [HarmonyPatch("UnsavedSettings")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerScreen_UnsavedSettings
+    internal static class ModManagerScreen_UnsavedSettings
     {
         public static bool Prepare()
         {
@@ -332,7 +333,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerScreen))]
     [HarmonyPatch("ReceiveButtonPress")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerScreen_ReceiveButtonPress
+    internal static class ModManagerScreen_ReceiveButtonPress
     {
         public static bool Prepare()
         {
@@ -364,7 +365,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerScreen))]
     [HarmonyPatch("ToggleModsEnabled")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerScreen_ToggleModsEnabled
+    internal static class ModManagerScreen_ToggleModsEnabled
     {
         public static bool Prepare()
         {
@@ -385,7 +386,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerListViewItem))]
     [HarmonyPatch("ToggleItemEnabled")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerListViewItem_ToggleItemEnabled
+    internal static class ModManagerListViewItem_ToggleItemEnabled
     {
         public static bool Prepare()
         {
@@ -537,7 +538,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerListViewItem))]
     [HarmonyPatch("SetData")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerListViewItem_SetData
+    internal static class ModManagerListViewItem_SetData
     {
         public static bool Prepare()
         {
@@ -567,7 +568,7 @@ namespace ModTek.Patches
     [HarmonyPatch(typeof(ModManagerInstalledModsPanel))]
     [HarmonyPatch("InitializeList")]
     [HarmonyPatch(MethodType.Normal)]
-    public static class ModManagerInstalledModsPanel_InitializeList
+    internal static class ModManagerInstalledModsPanel_InitializeList
     {
         public static bool Prepare()
         {

@@ -12,7 +12,7 @@ namespace ModTek.Patches
     /// Adds popup message with all of the mods that failed to load if any.
     /// </summary>
     [HarmonyPatch(typeof(MainMenu), "Init")]
-    public static class MainMenu_Init_Patch
+    internal static class MainMenu_Init_Patch
     {
         public static bool Prepare()
         {
@@ -28,7 +28,7 @@ namespace ModTek.Patches
 
             GenericPopupBuilder.Create(
                     "Some Mods Didn't Load",
-                    $"Check \"{FileUtils.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n" + string.Join(", ", ModTek.FailedToLoadMods.ToArray())
+                    $"Check \"{FileUtils.GetRelativePath(FileUtils.LogPath, FileUtils.GameDirectory)}\" for more info\n\n" + string.Join(", ", ModTek.FailedToLoadMods.ToArray())
                 )
                 .AddButton("Continue")
                 .Render();

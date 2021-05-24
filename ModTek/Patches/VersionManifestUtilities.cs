@@ -11,7 +11,7 @@ namespace ModTek.Patches
     /// This is primarily a performance optimization
     /// </summary>
     [HarmonyPatch(typeof(VersionManifestUtilities), "LoadDefaultManifest")]
-    public static class VersionManifestUtilities_LoadDefaultManifest_Patch
+    internal static class VersionManifestUtilities_LoadDefaultManifest_Patch
     {
         public static bool Prepare()
         {
