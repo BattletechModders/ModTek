@@ -414,5 +414,13 @@ namespace ModTek.Manifest
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
         internal static HashSet<string> BTRLEntriesPathes;
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
+
+        internal static void FinalizeResourceLoading()
+        {
+            if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath))
+            {
+                DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
+            }
+        }
     }
 }

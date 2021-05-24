@@ -199,10 +199,7 @@ namespace ModTek
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
-            if (ModsManifest.CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath))
-            {
-                DebugBridge.LoadSettings(ModsManifest.CustomResources["DebugSettings"]["settings"].FilePath);
-            }
+            ModsManifest.FinalizeResourceLoading();
 
             ModDefExLoading.FinishedLoadingMods();
 
