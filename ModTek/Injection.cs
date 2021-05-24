@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace ModTek
 {
-    internal static class Injection
+    public static class Injection
     {
         public static void LoadModTek()
         {
