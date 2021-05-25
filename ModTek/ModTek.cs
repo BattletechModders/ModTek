@@ -11,7 +11,6 @@ using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
-using ModTek.MDDTools;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.SoundBanks;
@@ -171,7 +170,7 @@ namespace ModTek
 
         private static void LoadMods()
         {
-            ProgressPanel.SubmitWork(ModDefExLoading.InitModsLoop);
+            ProgressPanel.SubmitWork(ModDefsDatabase.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.ProcessLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);

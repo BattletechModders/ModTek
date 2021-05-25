@@ -28,7 +28,13 @@ namespace ModTek.Manifest
 
         internal static List<ModEntry> AddBTRLEntries = new();
         internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
-        internal static HashSet<string> BTRLEntriesPathes;
+
+        private static HashSet<string> AddBTRLEntryPaths;
+
+        internal static bool IsBTRLEntryCached(string absolutePath)
+        {
+            return AddBTRLEntryPaths.Contains(absolutePath);
+        }
 
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
@@ -53,12 +59,12 @@ namespace ModTek.Manifest
             // since we're adding a new entry here, we want to remove anything that would remove it again after the fact
             if (RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
             {
-                Logger.Log((string) $"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
+                Logger.Log($"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
             }
 
             if (CustomResources.ContainsKey(modEntry.Type))
             {
-                Logger.Log((string) $"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
+                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
                 CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
                 return;
             }
@@ -70,7 +76,7 @@ namespace ModTek.Manifest
 
                 if (addendum == null)
                 {
-                    Logger.Log((string) $"\tWarning: Cannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
+                    Logger.Log($"\tWarning: Cannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
                     return;
                 }
             }
@@ -85,7 +91,7 @@ namespace ModTek.Manifest
                     SoundBanksFeature.AddSoundBankDef(modEntry.Path);
                     return;
                 case nameof(SVGAsset):
-                    Logger.Log((string) $"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
+                    Logger.Log($"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
                     if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants)))
                     {
                         systemIcons.Add(modEntry.Id);
@@ -103,25 +109,25 @@ namespace ModTek.Manifest
             // add to addendum instead of adding to manifest
             if (addendum != null)
             {
-                Logger.Log((string) $"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
+                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
             }
             else
             {
-                Logger.Log((string) $"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
+                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
             }
 
             // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
             AddBTRLEntries.Add(modEntry);
         }
 
-        internal static bool RemoveEntry(string id, TypeCache typeCache)
+        private static bool RemoveEntry(string id, TypeCache typeCache)
         {
             var removedEntry = false;
 
-            var containingCustomTypes = Enumerable.Where<KeyValuePair<string, Dictionary<string, VersionManifestEntry>>>(CustomResources, pair => pair.Value.ContainsKey(id)).ToList();
+            var containingCustomTypes = CustomResources.Where(pair => pair.Value.ContainsKey(id)).ToList();
             foreach (var pair in containingCustomTypes)
             {
-                Logger.Log((string) $"\tRemove: \"{pair.Value[id].Id}\" ({pair.Value[id].Type}) - Custom Resource");
+                Logger.Log($"\tRemove: \"{pair.Value[id].Id}\" ({pair.Value[id].Type}) - Custom Resource");
                 pair.Value.Remove(id);
                 removedEntry = true;
             }
@@ -129,16 +135,16 @@ namespace ModTek.Manifest
             var modEntries = AddBTRLEntries.FindAll(entry => entry.Id == id);
             foreach (var modEntry in modEntries)
             {
-                Logger.Log((string) $"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
+                Logger.Log($"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
                 AddBTRLEntries.Remove(modEntry);
-                BTRLEntriesPathes.Remove(modEntry.Path);
+                AddBTRLEntryPaths.Remove(modEntry.Path);
                 removedEntry = true;
             }
 
             var vanillaEntries = ModDefsDatabase.CachedVersionManifest.FindAll(entry => entry.Id == id);
             foreach (var vanillaEntry in vanillaEntries)
             {
-                Logger.Log((string) $"\tRemove: \"{vanillaEntry.Id}\" ({vanillaEntry.Type}) - Vanilla Entry");
+                Logger.Log($"\tRemove: \"{vanillaEntry.Id}\" ({vanillaEntry.Type}) - Vanilla Entry");
                 RemoveBTRLEntries.Add(vanillaEntry);
                 removedEntry = true;
             }
@@ -221,10 +227,10 @@ namespace ModTek.Manifest
 
         private static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
-            Logger.Log((string) "\nAdding Mod Content...");
+            Logger.Log("\nAdding Mod Content...");
             var typeCache = new TypeCache(FilePaths.TypeCachePath);
             typeCache.UpdateToIDBased();
-            Logger.Log((string) "");
+            Logger.Log("");
 
             // progress panel setup
             var entryCount = 0;
@@ -237,7 +243,7 @@ namespace ModTek.Manifest
             {
                 var modDef = ModDefsDatabase.ModDefs[modName];
 
-                Logger.Log((string) $"{modName}:");
+                Logger.Log($"{modName}:");
                 yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
 
                 foreach (var modEntry in modDef.Manifest)
@@ -262,14 +268,14 @@ namespace ModTek.Manifest
                         var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(FilePaths.StreamingAssetsDirectory, relativePath));
                         if (!File.Exists(fakeStreamingAssetsPath))
                         {
-                            Logger.Log((string) $"\tWarning: Could not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
+                            Logger.Log($"\tWarning: Could not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
                             continue;
                         }
 
                         var types = typeCache.GetTypes(modEntry.Id, ModDefsDatabase.CachedVersionManifest);
                         if (types == null)
                         {
-                            Logger.Log((string) $"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
+                            Logger.Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
                             continue;
                         }
 
@@ -282,7 +288,7 @@ namespace ModTek.Manifest
                             // typeCache will always contain this path
                             modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
                             mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
-                            Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
+                            Logger.Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
                             continue;
                         }
 
@@ -314,7 +320,7 @@ namespace ModTek.Manifest
 
                             if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
                             {
-                                Logger.Log((string) $"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
+                                Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
                                 continue;
                             }
 
@@ -326,7 +332,7 @@ namespace ModTek.Manifest
                                     var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
                                     if (types == null || types.Count == 0)
                                     {
-                                        Logger.Log((string) $"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
+                                        Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
                                         continue;
                                     }
 
@@ -337,12 +343,12 @@ namespace ModTek.Manifest
                                 var entry = FindEntry(type, id);
                                 if (entry == null)
                                 {
-                                    Logger.Log((string) $"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
+                                    Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
                                     continue;
                                 }
 
                                 mergesDatabase.AddMerge(type, id, modEntry.Path);
-                                Logger.Log((string) $"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" targeting '{id}' ({type})");
+                                Logger.Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" targeting '{id}' ({type})");
                             }
 
                             continue;
@@ -359,13 +365,13 @@ namespace ModTek.Manifest
                         }
                         case ModDefExLoading.CustomType_Tag:
                         {
-                            Logger.Log((string) $"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
+                            Logger.Log($"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
                             AddModEntry(modEntry);
                             continue;
                         }
                         case ModDefExLoading.CustomType_TagSet:
                         {
-                            Logger.Log((string) $"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
+                            Logger.Log($"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
                             AddModEntry(modEntry);
                             continue;
                         }
@@ -380,13 +386,13 @@ namespace ModTek.Manifest
 
                         if (matchingEntry == null)
                         {
-                            Logger.Log((string) $"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}!");
+                            Logger.Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}!");
                             continue;
                         }
 
                         // this assumes that .json can only have a single type
                         typeCache.TryAddType(modEntry.Id, modEntry.Type);
-                        Logger.Log((string) $"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
+                        Logger.Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
                         mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
                         continue;
                     }
@@ -406,7 +412,7 @@ namespace ModTek.Manifest
             }
 
             typeCache.ToFile(FilePaths.TypeCachePath);
-            BTRLEntriesPathes = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
+            AddBTRLEntryPaths = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
         internal static VersionManifestEntry FindEntry(string type, string id)
@@ -440,6 +446,11 @@ namespace ModTek.Manifest
         {
             return AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
                 ?? ModDefsDatabase.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+        }
+
+        internal static List<ModEntry> GetAddToDbEntries()
+        {
+            return AddBTRLEntries.Where(x => x.AddToDB).ToList();
         }
     }
 }

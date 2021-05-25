@@ -18,95 +18,6 @@ namespace ModTek.Mods
         internal static HashSet<string> FailedToLoadMods { get; } = new();
         internal static VersionManifest CachedVersionManifest;
 
-        internal static void CreateModDefs(string[] modDirectories)
-        {
-            // create ModDef objects for each mod.json file
-            foreach (var modDirectory in modDirectories)
-            {
-                ModDefEx modDef;
-                var modDefPath = Path.Combine(modDirectory, FilePaths.MOD_JSON_NAME);
-                try
-                {
-                    modDef = ModDefEx.CreateFromPath(modDefPath);
-                    if (modDef.Name == ModTek.MODTEK_DEF_NAME)
-                    {
-                        modDef = ModTek.SettingsDef;
-                    }
-                }
-                catch (Exception e)
-                {
-                    FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, FilePaths.ModsDirectory));
-                    Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
-                    continue;
-                }
-
-                if (allModDefs.ContainsKey(modDef.Name) == false)
-                {
-                    allModDefs.Add(modDef.Name, modDef);
-                }
-                else
-                {
-                    var counter = 0;
-                    var tmpname = modDef.Name;
-                    do
-                    {
-                        ++counter;
-                        tmpname = modDef.Name + "{dublicate " + counter + "}";
-                    }
-                    while (allModDefs.ContainsKey(tmpname));
-
-                    modDef.Name = tmpname;
-                    modDef.Enabled = false;
-                    modDef.LoadFail = true;
-                    modDef.FailReason = "dublicate";
-                    allModDefs.Add(modDef.Name, modDef);
-                    continue;
-                }
-
-                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out _))
-                {
-                    Logger.Log($"Not loading {modDef.Name} because {reason}");
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        FailedToLoadMods.Add(modDef.Name);
-                        if (allModDefs.ContainsKey(modDef.Name))
-                        {
-                            allModDefs[modDef.Name].LoadFail = true;
-                            modDef.FailReason = reason;
-                        }
-                    }
-
-                    continue;
-                }
-
-                ModDefs.Add(modDef.Name, modDef);
-            }
-        }
-
-        public static void SetupModLoadOrderAndRemoveUnloadableMods()
-        {
-            // get a load order and remove mods that won't be loaded
-            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
-            foreach (var modName in notLoaded)
-            {
-                var modDef = ModDefs[modName];
-                ModDefs.Remove(modName);
-                if (modDef.IgnoreLoadFailure)
-                {
-                    continue;
-                }
-
-                if (allModDefs.ContainsKey(modName))
-                {
-                    allModDefs[modName].LoadFail = true;
-                    allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
-                }
-
-                Logger.Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
-                FailedToLoadMods.Add(modName);
-            }
-        }
-
         // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
@@ -196,6 +107,176 @@ namespace ModTek.Mods
                 mods.Add(ModDefs[modname]);
             }
             return mods;
+        }
+
+        internal static IEnumerator<ProgressReport> InitModsLoop()
+        {
+            yield return new ProgressReport(1, "Initializing Mods", "");
+
+            // find all sub-directories that have a mod.json file
+            var modDirectories = Directory.GetDirectories(FilePaths.ModsDirectory).Where(x => File.Exists(Path.Combine(x, FilePaths.MOD_JSON_NAME))).ToArray();
+            //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
+
+            if (modDirectories.Length == 0)
+            {
+                Logger.Log("No ModTek-compatible mods found.");
+                yield break;
+            }
+
+            CreateModDefs(modDirectories);
+            SetupModLoadOrderAndRemoveUnloadableMods();
+
+            // try loading each mod
+            var numModsLoaded = 0;
+            Logger.Log("");
+            foreach (var modName in ModLoadOrder)
+            {
+                var modDef = ModDefs[modName];
+
+                if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
+                {
+                    ModDefs.Remove(modName);
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        Logger.Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
+                        if (allModDefs.ContainsKey(modName))
+                        {
+                            allModDefs[modName].LoadFail = true;
+                            allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
+                        }
+
+                        FailedToLoadMods.Add(modName);
+                    }
+
+                    continue;
+                }
+
+                yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+
+                try
+                {
+                    if (!ModDefExLoading.LoadMod(modDef, out var reason))
+                    {
+                        ModDefs.Remove(modName);
+
+                        if (!modDef.IgnoreLoadFailure)
+                        {
+                            FailedToLoadMods.Add(modName);
+                            if (allModDefs.ContainsKey(modName))
+                            {
+                                allModDefs[modName].LoadFail = true;
+                                allModDefs[modName].FailReason = reason;
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ModDefs.Remove(modName);
+
+                    if (modDef.IgnoreLoadFailure)
+                    {
+                        continue;
+                    }
+
+                    Logger.LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    FailedToLoadMods.Add(modName);
+                    if (allModDefs.ContainsKey(modName))
+                    {
+                        allModDefs[modName].LoadFail = true;
+                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e;
+                    }
+                }
+            }
+        }
+
+        private static void CreateModDefs(string[] modDirectories)
+        {
+            // create ModDef objects for each mod.json file
+            foreach (var modDirectory in modDirectories)
+            {
+                ModDefEx modDef;
+                var modDefPath = Path.Combine(modDirectory, FilePaths.MOD_JSON_NAME);
+                try
+                {
+                    modDef = ModDefEx.CreateFromPath(modDefPath);
+                    if (modDef.Name == ModTek.MODTEK_DEF_NAME)
+                    {
+                        modDef = ModTek.SettingsDef;
+                    }
+                }
+                catch (Exception e)
+                {
+                    FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, FilePaths.ModsDirectory));
+                    Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
+                    continue;
+                }
+
+                if (allModDefs.ContainsKey(modDef.Name) == false)
+                {
+                    allModDefs.Add(modDef.Name, modDef);
+                }
+                else
+                {
+                    var counter = 0;
+                    var tmpname = modDef.Name;
+                    do
+                    {
+                        ++counter;
+                        tmpname = modDef.Name + "{dublicate " + counter + "}";
+                    }
+                    while (allModDefs.ContainsKey(tmpname));
+
+                    modDef.Name = tmpname;
+                    modDef.Enabled = false;
+                    modDef.LoadFail = true;
+                    modDef.FailReason = "dublicate";
+                    allModDefs.Add(modDef.Name, modDef);
+                    continue;
+                }
+
+                if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out _))
+                {
+                    Logger.Log($"Not loading {modDef.Name} because {reason}");
+                    if (!modDef.IgnoreLoadFailure)
+                    {
+                        FailedToLoadMods.Add(modDef.Name);
+                        if (allModDefs.ContainsKey(modDef.Name))
+                        {
+                            allModDefs[modDef.Name].LoadFail = true;
+                            modDef.FailReason = reason;
+                        }
+                    }
+
+                    continue;
+                }
+
+                ModDefs.Add(modDef.Name, modDef);
+            }
+        }
+
+        private static void SetupModLoadOrderAndRemoveUnloadableMods()
+        {
+            // get a load order and remove mods that won't be loaded
+            ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
+            foreach (var modName in notLoaded)
+            {
+                var modDef = ModDefs[modName];
+                ModDefs.Remove(modName);
+                if (modDef.IgnoreLoadFailure)
+                {
+                    continue;
+                }
+
+                if (allModDefs.ContainsKey(modName))
+                {
+                    allModDefs[modName].LoadFail = true;
+                    allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
+                }
+
+                Logger.Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
+                FailedToLoadMods.Add(modName);
+            }
         }
     }
 }

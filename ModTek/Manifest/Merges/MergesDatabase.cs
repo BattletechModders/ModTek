@@ -3,7 +3,6 @@ using System.IO;
 using Harmony;
 using ModTek.Logging;
 using ModTek.Misc;
-using ModTek.Mods;
 using ModTek.UI;
 
 namespace ModTek.Manifest.Merges

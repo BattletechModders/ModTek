@@ -8,7 +8,6 @@ using BattleTech.Data;
 using Harmony;
 using ModTek.CustomTypes;
 using ModTek.Logging;
-using ModTek.MDDTools;
 using ModTek.Misc;
 using ModTek.Mods;
 using ModTek.UI;
@@ -56,7 +55,7 @@ namespace ModTek.Manifest.MDD
                         }
                         catch (Exception e)
                         {
-                            Logger.LogException((string) $"\tError: Add to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
+                            Logger.LogException($"\tError: Add to DB failed for {Path.GetFileName(absolutePath)}, exception caught:", e);
                             return false;
                         }
                     }
@@ -69,7 +68,7 @@ namespace ModTek.Manifest.MDD
 
         internal static IEnumerator<ProgressReport> AddToDBLoop()
         {
-            Logger.Log((string) "\nSyncing Database...");
+            Logger.Log("\nSyncing Database...");
             yield return new ProgressReport(1, "Syncing Database", "", true);
 
             var dbCache = new DBCache(FilePaths.DBCachePath, FilePaths.MDDBPath, FilePaths.ModMDDBPath);
@@ -90,13 +89,12 @@ namespace ModTek.Manifest.MDD
             {
                 var absolutePath = FileUtils.ResolvePath(path, FilePaths.GameDirectory);
 
-                // check if the file in the db cache is still used
-                if (ModsManifest.BTRLEntriesPathes.Contains(absolutePath))
+                if (ModsManifest.IsBTRLEntryCached(absolutePath))
                 {
                     continue;
                 }
 
-                Logger.Log((string) $"\tNeed to remove DB entry from file in path: {path}");
+                Logger.Log($"\tNeed to remove DB entry from file in path: {path}");
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
@@ -106,7 +104,7 @@ namespace ModTek.Manifest.MDD
 
                 if (existingEntry == null)
                 {
-                    Logger.Log((string) "\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
+                    Logger.Log("\t\tHave to rebuild DB, no existing entry in VersionManifest matches removed entry");
                     shouldRebuildDB = true;
                     break;
                 }
@@ -128,7 +126,7 @@ namespace ModTek.Manifest.MDD
                 {
                     if (AddModEntryToDB(MetadataDatabase.Instance, dbCache, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
                     {
-                        Logger.Log((string) $"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, FilePaths.GameDirectory)}");
+                        Logger.Log($"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, FilePaths.GameDirectory)}");
                         shouldWriteDB = true;
                     }
                 }
@@ -140,7 +138,7 @@ namespace ModTek.Manifest.MDD
                 dbCache = new DBCache(null, FilePaths.MDDBPath, FilePaths.ModMDDBPath);
             }
 
-            Logger.Log((string) $"\nAdding dynamic enums:");
+            Logger.Log("\nAdding dynamic enums:");
             var addCount = 0;
             var mods = ModDefsDatabase.ModsInLoadOrder();
 
@@ -148,7 +146,7 @@ namespace ModTek.Manifest.MDD
             {
                 if (moddef.DataAddendumEntries.Count != 0)
                 {
-                    Logger.Log((string) $"{moddef.Name}:");
+                    Logger.Log($"{moddef.Name}:");
                     foreach (var dataAddendumEntry in moddef.DataAddendumEntries)
                     {
                         if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, moddef.Directory))
@@ -165,12 +163,13 @@ namespace ModTek.Manifest.MDD
 
             // add needed files to db
             addCount = 0;
-            foreach (var modEntry in ModsManifest.AddBTRLEntries)
+            var entries = ModsManifest.GetAddToDbEntries();
+            foreach (var modEntry in entries)
             {
-                if (modEntry.AddToDB && AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
+                if (AddModEntryToDB(MetadataDatabase.Instance, dbCache, modEntry.Path, modEntry.Type))
                 {
-                    yield return new ProgressReport(addCount / (float) ModsManifest.AddBTRLEntries.Count, "Populating Database", modEntry.Id);
-                    Logger.Log((string) $"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
+                    yield return new ProgressReport(addCount / (float) entries.Count, "Populating Database", modEntry.Id);
+                    Logger.Log($"\tAdded/Updated {modEntry.Id} ({modEntry.Type})");
                     shouldWriteDB = true;
                 }
 
@@ -180,7 +179,7 @@ namespace ModTek.Manifest.MDD
             // Add any custom tags to DB
             if (ModsManifest.CustomTags.Count > 0)
             {
-                Logger.Log((string) $"Processing CustomTags:");
+                Logger.Log("Processing CustomTags:");
             }
 
             foreach (var modEntry in ModsManifest.CustomTags)
@@ -190,7 +189,7 @@ namespace ModTek.Manifest.MDD
 
             if (ModsManifest.CustomTagSets.Count > 0)
             {
-                Logger.Log((string) $"Processing CustomTagSets:");
+                Logger.Log("Processing CustomTagSets:");
             }
 
             foreach (var modEntry in ModsManifest.CustomTagSets)
@@ -205,7 +204,7 @@ namespace ModTek.Manifest.MDD
             if (shouldWriteDB)
             {
                 yield return new ProgressReport(1, "Writing Database", "", true);
-                Logger.Log((string) "Writing DB");
+                Logger.Log("Writing DB");
 
                 var inMemoryDB = typeof(MetadataDatabase).GetField("inMemoryDB", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(MetadataDatabase.Instance);
                 Task.Run(
