@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using ModTek.Logging;
+using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -277,6 +278,27 @@ namespace ModTek.Mods
                 Logger.Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
                 FailedToLoadMods.Add(modName);
             }
+        }
+
+        internal static void FinishedLoadingMods()
+        {
+            if (ModLoadOrder == null || ModLoadOrder.Count <= 0)
+            {
+                return;
+            }
+
+            {
+                Logger.Log("\nCalling FinishedLoading:");
+                foreach (var modDef in ModLoadOrder
+                    .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
+                    .Select(assemblyMod => ModDefs[assemblyMod])
+                )
+                {
+                    ModDefExLoading.FinishedLoading(modDef, ModLoadOrder, ModsManifest.CustomResources);
+                }
+            }
+            HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
+            LoadOrder.ToFile(ModLoadOrder, FilePaths.LoadOrderPath);
         }
     }
 }

@@ -338,27 +338,6 @@ namespace ModTek.Mods
 
         private static Dictionary<string, Assembly> TryResolveAssemblies = new();
 
-        internal static void FinishedLoadingMods()
-        {
-            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count <= 0)
-            {
-                return;
-            }
-
-            {
-                Logger.Log("\nCalling FinishedLoading:");
-                foreach (var modDef in ModDefsDatabase.ModLoadOrder
-                    .Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && ModDefsDatabase.ModDefs[name].Assembly != null)
-                    .Select(assemblyMod => ModDefsDatabase.ModDefs[assemblyMod])
-                )
-                {
-                    FinishedLoading(modDef, ModDefsDatabase.ModLoadOrder, ModsManifest.CustomResources);
-                }
-            }
-            HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
-            LoadOrder.ToFile(ModDefsDatabase.ModLoadOrder, FilePaths.LoadOrderPath);
-        }
-
         internal static void Setup()
         {
             // setup assembly resolver

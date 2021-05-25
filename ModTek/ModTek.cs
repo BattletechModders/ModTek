@@ -185,7 +185,7 @@ namespace ModTek
 
             ModsManifest.FinalizeResourceLoading();
 
-            ModDefExLoading.FinishedLoadingMods();
+            ModDefsDatabase.FinishedLoadingMods();
 
             Config?.ToFile(FilePaths.ConfigPath);
 
