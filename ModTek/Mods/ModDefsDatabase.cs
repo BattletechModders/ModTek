@@ -182,5 +182,20 @@ namespace ModTek.Mods
                 }
             }
         }
+
+        internal static List<ModDefEx> ModsInLoadOrder()
+        {
+            var mods = new List<ModDefEx>();
+            foreach (var modname in ModLoadOrder)
+            {
+                if (!ModDefs.ContainsKey(modname))
+                {
+                    continue;
+                }
+
+                mods.Add(ModDefs[modname]);
+            }
+            return mods;
+        }
     }
 }

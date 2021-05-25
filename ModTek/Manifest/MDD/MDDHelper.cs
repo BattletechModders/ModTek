@@ -100,7 +100,7 @@ namespace ModTek.Manifest.MDD
 
                 // file is missing, check if another entry exists with same filename in manifest or in BTRL entries
                 var fileName = Path.GetFileName(path);
-                var existingEntry = ModsManifest.AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry() ?? ModDefsDatabase.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+                var existingEntry = ModsManifest.FindEntryByFileName(fileName);
 
                 // TODO: DOES NOT HANDLE CASE WHERE REMOVING VANILLA CONTENT IN DB
 
@@ -142,16 +142,7 @@ namespace ModTek.Manifest.MDD
 
             Logger.Log((string) $"\nAdding dynamic enums:");
             var addCount = 0;
-            var mods = new List<ModDefEx>();
-            foreach (var modname in ModDefsDatabase.ModLoadOrder)
-            {
-                if (ModDefsDatabase.ModDefs.ContainsKey(modname) == false)
-                {
-                    continue;
-                }
-
-                mods.Add(ModDefsDatabase.ModDefs[modname]);
-            }
+            var mods = ModDefsDatabase.ModsInLoadOrder();
 
             foreach (var moddef in mods)
             {

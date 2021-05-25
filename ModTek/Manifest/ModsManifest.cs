@@ -435,5 +435,11 @@ namespace ModTek.Manifest
                 DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
             }
         }
+
+        internal static VersionManifestEntry FindEntryByFileName(string fileName)
+        {
+            return AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
+                ?? ModDefsDatabase.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+        }
     }
 }
