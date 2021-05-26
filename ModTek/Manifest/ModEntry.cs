@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.IO;
 using BattleTech;
 using ModTek.Misc;
+using ModTek.Mods;
+using ModTek.SoundBanks;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -34,26 +36,32 @@ namespace ModTek.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        internal DateTime FileVersion => File.GetLastAccessTimeUtc(Path);
-        public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
-        public string FileName => System.IO.Path.GetFileName(Path);
+        // directory based methods, used during normalization
+        public bool IsDirectory => Directory.Exists(Path);
         public string[] Files => Directory.GetFiles(Path);
 
+        // file based methods
         public bool IsFile => File.Exists(Path);
-        public bool IsDirectory => Directory.Exists(Path);
+        internal DateTime FileVersion => File.GetLastAccessTimeUtc(Path);
+        public string FileExtension => System.IO.Path.GetExtension(Path);
+        public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
+        internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, Path);
 
-        public string RelativePathToMods => FileUtils.GetRelativePath(Path, FilePaths.ModsDirectory);
-
-        public bool IsJson => Path?.EndsWith(".json") ?? false;
-        public bool IsTxt => Path?.EndsWith(".txt") ?? false;
-        public bool IsCsv => Path?.EndsWith(".csv") ?? false;
+        internal bool IsJson => Path?.EndsWith(".json") ?? false;
+        internal bool IsTxt => Path?.EndsWith(".txt") ?? false;
+        internal bool IsCsv => Path?.EndsWith(".csv") ?? false;
 
         public string Type { get; set; }
-        public BattleTechResourceType? ResourceType => Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
-        public bool IsResourceType => ResourceType != null;
+        internal bool IsTypeStreamingAsset => Type == null;
+        internal bool IsTypeCustomResource => Type != null && ModsManifest.CustomResources.ContainsKey(Type);
+        internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
+        internal bool IsTypeCustomTag => Type == ModDefExLoading.CustomType_Tag;
+        internal bool IsTypeCustomTagSet => Type == ModDefExLoading.CustomType_TagSet;
+        internal BattleTechResourceType? ResourceType => Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
+        internal bool IsTypeBattleTechResourceType => ResourceType != null;
 
         public string Id { get; set; }
-        public bool HasId => !string.IsNullOrEmpty(Id);
+        internal bool HasId => !string.IsNullOrEmpty(Id);
 
         public string AddToAddendum { get; set; }
         public string AssetBundleName { get; set; }
@@ -71,7 +79,7 @@ namespace ModTek.Manifest
         [JsonIgnore]
         private VersionManifestEntry versionManifestEntry;
 
-        public VersionManifestEntry GetVersionManifestEntry()
+        internal VersionManifestEntry GetVersionManifestEntry()
         {
             return versionManifestEntry ??= new VersionManifestEntry(
                 Id,

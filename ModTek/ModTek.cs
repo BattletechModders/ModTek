@@ -34,8 +34,6 @@ namespace ModTek
         internal const string MODTEK_DEF_NAME = "ModTek";
         internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
-        // special StreamingAssets relative directories
-
         // internal temp structures
         private static System.Diagnostics.Stopwatch stopwatch = new();
 
@@ -160,8 +158,6 @@ namespace ModTek
             LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
 
             CloseLogStream();
-
-            ModsManifest.ClearTemp();
             stopwatch = null;
         }
 

@@ -216,7 +216,7 @@ namespace ModTek.Mods
                 }
                 catch (Exception e)
                 {
-                    FailedToLoadMods.Add(FileUtils.GetRelativePath(modDirectory, FilePaths.ModsDirectory));
+                    FailedToLoadMods.Add(FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDirectory));
                     Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }

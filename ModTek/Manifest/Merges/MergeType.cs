@@ -2,7 +2,7 @@
 {
     internal enum MergeType
     {
-        JSONMERGE,
-        APPEND
+        JSON_MERGE,
+        TEXT_APPEND
     }
 }

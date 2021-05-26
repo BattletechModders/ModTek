@@ -33,7 +33,7 @@ namespace ModTek.UI
             var cleanLogPath = Path.Combine(FilePaths.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
             {
-                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath, FilePaths.GameDirectory)}\"\n";
+                currentMessage += $"\"{FileUtils.GetRelativePath(FilePaths.GameDirectory, cleanLogPath)}\"\n";
             }
             else
             {

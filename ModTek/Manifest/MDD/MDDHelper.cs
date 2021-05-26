@@ -25,7 +25,7 @@ namespace ModTek.Manifest.MDD
             }
 
             var type = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), typeStr);
-            var relativePath = FileUtils.GetRelativePath(absolutePath, FilePaths.GameDirectory);
+            var relativePath = FileUtils.GetRelativePath(FilePaths.GameDirectory, absolutePath);
 
             switch (type) // switch is to avoid poisoning the output_log.txt with known types that don't use MDD
             {
@@ -87,7 +87,7 @@ namespace ModTek.Manifest.MDD
             var removeEntries = new List<string>();
             foreach (var path in dbCache.Entries.Keys)
             {
-                var absolutePath = FileUtils.ResolvePath(path, FilePaths.GameDirectory);
+                var absolutePath = FileUtils.ResolvePath(FilePaths.GameDirectory, path);
 
                 if (ModsManifest.IsBTRLEntryCached(absolutePath))
                 {
@@ -126,7 +126,7 @@ namespace ModTek.Manifest.MDD
                 {
                     if (AddModEntryToDB(MetadataDatabase.Instance, dbCache, Path.GetFullPath(replacementEntry.FilePath), replacementEntry.Type))
                     {
-                        Logger.Log($"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(replacementEntry.FilePath, FilePaths.GameDirectory)}");
+                        Logger.Log($"\t\tReplaced DB entry with an existing entry in path: {FileUtils.GetRelativePath(FilePaths.GameDirectory, replacementEntry.FilePath)}");
                         shouldWriteDB = true;
                     }
                 }

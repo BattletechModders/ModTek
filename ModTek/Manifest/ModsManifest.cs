@@ -37,11 +37,6 @@ namespace ModTek.Manifest
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
         internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
 
-        internal static void ClearTemp()
-        {
-            mergesDatabase.Clear();
-        }
-
         internal static bool isInSystemIcons(string id)
         {
             return systemIcons.Contains(id);
@@ -139,42 +134,41 @@ namespace ModTek.Manifest
 
                     yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", modEntry.Id);
 
-                    ExpandModEntries(modEntry);
+                    NormalizeModEntries(modEntry);
                 }
             }
 
             AddBTRLEntryPaths = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
-        private static void ExpandModEntries(ModEntry modEntry)
+        private static void NormalizeModEntries(ModEntry entry)
         {
-            // StreamingAssets && other filename based merges
-            if (modEntry.IsFile)
+            if (entry.IsFile)
             {
-                if (modEntry.Type == null)
+                if (string.IsNullOrEmpty(entry.Id))
                 {
-                    if (modEntry.Id == "settings")
+                    entry.Id = entry.FileNameWithoutExtension;
+                }
+                if (entry.IsTypeStreamingAsset)
+                {
+                    if (entry.Id == "settings")
                     {
-                        modEntry.Type = "DebugSettings";
+                        entry.Type = "DebugSettings";
                     }
                 }
-                if (string.IsNullOrEmpty(modEntry.Id))
-                {
-                    modEntry.Id = modEntry.FileNameWithoutExtension;
-                }
-                AddModEntry(modEntry);
+                AddModEntry(entry);
             }
-            else if (modEntry.IsDirectory)
+            else if (entry.IsDirectory)
             {
-                foreach (var file in modEntry.Files)
+                foreach (var file in entry.Files)
                 {
                     var id = Path.GetFileNameWithoutExtension(file);
-                    AddModEntry(new ModEntry(modEntry, file, id));
+                    AddModEntry(new ModEntry(entry, file, id));
                 }
             }
             else
             {
-                Logger.Log($"\tWarning: Could not find path {modEntry.RelativePathToMods}.");
+                Logger.Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
             }
         }
 
@@ -192,24 +186,24 @@ namespace ModTek.Manifest
                     Logger.Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
                 }
             }
-            else if (CustomResources.ContainsKey(entry.Type))
+            else if (entry.IsTypeCustomResource)
             {
-                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(entry.Path, FilePaths.ModsDirectory)}\" ({entry.Type})");
+                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(FilePaths.ModsDirectory, entry.Path)}\" ({entry.Type})");
                 CustomResources[entry.Type][entry.Id] = entry.GetVersionManifestEntry();
             }
-            else if (entry.Type == nameof(SoundBankDef))
+            else if (entry.IsTypeSoundBankDef)
             {
                 SoundBanksFeature.AddSoundBankDef(entry.Path);
             }
-            else if (entry.Type == ModDefExLoading.CustomType_Tag)
+            else if (entry.IsTypeCustomTag)
             {
                 CustomTags.Add(entry);
             }
-            else if (entry.Type == ModDefExLoading.CustomType_TagSet)
+            else if (entry.IsTypeCustomTagSet)
             {
                 CustomTagSets.Add(entry);
             }
-            else if (entry.IsResourceType)
+            else if (entry.IsTypeBattleTechResourceType)
             {
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.AssetBundle)
@@ -225,7 +219,7 @@ namespace ModTek.Manifest
                     }
                 }
 
-                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(entry.Path, FilePaths.ModsDirectory)}\" ({entry.Type})");
+                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(FilePaths.ModsDirectory, entry.Path)}\" ({entry.Type})");
 
                 // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
                 AddBTRLEntries.Add(entry); // TODO new resource adding here

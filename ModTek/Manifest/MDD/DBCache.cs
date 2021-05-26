@@ -53,7 +53,7 @@ namespace ModTek.Manifest.MDD
                     continue;
                 }
 
-                var relativePath = FileUtils.GetRelativePath(path, FilePaths.GameDirectory);
+                var relativePath = FileUtils.GetRelativePath(FilePaths.GameDirectory, path);
                 toAdd[relativePath] = Entries[path];
                 toRemove.Add(path);
             }

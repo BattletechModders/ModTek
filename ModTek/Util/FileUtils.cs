@@ -53,35 +53,35 @@ namespace ModTek.Util
             }
         }
 
-        internal static string ResolvePath(string path, string rootPathToUse)
+        internal static string ResolvePath(string basePath, string relativePath)
         {
-            if (!Path.IsPathRooted(path))
+            if (!Path.IsPathRooted(relativePath))
             {
-                path = Path.Combine(rootPathToUse, path);
+                relativePath = Path.Combine(basePath, relativePath);
             }
 
-            return Path.GetFullPath(path);
+            return Path.GetFullPath(relativePath);
         }
 
-        internal static string GetRelativePath(string path, string rootPath)
+        internal static string GetRelativePath(string basePath, string absolutePath)
         {
-            if (!Path.IsPathRooted(path))
+            if (!Path.IsPathRooted(absolutePath))
             {
-                return path;
+                return absolutePath;
             }
 
-            rootPath = Path.GetFullPath(rootPath);
-            if (rootPath.Last() != Path.DirectorySeparatorChar)
+            basePath = Path.GetFullPath(basePath);
+            if (basePath.Last() != Path.DirectorySeparatorChar)
             {
-                rootPath += Path.DirectorySeparatorChar;
+                basePath += Path.DirectorySeparatorChar;
             }
 
-            var pathUri = new Uri(Path.GetFullPath(path), UriKind.Absolute);
-            var rootUri = new Uri(rootPath, UriKind.Absolute);
+            var pathUri = new Uri(Path.GetFullPath(absolutePath), UriKind.Absolute);
+            var rootUri = new Uri(basePath, UriKind.Absolute);
 
             if (pathUri.Scheme != rootUri.Scheme)
             {
-                return path;
+                return absolutePath;
             }
 
             var relativeUri = rootUri.MakeRelativeUri(pathUri);
