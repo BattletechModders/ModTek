@@ -109,7 +109,7 @@ namespace ModTek.Patches
             {
                 RLog.M.TWL(0, "BattleTechResourceLocator.RefreshTypedEntries");
                 RLog.M.TWL(0, $"  typedEntriesCount: {___typedEntriesCount}  versionManifest.Count: {versionManifest.Count}");
-                RLog.M.TWL(0, $"  addBTRLEntries: {ModsManifest.AddBTRLEntries.Count}  removeBTRLEntries: {ModsManifest.RemoveBTRLEntries.Count}");
+                RLog.M.TWL(0, $"  addBTRLEntries: {ModsManifest.AddBTRLEntries.Count}");
             }
 
 
@@ -216,37 +216,6 @@ namespace ModTek.Patches
 
             sw.Stop();
             //RLog.M.WL(0, $"BTRL ADD took: {sw.ElapsedMilliseconds}ms");
-
-            sw.Restart();
-            foreach (var entry in ModsManifest.RemoveBTRLEntries)
-            {
-                var resourceType = (BattleTechResourceType) Enum.Parse(typeof(BattleTechResourceType), entry.Type);
-                // entry.RemoveFromModTekManifest(resourceType); THIS WAS A NOP
-
-                if (___baseManifest.ContainsKey(resourceType) && ___baseManifest[resourceType].ContainsKey(entry.Id))
-                {
-                    ___baseManifest[resourceType].Remove(entry.Id);
-                    RLog.M.WL(1, "baseManifest remove:" + resourceType + " " + entry.Id);
-                }
-
-                if (___contentPacksManifest.ContainsKey(resourceType) && ___contentPacksManifest[resourceType].ContainsKey(entry.Id))
-                {
-                    ___contentPacksManifest[resourceType].Remove(entry.Id);
-                    RLog.M.WL(1, "contentPacksManifest remove:" + resourceType + " " + entry.Id);
-                }
-
-                var containingAddendums = ___addendumsManifest.Where(pair => pair.Value.ContainsKey(resourceType) && pair.Value[resourceType].ContainsKey(entry.Id));
-                foreach (var containingAddendum in containingAddendums)
-                {
-                    RLog.M.WL(1, "remove addendumsManifest[" + resourceType + "][" + entry.Id + "]");
-                    containingAddendum.Value[resourceType].Remove(entry.Id);
-
-                    // Invalidate the cache we've created for this addendum
-                    VersionManifestAddendumCache.InvalidateAddendum(containingAddendum.Key);
-                }
-            }
-
-            sw.Stop();
 
             __state.Stop();
             if (ModTek.Config.EnableDebugLogging)

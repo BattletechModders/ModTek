@@ -161,7 +161,6 @@ namespace ModTek
 
             CloseLogStream();
 
-            JObjectCache.ClearTemp();
             ModsManifest.ClearTemp();
             stopwatch = null;
         }

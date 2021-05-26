@@ -93,14 +93,14 @@
     <Compile Include="Manifest\AdvMerge\MergeAction.cs" />
     <Compile Include="Manifest\MDD\DBCache.cs" />
     <Compile Include="Manifest\MDD\MDDHelper.cs" />
+    <Compile Include="Manifest\Merges\CacheEntry.cs" />
     <Compile Include="Manifest\Merges\MergeCache.cs" />
     <Compile Include="Manifest\Merges\MergesDatabase.cs" />
+    <Compile Include="Manifest\Merges\MergeType.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
     <Compile Include="Manifest\ModsManifest.cs" />
-    <Compile Include="Manifest\TypeCache.cs" />
     <Compile Include="Misc\Configuration.cs" />
     <Compile Include="Misc\FilePaths.cs" />
-    <Compile Include="Misc\JObjectCache.cs" />
     <Compile Include="Mods\DataAddendumEntry.cs" />
     <Compile Include="Mods\ModDefExLoading.cs" />
     <Compile Include="Mods\ModDefsDatabase.cs" />
@@ -125,6 +125,7 @@
     <Compile Include="Util\FileUtils.cs" />
     <Compile Include="Util\HarmonyUtils.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
+    <Compile Include="Util\JsonUtils.cs" />
     <Compile Include="Util\LoadOrder.cs" />
     <Compile Include="Mods\ModDef.cs" />
     <Compile Include="ModTek.cs" />

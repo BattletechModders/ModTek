@@ -1,100 +1,153 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using Harmony;
+using System.Linq;
 using ModTek.Logging;
+using ModTek.Manifest.AdvMerge;
 using ModTek.Misc;
-using ModTek.UI;
+using ModTek.Mods;
+using ModTek.Util;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ModTek.Manifest.Merges
 {
     internal class MergesDatabase
     {
-        private Dictionary<string, Dictionary<string, List<string>>> merges = new();
+        private readonly string FakeStreamingAssetsBundleName = "StreamingAssets";
 
-        internal void AddMerge(string type, string id, string path)
-        {
-            if (!merges.ContainsKey(type))
-            {
-                merges[type] = new Dictionary<string, List<string>>();
-            }
-
-            if (!merges[type].ContainsKey(id))
-            {
-                merges[type][id] = new List<string>();
-            }
-
-            if (merges[type][id].Contains(path))
-            {
-                return;
-            }
-
-            merges[type][id].Add(path);
-        }
-
-        internal void RemoveMerge(string type, string id)
-        {
-            if (!merges.ContainsKey(type) || !merges[type].ContainsKey(id))
-            {
-                return;
-            }
-
-            merges[type].Remove(id);
-            Logger.Log($"\t\tHad merges for {id} but had to toss, since original file is being replaced");
-        }
+        // asset bundle name OR StreamingAssets, id, list
+        private readonly Dictionary<string, Dictionary<string, List<ModEntry>>> merges = new();
+        private readonly MergeCache mergeResultsCache = new();
 
         internal void Clear()
         {
-            merges = null;
+            merges.Clear();
+            // mergeResultsCache.Clear();
         }
 
-        internal IEnumerator<ProgressReport> MergeFilesLoop()
+        internal void GetMergedStreamingAssets(string id, DateTime version, out string content, out bool hasMerges)
         {
-            // perform merges into cache
-            Logger.Log("\nDoing merges...");
-            yield return new ProgressReport(1, "Merging", "", true);
+            GetMergedAssetBundle(FakeStreamingAssetsBundleName, id, version, out content, out hasMerges);
+        }
 
-            var mergeCache = MergeCache.FromFile(FilePaths.MergeCachePath);
-            mergeCache.UpdateToRelativePaths();
+        // version: version of the base content
+        // mergedContent: returns the cached version if available, null otherwise
+        // canCache: returns true if there are merges available, null otherwise
+        internal void GetMergedAssetBundle(string assetBundleName, string id, DateTime version, out string cachedMergedContent, out bool canMerge)
+        {
+            cachedMergedContent = null;
+            canMerge = Entries(assetBundleName, id).Any();
+        }
 
-            // progress panel setup
-            var mergeCount = 0;
-            var numEntries = 0;
-            CollectionExtensions.Do(merges, pair => numEntries += pair.Value.Count);
+        // returns the merged content, can return already merged content
+        internal void PutStreamingAssetsAndReturnMergedContent(string id, DateTime version, string originalContent, out string mergedContent)
+        {
+            PutAssetBundleAndReturnMergedContent(FakeStreamingAssetsBundleName, id, version, originalContent, out mergedContent);
+        }
 
-            foreach (var type in merges.Keys)
+        // returns the merged content
+        internal void PutAssetBundleAndReturnMergedContent(string assetBundleName, string id, DateTime version, string originalContent, out string mergedContent)
+        {
+            mergedContent = Merge(assetBundleName, id, originalContent);
+        }
+
+        internal void AddModEntry(ModEntry entry)
+        {
+            if (entry.Type == ModDefExLoading.CustomType_AdvancedJSONMerge)
             {
-                foreach (var id in merges[type].Keys)
+                var advMerge = AdvancedJSONMerge.FromFile(entry.Path);
+                if (advMerge == null)
                 {
-                    var existingEntry = ModsManifest.FindEntry(type, id);
-                    if (existingEntry == null)
-                    {
-                        Logger.Log($"\tWarning: Have merges for {id} but cannot find an original file! Skipping.");
-                        continue;
-                    }
+                    return;
+                }
 
-                    var originalPath = Path.GetFullPath(existingEntry.FilePath);
-                    var mergePaths = merges[type][id];
+                var targets = new List<string>();
+                if (!string.IsNullOrEmpty(advMerge.TargetID))
+                {
+                    targets.Add(advMerge.TargetID);
+                }
+                if (advMerge.TargetIDs != null)
+                {
+                    targets.AddRange(advMerge.TargetIDs);
+                }
 
-                    if (!mergeCache.HasCachedEntry(originalPath, mergePaths))
-                    {
-                        yield return new ProgressReport(mergeCount++ / (float) numEntries, "Merging", id);
-                    }
+                if (targets.Count == 0)
+                {
+                    Logger.Log($"\tError: AdvancedJSONMerge: \"{entry.RelativePathToMods}\" didn't target any IDs. Skipping merge.");
+                    return;
+                }
 
-                    var cachePath = mergeCache.GetOrCreateCachedEntry(originalPath, mergePaths);
-
-                    // something went wrong (the parent json prob had errors)
-                    if (cachePath == null)
-                    {
-                        continue;
-                    }
-
-                    var cacheEntry = new ModEntry(cachePath) { ShouldAppendText = false, ShouldMergeJSON = false, Type = existingEntry.Type, Id = id };
-
-                    ModsManifest.AddModEntry(cacheEntry);
+                foreach (var target in targets)
+                {
+                    AddMergeEntry(entry, target);
                 }
             }
-
-            mergeCache.ToFile(FilePaths.MergeCachePath);
+            else
+            {
+                if (!string.IsNullOrEmpty(entry.Type))
+                {
+                    Logger.Log($"\tWarning: Type is ignore for merge \"{entry.RelativePathToMods}\".");
+                }
+                AddMergeEntry(entry);
+            }
         }
+
+        private void AddMergeEntry(ModEntry modEntry, string id = null)
+        {
+            id ??= modEntry.Id;
+            var bundleName = modEntry.AssetBundleName ?? FakeStreamingAssetsBundleName;
+
+            if (!merges.TryGetValue(bundleName, out var ids))
+            {
+                ids = new Dictionary<string, List<ModEntry>>();
+                merges[bundleName] = ids;
+            }
+
+            if (!ids.TryGetValue(id, out var list))
+            {
+                list = new List<ModEntry>();
+                ids[id] = list;
+            }
+
+            list.Add(modEntry);
+        }
+
+        private List<ModEntry> Entries(string bundleName, string id)
+        {
+            if (merges.TryGetValue(bundleName, out var ids) && ids.TryGetValue(id, out var list))
+            {
+                return list;
+            }
+            return null;
+        }
+
+        private string Merge(string bundleName, string id, string originalContent)
+        {
+            var list = Entries(bundleName, id);
+            if (list == null)
+            {
+                return null;
+            }
+
+            var target = JsonUtils.ParseGameJSON(originalContent);
+            foreach (var entry in list)
+            {
+                var merge = JsonUtils.ParseGameJSON(entry.Path);
+                JSONMerger.MergeIntoTarget(target, merge);
+            }
+
+            return target.ToString(Formatting.Indented);
+        }
+
+        // internal void Merge(JObject target)
+        // {
+        //     JSONMerger.MergeIntoTarget(target, JObjectCache.ParseGameJSONFile(FilePath));
+        // }
+        //
+        // internal void Append(StreamWriter writer)
+        // {
+        //     writer.Write(File.ReadAllText(FilePath));
+        // }
     }
 }

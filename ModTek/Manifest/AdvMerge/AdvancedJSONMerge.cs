@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using ModTek.Logging;
+using ModTek.Misc;
+using ModTek.Util;
 using Newtonsoft.Json;
 
 namespace ModTek.Manifest.AdvMerge
@@ -10,21 +11,16 @@ namespace ModTek.Manifest.AdvMerge
     {
         public string TargetID;
         public List<string> TargetIDs;
-        public string TargetType;
 
         [JsonProperty(Required = Required.Always)]
         public List<Instruction> Instructions;
 
         public static AdvancedJSONMerge FromFile(string path)
         {
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
             try
             {
-                return JsonConvert.DeserializeObject<AdvancedJSONMerge>(File.ReadAllText(path));
+                var objCache = JsonUtils.ParseGameJSON(path);
+                return objCache.ToObject<AdvancedJSONMerge>();
             }
             catch (Exception e)
             {

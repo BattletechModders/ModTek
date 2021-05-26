@@ -110,6 +110,14 @@ namespace ModTek.Mods
             return mods;
         }
 
+        internal static List<ModDefEx> ModsWithManifests()
+        {
+            return ModLoadOrder
+                .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0)
+                .Select(name => ModDefs[name])
+                .ToList();
+        }
+
         internal static IEnumerator<ProgressReport> InitModsLoop()
         {
             yield return new ProgressReport(1, "Initializing Mods", "");

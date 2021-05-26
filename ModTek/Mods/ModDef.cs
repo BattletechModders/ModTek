@@ -89,6 +89,7 @@ namespace ModTek.Mods
         public List<ModEntry> Manifest { get; set; } = new();
 
         // remove these entries by ID from the game
+        [Obsolete]
         public List<string> RemoveManifestEntries { get; set; } = new();
 
         // a settings file to be nice to our users and have a known place for settings

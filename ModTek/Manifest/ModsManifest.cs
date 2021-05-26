@@ -6,7 +6,6 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using ModTek.Logging;
-using ModTek.Manifest.AdvMerge;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
 using ModTek.Misc;
@@ -27,7 +26,6 @@ namespace ModTek.Manifest
         internal static HashSet<ModEntry> CustomTagSets = new();
 
         internal static List<ModEntry> AddBTRLEntries = new();
-        internal static List<VersionManifestEntry> RemoveBTRLEntries = new();
 
         private static HashSet<string> AddBTRLEntryPaths;
 
@@ -47,115 +45,6 @@ namespace ModTek.Manifest
         internal static bool isInSystemIcons(string id)
         {
             return systemIcons.Contains(id);
-        }
-
-        internal static void AddModEntry(ModEntry modEntry)
-        {
-            if (modEntry.Path == null)
-            {
-                return;
-            }
-
-            // since we're adding a new entry here, we want to remove anything that would remove it again after the fact
-            if (RemoveBTRLEntries.RemoveAll(entry => entry.Id == modEntry.Id && entry.Type == modEntry.Type) > 0)
-            {
-                Logger.Log($"\t\t{modEntry.Id} ({modEntry.Type}) -- this entry replaced an entry that was slated to be removed. Removed the removal.");
-            }
-
-            if (CustomResources.ContainsKey(modEntry.Type))
-            {
-                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                CustomResources[modEntry.Type][modEntry.Id] = modEntry.GetVersionManifestEntry();
-                return;
-            }
-
-            VersionManifestAddendum addendum = null;
-            if (!string.IsNullOrEmpty(modEntry.AddToAddendum))
-            {
-                addendum = ModDefsDatabase.CachedVersionManifest.GetAddendumByName(modEntry.AddToAddendum);
-
-                if (addendum == null)
-                {
-                    Logger.Log($"\tWarning: Cannot add {modEntry.Id} to {modEntry.AddToAddendum} because addendum doesn't exist in the manifest.");
-                    return;
-                }
-            }
-
-            // special handling for particular types
-            switch (modEntry.Type)
-            {
-                case "AssetBundle":
-                    ModAssetBundlePaths[modEntry.Id] = modEntry.Path;
-                    break;
-                case nameof(SoundBankDef):
-                    SoundBanksFeature.AddSoundBankDef(modEntry.Path);
-                    return;
-                case nameof(SVGAsset):
-                    Logger.Log($"Processing SVG entry of: {modEntry.Id}  type: {modEntry.Type}  name: {nameof(SVGAsset)}  path: {modEntry.Path}");
-                    if (modEntry.Id.StartsWith(nameof(UILookAndColorConstants)))
-                    {
-                        systemIcons.Add(modEntry.Id);
-                    }
-
-                    break;
-                case ModDefExLoading.CustomType_Tag:
-                    CustomTags.Add(modEntry);
-                    return; // Do not process further and do when the DB is updated
-                case ModDefExLoading.CustomType_TagSet:
-                    CustomTagSets.Add(modEntry);
-                    return; // Do no process further and do when the DB is updated
-            }
-
-            // add to addendum instead of adding to manifest
-            if (addendum != null)
-            {
-                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type}) [{addendum.Name}]");
-            }
-            else
-            {
-                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-            }
-
-            // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
-            AddBTRLEntries.Add(modEntry);
-        }
-
-        private static bool RemoveEntry(string id, TypeCache typeCache)
-        {
-            var removedEntry = false;
-
-            var containingCustomTypes = CustomResources.Where(pair => pair.Value.ContainsKey(id)).ToList();
-            foreach (var pair in containingCustomTypes)
-            {
-                Logger.Log($"\tRemove: \"{pair.Value[id].Id}\" ({pair.Value[id].Type}) - Custom Resource");
-                pair.Value.Remove(id);
-                removedEntry = true;
-            }
-
-            var modEntries = AddBTRLEntries.FindAll(entry => entry.Id == id);
-            foreach (var modEntry in modEntries)
-            {
-                Logger.Log($"\tRemove: \"{modEntry.Id}\" ({modEntry.Type}) - Mod Entry");
-                AddBTRLEntries.Remove(modEntry);
-                AddBTRLEntryPaths.Remove(modEntry.Path);
-                removedEntry = true;
-            }
-
-            var vanillaEntries = ModDefsDatabase.CachedVersionManifest.FindAll(entry => entry.Id == id);
-            foreach (var vanillaEntry in vanillaEntries)
-            {
-                Logger.Log($"\tRemove: \"{vanillaEntry.Id}\" ({vanillaEntry.Type}) - Vanilla Entry");
-                RemoveBTRLEntries.Add(vanillaEntry);
-                removedEntry = true;
-            }
-
-            var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
-            foreach (var type in types)
-            {
-                mergesDatabase.RemoveMerge(type, id);
-            }
-
-            return removedEntry;
         }
 
         internal static void PrepareManifestAndCustomResources()
@@ -220,218 +109,131 @@ namespace ModTek.Manifest
 
             return CSharpUtils.Enumerate(
                 HandleModManifestsLoop(),
-                mergesDatabase.MergeFilesLoop(),
                 MDDHelper.AddToDBLoop()
-                );
+            );
         }
 
         private static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             Logger.Log("\nAdding Mod Content...");
-            var typeCache = new TypeCache(FilePaths.TypeCachePath);
-            typeCache.UpdateToIDBased();
-            Logger.Log("");
 
             // progress panel setup
             var entryCount = 0;
             var numEntries = 0;
             ModDefsDatabase.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            var manifestMods = ModDefsDatabase.ModLoadOrder.Where(name => ModDefsDatabase.ModDefs.ContainsKey(name) && (ModDefsDatabase.ModDefs[name].Manifest.Count > 0 || ModDefsDatabase.ModDefs[name].RemoveManifestEntries.Count > 0))
-                .ToList();
-            foreach (var modName in manifestMods)
+            foreach (var modDef in ModDefsDatabase.ModsWithManifests())
             {
-                var modDef = ModDefsDatabase.ModDefs[modName];
+                var modName = modDef.Name;
 
                 Logger.Log($"{modName}:");
                 yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
 
                 foreach (var modEntry in modDef.Manifest)
                 {
+                    if (modEntry.Path == null)
+                    {
+                        Logger.Log($"\tWarning: Internal error, path not set for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
+                        continue;
+                    }
+
                     yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", modEntry.Id);
 
-                    // type being null means we have to figure out the type from the path (StreamingAssets)
-                    if (modEntry.Type == null)
-                    {
-                        var relativePath = FileUtils.GetRelativePath(modEntry.Path, Path.Combine(modDef.Directory, "StreamingAssets"));
-
-                        if (relativePath == FilePaths.DebugSettingsPath)
-                        {
-                            modEntry.Type = "DebugSettings";
-                        }
-                    }
-
-                    // type *still* being null means that this is an "non-special" case, i.e. it's in the manifest
-                    if (modEntry.Type == null)
-                    {
-                        var relativePath = FileUtils.GetRelativePath(modEntry.Path, Path.Combine(modDef.Directory, "StreamingAssets"));
-                        var fakeStreamingAssetsPath = Path.GetFullPath(Path.Combine(FilePaths.StreamingAssetsDirectory, relativePath));
-                        if (!File.Exists(fakeStreamingAssetsPath))
-                        {
-                            Logger.Log($"\tWarning: Could not find a file at {fakeStreamingAssetsPath} for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
-                            continue;
-                        }
-
-                        var types = typeCache.GetTypes(modEntry.Id, ModDefsDatabase.CachedVersionManifest);
-                        if (types == null)
-                        {
-                            Logger.Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}. Is this supposed to be a new entry? Don't put new entries in StreamingAssets!");
-                            continue;
-                        }
-
-                        // TODO fix typeCache becoming irrelevant!
-                        // this is getting merged later and then added to the BTRL entries then
-                        // StreamingAssets don't get default appendText
-                        if (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".json" && modEntry.ShouldMergeJSON)
-                        {
-                            // this assumes that vanilla .json can only have a single type
-                            // typeCache will always contain this path
-                            modEntry.Type = typeCache.GetTypes(modEntry.Id)[0];
-                            mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
-                            Logger.Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                            continue;
-                        }
-
-                        // TODO WTF IS THIS?? add stuff for every type? seems fishy for JSON stuff
-                        // and why remove merge?
-                        foreach (var type in types)
-                        {
-                            var subModEntry = new ModEntry(modEntry, modEntry.Path, modEntry.Id);
-                            subModEntry.Type = type;
-                            AddModEntry(subModEntry);
-                            mergesDatabase.RemoveMerge(type, modEntry.Id);
-                        }
-
-                        continue;
-                    }
-
-                    // TODO WHY ARE TYPES SO IMPORTANT?????
-                    // special handling for types
-                    switch (modEntry.Type)
-                    {
-                        case ModDefExLoading.CustomType_AdvancedJSONMerge:
-                        {
-                            var advancedJSONMerge = AdvancedJSONMerge.FromFile(modEntry.Path);
-
-                            if (!string.IsNullOrEmpty(advancedJSONMerge.TargetID) && advancedJSONMerge.TargetIDs == null)
-                            {
-                                advancedJSONMerge.TargetIDs = new List<string> { advancedJSONMerge.TargetID };
-                            }
-
-                            if (advancedJSONMerge.TargetIDs == null || advancedJSONMerge.TargetIDs.Count == 0)
-                            {
-                                Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" didn't target any IDs. Skipping this merge.");
-                                continue;
-                            }
-
-                            foreach (var id in advancedJSONMerge.TargetIDs)
-                            {
-                                var type = advancedJSONMerge.TargetType;
-                                if (string.IsNullOrEmpty(type))
-                                {
-                                    var types = typeCache.GetTypes(id, ModDefsDatabase.CachedVersionManifest);
-                                    if (types == null || types.Count == 0)
-                                    {
-                                        Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not resolve type for ID: {id}. Skipping this merge");
-                                        continue;
-                                    }
-
-                                    // assume that only a single type
-                                    type = types[0];
-                                }
-
-                                var entry = FindEntry(type, id);
-                                if (entry == null)
-                                {
-                                    Logger.Log($"\tError: AdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" could not find entry {id} ({type}). Skipping this merge");
-                                    continue;
-                                }
-
-                                mergesDatabase.AddMerge(type, id, modEntry.Path);
-                                Logger.Log($"\tAdvancedJSONMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" targeting '{id}' ({type})");
-                            }
-
-                            continue;
-                        }
-                        case nameof(SoundBankDef):
-                        {
-                            AddModEntry(modEntry);
-                            continue;
-                        }
-                        case ModDefExLoading.CustomType_FixedSVGAsset:
-                        {
-                            AddModEntry(modEntry);
-                            continue;
-                        }
-                        case ModDefExLoading.CustomType_Tag:
-                        {
-                            Logger.Log($"Processing tag of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                            AddModEntry(modEntry);
-                            continue;
-                        }
-                        case ModDefExLoading.CustomType_TagSet:
-                        {
-                            Logger.Log($"Processing tagset of: {modEntry.Id} with type: {modEntry.Type} with path: {modEntry.Path}");
-                            AddModEntry(modEntry);
-                            continue;
-                        }
-                    }
-
-                    // non-StreamingAssets json merges
-                    if (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".json" && modEntry.ShouldMergeJSON ||
-                        (Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".txt" || Path.GetExtension(modEntry.Path)?.ToLowerInvariant() == ".csv") && modEntry.ShouldAppendText)
-                    {
-                        // have to find the original path for the manifest entry that we're merging onto
-                        var matchingEntry = FindEntry(modEntry.Type, modEntry.Id);
-
-                        if (matchingEntry == null)
-                        {
-                            Logger.Log($"\tWarning: Could not find an existing VersionManifest entry for {modEntry.Id}!");
-                            continue;
-                        }
-
-                        // this assumes that .json can only have a single type
-                        typeCache.TryAddType(modEntry.Id, modEntry.Type);
-                        Logger.Log($"\tMerge: \"{FileUtils.GetRelativePath(modEntry.Path, FilePaths.ModsDirectory)}\" ({modEntry.Type})");
-                        mergesDatabase.AddMerge(modEntry.Type, modEntry.Id, modEntry.Path);
-                        continue;
-                    }
-
-                    typeCache.TryAddType(modEntry.Id, modEntry.Type);
-                    AddModEntry(modEntry);
-                    mergesDatabase.RemoveMerge(modEntry.Type, modEntry.Id);
-                }
-
-                foreach (var removeID in ModDefsDatabase.ModDefs[modName].RemoveManifestEntries)
-                {
-                    if (!RemoveEntry(removeID, typeCache))
-                    {
-                        Logger.Log($"\tWarning: Could not find manifest entries for {removeID} to remove them. Skipping.");
-                    }
+                    ExpandModEntries(modEntry);
                 }
             }
 
-            typeCache.ToFile(FilePaths.TypeCachePath);
             AddBTRLEntryPaths = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
-        internal static VersionManifestEntry FindEntry(string type, string id)
+        private static void ExpandModEntries(ModEntry modEntry)
         {
-            if (CustomResources.ContainsKey(type) && CustomResources[type].ContainsKey(id))
+            // StreamingAssets && other filename based merges
+            if (modEntry.IsFile)
             {
-                return CustomResources[type][id];
+                if (modEntry.Type == null)
+                {
+                    if (modEntry.Id == "settings")
+                    {
+                        modEntry.Type = "DebugSettings";
+                    }
+                }
+                if (string.IsNullOrEmpty(modEntry.Id))
+                {
+                    modEntry.Id = modEntry.FileNameWithoutExtension;
+                }
+                AddModEntry(modEntry);
             }
-
-            var modEntry = AddBTRLEntries.FindLast(x => x.Type == type && x.Id == id)?.GetVersionManifestEntry();
-            if (modEntry != null)
+            else if (modEntry.IsDirectory)
             {
-                return modEntry;
+                foreach (var file in modEntry.Files)
+                {
+                    var id = Path.GetFileNameWithoutExtension(file);
+                    AddModEntry(new ModEntry(modEntry, file, id));
+                }
             }
+            else
+            {
+                Logger.Log($"\tWarning: Could not find path {modEntry.RelativePathToMods}.");
+            }
+        }
 
-            // if we're slating to remove an entry, then we don't want to return it here from the manifest
-            return !RemoveBTRLEntries.Exists(entry => entry.Type == type && entry.Id == id)
-                ? ModDefsDatabase.CachedVersionManifest.Find(entry => entry.Type == type && entry.Id == id)
-                : null;
+        private static void AddModEntry(ModEntry entry)
+        {
+            if (entry.ShouldMergeJSON || entry.ShouldAppendText)
+            {
+                if ((entry.ShouldMergeJSON && entry.IsJson)
+                    || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
+                {
+                    mergesDatabase.AddModEntry(entry);
+                }
+                else
+                {
+                    Logger.Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
+                }
+            }
+            else if (CustomResources.ContainsKey(entry.Type))
+            {
+                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(entry.Path, FilePaths.ModsDirectory)}\" ({entry.Type})");
+                CustomResources[entry.Type][entry.Id] = entry.GetVersionManifestEntry();
+            }
+            else if (entry.Type == nameof(SoundBankDef))
+            {
+                SoundBanksFeature.AddSoundBankDef(entry.Path);
+            }
+            else if (entry.Type == ModDefExLoading.CustomType_Tag)
+            {
+                CustomTags.Add(entry);
+            }
+            else if (entry.Type == ModDefExLoading.CustomType_TagSet)
+            {
+                CustomTagSets.Add(entry);
+            }
+            else if (entry.IsResourceType)
+            {
+                var resourceType = entry.ResourceType;
+                if (resourceType is BattleTechResourceType.AssetBundle)
+                {
+                    ModAssetBundlePaths[entry.Id] = entry.Path;
+                }
+                else if (resourceType is BattleTechResourceType.SVGAsset)
+                {
+                    Logger.Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.Path}");
+                    if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
+                    {
+                        systemIcons.Add(entry.Id);
+                    }
+                }
+
+                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(entry.Path, FilePaths.ModsDirectory)}\" ({entry.Type})");
+
+                // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
+                AddBTRLEntries.Add(entry); // TODO new resource adding here
+            }
+            else
+            {
+                Logger.Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
+            }
         }
 
         internal static void FinalizeResourceLoading()
