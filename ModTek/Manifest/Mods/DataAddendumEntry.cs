@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ModTek.Mods
+namespace ModTek.Manifest.Mods
 {
     [JsonObject]
     internal class DataAddendumEntry

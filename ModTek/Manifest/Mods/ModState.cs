@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace ModTek.Mods
+namespace ModTek.Manifest.Mods
 {
     internal class ModState
     {

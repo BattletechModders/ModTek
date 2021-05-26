@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using ModTek.Logging;
-using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -14,7 +13,7 @@ using Newtonsoft.Json.Linq;
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace ModTek.Mods
+namespace ModTek.Manifest.Mods
 {
     internal class ModDefEx
     {

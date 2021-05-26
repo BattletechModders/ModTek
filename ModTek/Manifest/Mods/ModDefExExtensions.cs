@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ModTek.Logging;
 
-namespace ModTek.Mods
+namespace ModTek.Manifest.Mods
 {
     internal static class ModDefExExtensions
     {

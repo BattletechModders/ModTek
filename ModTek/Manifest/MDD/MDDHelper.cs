@@ -8,8 +8,8 @@ using BattleTech.Data;
 using Harmony;
 using ModTek.CustomTypes;
 using ModTek.Logging;
+using ModTek.Manifest.Mods;
 using ModTek.Misc;
-using ModTek.Mods;
 using ModTek.UI;
 using ModTek.Util;
 

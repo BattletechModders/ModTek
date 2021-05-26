@@ -1,8 +1,8 @@
 using System.Linq;
 using BattleTech.UI;
 using Harmony;
+using ModTek.Manifest.Mods;
 using ModTek.Misc;
-using ModTek.Mods;
 using ModTek.Util;
 
 // ReSharper disable InconsistentNaming

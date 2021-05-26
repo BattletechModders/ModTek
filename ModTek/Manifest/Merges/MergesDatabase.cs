@@ -1,41 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using ModTek.Logging;
 using ModTek.Manifest.AdvMerge;
 using ModTek.Manifest.Merges.Cache;
-using ModTek.Mods;
-using ModTek.Util;
-using Newtonsoft.Json;
+using ModTek.Manifest.Mods;
 
 namespace ModTek.Manifest.Merges
 {
     internal class MergesDatabase
     {
-        internal const string STREAMING_ASSETS_BUNDLE_NAME = "StreamingAssets";
+        private const string STREAMING_ASSETS_BUNDLE_NAME = "StreamingAssets";
 
         private readonly MergeCache mergeCache = new();
 
-        // bundleName: the assetBundle file or StreamingAssets, see constant
+        // bundleName: the assetBundle file or StreamingAssets if null
         // id: the unique identifier, we use filename without extension since basegame+dlc doesnt have duplicates if json/txt/csv is involved
         // version: version of the base content
-        // mergedContent: returns the cached version if available, null otherwise
-        // canCache: returns true if there are merges available, null otherwise
-        internal void GetMerged(string bundleName, string id, DateTime version, out string mergedContent, out bool canMerge)
+        // returns the cached version if available, null otherwise
+        internal string GetMergedContent(string bundleName, string id, DateTime version)
         {
-            canMerge = mergeCache.GetTemp(bundleName, id) != null;
-            if (!canMerge)
-            {
-                mergedContent = null;
-                return;
-            }
-            mergedContent = mergeCache.GetCachedContent(bundleName, id, version);
+            return mergeCache.GetCachedContent(bundleName ?? STREAMING_ASSETS_BUNDLE_NAME, id, version);
         }
 
-        // returns the merged content
-        internal void Merge(string bundleName, string id, DateTime version, string originalContent, out string mergedContent)
+        // returns the merged content, return null if nothing to merge or error happened
+        internal string MergeContentIfApplicable(string bundleName, string id, DateTime version, string originalContent)
         {
-            mergedContent = mergeCache.MergeAndCacheContent(bundleName, id, version, originalContent);
+            return mergeCache.MergeAndCacheContent(bundleName ?? STREAMING_ASSETS_BUNDLE_NAME, id, version, originalContent);
         }
 
         internal void AddModEntry(ModEntry entry)

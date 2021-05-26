@@ -8,8 +8,8 @@ using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
+using ModTek.Manifest.Mods;
 using ModTek.Misc;
-using ModTek.Mods;
 using ModTek.SoundBanks;
 using ModTek.UI;
 using ModTek.Util;
@@ -25,7 +25,7 @@ namespace ModTek.Manifest
         internal static HashSet<ModEntry> CustomTags = new();
         internal static HashSet<ModEntry> CustomTagSets = new();
 
-        internal static List<ModEntry> AddBTRLEntries = new();
+        private static List<ModEntry> AddBTRLEntries = new();
 
         private static HashSet<string> AddBTRLEntryPaths;
 
@@ -35,7 +35,6 @@ namespace ModTek.Manifest
         }
 
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
-        internal static Dictionary<string, string> ModAssetBundlePaths { get; } = new();
 
         internal static bool isInSystemIcons(string id)
         {
@@ -44,8 +43,6 @@ namespace ModTek.Manifest
 
         internal static void PrepareManifestAndCustomResources()
         {
-            ModDefsDatabase.CachedVersionManifest = VersionManifestUtilities.LoadDefaultManifest();
-
             // setup custom resources for ModTek types with fake VersionManifestEntries
             CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
             CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
@@ -206,11 +203,7 @@ namespace ModTek.Manifest
             else if (entry.IsTypeBattleTechResourceType)
             {
                 var resourceType = entry.ResourceType;
-                if (resourceType is BattleTechResourceType.AssetBundle)
-                {
-                    ModAssetBundlePaths[entry.Id] = entry.Path;
-                }
-                else if (resourceType is BattleTechResourceType.SVGAsset)
+                if (resourceType is BattleTechResourceType.SVGAsset)
                 {
                     Logger.Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.Path}");
                     if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
@@ -247,6 +240,16 @@ namespace ModTek.Manifest
         internal static List<ModEntry> GetAddToDbEntries()
         {
             return AddBTRLEntries.Where(x => x.AddToDB).ToList();
+        }
+
+        internal static string GetMergedContent(string bundleName, string id, DateTime version)
+        {
+            return mergesDatabase.GetMergedContent(bundleName, id, version);
+        }
+
+        internal static string MergeOriginalContent(string bundleName, string id, DateTime version, string originalContent)
+        {
+            return mergesDatabase.MergeContentIfApplicable(bundleName, id, version, originalContent);
         }
     }
 }

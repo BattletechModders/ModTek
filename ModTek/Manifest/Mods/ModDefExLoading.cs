@@ -6,14 +6,12 @@ using System.Reflection;
 using BattleTech;
 using Harmony;
 using ModTek.Logging;
-using ModTek.Manifest;
 using ModTek.Misc;
 using ModTek.SoundBanks;
-using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Mods
+namespace ModTek.Manifest.Mods
 {
     internal static class ModDefExLoading
     {

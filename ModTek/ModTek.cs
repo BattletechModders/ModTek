@@ -11,8 +11,8 @@ using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
+using ModTek.Manifest.Mods;
 using ModTek.Misc;
-using ModTek.Mods;
 using ModTek.SoundBanks;
 using static ModTek.Logging.Logger;
 

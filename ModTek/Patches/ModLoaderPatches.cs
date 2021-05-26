@@ -9,8 +9,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ModTek.Logging;
+using ModTek.Manifest.Mods;
 using ModTek.Misc;
-using ModTek.Mods;
 using UnityEngine;
 
 namespace ModTek.Patches

@@ -4,7 +4,7 @@ using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 using CacheKey = System.Tuple<string, string>;
-using MergeSets = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
+using MergeSets = System.Collections.Concurrent.ConcurrentDictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
 
 namespace ModTek.Manifest.Merges.Cache
 {
@@ -44,11 +44,6 @@ namespace ModTek.Manifest.Merges.Cache
             {
                 Log($"Couldn't write merge cache to {MergeCacheFilePath}", e);
             }
-        }
-
-        internal CacheEntry GetTemp(string bundleName, string id)
-        {
-            return tempSets.TryGetValue(new CacheKey(bundleName, id), out var set) ? set : null;
         }
 
         internal void AddTemp(string bundleName, string id, ModEntry modEntry)
@@ -94,10 +89,13 @@ namespace ModTek.Manifest.Merges.Cache
 
         internal string MergeAndCacheContent(string bundleName, string id, DateTime version, string originalContent)
         {
+            if (originalContent == null)
+            {
+                return null;
+            }
             var key = new CacheKey(bundleName, id);
             if (!tempSets.TryGetValue(key, out var temp))
             {
-                Log($"Internal Error: Couldn't find cache key in temp merge sets {key}");
                 return null;
             }
             temp.OriginalVersion = version;
@@ -120,7 +118,8 @@ namespace ModTek.Manifest.Merges.Cache
             {
                 Log($"Couldn't write cached merge result to {temp.CachedPath}", e);
             }
-            Save();
+
+            Save();// TODO only save at certain points, e.g. after datamanger finished loading a bunch of stuff
             return mergedContent;
         }
     }

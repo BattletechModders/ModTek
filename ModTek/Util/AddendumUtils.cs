@@ -7,7 +7,7 @@ using BattleTech;
 using BattleTech.Data;
 using HBS.Util;
 using ModTek.Logging;
-using ModTek.Mods;
+using ModTek.Manifest.Mods;
 
 namespace ModTek.Util
 {

@@ -2,12 +2,10 @@ using BattleTech;
 using Harmony;
 using ModTek.Logging;
 
-namespace ModTek
+namespace ModTek.Manifest.Patches
 {
-    [HarmonyPatch(typeof(SimGameConstants))]
-    [HarmonyPatch("FromJSON")]
-    [HarmonyPatch(MethodType.Normal)]
-    internal static class SimGameConstants_FromJSON
+    [HarmonyPatch(typeof(SimGameConstants), nameof(SimGameConstants.FromJSON))]
+    internal static class SimGameConstants_FromJSON_Patch
     {
         public static bool Prepare()
         {

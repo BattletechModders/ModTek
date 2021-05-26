@@ -3,12 +3,11 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using Harmony;
-using ModTek.Manifest;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Patches
+namespace ModTek.Manifest.Patches
 {
     /// <summary>
     /// Patch the GameTipList to use modded tip list if existing.
