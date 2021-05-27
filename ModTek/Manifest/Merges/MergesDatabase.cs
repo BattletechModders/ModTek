@@ -9,7 +9,7 @@ namespace ModTek.Manifest.Merges
 {
     internal class MergesDatabase
     {
-        private const string STREAMING_ASSETS_BUNDLE_NAME = "StreamingAssets";
+        private const string DEFAULT_BUNDLE_NAME = "default"; // used for mod and streaming assets resources
 
         private readonly MergeCache mergeCache = new();
 
@@ -19,20 +19,20 @@ namespace ModTek.Manifest.Merges
         // returns the cached version if available, null otherwise
         internal string GetMergedContent(string bundleName, string id, DateTime version)
         {
-            return mergeCache.GetCachedContent(bundleName ?? STREAMING_ASSETS_BUNDLE_NAME, id, version);
+            return mergeCache.GetCachedContent(bundleName ?? DEFAULT_BUNDLE_NAME, id, version);
         }
 
         // returns the merged content, return null if nothing to merge or error happened
         internal string MergeContentIfApplicable(string bundleName, string id, DateTime version, string originalContent)
         {
-            return mergeCache.MergeAndCacheContent(bundleName ?? STREAMING_ASSETS_BUNDLE_NAME, id, version, originalContent);
+            return mergeCache.MergeAndCacheContent(bundleName ?? DEFAULT_BUNDLE_NAME, id, version, originalContent);
         }
 
         internal void AddModEntry(ModEntry entry)
         {
             if (entry.Type == ModDefExLoading.CustomType_AdvancedJSONMerge)
             {
-                var advMerge = AdvancedJSONMerge.FromFile(entry.Path);
+                var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
                 if (advMerge == null)
                 {
                     return;
@@ -72,7 +72,7 @@ namespace ModTek.Manifest.Merges
         private void AddMergeEntry(ModEntry modEntry, string id = null)
         {
             id ??= modEntry.Id;
-            var bundleName = modEntry.AssetBundleName ?? STREAMING_ASSETS_BUNDLE_NAME;
+            var bundleName = modEntry.AssetBundleName;
 
             mergeCache.AddTemp(bundleName, id, modEntry);
         }

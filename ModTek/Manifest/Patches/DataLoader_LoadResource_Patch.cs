@@ -3,8 +3,6 @@ using System.IO;
 using Harmony;
 using HBS.Data;
 using JetBrains.Annotations;
-using ModTek.Misc;
-using ModTek.Util;
 using static ModTek.Logging.Logger;
 
 namespace ModTek.Manifest.Patches
@@ -12,18 +10,12 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(DataLoader), nameof(DataLoader.LoadResource), typeof(string), typeof(Action<string>))]
     internal static class DataLoader_LoadResource_Patch
     {
-        private static string GetId(string path)
-        {
-            var relativePath = FileUtils.GetRelativePath(FilePaths.StreamingAssetsDirectory, path);
-            return relativePath.StartsWith("..") ? null : Path.GetFileNameWithoutExtension(path);
-        }
-
         [UsedImplicitly]
         internal static bool Prefix(DataLoader __instance, string path, ref Action<string> handler)
         {
             try
             {
-                var id = GetId(path);
+                var id = Path.GetFileNameWithoutExtension(path);
                 if (id == null)
                 {
                     return true;

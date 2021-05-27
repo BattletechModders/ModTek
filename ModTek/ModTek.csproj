@@ -97,6 +97,7 @@
     <Compile Include="Manifest\BTRL\TypedManifest.cs" />
     <Compile Include="Manifest\MDD\DBCache.cs" />
     <Compile Include="Manifest\MDD\MDDHelper.cs" />
+    <Compile Include="Manifest\MDD\UpdateMDD.cs" />
     <Compile Include="Manifest\Merges\Cache\CacheEntry.cs" />
     <Compile Include="Manifest\Merges\Cache\FileVersionTuple.cs" />
     <Compile Include="Manifest\Merges\Cache\MergeCache.cs" />

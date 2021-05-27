@@ -43,7 +43,7 @@ namespace ModTek.Manifest.MDD
                     {
                         try
                         {
-                            VersionManifestHotReload.InstantiateResourceAndUpdateMDDB(type, absolutePath, db);
+                            db.InstantiateResourceAndUpdateMDDB(type, "absolutePath", "");
 
                             // don't write game files to the dbCache, since they're assumed to be default in the db
                             if (!absolutePath.Contains(FilePaths.StreamingAssetsDirectory))
@@ -66,6 +66,7 @@ namespace ModTek.Manifest.MDD
             return false;
         }
 
+        [Obsolete] // TODO we can write stuff into the DB that we know exist, but manifest related entries can change
         internal static IEnumerator<ProgressReport> AddToDBLoop()
         {
             Logger.Log("\nSyncing Database...");
@@ -142,6 +143,7 @@ namespace ModTek.Manifest.MDD
             var addCount = 0;
             var mods = ModDefsDatabase.ModsInLoadOrder();
 
+            // TODO so this is written to DB anyway
             foreach (var moddef in mods)
             {
                 if (moddef.DataAddendumEntries.Count != 0)
@@ -184,7 +186,7 @@ namespace ModTek.Manifest.MDD
 
             foreach (var modEntry in ModsManifest.CustomTags)
             {
-                CustomTypeProcessor.AddOrUpdateTag(modEntry.Path);
+                CustomTypeProcessor.AddOrUpdateTag(modEntry.AbsolutePath);
             }
 
             if (ModsManifest.CustomTagSets.Count > 0)
@@ -194,7 +196,7 @@ namespace ModTek.Manifest.MDD
 
             foreach (var modEntry in ModsManifest.CustomTagSets)
             {
-                CustomTypeProcessor.AddOrUpdateTagSet(modEntry.Path);
+                CustomTypeProcessor.AddOrUpdateTagSet(modEntry.AbsolutePath);
             }
 
             //ModLoadOrder.Count;

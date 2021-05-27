@@ -28,20 +28,21 @@ namespace ModTek.Misc
         internal static string CacheDirectory { get; private set; }
         internal static string DatabaseDirectory { get; private set; }
         internal static string MergeCachePath { get; private set; }
-        internal static string TypeCachePath { get; private set; }
         internal static string MDDBPath { get; private set; }
         internal static string ModMDDBPath { get; private set; }
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
-        public static string GameDirectory { get; private set; }
-        public static string ModsDirectory { get; private set; }
-        public static string StreamingAssetsDirectory { get; private set; }
+        internal static string GameDirectory { get; private set; }
+        internal static string ModsDirectory { get; private set; }
+        internal static string StreamingAssetsDirectory { get; private set; }
+        internal static string StreamingAssetsDirectoryName { get; private set; }
         internal static string DBCachePath { get; private set; }
-        public static string ChangedFlagPath { get; private set; }
+        internal static string ChangedFlagPath { get; private set; }
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
         internal static string LogPath { get; set; }
+        internal static string AssetBundleDirectoryName { get; set; } = "AssetBundle"; // used for merging in asset bundles e.g. dlc
 
         public static bool SetupPaths()
         {
@@ -61,6 +62,7 @@ namespace ModTek.Misc
             );
 
             StreamingAssetsDirectory = Application.streamingAssetsPath;
+            StreamingAssetsDirectoryName = Path.GetFileName(StreamingAssetsDirectory);
             GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
             MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
 
@@ -74,7 +76,6 @@ namespace ModTek.Misc
             HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
             LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
-            TypeCachePath = Path.Combine(CacheDirectory, TYPE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
             DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);

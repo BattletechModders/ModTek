@@ -42,14 +42,14 @@ namespace ModTek.Manifest.Mods
 
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
-            Logger.Log((string) $"{modDef.Name} {modDef.Version}");
+            Logger.Log($"{modDef.Name} {modDef.Version}");
 
             // read in custom resource types
             foreach (var customResourceType in modDef.CustomResourceTypes)
             {
                 if (VANILLA_TYPES.Contains(customResourceType) || MODTEK_TYPES.Contains(customResourceType))
                 {
-                    Logger.Log((string) $"\tWarning: {modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    Logger.Log($"\tWarning: {modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
                     continue;
                 }
 
@@ -60,10 +60,9 @@ namespace ModTek.Manifest.Mods
             }
 
             // expand the manifest (parses all JSON as well)
-            var expandedManifest = ExpandManifest(modDef);
-            if (expandedManifest == null)
+            if (!CheckManifest(modDef))
             {
-                reason = "Can't expand manifest";
+                reason = "Failures in manifest";
                 return false;
             }
 
@@ -74,136 +73,30 @@ namespace ModTek.Manifest.Mods
                 return false;
             }
 
-            // replace the manifest with our expanded manifest since we successfully got through loading the other stuff
-            if (expandedManifest.Count > 0)
-            {
-                Logger.Log((string) $"\t{expandedManifest.Count} manifest entries");
-            }
-
-            modDef.Manifest = expandedManifest;
             reason = "Success";
             return true;
         }
 
-        private static List<ModEntry> ExpandManifest(ModDefEx modDef)
+        private static bool CheckManifest(ModDefEx modDef)
         {
-            // note: if a JSON has errors, this mod will not load, since InferIDFromFile will throw from parsing the JSON
-            var expandedManifest = new List<ModEntry>();
-
-            if (modDef.LoadImplicitManifest && modDef.Manifest.All(x => Path.GetFullPath(Path.Combine(modDef.Directory, x.Path)) != Path.GetFullPath(Path.Combine(modDef.Directory, "StreamingAssets"))))
+            foreach (var entry in modDef.Manifest)
             {
-                modDef.Manifest.Add(new ModEntry("StreamingAssets", true));
-            }
-
-            Logger.Log((string) $"Expanding manifest {modDef.Name}:");
-            foreach (var modEntry in modDef.Manifest)
-            {
-                // handle prefabs; they have potential internal path to assetbundle
-                Logger.Log((string) $"\t{modEntry.Type}:{modEntry.Path}");
-                if (modEntry.Type == "Prefab" && !string.IsNullOrEmpty(modEntry.AssetBundleName))
+                if (string.IsNullOrEmpty(entry.Path))
                 {
-                    if (!expandedManifest.Any(x => x.Type == "AssetBundle" && x.Id == modEntry.AssetBundleName))
-                    {
-                        Logger.Log((string) $"\tError: {modDef.Name} has a Prefab '{modEntry.Id}' that's referencing an AssetBundle '{modEntry.AssetBundleName}' that hasn't been loaded. Put the assetbundle first in the manifest!");
-                        return null;
-                    }
-
-                    // TODO wtf, if type != Prefab then why have it as prevcondition of wrapper if == Prefab
-                    //if (string.IsNullOrEmpty(modEntry.Id))
-                    //{
-                    if (modEntry.Type != "Prefab")
-                    {
-                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
-                    }
-                    else if (string.IsNullOrEmpty(modEntry.Id))
-                    {
-                        modEntry.Id = Path.GetFileNameWithoutExtension(modEntry.Path);
-                    }
-                    //}
-
-                    if (!FileUtils.FileIsOnDenyList(modEntry.Path))
-                    {
-                        expandedManifest.Add(modEntry);
-                        Logger.Log((string) $"\t\t{modEntry.Path}");
-                    }
-
-                    continue;
+                    Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
+                    return false;
                 }
-
-                if (string.IsNullOrEmpty(modEntry.Path) && string.IsNullOrEmpty(modEntry.Type) && modEntry.Path != "StreamingAssets")
+                if (string.IsNullOrEmpty(entry.Type))
                 {
-                    Logger.Log((string) $"\tError: {modDef.Name} has a manifest entry that is missing its path or type! Aborting load.");
-                    return null;
-                }
-
-                if (!string.IsNullOrEmpty(modEntry.Type) && !VANILLA_TYPES.Contains(modEntry.Type) && !MODTEK_TYPES.Contains(modEntry.Type) && !ModsManifest.CustomResources.ContainsKey(modEntry.Type))
-                {
-                    Logger.Log((string) $"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
-                    return null;
-                }
-
-                // TODO ok i assume its ok to think files exists on filesystem
-                var entryPath = Path.GetFullPath(Path.Combine(modDef.Directory, modEntry.Path));
-                if (Directory.Exists(entryPath))
-                {
-                    // path is a directory, add all the files there
-                    var files = new List<string>();
-                    switch (modEntry.Type)
-                    {
-                        // TODO too much code clone
-                        case nameof(SoundBankDef):
-                            files = Directory.GetFiles(entryPath, "*.json", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
-                            break;
-                        default:
-                            files = Directory.GetFiles(entryPath, "*", SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
-                            break;
-                    }
-
-                    foreach (var filePath in files)
-                    {
-                        var path = Path.GetFullPath(filePath);
-                        try
-                        {
-                            var childModEntry = new ModEntry(modEntry, path, InferIDFromFile(filePath));
-                            expandedManifest.Add(childModEntry);
-                            Logger.Log((string) $"\t\t{childModEntry.Path}");
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(FilePaths.GameDirectory, path)}", e);
-                            return null;
-                        }
-                    }
-                }
-                else if (File.Exists(entryPath) && !FileUtils.FileIsOnDenyList(entryPath))
-                {
-                    // path is a file, add the single entry
-                    try
-                    {
-                        modEntry.Id = modEntry.Id ?? InferIDFromFile(entryPath);
-                        modEntry.Path = entryPath;
-                        expandedManifest.Add(modEntry);
-                        Logger.Log((string) $"\t\t{modEntry.Path}");
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogException((string) $"\tError: Canceling {modDef.Name} load!\n\tCaught exception reading file at {FileUtils.GetRelativePath(FilePaths.GameDirectory, entryPath)}", e);
-                        return null;
-                    }
-                }
-                else if (modEntry.Path != "StreamingAssets")
-                {
-                    // path is not StreamingAssets and it's missing
-                    Logger.Log((string) $"\tWarning: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+                    Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its type! Aborting load.");
+                    return false;
                 }
             }
 
-            return expandedManifest;
-        }
-
-        private static string InferIDFromFile(string path)
-        {
-            return Path.GetFileNameWithoutExtension(path);
+            // Logger.Log($"\tError: {modDef.Name} has a Prefab '{entry.Id}' that's referencing an AssetBundle '{entry.AssetBundleName}' that hasn't been loaded. Put the assetbundle first in the manifest!");
+            // Logger.Log($"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
+            // Logger.Log($"\tWarning: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+            return true;
         }
 
         private static bool LoadAssemblyAndCallInit(ModDefEx modDef)
@@ -214,7 +107,7 @@ namespace ModTek.Manifest.Mods
 
             if (!File.Exists(dllPath))
             {
-                Logger.Log((string) $"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
+                Logger.Log($"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
                 return false;
             }
 
@@ -235,14 +128,14 @@ namespace ModTek.Manifest.Mods
             var assembly = AssemblyUtil.LoadDLL(dllPath);
             if (assembly == null)
             {
-                Logger.Log((string) $"\tError: Failed to load mod assembly at path {dllPath}.");
+                Logger.Log($"\tError: Failed to load mod assembly at path {dllPath}.");
                 return false;
             }
 
             var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
             if (methods == null || methods.Length == 0)
             {
-                Logger.Log((string) $"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                Logger.Log($"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
                 return false;
             }
 
@@ -285,11 +178,11 @@ namespace ModTek.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException((string) $"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    Logger.LogException($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 
-                Logger.Log((string) $"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                Logger.Log($"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                 return false;
             }
 

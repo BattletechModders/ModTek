@@ -6,6 +6,7 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using ModTek.Logging;
+using ModTek.Manifest.BTRL;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
 using ModTek.Manifest.Mods;
@@ -24,15 +25,6 @@ namespace ModTek.Manifest
         private static HashSet<string> systemIcons = new();
         internal static HashSet<ModEntry> CustomTags = new();
         internal static HashSet<ModEntry> CustomTagSets = new();
-
-        private static List<ModEntry> AddBTRLEntries = new();
-
-        private static HashSet<string> AddBTRLEntryPaths;
-
-        internal static bool IsBTRLEntryCached(string absolutePath)
-        {
-            return AddBTRLEntryPaths.Contains(absolutePath);
-        }
 
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
 
@@ -114,32 +106,43 @@ namespace ModTek.Manifest
             var numEntries = 0;
             ModDefsDatabase.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
 
-            foreach (var modDef in ModDefsDatabase.ModsWithManifests())
+            foreach (var modDef in ModDefsDatabase.ModsInLoadOrder())
             {
                 var modName = modDef.Name;
 
                 Logger.Log($"{modName}:");
                 yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
 
+                CleanupManifest(modDef);
+
                 foreach (var modEntry in modDef.Manifest)
                 {
-                    if (modEntry.Path == null)
-                    {
-                        Logger.Log($"\tWarning: Internal error, path not set for {modName} {modEntry.Id}. NOT LOADING THIS FILE");
-                        continue;
-                    }
-
                     yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", modEntry.Id);
 
-                    NormalizeModEntries(modEntry);
+                    NormalizeAndAddModEntries(modDef, modEntry);
                 }
             }
-
-            AddBTRLEntryPaths = new HashSet<string>(AddBTRLEntries.Select(e => e.Path));
         }
 
-        private static void NormalizeModEntries(ModEntry entry)
+        private static void CleanupManifest(ModDefEx modDef)
         {
+            if (modDef.LoadImplicitManifest)
+            {
+                if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
+                {
+                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                }
+                if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleDirectoryName)))
+                {
+                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                }
+            }
+        }
+
+        private static void NormalizeAndAddModEntries(ModDefEx modDef, ModEntry entry)
+        {
+            entry.AbsolutePath = modDef.GetFullPath(entry.Path);
+
             if (entry.IsFile)
             {
                 if (string.IsNullOrEmpty(entry.Id))
@@ -157,10 +160,33 @@ namespace ModTek.Manifest
             }
             else if (entry.IsDirectory)
             {
-                foreach (var file in entry.Files)
+                if (entry.IsAssetBundlePath)
                 {
-                    var id = Path.GetFileNameWithoutExtension(file);
-                    AddModEntry(new ModEntry(entry, file, id));
+                    foreach (var bundlePath in Directory.GetDirectories(entry.AbsolutePath))
+                    {
+                        var bundleName = Path.GetFileName(bundlePath);
+                        foreach (var file in FileUtils.FindFiles(bundlePath, "*"))
+                        {
+                            var copy = entry.copy();
+                            copy.AssetBundleName = bundleName;
+                            copy.AbsolutePath = file;
+                            copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
+                            copy.Id = Path.GetFileNameWithoutExtension(file);
+                            AddModEntry(copy);
+                        }
+                    }
+                }
+                else
+                {
+                    var pattern = entry.Type == nameof(SoundBankDef) ? "*.json" : "*";
+                    foreach (var file in FileUtils.FindFiles(entry.Path, pattern))
+                    {
+                        var copy = entry.copy();
+                        copy.AbsolutePath = file;
+                        copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
+                        copy.Id = Path.GetFileNameWithoutExtension(file);
+                        AddModEntry(copy);
+                    }
                 }
             }
             else
@@ -185,12 +211,12 @@ namespace ModTek.Manifest
             }
             else if (entry.IsTypeCustomResource)
             {
-                Logger.Log($"\tAdd/Replace (CustomResource): \"{FileUtils.GetRelativePath(FilePaths.ModsDirectory, entry.Path)}\" ({entry.Type})");
+                Logger.Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
                 CustomResources[entry.Type][entry.Id] = entry.GetVersionManifestEntry();
             }
             else if (entry.IsTypeSoundBankDef)
             {
-                SoundBanksFeature.AddSoundBankDef(entry.Path);
+                SoundBanksFeature.AddSoundBankDef(entry.AbsolutePath);
             }
             else if (entry.IsTypeCustomTag)
             {
@@ -205,17 +231,17 @@ namespace ModTek.Manifest
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
-                    Logger.Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.Path}");
+                    Logger.Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.RelativePathToMods}");
                     if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
                     {
                         systemIcons.Add(entry.Id);
                     }
                 }
 
-                Logger.Log($"\tAdd/Replace: \"{FileUtils.GetRelativePath(FilePaths.ModsDirectory, entry.Path)}\" ({entry.Type})");
+                Logger.Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");
 
-                // entries in AddBTRLEntries will be added to game through patch in Patches\BattleTechResourceLocator
-                AddBTRLEntries.Add(entry); // TODO new resource adding here
+                BTRLInstance.Locator.AddModAddendum();
+                AddBTRLEntries;
             }
             else
             {

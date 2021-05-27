@@ -12,44 +12,28 @@ namespace ModTek.Manifest
 {
     internal class ModEntry
     {
-        [JsonConstructor]
-        public ModEntry(string path, bool shouldMergeJSON = false)
-        {
-            Path = path;
-            ShouldMergeJSON = shouldMergeJSON;
-        }
-
-        public ModEntry(ModEntry parent, string path, string id)
-        {
-            Path = path;
-            Id = id;
-
-            Type = parent.Type;
-            AssetBundleName = parent.AssetBundleName;
-            AssetBundlePersistent = parent.AssetBundlePersistent;
-            ShouldMergeJSON = parent.ShouldMergeJSON;
-            ShouldAppendText = parent.ShouldAppendText;
-            AddToAddendum = parent.AddToAddendum;
-            AddToDB = parent.AddToDB;
-        }
-
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
+        public bool IsStreamingAssetPath => Path.Equals(FilePaths.StreamingAssetsDirectoryName);
+        public bool IsAssetBundlePath => Path.Equals(FilePaths.AssetBundleDirectoryName);
+
+        [JsonIgnore]
+        public string AbsolutePath { get; set; }
+
         // directory based methods, used during normalization
-        public bool IsDirectory => Directory.Exists(Path);
-        public string[] Files => Directory.GetFiles(Path);
+        public bool IsDirectory => Directory.Exists(AbsolutePath);
 
         // file based methods
-        public bool IsFile => File.Exists(Path);
-        internal DateTime FileVersion => File.GetLastAccessTimeUtc(Path);
+        public bool IsFile => File.Exists(AbsolutePath);
+        internal DateTime FileVersion => File.GetLastAccessTimeUtc(AbsolutePath);
         public string FileExtension => System.IO.Path.GetExtension(Path);
         public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
-        internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, Path);
+        internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, AbsolutePath);
 
-        internal bool IsJson => Path?.EndsWith(".json") ?? false;
-        internal bool IsTxt => Path?.EndsWith(".txt") ?? false;
-        internal bool IsCsv => Path?.EndsWith(".csv") ?? false;
+        internal bool IsJson => Path.EndsWith(".json");
+        internal bool IsTxt => Path.EndsWith(".txt");
+        internal bool IsCsv => Path.EndsWith(".csv");
 
         public string Type { get; set; }
         internal bool IsTypeStreamingAsset => Type == null;
@@ -61,29 +45,32 @@ namespace ModTek.Manifest
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
 
         public string Id { get; set; }
-        internal bool HasId => !string.IsNullOrEmpty(Id);
 
         public string AddToAddendum { get; set; }
         public string AssetBundleName { get; set; }
         public bool? AssetBundlePersistent { get; set; }
 
-        [DefaultValue(false)]
+        [JsonIgnore]
         public bool ShouldMergeJSON { get; set; }
 
-        [DefaultValue(false)]
+        [JsonIgnore]
         public bool ShouldAppendText { get; set; }
 
         [DefaultValue(true)]
         public bool AddToDB { get; set; } = true;
 
+        public ModEntry copy()
+        {
+            return (ModEntry) MemberwiseClone();
+        }
+
         [JsonIgnore]
         private VersionManifestEntry versionManifestEntry;
-
         internal VersionManifestEntry GetVersionManifestEntry()
         {
             return versionManifestEntry ??= new VersionManifestEntry(
                 Id,
-                Path,
+                AbsolutePath,
                 Type,
                 DateTime.Now,
                 "1",

@@ -21,6 +21,11 @@ namespace ModTek.Manifest.Mods
         [JsonIgnore]
         public string Directory { get; set; }
 
+        public string GetFullPath(string subPath)
+        {
+            return Path.GetFullPath(Path.Combine(Directory, subPath));
+        }
+
         [JsonProperty(Required = Required.Always)]
         public string Name { get; set; }
 
@@ -146,11 +151,6 @@ namespace ModTek.Manifest.Mods
 
             modDef.PendingEnable = modDef.Enabled;
             return modDef;
-        }
-
-        public string toJSON()
-        {
-            return JsonConvert.SerializeObject(this);
         }
 
         /// <summary>

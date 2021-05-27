@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ModTek.Logging;
@@ -102,9 +103,14 @@ namespace ModTek.Util
             ".nomedia"
         };
 
-        public static bool FileIsOnDenyList(string filePath)
+        internal static bool FileIsOnDenyList(string filePath)
         {
             return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        internal static List<string> FindFiles(string path, string pattern)
+        {
+            return Directory.GetFiles(path, pattern, SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
         }
     }
 }

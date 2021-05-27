@@ -94,23 +94,8 @@ namespace ModTek.Manifest.Mods
 
         internal static List<ModDefEx> ModsInLoadOrder()
         {
-            var mods = new List<ModDefEx>();
-            foreach (var modname in ModLoadOrder)
-            {
-                if (!ModDefs.ContainsKey(modname))
-                {
-                    continue;
-                }
-
-                mods.Add(ModDefs[modname]);
-            }
-            return mods;
-        }
-
-        internal static List<ModDefEx> ModsWithManifests()
-        {
             return ModLoadOrder
-                .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Manifest.Count > 0)
+                .Where(name => ModDefs.ContainsKey(name))
                 .Select(name => ModDefs[name])
                 .ToList();
         }
