@@ -13,7 +13,7 @@ namespace ModTek.Manifest.Merges.Cache
 
         internal static FileVersionTuple FromModEntry(ModEntry entry)
         {
-            return new() { Path = entry.AbsolutePath, Version = entry.FileVersion };
+            return new() { Path = entry.AbsolutePath, Version = entry.LastWriteTimeUtc };
         }
 
         // GENERATED CODE BELOW

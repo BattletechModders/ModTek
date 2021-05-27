@@ -2,12 +2,15 @@
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Util;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Manifest.BTRL
 {
     internal class TypedManifest
     {
         private readonly Dictionary<string, Dictionary<string, VersionManifestEntry>> manifestAll = new();
+        private readonly Dictionary<string, VersionManifestEntry> manifestAllStrings = new();
         private readonly Dictionary<string, Dictionary<string, VersionManifestEntry>> manifestOwned = new();
         private readonly HashSet<string> activeAddendums = new();
 
@@ -15,6 +18,7 @@ namespace ModTek.Manifest.BTRL
         {
             GetContent(true).Clear();
             GetContent(false).Clear();
+            manifestAllStrings.Clear();
             activeAddendums.Clear();
             SetEntries(defaultEntries, null);
         }
@@ -34,6 +38,16 @@ namespace ModTek.Manifest.BTRL
             }
             SetEntries(modAddendum.Addendum.Entries, null);
             activeAddendums.Add(modAddendum.Addendum.Name);
+        }
+
+        public VersionManifestEntry StringEntryByID(string id)
+        {
+            return manifestAllStrings.TryGetValue(id, out var entry) ? entry : null;
+        }
+
+        public VersionManifestEntry[] AllEntries(bool filterByOwnership = false)
+        {
+            return GetContent(filterByOwnership).Values.SelectMany(x => x.Values).ToArray();
         }
 
         public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership)
@@ -69,6 +83,23 @@ namespace ModTek.Manifest.BTRL
                 SetEntry(GetContent(true), entry);
             }
             SetEntry(GetContent(false), entry);
+            SetStringEntry(entry);
+        }
+
+        private void SetStringEntry(VersionManifestEntry entry)
+        {
+            if (entry.FilePath == null || !FileUtils.IsStringType(entry.FilePath))
+            {
+                return;
+            }
+
+            if (manifestAllStrings.ContainsKey(entry.Id))
+            {
+                Log($"Error: found duplicate entry for same id of string type {entry.Id}");
+                return;
+            }
+
+            manifestAllStrings[entry.Id] = entry;
         }
 
         private static void SetEntry(

@@ -18,7 +18,7 @@ namespace ModTek.Manifest.Patches
 
         public static void Postfix(string assetBundleName, ref string __result)
         {
-            var entry = BTRLInstance.Locator.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
+            var entry = BetterBTRL.Instance.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
             if (entry == null)
             {
                 return;

@@ -3,16 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using RequestKey = System.Tuple<string, string>;
+using RequestCache = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
 
 namespace ModTek.Manifest.BTRL
 {
 	internal class BetterBTRL
 	{
+        public static readonly BetterBTRL Instance = new();
+
         private ContentPackIndex packIndex;
         private readonly TypedManifest currentManifest = new();
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> hbsAddendums = new();
         private readonly List<ModManifest> orderedModAddendums = new();
+
+
+        private readonly Dictionary<Tuple<BattleTechResourceType, string>, VersionManifestEntry> cachedLoadRequests = new();
+
+        //
+
+        public VersionManifestEntry StringEntryByID(string id)
+        {
+            return currentManifest.StringEntryByID(id);
+        }
 
         // methods order is same as dnSpy lists them
 
@@ -160,7 +174,7 @@ namespace ModTek.Manifest.BTRL
 
         #endregion
 
-        public BetterBTRL()
+        private BetterBTRL()
         {
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
             RefreshTypedEntries();
@@ -183,8 +197,7 @@ namespace ModTek.Manifest.BTRL
 
         public VersionManifestEntry[] AllEntries()
         {
-            // not used by anyone
-            throw new NotImplementedException();
+            return currentManifest.AllEntries();
         }
 
 		public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
@@ -207,5 +220,12 @@ namespace ModTek.Manifest.BTRL
             // only used by ModLoader, which we disable anyway
             throw new NotImplementedException();
 		}
+
+        public void PatchMDD()
+        {
+            // go through all AddToDb
+            // if merge => put out error, say can't AddToDb merged stuff
+            ModsManifest.ApplyManifest();
+        }
     }
 }

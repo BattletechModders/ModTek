@@ -92,7 +92,6 @@
     <Compile Include="Manifest\AdvMerge\JSONMerger.cs" />
     <Compile Include="Manifest\AdvMerge\MergeAction.cs" />
     <Compile Include="Manifest\BTRL\BetterBTRL.cs" />
-    <Compile Include="Manifest\BTRL\BTRLInstance.cs" />
     <Compile Include="Manifest\BTRL\ModManifest.cs" />
     <Compile Include="Manifest\BTRL\TypedManifest.cs" />
     <Compile Include="Manifest\MDD\DBCache.cs" />
@@ -115,10 +114,12 @@
     <Compile Include="Manifest\Patches\AssetBundleManager_AssetBundleNameToFilepath_Patch.cs" />
     <Compile Include="Manifest\Patches\AssetBundle_LoadAsset_Patch.cs" />
     <Compile Include="Manifest\Patches\BattleTechResourceLocator_Patches.cs" />
+    <Compile Include="Manifest\Patches\ContentPackIndex_PatchMDD_Patch.cs" />
     <Compile Include="Manifest\Patches\DataLoader_LoadResource_Patch.cs" />
     <Compile Include="Manifest\Patches\GameTipList_ctor_Patch.cs" />
     <Compile Include="Manifest\Patches\MetadataDatabase_MDD_TMP_PATH_Patch.cs" />
     <Compile Include="Manifest\Patches\MetadataDatabase_MDD_DB_PATH_Patch.cs" />
+    <Compile Include="Manifest\Patches\DataManagerFileLoadRequest_OnLoadedWithText_Patch.cs" />
     <Compile Include="Manifest\Patches\SimGameConstants_FromJSON_Patch.cs" />
     <Compile Include="Manifest\Patches\SimGame_MDDExtensions_UpdateContract_Patch.cs" />
     <Compile Include="Misc\Configuration.cs" />

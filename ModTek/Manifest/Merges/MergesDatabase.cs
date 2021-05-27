@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using BattleTech;
 using ModTek.Logging;
 using ModTek.Manifest.AdvMerge;
 using ModTek.Manifest.Merges.Cache;
@@ -9,23 +9,16 @@ namespace ModTek.Manifest.Merges
 {
     internal class MergesDatabase
     {
-        private const string DEFAULT_BUNDLE_NAME = "default"; // used for mod and streaming assets resources
-
         private readonly MergeCache mergeCache = new();
 
-        // bundleName: the assetBundle file or StreamingAssets if null
-        // id: the unique identifier, we use filename without extension since basegame+dlc doesnt have duplicates if json/txt/csv is involved
-        // version: version of the base content
-        // returns the cached version if available, null otherwise
-        internal string GetMergedContent(string bundleName, string id, DateTime version)
+        internal string GetMergedContent(VersionManifestEntry entry)
         {
-            return mergeCache.GetCachedContent(bundleName ?? DEFAULT_BUNDLE_NAME, id, version);
+            return mergeCache.GetCachedContent(entry);
         }
 
-        // returns the merged content, return null if nothing to merge or error happened
-        internal string MergeContentIfApplicable(string bundleName, string id, DateTime version, string originalContent)
+        internal string MergeContentIfApplicable(VersionManifestEntry entry, string originalContent)
         {
-            return mergeCache.MergeAndCacheContent(bundleName ?? DEFAULT_BUNDLE_NAME, id, version, originalContent);
+            return mergeCache.MergeAndCacheContent(entry, originalContent);
         }
 
         internal void AddModEntry(ModEntry entry)
@@ -56,25 +49,16 @@ namespace ModTek.Manifest.Merges
 
                 foreach (var target in targets)
                 {
-                    AddMergeEntry(entry, target);
+                    var copy = entry.copy();
+                    copy.Id = target;
+                    copy.Type = advMerge.TargetType;
+                    mergeCache.AddTemp(entry);
                 }
             }
             else
             {
-                if (!string.IsNullOrEmpty(entry.Type))
-                {
-                    Logger.Log($"\tWarning: Type is ignore for merge \"{entry.RelativePathToMods}\".");
-                }
-                AddMergeEntry(entry);
+                mergeCache.AddTemp(entry);
             }
-        }
-
-        private void AddMergeEntry(ModEntry modEntry, string id = null)
-        {
-            id ??= modEntry.Id;
-            var bundleName = modEntry.AssetBundleName;
-
-            mergeCache.AddTemp(bundleName, id, modEntry);
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using BattleTech;
 using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 using CacheKey = System.Tuple<string, string>;
-using MergeSets = System.Collections.Concurrent.ConcurrentDictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
+using MergeSets = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
 
 namespace ModTek.Manifest.Merges.Cache
 {
@@ -46,25 +47,35 @@ namespace ModTek.Manifest.Merges.Cache
             }
         }
 
-        internal void AddTemp(string bundleName, string id, ModEntry modEntry)
+        internal void AddTemp(ModEntry modEntry)
         {
-            var key = new CacheKey(bundleName, id);
+            var key = new CacheKey(modEntry.Type, modEntry.Id);
             if (!tempSets.TryGetValue(key, out var set))
             {
-                set = new CacheEntry(bundleName, id, modEntry);
+                set = new CacheEntry(modEntry);
                 tempSets[key] = set;
             }
             set.Add(modEntry);
         }
 
-        internal string GetCachedContent(string bundleName, string id, DateTime version)
+        internal string GetCachedContent(VersionManifestEntry entry)
         {
-            var key = new CacheKey(bundleName, id);
+            var key = new CacheKey(entry.Type, entry.Id);
             if (!tempSets.TryGetValue(key, out var temp))
             {
-                return null;
+                // lets find and fix un-typed sets
+                // TODO this way a good idea? well we ignore all untyped if we find one typed.. so no
+                var noTypeKey = new CacheKey(null, entry.Id);
+                if (!tempSets.TryGetValue(noTypeKey, out temp))
+                {
+                    return null;
+                }
+
+                tempSets.Remove(noTypeKey);
+                temp.ResourceType = entry.Type;
+                tempSets[key] = temp;
             }
-            temp.OriginalVersion = version;
+            temp.UpdatedOn = entry.UpdatedOn;
 
             if (!persistentSets.TryGetValue(key, out var persist))
             {
@@ -87,18 +98,19 @@ namespace ModTek.Manifest.Merges.Cache
             }
         }
 
-        internal string MergeAndCacheContent(string bundleName, string id, DateTime version, string originalContent)
+        internal string MergeAndCacheContent(VersionManifestEntry entry, string originalContent)
         {
             if (originalContent == null)
             {
                 return null;
             }
-            var key = new CacheKey(bundleName, id);
+
+            var key = new CacheKey(entry.Type, entry.Id);
             if (!tempSets.TryGetValue(key, out var temp))
             {
                 return null;
             }
-            temp.OriginalVersion = version;
+
             string mergedContent;
             try
             {

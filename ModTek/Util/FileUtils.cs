@@ -112,5 +112,25 @@ namespace ModTek.Util
         {
             return Directory.GetFiles(path, pattern, SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
         }
+
+        internal static bool IsStringType(string name)
+        {
+            return IsJson(name) || IsCsv(name) || IsTxt(name);
+        }
+
+        internal static bool IsJson(string name)
+        {
+            return name.EndsWith(".json");
+        }
+
+        internal static bool IsCsv(string name)
+        {
+            return name.EndsWith(".csv");
+        }
+
+        internal static bool IsTxt(string name)
+        {
+            return name.EndsWith(".txt");
+        }
     }
 }

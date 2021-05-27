@@ -2,7 +2,6 @@
 using System.IO;
 using Harmony;
 using HBS.Data;
-using JetBrains.Annotations;
 using static ModTek.Logging.Logger;
 
 namespace ModTek.Manifest.Patches
@@ -10,7 +9,6 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(DataLoader), nameof(DataLoader.LoadResource), typeof(string), typeof(Action<string>))]
     internal static class DataLoader_LoadResource_Patch
     {
-        [UsedImplicitly]
         internal static bool Prefix(DataLoader __instance, string path, ref Action<string> handler)
         {
             try
@@ -61,7 +59,7 @@ namespace ModTek.Manifest.Patches
                 return;
             }
 
-            var mergedContent = ModsManifest.MergeOriginalContent(null, id, lastWriteTimeUtc, content);
+            var mergedContent = ModsManifest.ContentLoaded(null, id, lastWriteTimeUtc, content);
             if (mergedContent != null)
             {
                 content = mergedContent;

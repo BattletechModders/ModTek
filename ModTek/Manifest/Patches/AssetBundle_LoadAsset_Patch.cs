@@ -1,6 +1,5 @@
 ﻿using System;
 using Harmony;
-using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using static ModTek.Logging.Logger;
@@ -10,7 +9,6 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(AssetBundle), nameof(AssetBundle.LoadAsset), typeof(string), typeof(Type))]
     internal static class AssetBundle_LoadAsset_Patch
     {
-        [UsedImplicitly]
         internal static bool Prefix(AssetBundle __instance, string name, Type type, ref Object __result)
         {
             try
@@ -36,7 +34,6 @@ namespace ModTek.Manifest.Patches
             }
         }
 
-        [UsedImplicitly]
         internal static void Postfix(AssetBundle __instance, string name, Type type, ref Object __result)
         {
             try
@@ -49,10 +46,10 @@ namespace ModTek.Manifest.Patches
                 var ta = (TextAsset) __result;
 
                 var originalContent = ta.text;
-                var mergedContent = ModsManifest.MergeOriginalContent(__instance.name, name, DateTime.MinValue, originalContent);
-                if (mergedContent != null)
+                var changedContent = ModsManifest.ContentLoaded(__instance.name, name, DateTime.MinValue, originalContent);
+                if (changedContent != null)
                 {
-                    __result = new TextAsset(mergedContent); // maybe a memory leak?
+                    __result = new TextAsset(changedContent); // maybe a memory leak?
                 }
             }
             catch (Exception e)

@@ -15,6 +15,7 @@ using ModTek.SoundBanks;
 using ModTek.UI;
 using ModTek.Util;
 using SVGImporter;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Manifest
 {
@@ -212,7 +213,7 @@ namespace ModTek.Manifest
             else if (entry.IsTypeCustomResource)
             {
                 Logger.Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
-                CustomResources[entry.Type][entry.Id] = entry.GetVersionManifestEntry();
+                CustomResources[entry.Type][entry.Id] = entry.GetCustomResourceEntry();
             }
             else if (entry.IsTypeSoundBankDef)
             {
@@ -240,7 +241,7 @@ namespace ModTek.Manifest
 
                 Logger.Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");
 
-                BTRLInstance.Locator.AddModAddendum();
+                BetterBTRL.Instance.AddModAddendum();
                 AddBTRLEntries;
             }
             else
@@ -268,14 +269,28 @@ namespace ModTek.Manifest
             return AddBTRLEntries.Where(x => x.AddToDB).ToList();
         }
 
-        internal static string GetMergedContent(string bundleName, string id, DateTime version)
+        // only merges will be cached
+        internal static string GetMergedContent(VersionManifestEntry entry)
         {
-            return mergesDatabase.GetMergedContent(bundleName, id, version);
+            return mergesDatabase.GetMergedContent(entry);
         }
 
-        internal static string MergeOriginalContent(string bundleName, string id, DateTime version, string originalContent)
+        // make sure to update MDD if need be
+        internal static string ContentLoaded(VersionManifestEntry entry, string content)
         {
-            return mergesDatabase.MergeContentIfApplicable(bundleName, id, version, originalContent);
+            var type = AddendumUtils.ResourceType(entry.Type);
+            if (type == null)
+            {
+                Log($"Internal error: {entry.Id} has invalid type: {entry.Type}");
+                return null;
+            }
+
+            if (mergable && !merged)
+            {
+                var changedContent = mergesDatabase.MergeContentIfApplicable(entry, content);
+            }
+            mddbHelper.UpdateContent(type, id, version, changedContent ?? content);
+            return changedContent;
         }
     }
 }

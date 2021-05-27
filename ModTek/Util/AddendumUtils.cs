@@ -13,6 +13,11 @@ namespace ModTek.Util
 {
     internal static class AddendumUtils
     {
+        internal static BattleTechResourceType? ResourceType(string Type)
+        {
+            return Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
+        }
+
         public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {
             try

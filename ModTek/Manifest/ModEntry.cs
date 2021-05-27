@@ -26,14 +26,14 @@ namespace ModTek.Manifest
 
         // file based methods
         public bool IsFile => File.Exists(AbsolutePath);
-        internal DateTime FileVersion => File.GetLastAccessTimeUtc(AbsolutePath);
+        internal DateTime LastWriteTimeUtc => File.GetLastWriteTimeUtc(AbsolutePath);
         public string FileExtension => System.IO.Path.GetExtension(Path);
         public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
         internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, AbsolutePath);
 
-        internal bool IsJson => Path.EndsWith(".json");
-        internal bool IsTxt => Path.EndsWith(".txt");
-        internal bool IsCsv => Path.EndsWith(".csv");
+        internal bool IsJson => FileUtils.IsJson(Path);
+        internal bool IsTxt => FileUtils.IsTxt(Path);
+        internal bool IsCsv => FileUtils.IsCsv(Path);
 
         public string Type { get; set; }
         internal bool IsTypeStreamingAsset => Type == null;
@@ -41,7 +41,7 @@ namespace ModTek.Manifest
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
         internal bool IsTypeCustomTag => Type == ModDefExLoading.CustomType_Tag;
         internal bool IsTypeCustomTagSet => Type == ModDefExLoading.CustomType_TagSet;
-        internal BattleTechResourceType? ResourceType => Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
+        internal BattleTechResourceType? ResourceType => AddendumUtils.ResourceType(Type);
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
 
         public string Id { get; set; }
@@ -65,14 +65,14 @@ namespace ModTek.Manifest
         }
 
         [JsonIgnore]
-        private VersionManifestEntry versionManifestEntry;
-        internal VersionManifestEntry GetVersionManifestEntry()
+        private VersionManifestEntry customResourceEntry;
+        internal VersionManifestEntry GetCustomResourceEntry()
         {
-            return versionManifestEntry ??= new VersionManifestEntry(
+            return customResourceEntry ??= new VersionManifestEntry(
                 Id,
                 AbsolutePath,
                 Type,
-                DateTime.Now,
+                LastWriteTimeUtc,
                 "1",
                 AssetBundleName,
                 AssetBundlePersistent

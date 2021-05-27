@@ -11,6 +11,7 @@ namespace ModTek.Manifest.AdvMerge
     {
         public string TargetID;
         public List<string> TargetIDs;
+        public string TargetType;
 
         [JsonProperty(Required = Required.Always)]
         public List<Instruction> Instructions;
