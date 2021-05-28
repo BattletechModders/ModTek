@@ -19,11 +19,13 @@ namespace ModTek.Manifest.Patches
                 {
                     continue;
                 }
+
                 var method = AccessTools.DeclaredMethod(subclass, "OnLoadedWithText");
                 if (method == null)
                 {
                     continue;
                 }
+
                 //Log($"Patching {method}");
                 yield return method;
             }

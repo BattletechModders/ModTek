@@ -110,7 +110,7 @@ namespace ModTek.Util
 
         internal static List<string> FindFiles(string path, string pattern)
         {
-            return Directory.GetFiles(path, pattern, SearchOption.AllDirectories).Where(filePath => !FileUtils.FileIsOnDenyList(filePath)).ToList();
+            return Directory.GetFiles(path, pattern, SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList();
         }
 
         internal static bool IsStringType(string name)

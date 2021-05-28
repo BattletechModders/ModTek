@@ -131,7 +131,7 @@ namespace ModTek.Manifest.Merges
         {
             unchecked
             {
-                var hashCode = (CachedFileName != null ? CachedFileName.GetHashCode() : 0);
+                var hashCode = CachedFileName != null ? CachedFileName.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ResourceType != null ? ResourceType.GetHashCode() : 0);

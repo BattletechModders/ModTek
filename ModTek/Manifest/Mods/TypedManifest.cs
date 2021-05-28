@@ -34,6 +34,7 @@ namespace ModTek.Manifest.Mods
             {
                 return dict.Values.ToArray();
             }
+
             return default;
         }
 
@@ -43,6 +44,7 @@ namespace ModTek.Manifest.Mods
             {
                 return entry;
             }
+
             return default;
         }
 
@@ -60,6 +62,7 @@ namespace ModTek.Manifest.Mods
             {
                 SetEntry(GetContent(true), entry);
             }
+
             SetEntry(GetContent(false), entry);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BattleTech;
 using ModTek.Manifest.BTRL;
 
 namespace ModTek.Manifest.Mods
@@ -20,10 +21,11 @@ namespace ModTek.Manifest.Mods
             if (manifest == null || manifest.RequiredAddendums != entry.RequiredAddendums)
             {
                 var addendumName = "Mod_" + ModName + (Index > 0 ? Index.ToString() : "");
-                manifest = new ModAddendumManifest(new(addendumName), entry.RequiredAddendums);
+                manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredAddendums);
                 addendums.Add(manifest);
                 Index++;
             }
+
             manifest.Addendum.Add(entry.CreateVersionManifestEntry());
         }
 

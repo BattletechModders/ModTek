@@ -115,6 +115,7 @@ namespace ModTek.Manifest
                 {
                     NormalizeAndAddModEntries(modDef, modEntry, packager);
                 }
+
                 packager.SaveToBTRL();
 
                 LogIf(modDef.DataAddendumEntries.Count > 0, "DataAddendum:");
@@ -132,6 +133,7 @@ namespace ModTek.Manifest
             {
                 CustomTypeProcessor.AddOrUpdateTag(modEntry.AbsolutePath);
             }
+
             LogIf(CustomTagSets.Count > 0, "Processing CustomTagSets:");
             foreach (var modEntry in CustomTagSets)
             {
@@ -147,11 +149,12 @@ namespace ModTek.Manifest
             {
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry() { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
+
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry() { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
             }
         }
@@ -166,6 +169,7 @@ namespace ModTek.Manifest
                 {
                     entry.Id = entry.FileNameWithoutExtension;
                 }
+
                 if (entry.IsTypeStreamingAsset)
                 {
                     if (entry.Id == "settings")
@@ -173,6 +177,7 @@ namespace ModTek.Manifest
                         entry.Type = "DebugSettings";
                     }
                 }
+
                 AddModEntry(entry, packager);
             }
             else if (entry.IsDirectory)
@@ -214,8 +219,7 @@ namespace ModTek.Manifest
         {
             if (entry.ShouldMergeJSON || entry.ShouldAppendText)
             {
-                if ((entry.ShouldMergeJSON && entry.IsJson)
-                    || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
+                if (entry.ShouldMergeJSON && entry.IsJson || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
                 {
                     mergeCache.AddModEntry(entry);
                 }
@@ -258,6 +262,7 @@ namespace ModTek.Manifest
                 {
                     mddbCache.Ignore(entry);
                 }
+
                 if (entry.AddToAddendum != null)
                 {
                     BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
@@ -293,6 +298,7 @@ namespace ModTek.Manifest
             {
                 loadRequest.AddAllOfTypeBlindLoadRequest(type);
             }
+
             loadRequest.ProcessRequests();
         }
 

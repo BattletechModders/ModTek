@@ -63,11 +63,13 @@ namespace ModTek.Manifest
 
         [JsonIgnore]
         public ModDefEx ModDef { get; set; }
+
         [JsonIgnore]
         public string AbsolutePath => ModDef.GetFullPath(Path);
 
         [JsonIgnore]
         private VersionManifestEntry customResourceEntry;
+
         internal VersionManifestEntry CreateVersionManifestEntry()
         {
             return customResourceEntry ??= new VersionManifestEntry(

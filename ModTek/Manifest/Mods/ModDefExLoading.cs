@@ -86,6 +86,7 @@ namespace ModTek.Manifest.Mods
                     Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
                     return false;
                 }
+
                 if (string.IsNullOrEmpty(entry.Type))
                 {
                     Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its type! Aborting load.");

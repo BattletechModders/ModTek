@@ -28,7 +28,10 @@ namespace ModTek.Manifest.Patches
                 typeof(AssetBundleManager),
                 nameof(AssetBundleManager.RequestAsset),
                 null,
-                new[] {typeof(TextAsset)}
+                new[]
+                {
+                    typeof(TextAsset)
+                }
             );
             RequestAssetReplacement = AccessTools.Method(
                 typeof(DataManagerFileLoadRequest_Load_Patch),
@@ -38,7 +41,10 @@ namespace ModTek.Manifest.Patches
                 typeof(DataManager),
                 "RequestResourcesLoad",
                 null,
-                new[] {typeof(TextAsset)}
+                new[]
+                {
+                    typeof(TextAsset)
+                }
             );
             RequestResourcesLoadReplacement = AccessTools.Method(
                 typeof(DataManagerFileLoadRequest_Load_Patch),
@@ -47,7 +53,11 @@ namespace ModTek.Manifest.Patches
             LoadResourceOriginal = AccessTools.Method(
                 typeof(DataLoader),
                 nameof(DataLoader.LoadResource),
-                new[] {typeof(string), typeof(Action<string>)}
+                new[]
+                {
+                    typeof(string),
+                    typeof(Action<string>)
+                }
             );
             LoadResourceReplacement = AccessTools.Method(
                 typeof(DataManagerFileLoadRequest_Load_Patch),
@@ -62,15 +72,17 @@ namespace ModTek.Manifest.Patches
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             return instructions.MethodReplacer(
-                RequestAssetOriginal,
-                RequestAssetReplacement
-            ).MethodReplacer(
-                RequestResourcesLoadOriginal,
-                RequestResourcesLoadReplacement
-            ).MethodReplacer(
-                LoadResourceOriginal,
-                LoadResourceReplacement
-            );
+                    RequestAssetOriginal,
+                    RequestAssetReplacement
+                )
+                .MethodReplacer(
+                    RequestResourcesLoadOriginal,
+                    RequestResourcesLoadReplacement
+                )
+                .MethodReplacer(
+                    LoadResourceOriginal,
+                    LoadResourceReplacement
+                );
         }
 
         public static void LoadResource(DataLoader instance, string path, Action<string> handler)
@@ -79,6 +91,7 @@ namespace ModTek.Manifest.Patches
             {
                 return;
             }
+
             instance.LoadResource(path, handler);
         }
 
@@ -88,6 +101,7 @@ namespace ModTek.Manifest.Patches
             {
                 return;
             }
+
             Traverse.Create(instance).Method("RequestResourcesLoad").GetValue(path, onComplete);
         }
 
@@ -97,6 +111,7 @@ namespace ModTek.Manifest.Patches
             {
                 return;
             }
+
             instance.RequestAsset(type, id, loadedCallback);
         }
 
@@ -107,11 +122,13 @@ namespace ModTek.Manifest.Patches
                 Logger.Log("Internal Error: request can't be not FileLoadRequest");
                 return false;
             }
+
             var cachedContent = ModsManifest.GetMergedContent(request.ManifestEntry);
             if (cachedContent == null)
             {
                 return false;
             }
+
             Traverse.Create(request).Method("OnLoadedWithText").GetValue(cachedContent);
             return true;
         }

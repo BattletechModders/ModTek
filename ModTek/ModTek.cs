@@ -95,7 +95,7 @@ namespace ModTek
             else
             {
                 Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
-                SettingsDef = new ModDefEx
+                SettingsDef = new ModDefEx()
                 {
                     Enabled = true,
                     PendingEnable = true,

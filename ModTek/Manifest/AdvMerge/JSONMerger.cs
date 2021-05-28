@@ -31,7 +31,7 @@ namespace ModTek.Manifest.AdvMerge
                 return;
             }
 
-            target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+            target.Merge(merge, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
         }
     }
 }

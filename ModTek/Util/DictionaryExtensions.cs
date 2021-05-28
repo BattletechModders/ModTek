@@ -10,7 +10,8 @@ namespace ModTek.Util
             {
                 return value;
             }
-            value = new();
+
+            value = new V();
             dict[key] = value;
             return value;
         }

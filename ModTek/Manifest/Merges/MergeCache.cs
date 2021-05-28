@@ -33,6 +33,7 @@ namespace ModTek.Manifest.Merges
                     LogException("Loading merge cache failed.", e);
                 }
             }
+
             // create a new one if it doesn't exist or couldn't be added'
             Log("Building new Merge Cache.");
             persistentSets = new MergeSets();
@@ -124,6 +125,7 @@ namespace ModTek.Manifest.Merges
                 Log($"Couldn't merge {temp.CachedPath}", e);
                 return null;
             }
+
             try
             {
                 File.WriteAllText(temp.CachedPath, mergedContent);
@@ -158,6 +160,7 @@ namespace ModTek.Manifest.Merges
                 {
                     targets.Add(advMerge.TargetID);
                 }
+
                 if (advMerge.TargetIDs != null)
                 {
                     targets.AddRange(advMerge.TargetIDs);
@@ -191,6 +194,7 @@ namespace ModTek.Manifest.Merges
                 set = new MergeCacheEntry(modEntry);
                 tempSets[key] = set;
             }
+
             set.Add(modEntry);
         }
     }

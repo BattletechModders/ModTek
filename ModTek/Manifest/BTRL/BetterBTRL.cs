@@ -11,7 +11,7 @@ using RequestCache = System.Collections.Generic.Dictionary<System.Tuple<string, 
 namespace ModTek.Manifest.BTRL
 {
     internal class BetterBTRL
-	{
+    {
         public static readonly BetterBTRL Instance = new();
 
         private ContentPackIndex packIndex;
@@ -56,13 +56,13 @@ namespace ModTek.Manifest.BTRL
             }
 
             var contentPackIndex = packIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Remove(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
+            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded) Delegate.Remove(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
         }
 
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)
         {
             packIndex = contentPackIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Combine(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
+            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded) Delegate.Combine(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
         }
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
@@ -95,7 +95,7 @@ namespace ModTek.Manifest.BTRL
         private Dictionary<string, VersionManifestMemoryStore> memoryStores = new();
         private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new();
 
-		public void ApplyMemoryStore(VersionManifestMemoryStore memoryStore)
+        public void ApplyMemoryStore(VersionManifestMemoryStore memoryStore)
         {
             if (memoryStores.ContainsKey(memoryStore.Name))
             {
@@ -109,7 +109,7 @@ namespace ModTek.Manifest.BTRL
             RefreshTypedEntries(); // TODO needed?
         }
 
-		public void RemoveMemoryStore(VersionManifestMemoryStore memoryStore)
+        public void RemoveMemoryStore(VersionManifestMemoryStore memoryStore)
         {
             if (!memoryStores.ContainsKey(memoryStore.Name))
             {
@@ -123,70 +123,75 @@ namespace ModTek.Manifest.BTRL
             RefreshTypedEntries(); // TODO needed?
         }
 
-		private void IndexMemoryStore(VersionManifestMemoryStore memoryStore)
-		{
-			UnIndexMemoryStore(memoryStore);
-			foreach (VersionManifestEntry versionManifestEntry in memoryStore)
-			{
-				var key = versionManifestEntry.Type.FromString();
+        private void IndexMemoryStore(VersionManifestMemoryStore memoryStore)
+        {
+            UnIndexMemoryStore(memoryStore);
+            foreach (VersionManifestEntry versionManifestEntry in memoryStore)
+            {
+                var key = versionManifestEntry.Type.FromString();
                 if (!memoryStoreResourceIndex.TryGetValue(key, out var dictionary))
-				{
-					dictionary = new Dictionary<string, List<VersionManifestMemoryStore>>();
-					memoryStoreResourceIndex[key] = dictionary;
-				}
+                {
+                    dictionary = new Dictionary<string, List<VersionManifestMemoryStore>>();
+                    memoryStoreResourceIndex[key] = dictionary;
+                }
 
                 if (!dictionary.TryGetValue(versionManifestEntry.Id, out var list))
-				{
-					list = new List<VersionManifestMemoryStore>();
-					dictionary[versionManifestEntry.Id] = list;
-				}
-				if (!list.Contains(memoryStore))
-				{
-					list.Add(memoryStore);
-				}
-			}
-		}
+                {
+                    list = new List<VersionManifestMemoryStore>();
+                    dictionary[versionManifestEntry.Id] = list;
+                }
 
-		private bool UnIndexMemoryStore(VersionManifestMemoryStore memoryStore)
-		{
-			foreach (object obj in memoryStore)
-			{
-				VersionManifestEntry versionManifestEntry = (VersionManifestEntry)obj;
-				BattleTechResourceType key = versionManifestEntry.Type.FromString();
-				Dictionary<string, List<VersionManifestMemoryStore>> dictionary;
-				List<VersionManifestMemoryStore> list;
-				if (memoryStoreResourceIndex.TryGetValue(key, out dictionary) && dictionary.TryGetValue(versionManifestEntry.Id, out list))
-				{
-					return list.Remove(memoryStore);
-				}
-			}
-			return false;
-		}
+                if (!list.Contains(memoryStore))
+                {
+                    list.Add(memoryStore);
+                }
+            }
+        }
 
-		public List<VersionManifestMemoryStore> GetMemoryStoresContainingEntry(BattleTechResourceType resourceType, string id)
-		{
-			Dictionary<string, List<VersionManifestMemoryStore>> dictionary;
-			if (!memoryStoreResourceIndex.TryGetValue(resourceType, out dictionary))
-			{
-				return null;
-			}
-			List<VersionManifestMemoryStore> result;
-			if (!dictionary.TryGetValue(id, out result))
-			{
-				return null;
-			}
-			return result;
-		}
+        private bool UnIndexMemoryStore(VersionManifestMemoryStore memoryStore)
+        {
+            foreach (var obj in memoryStore)
+            {
+                var versionManifestEntry = (VersionManifestEntry) obj;
+                var key = versionManifestEntry.Type.FromString();
+                Dictionary<string, List<VersionManifestMemoryStore>> dictionary;
+                List<VersionManifestMemoryStore> list;
+                if (memoryStoreResourceIndex.TryGetValue(key, out dictionary) && dictionary.TryGetValue(versionManifestEntry.Id, out list))
+                {
+                    return list.Remove(memoryStore);
+                }
+            }
 
-		public VersionManifestMemoryStore GetMemoryStoreByName(string name)
-		{
-			VersionManifestMemoryStore result;
-			if (!memoryStores.TryGetValue(name, out result))
-			{
-				return null;
-			}
-			return result;
-		}
+            return false;
+        }
+
+        public List<VersionManifestMemoryStore> GetMemoryStoresContainingEntry(BattleTechResourceType resourceType, string id)
+        {
+            Dictionary<string, List<VersionManifestMemoryStore>> dictionary;
+            if (!memoryStoreResourceIndex.TryGetValue(resourceType, out dictionary))
+            {
+                return null;
+            }
+
+            List<VersionManifestMemoryStore> result;
+            if (!dictionary.TryGetValue(id, out result))
+            {
+                return null;
+            }
+
+            return result;
+        }
+
+        public VersionManifestMemoryStore GetMemoryStoreByName(string name)
+        {
+            VersionManifestMemoryStore result;
+            if (!memoryStores.TryGetValue(name, out result))
+            {
+                return null;
+            }
+
+            return result;
+        }
 
         #endregion
 
@@ -208,6 +213,7 @@ namespace ModTek.Manifest.BTRL
                 {
                     activeAndOwnedAddendums.Add(addendum.Name);
                 }
+
                 currentManifest.AddAddendum(ApplyOverrides(addendum), isOwned);
             }
 
@@ -218,6 +224,7 @@ namespace ModTek.Manifest.BTRL
                     // skip since not all requirements are met
                     continue;
                 }
+
                 currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum), true);
             }
         }
@@ -227,25 +234,25 @@ namespace ModTek.Manifest.BTRL
             return currentManifest.AllEntries(false);
         }
 
-		public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
+        public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
         {
             return currentManifest.AllEntriesOfResource(type, filterByOwnership);
         }
 
-		public VersionManifestEntry[] AllEntriesOfResourceFromAddendum(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership = false)
+        public VersionManifestEntry[] AllEntriesOfResourceFromAddendum(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership = false)
         {
             return addendum.Entries.Where(x => x.Type == type.ToString() && (!filterByOwnership || packIndex.IsResourceOwned(x.Id))).ToArray();
         }
 
-		public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
+        public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
         {
             return currentManifest.GetEntryByID(id, type, filterByOwnership);
         }
 
-		public void RemoveEntry(VersionManifestEntry entry)
-		{
+        public void RemoveEntry(VersionManifestEntry entry)
+        {
             // only used by ModLoader, which we disable anyway
             throw new NotImplementedException();
-		}
+        }
     }
 }

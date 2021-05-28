@@ -60,6 +60,7 @@ namespace ModTek.Manifest.MDD
             {
                 return;
             }
+
             try
             {
                 MetadataDatabase.SaveMDDToPath();
