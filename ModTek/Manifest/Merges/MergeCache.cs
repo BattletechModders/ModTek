@@ -42,7 +42,8 @@ namespace ModTek.Manifest.Merges
         {
             try
             {
-                File.WriteAllText(PersistentFilePath, JsonConvert.SerializeObject(persistentSets, Formatting.Indented));
+                var json = JsonConvert.SerializeObject(persistentSets, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                File.WriteAllText(PersistentFilePath, json);
             }
             catch (Exception e)
             {

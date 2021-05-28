@@ -83,8 +83,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomTypes\CustomTypeProcessor.cs" />
-    <Compile Include="CustomTypes\MetadataDatabaseExtensions.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Manifest\AdvMerge\AdvancedJSONMerge.cs" />
@@ -96,8 +94,13 @@
     <Compile Include="Manifest\CacheKeys.cs" />
     <Compile Include="Manifest\FileVersionTuple.cs" />
     <Compile Include="Manifest\MDD\AddendumUtils.cs" />
+    <Compile Include="Manifest\MDD\CustomTypes\CustomTag.cs" />
+    <Compile Include="Manifest\MDD\CustomTypes\CustomTagSet.cs" />
+    <Compile Include="Manifest\MDD\CustomTypes\CustomTypeProcessor.cs" />
+    <Compile Include="Manifest\MDD\CustomTypes\MetadataDatabaseExtensions.cs" />
     <Compile Include="Manifest\MDD\MDDBCache.cs" />
     <Compile Include="Manifest\MDD\MDDBExtensions.cs" />
+    <Compile Include="Manifest\MDD\VersionManifestEntryExtensions.cs" />
     <Compile Include="Manifest\Merges\MergeCacheEntry.cs" />
     <Compile Include="Manifest\Merges\MergeCache.cs" />
     <Compile Include="Manifest\ModEntry.cs" />
@@ -126,8 +129,6 @@
     <Compile Include="Misc\FilePaths.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
     <Compile Include="Patches\SVGAssetHelper.cs" />
-    <Compile Include="CustomTypes\CustomTagSet.cs" />
-    <Compile Include="CustomTypes\CustomTag.cs" />
     <Compile Include="SoundBanks\LoadedAudioBank.cs" />
     <Compile Include="SoundBanks\ProcessParameters.cs" />
     <Compile Include="SoundBanks\SoundBanksFeature.cs" />

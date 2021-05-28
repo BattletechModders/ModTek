@@ -5,7 +5,7 @@ using HBS.Collections;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.CustomTypes
+namespace ModTek.Manifest.MDD.CustomTypes
 {
     internal static class CustomTypeProcessor
     {

@@ -5,6 +5,7 @@ using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Misc;
+using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 using CacheDB = System.Collections.Generic.Dictionary<string, ModTek.Manifest.FileVersionTuple>;
@@ -64,7 +65,8 @@ namespace ModTek.Manifest.MDD
             try
             {
                 MetadataDatabase.SaveMDDToPath();
-                File.WriteAllText(PersistentFilePath, JsonConvert.SerializeObject(Entries, Formatting.Indented));
+                var json = JsonConvert.SerializeObject(Entries, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                File.WriteAllText(PersistentFilePath, json);
                 HasChanges = false;
             }
             catch (Exception e)
@@ -93,9 +95,19 @@ namespace ModTek.Manifest.MDD
                 return;
             }
 
-            if (updateOnlyIfCacheOutdated && Entries.TryGetValue(key, out var existingEntry) && existingEntry.UpdatedOn == entry.UpdatedOn)
+            if (updateOnlyIfCacheOutdated)
             {
-                return;
+                if (Entries.TryGetValue(key, out var existingEntry))
+                {
+                    if (existingEntry.UpdatedOn == entry.UpdatedOn)
+                    {
+                        return;
+                    }
+                }
+                else if (entry.IsInDefaultMDDB())
+                {
+                    return;
+                }
             }
 
             MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type.Value, entry.Id, content);
