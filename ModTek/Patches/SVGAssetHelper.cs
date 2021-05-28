@@ -1,19 +1,19 @@
-using BattleTech;
-using BattleTech.Assetbundles;
-using BattleTech.Data;
-using BattleTech.UI;
-using Harmony;
-using SVGImporter;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using BattleTech;
+using BattleTech.Assetbundles;
+using BattleTech.Data;
+using BattleTech.UI;
+using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest;
+using SVGImporter;
 using static BattleTech.Data.DataManager;
 
-namespace ModTek
+namespace ModTek.Patches
 {
     [HarmonyPatch(typeof(ApplicationConstants))]
     [HarmonyPatch("FromJSON")]

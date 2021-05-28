@@ -6,8 +6,6 @@ using System.Reflection;
 using BattleTech;
 using Harmony;
 using ModTek.Logging;
-using ModTek.Misc;
-using ModTek.SoundBanks;
 using ModTek.Util;
 using Newtonsoft.Json;
 

@@ -1,6 +1,5 @@
 using System.IO;
 using Harmony;
-using System.IO.Compression;
 using ModTek.Manifest;
 
 // ReSharper disable InconsistentNaming

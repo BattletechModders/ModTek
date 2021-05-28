@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BattleTech;
 using ModTek.Manifest.AdvMerge;
 using ModTek.Misc;
 using ModTek.Util;

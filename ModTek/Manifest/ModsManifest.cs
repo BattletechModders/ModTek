@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using BattleTech;
 using BattleTech.UI;
-using Harmony;
-using Harmony.ILCopying;
 using ModTek.CustomTypes;
 using ModTek.Manifest.BTRL;
 using ModTek.Manifest.MDD;
