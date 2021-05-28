@@ -6,6 +6,9 @@ namespace ModTek.Manifest
 {
     internal class FileVersionTuple : IEquatable<FileVersionTuple>
     {
+        [JsonProperty]
+        public string AssetBundleName { get; private set; }
+
         [JsonProperty(Required = Required.Always)]
         public string Path { get; private set; }
 
@@ -14,12 +17,12 @@ namespace ModTek.Manifest
 
         internal static FileVersionTuple From(ModEntry entry)
         {
-            return new() { Path = entry.AbsolutePath, UpdatedOn = entry.LastWriteTimeUtc };
+            return new() { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.LastWriteTimeUtc };
         }
 
         internal static FileVersionTuple From(VersionManifestEntry entry)
         {
-            return new() { Path = entry.FilePath, UpdatedOn = entry.UpdatedOn };
+            return new() { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
         }
 
         // GENERATED CODE BELOW

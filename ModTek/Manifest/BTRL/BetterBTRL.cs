@@ -23,19 +23,25 @@ namespace ModTek.Manifest.BTRL
         private readonly List<ModAddendumManifest> orderedModAddendums = new();
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
-        private void ContentPackLoaded()
+        internal void TryFinalizeDataLoad(ContentPackIndex contentPackIndex)
         {
+            packIndex = contentPackIndex;
             RefreshTypedEntries();
-            ModsManifest.BTRLContentPackLoaded();
+            if (contentPackIndex.AllContentPacksLoaded())
+            {
+                ModsManifest.BTRLContentPackLoaded();
+            }
         }
 
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
         {
+            // Log("BetterBTRL AddAddendumOverrideEntry");
             addendumEntryOverrides.GetOrCreate(addendumName).Add(manifestEntry);
         }
 
         private VersionManifestAddendum ApplyOverrides(VersionManifestAddendum addendum)
         {
+            // Log("BetterBTRL ApplyOverrides");
             if (!addendumEntryOverrides.TryGetValue(addendum.Name, out var overrides))
             {
                 return addendum;
@@ -49,25 +55,14 @@ namespace ModTek.Manifest.BTRL
 
         // methods order is same as dnSpy lists them
 
-        public void Dispose()
-        {
-            if (packIndex == null)
-            {
-                return;
-            }
-
-            var contentPackIndex = packIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded) Delegate.Remove(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
-        }
-
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)
         {
             packIndex = contentPackIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded) Delegate.Combine(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
         }
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
         {
+            // Log($"BetterBTRL ApplyAddendum {addendum.Name} {Environment.StackTrace}");
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             hbsAddendums.Add(addendum);
             RefreshTypedEntries(); // TODO needed?
@@ -75,17 +70,20 @@ namespace ModTek.Manifest.BTRL
 
         public void AddModAddendum(ModAddendumManifest modManifest)
         {
+            // Log("BetterBTRL AddModAddendum");
             orderedModAddendums.Add(modManifest);
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
+            // Log("BetterBTRL RemoveAddendum");
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             RefreshTypedEntries(); // TODO needed?
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
         {
+            // Log("BetterBTRL GetAddendumByName");
             return hbsAddendums.FirstOrDefault(x => x.Name == name);
         }
 
@@ -198,12 +196,14 @@ namespace ModTek.Manifest.BTRL
 
         private BetterBTRL()
         {
+            // Log("BetterBTRL");
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
-            RefreshTypedEntries(); // TODO needed?
+            SetContentPackIndex(UnityGameInstance.BattleTechGame?.DataManager?.ContentPackIndex);
         }
 
         internal void RefreshTypedEntries()
         {
+            // Log("RefreshTypedEntries");
             currentManifest.Reset(defaultManifest.Entries);
             var activeAndOwnedAddendums = new List<string>();
 
@@ -232,21 +232,25 @@ namespace ModTek.Manifest.BTRL
 
         public VersionManifestEntry[] AllEntries()
         {
+            // Log("AllEntries");
             return currentManifest.AllEntries(false);
         }
 
         public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
         {
+            // Log("AllEntriesOfResource");
             return currentManifest.AllEntriesOfResource(type, filterByOwnership);
         }
 
         public VersionManifestEntry[] AllEntriesOfResourceFromAddendum(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership = false)
         {
+            // Log("AllEntriesOfResourceFromAddendum");
             return addendum.Entries.Where(x => x.Type == type.ToString() && (!filterByOwnership || packIndex.IsResourceOwned(x.Id))).ToArray();
         }
 
         public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
         {
+            // Log("EntryByID");
             return currentManifest.GetEntryByID(id, type, filterByOwnership);
         }
 

@@ -10,7 +10,7 @@ namespace ModTek.Manifest
             return Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
         }
 
-        internal static BattleTechResourceType[] MDDTypes =
+        internal static readonly BattleTechResourceType[] MDDTypes =
         {
             BattleTechResourceType.ContractOverride,
             BattleTechResourceType.LanceDef,
@@ -24,7 +24,7 @@ namespace ModTek.Manifest
         };
 
         // from CustomComponents mod
-        internal static BattleTechResourceType[] CCTypes =
+        internal static readonly BattleTechResourceType[] CCTypes =
         {
             BattleTechResourceType.HeatSinkDef,
             BattleTechResourceType.UpgradeDef,
@@ -33,7 +33,7 @@ namespace ModTek.Manifest
             BattleTechResourceType.JumpJetDef
         };
 
-        internal static BattleTechResourceType[] StringTypes =
+        internal static readonly BattleTechResourceType[] StringTypes =
         {
             // one time
             BattleTechResourceType.ApplicationConstants,

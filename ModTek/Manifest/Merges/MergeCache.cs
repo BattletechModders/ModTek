@@ -7,8 +7,7 @@ using ModTek.Manifest.Mods;
 using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
-using CacheKey = System.Tuple<string, string>;
-using MergeSets = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.MergeCacheEntry>;
+using MergeSets = System.Collections.Generic.Dictionary<string, ModTek.Manifest.Merges.MergeCacheEntry>;
 
 namespace ModTek.Manifest.Merges
 {
@@ -54,12 +53,12 @@ namespace ModTek.Manifest.Merges
         internal bool HasMergedContentCached(VersionManifestEntry entry, bool fetchContent, out string cachedContent)
         {
             cachedContent = null;
-            var key = new CacheKey(entry.Type, entry.Id);
+            var key = CacheKeys.Unique(entry);
             if (!tempSets.TryGetValue(key, out var temp))
             {
                 // lets find and fix un-typed sets
                 // TODO this way a good idea? we ignore all untyped if we find one typed.. so no
-                var noTypeKey = new CacheKey(null, entry.Id);
+                var noTypeKey = CacheKeys.Unique(entry);
                 if (!tempSets.TryGetValue(noTypeKey, out temp))
                 {
                     return false;
@@ -109,7 +108,7 @@ namespace ModTek.Manifest.Merges
                 return null;
             }
 
-            var key = new CacheKey(entry.Type, entry.Id);
+            var key = CacheKeys.Unique(entry);
             if (!tempSets.TryGetValue(key, out var temp))
             {
                 return null;
@@ -141,7 +140,7 @@ namespace ModTek.Manifest.Merges
 
         internal bool HasMerges(VersionManifestEntry entry)
         {
-            var key = new CacheKey(entry.Type, entry.Id);
+            var key = CacheKeys.Unique(entry);
             return tempSets.ContainsKey(key);
         }
 
@@ -186,16 +185,16 @@ namespace ModTek.Manifest.Merges
             }
         }
 
-        private void AddTemp(ModEntry modEntry)
+        private void AddTemp(ModEntry entry)
         {
-            var key = new CacheKey(modEntry.Type, modEntry.Id);
+            var key = CacheKeys.Unique(entry);
             if (!tempSets.TryGetValue(key, out var set))
             {
-                set = new MergeCacheEntry(modEntry);
+                set = new MergeCacheEntry(entry);
                 tempSets[key] = set;
             }
 
-            set.Add(modEntry);
+            set.Add(entry);
         }
     }
 }

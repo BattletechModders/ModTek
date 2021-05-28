@@ -93,6 +93,7 @@
     <Compile Include="Manifest\AdvMerge\MergeAction.cs" />
     <Compile Include="Manifest\BTResourceUtils.cs" />
     <Compile Include="Manifest\BTRL\BetterBTRL.cs" />
+    <Compile Include="Manifest\CacheKeys.cs" />
     <Compile Include="Manifest\FileVersionTuple.cs" />
     <Compile Include="Manifest\MDD\AddendumUtils.cs" />
     <Compile Include="Manifest\MDD\MDDBCache.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Manifest\Patches\AssetBundleManager_AssetBundleNameToFileURL_Patch.cs" />
     <Compile Include="Manifest\Patches\AssetBundleManager_AssetBundleNameToFilepath_Patch.cs" />
     <Compile Include="Manifest\Patches\BattleTechResourceLocator_Patches.cs" />
+    <Compile Include="Manifest\Patches\ContentPackIndex_TryFinalizeDataLoad_Patch.cs" />
     <Compile Include="Manifest\Patches\DataManagerFileLoadRequest_Load_Patch.cs" />
     <Compile Include="Manifest\Patches\GameTipList_ctor_Patch.cs" />
     <Compile Include="Manifest\Patches\MetadataDatabase_MDD_TMP_PATH_Patch.cs" />

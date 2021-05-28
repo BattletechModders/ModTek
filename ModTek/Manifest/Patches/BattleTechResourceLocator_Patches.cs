@@ -23,22 +23,22 @@ namespace ModTek.Manifest.Patches
         }
     }
 
+    // well we do want the original BTRLs to properly dispose
+    //[HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.Dispose))]
+    // public static class BattleTechResourceLocator_Dispose_Patch
+    // {
+    //     public static bool Prepare()
+    //     {
+    //         return ModTek.Enabled;
+    //     }
+    //
+    //     public static bool Prefix()
+    //     {
+    //         return false;
+    //     }
+    // }
+
     // redirect all public methods to new class
-
-    [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.Dispose))]
-    public static class BattleTechResourceLocator_Dispose_Patch
-    {
-        public static bool Prepare()
-        {
-            return ModTek.Enabled;
-        }
-
-        public static bool Prefix()
-        {
-            BetterBTRL.Instance.Dispose();
-            return false;
-        }
-    }
 
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.SetContentPackIndex))]
     public static class BattleTechResourceLocator_SetContentPackIndex_Patch

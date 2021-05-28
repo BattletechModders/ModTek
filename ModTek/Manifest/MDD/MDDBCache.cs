@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
-using CacheKey = System.Tuple<string, string>;
-using CacheDB = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.FileVersionTuple>;
+using CacheDB = System.Collections.Generic.Dictionary<string, ModTek.Manifest.FileVersionTuple>;
 
 namespace ModTek.Manifest.MDD
 {
@@ -17,7 +17,7 @@ namespace ModTek.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<CacheKey> ignored = new();
+        private readonly HashSet<string> ignored = new();
 
         private CacheDB Entries { get; }
         internal static bool HasChanges;
@@ -82,7 +82,12 @@ namespace ModTek.Manifest.MDD
                 return;
             }
 
-            var key = new CacheKey(entry.Type, entry.Id);
+            if (!BTResourceUtils.MDDTypes.Contains(type.Value))
+            {
+                return;
+            }
+
+            var key = CacheKeys.Unique(entry);
             if (ignored.Contains(key))
             {
                 return;
@@ -100,7 +105,7 @@ namespace ModTek.Manifest.MDD
 
         internal void Ignore(ModEntry entry)
         {
-            var key = new CacheKey(entry.Type, entry.Id);
+            var key = CacheKeys.Unique(entry);
             ignored.Add(key);
         }
     }

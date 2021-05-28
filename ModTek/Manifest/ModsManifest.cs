@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using BattleTech;
 using BattleTech.UI;
@@ -283,26 +284,41 @@ namespace ModTek.Manifest
             }
         }
 
+
         internal static void BTRLContentPackLoaded()
         {
             PreloadAfterManifestComplete();
         }
 
+        private static Stopwatch osw = new();
         private static void PreloadAfterManifestComplete()
         {
+            osw.Restart();
+
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
-            foreach (var type in BTResourceUtils.StringTypes)
+            foreach (var type in BTResourceUtils.MDDTypes)
             {
                 loadRequest.AddAllOfTypeBlindLoadRequest(type);
             }
-
             loadRequest.ProcessRequests();
         }
 
         private static void SaveCaches()
         {
+            var sw = new Stopwatch();
+
+            sw.Start();
             mergeCache.Save();
+            sw.Stop();
+            Log($"mergeCache.Save {sw.Elapsed}");
+
+            sw.Start();
             mddbCache.Save();
+            sw.Stop();
+            Log($"mddbCache.Save {sw.Elapsed}");
+
+            osw.Stop();
+            Log($"PreloadAfterManifestComplete {osw.Elapsed}");
         }
 
         // only merges will be cached
