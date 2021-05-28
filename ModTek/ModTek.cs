@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using BattleTech;
 using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest;
@@ -42,23 +41,37 @@ namespace ModTek
         // INITIALIZATION (called by injected code)
         public static void Init()
         {
+            Load();
+        }
+
+        private static void Load()
+        {
             if (HasLoaded)
             {
                 return;
             }
 
-            stopwatch.Start();
-
-            if (!FilePaths.SetupPaths())
+            FilePaths.SetupPaths();
+            LogInit();
+            try
             {
-                return;
+                var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+                Log($"ModTek v{version} -- {DateTime.Now}");
+                Start(version);
             }
+            catch (Exception e)
+            {
+                Log("Fatal error", e);
+            }
+        }
+
+        private static void Start(string version) {
+            stopwatch.Start();
 
             // creates the directories above it as well
             Directory.CreateDirectory(FilePaths.CacheDirectory);
             Directory.CreateDirectory(FilePaths.DatabaseDirectory);
 
-            var versionString = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             RLog.InitLog(FilePaths.TempModTekDirectory, true);
             RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
             if (File.Exists(FilePaths.ChangedFlagPath))
@@ -69,17 +82,12 @@ namespace ModTek
                 Directory.CreateDirectory(FilePaths.DatabaseDirectory);
             }
 
-            // create log file, overwriting if it's already there
-            using (var logWriter = File.CreateText(FilePaths.LogPath))
-            {
-                logWriter.WriteLine($"ModTek v{versionString} -- {DateTime.Now}");
-            }
-
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {
                 try
                 {
                     SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
+                    SettingsDef.Version = version;
                 }
                 catch (Exception e)
                 {
@@ -87,10 +95,9 @@ namespace ModTek
                     Finish();
                     return;
                 }
-
-                SettingsDef.Version = versionString;
             }
-            else
+
+            if (SettingsDef == null)
             {
                 Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
                 SettingsDef = new ModDefEx
@@ -98,7 +105,7 @@ namespace ModTek
                     Enabled = true,
                     PendingEnable = true,
                     Name = MODTEK_DEF_NAME,
-                    Version = versionString,
+                    Version = version,
                     Description = "Mod system for HBS's PC game BattleTech.",
                     Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum",
                     Website = "https://github.com/BattletechModders/ModTek"
@@ -108,11 +115,10 @@ namespace ModTek
                 SettingsDef.SaveState();
             }
 
-
             // load progress bar
             if (Enabled)
             {
-                if (!ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{versionString}"))
+                if (!ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{version}"))
                 {
                     Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                     Finish();
@@ -128,37 +134,23 @@ namespace ModTek
             {
                 var instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
                 instance.PatchAll(Assembly.GetExecutingAssembly());
-                BattleTechResourceLoader.Refresh();
+                //BattleTechResourceLoader.Refresh();
                 SVGAssetLoadRequest_Load.Patch(instance);
             }
             catch (Exception e)
             {
                 LogException("Error: PATCHING FAILED!", e);
-                CloseLogStream();
                 return;
             }
 
             if (Enabled == false)
             {
                 Log("ModTek not enabled");
-                CloseLogStream();
                 return;
             }
 
             ModsManifest.PrepareManifestAndCustomResources();
             LoadMods();
-        }
-
-        internal static void Finish()
-        {
-            HasLoaded = true;
-
-            stopwatch.Stop();
-            Log("");
-            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
-
-            CloseLogStream();
-            stopwatch = null;
         }
 
         // PATHS
@@ -184,6 +176,16 @@ namespace ModTek
             Config?.ToFile(FilePaths.ConfigPath);
 
             Finish();
+        }
+
+        internal static void Finish()
+        {
+            HasLoaded = true;
+
+            stopwatch.Stop();
+            Log("");
+            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+            stopwatch = null;
         }
     }
 }

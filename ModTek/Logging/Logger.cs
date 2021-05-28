@@ -6,27 +6,14 @@ namespace ModTek.Logging
 {
     internal static class Logger
     {
-        private static StreamWriter logStream;
-
-        private static StreamWriter GetOrCreateStream()
+        private static StreamWriter stream;
+        internal static void LogInit()
         {
-            if (logStream == null && !string.IsNullOrEmpty(FilePaths.LogPath))
+            if (stream == null)
             {
-                logStream = File.AppendText(FilePaths.LogPath);
+                Directory.CreateDirectory(FilePaths.TempModTekDirectory);
+                stream = File.CreateText(FilePaths.LogPath);
             }
-
-            return logStream;
-        }
-
-        internal static void CloseLogStream()
-        {
-            logStream?.Dispose();
-            logStream = null;
-        }
-
-        internal static void FlushLogStream()
-        {
-            logStream?.Flush();
         }
 
         internal static void LogIf(bool condition, string message)
@@ -39,33 +26,26 @@ namespace ModTek.Logging
 
         internal static void Log(string message)
         {
-            var stream = GetOrCreateStream();
-            stream?.WriteLine(message);
+            stream.WriteLine(message);
+            stream.Flush();
         }
 
         internal static void Log(string message, params object[] formatObjects)
         {
-            var stream = GetOrCreateStream();
-            stream?.WriteLine(message, formatObjects);
+            stream.WriteLine(message, formatObjects);
+            stream.Flush();
         }
 
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
-            var stream = GetOrCreateStream();
-            stream?.WriteLine(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
+            Log(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
         }
 
         internal static void LogException(string message, Exception e)
         {
-            var stream = GetOrCreateStream();
-            if (stream == null)
-            {
-                return;
-            }
-
             stream.WriteLine(message);
             stream.WriteLine(e.ToString());
-            FlushLogStream();
+            stream.Flush();
         }
     }
 }

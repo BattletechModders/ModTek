@@ -5,6 +5,7 @@ using BattleTech;
 using BattleTech.Data;
 using ModTek.Manifest.Mods;
 using ModTek.Util;
+using static ModTek.Logging.Logger;
 using RequestKey = System.Tuple<string, string>;
 using RequestCache = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.MergeCacheEntry>;
 
@@ -208,7 +209,7 @@ namespace ModTek.Manifest.BTRL
 
             foreach (var addendum in hbsAddendums)
             {
-                var isOwned = packIndex.IsContentPackOwned(addendum.Name);
+                var isOwned = packIndex?.IsContentPackOwned(addendum.Name) ?? false;
                 if (isOwned)
                 {
                     activeAndOwnedAddendums.Add(addendum.Name);

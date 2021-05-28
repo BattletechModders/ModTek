@@ -27,9 +27,6 @@ namespace ModTek.Patches
 
         public static void Postfix(ref bool __result)
         {
-            //Action OnModLoadComplete = (Action)typeof(BattleTech.ModSupport.ModLoader).GetField("OnModLoadComplete",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
-            //OnModLoadComplete.Invoke();
-            //typeof(BattleTech.ModSupport.ModLoader).GetProperty("ModFilePaths", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null,new List<string>().ToArray());
             __result = false;
         }
     }
@@ -44,26 +41,9 @@ namespace ModTek.Patches
             return !ModTek.Enabled;
         }
 
-        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
         public static bool Prefix()
         {
-            //loadedModsCache = playerSettings.loadedMods;
-            //playerSettings.loadedMods.Clear();
-            //foreach (var mod in ModTek.allModDefs)
-            //{
-            //    if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
-            //}
             return true;
-        }
-
-        public static void Postfix()
-        {
-            //playerSettings.loadedMods = loadedModsCache;
-            //if (ModTek.allModDefs.TryGetValue(ModTek.MODTEK_DEF_NAME, out ModDefEx modtek))
-            //{
-            //    ModLoader.loadedSystemModStatus = new Dictionary<string, ModStatusItem>();
-            //    ModLoader.loadedSystemModStatus.Add(ModTek.MODTEK_DEF_NAME, modtek.ToVanilla());
-            //}
         }
     }
 
@@ -77,23 +57,11 @@ namespace ModTek.Patches
             return ModTek.Enabled;
         }
 
-        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
         public static bool Prefix()
         {
-            //loadedModsCache = playerSettings.loadedMods;
-            //playerSettings.loadedMods.Clear();
-            //foreach (var mod in ModTek.allModDefs)
-            //{
-            //    if (mod.Value.Hidden == false) { playerSettings.loadedMods.Add(mod.Key, mod.Value.Enabled); }
-            //}
             ModLoader.loadedSystemModStatus = new Dictionary<string, ModStatusItem>();
             ModLoader.loadedSystemModStatus.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
             return false;
-        }
-
-        public static void Postfix()
-        {
-            //playerSettings.loadedMods = loadedModsCache;
         }
     }
 
@@ -107,7 +75,6 @@ namespace ModTek.Patches
             return ModTek.Enabled;
         }
 
-        //public static Dictionary<string, bool> loadedModsCache = new Dictionary<string, bool>();
         public static bool Prefix()
         {
             ModLoader.loadedGameModStatus = new Dictionary<string, ModStatusItem>();
@@ -127,11 +94,6 @@ namespace ModTek.Patches
             }
 
             return false;
-        }
-
-        public static void Postfix()
-        {
-            //playerSettings.loadedMods = loadedModsCache;
         }
     }
 
@@ -164,7 +126,6 @@ namespace ModTek.Patches
 
         public static void Postfix(ModManagerScreen __instance)
         {
-            //if(ModLoader.ModDefs)
             if (__instance.tempLoadedMods.ContainsKey(ModTek.MODTEK_DEF_NAME) == false)
             {
                 __instance.tempLoadedMods.Add(ModTek.MODTEK_DEF_NAME, ModTek.SettingsDef.ToVanilla());
@@ -257,7 +218,6 @@ namespace ModTek.Patches
     [HarmonyPatch(MethodType.Normal)]
     internal static class ModLoader_SaveModStatusToFile
     {
-        //public static bool SaveModsState { get; set; } = false;
         public static bool Prepare()
         {
             return ModTek.Enabled;
@@ -295,7 +255,6 @@ namespace ModTek.Patches
             }
 
             RLog.M.flush();
-            //SaveModsState = false;
             return false;
         }
     }
@@ -351,7 +310,6 @@ namespace ModTek.Patches
 
             if (button == "save")
             {
-                //ActiveOrDefaultSettings_SaveUserSettings.SaveModsState = true;
                 return true;
             }
 
@@ -394,7 +352,6 @@ namespace ModTek.Patches
         {
             if (ModDefsDatabase.allModDefs.ContainsKey(__instance.ModStatusItem.name) == false)
             {
-                //if (ModTek.allModDefs[modDef.Name].Enabled == false) { ___modNameText.color = Color.red; };
                 ___toggleBox.SetToggled(false);
             }
             else
@@ -582,9 +539,6 @@ namespace ModTek.Patches
             result.failedToLoad = mod.LoadFail;
             result.dependsOn = mod.DependsOn.ToList();
             result.directory = mod.Directory;
-            //result.Author = mod.Author;
-            //result.Contact = mod.Contact;
-            //result.Description = mod.Description;
             return result;
         }
 
@@ -646,22 +600,6 @@ namespace ModTek.Patches
             }
 
             __result = true;
-            /*StringBuilder dbg = new StringBuilder();
-            try
-            {
-                IList items = (IList)typeof(BattleTech.UI.ModManagerListView).BaseType.BaseType.BaseType.GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(___modsList);
-                foreach (object itm in items)
-                {
-                    BattleTech.UI.ModManagerListViewItem item = itm as BattleTech.UI.ModManagerListViewItem;
-                    if (item != null)
-                    {
-                        item.SetData(item.modDef);
-                    }
-                }
-            }catch(Exception e)
-            {
-                dbg.AppendLine(e.ToString());
-            }*/
             return false;
         }
     }

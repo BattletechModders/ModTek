@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using BattleTech;
 using UnityEngine;
 
@@ -13,7 +14,6 @@ namespace ModTek.Misc
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
         private const string MERGE_CACHE_FILE_NAME = "merge_cache.json";
-        private const string TYPE_CACHE_FILE_NAME = "type_cache.json";
         private const string LOG_NAME = "ModTek.log";
         private const string LOAD_ORDER_FILE_NAME = "load_order.json";
         private const string DATABASE_DIRECTORY_NAME = "Database";
@@ -44,13 +44,13 @@ namespace ModTek.Misc
         internal static string LogPath { get; set; }
         internal static string AssetBundleDirectoryName { get; set; } = "AssetBundleMerges"; // used for merging in asset bundles e.g. dlc
 
-        public static bool SetupPaths()
+        internal static void SetupPaths()
         {
             // if the manifest directory is null, there is something seriously wrong
             var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
             if (manifestDirectory == null)
             {
-                return false;
+                throw new Exception("Can't find manifest directory");
             }
 
             // setup directories
@@ -80,8 +80,6 @@ namespace ModTek.Misc
             MDDBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
             ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
-
-            return true;
         }
     }
 }
