@@ -25,13 +25,9 @@ namespace ModTek.CustomTypes
 
             var tagSet_MDD = MetadataDatabase.Instance.Query<TagSet_MDD>(
                     "SELECT * FROM TagSet WHERE TagSetID = @TagSetID",
-                    new { TagSetID = customTagSet.ID },
-                    null,
-                    true,
-                    null,
-                    null
+                    new { TagSetID = customTagSet.ID }
                 )
-                .FirstOrDefault<TagSet_MDD>();
+                .FirstOrDefault();
 
             // TODO: Can error out, test for that
             var tagSetType = (TagSetType) customTagSet.TypeID;

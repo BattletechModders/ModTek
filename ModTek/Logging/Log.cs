@@ -15,8 +15,8 @@ namespace ModTek.Logging
     {
         private string m_logfile;
         private Mutex mutex;
-        private StringBuilder m_cache = null;
-        private StreamWriter m_fs = null;
+        private StringBuilder m_cache;
+        private StreamWriter m_fs;
         private bool enabled;
 
         public LogFile(string name, bool enabled)
@@ -123,7 +123,7 @@ namespace ModTek.Logging
 
         public static void flushThreadProc()
         {
-            while (flushThreadActive == true)
+            while (flushThreadActive)
             {
                 Thread.Sleep(30 * 1000);
                 //RLog.LogWrite("Log flushing\n");

@@ -146,12 +146,12 @@ namespace ModTek.Manifest
             {
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry() { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
 
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry() { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
             }
         }

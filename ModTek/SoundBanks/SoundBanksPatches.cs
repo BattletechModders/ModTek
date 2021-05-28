@@ -166,13 +166,13 @@ namespace ModTek.SoundBanks
                     continue;
                 }
 
-                if (soundBank.Value.loaded == true)
+                if (soundBank.Value.loaded)
                 {
                     continue;
                 }
 
                 RLog.M.WL(1, "Loading:" + soundBank.Key);
-                ___loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true, false));
+                ___loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true));
             }
         }
     }
@@ -202,7 +202,7 @@ namespace ModTek.SoundBanks
                     continue;
                 }
 
-                var loadedAudioBank = ___loadedBanks.Find((Predicate<LoadedAudioBank>) (x => x.name == soundBank.Value.name));
+                var loadedAudioBank = ___loadedBanks.Find(x => x.name == soundBank.Value.name);
                 if (loadedAudioBank != null)
                 {
                     RLog.M.WL(1, "Unloading:" + soundBank.Key);
@@ -287,12 +287,12 @@ namespace ModTek.SoundBanks
                     result = msEncrypt.ToArray();
                 }
 
-                handle = GCHandle.Alloc((object) result, GCHandleType.Pinned);
+                handle = GCHandle.Alloc(result, GCHandleType.Pinned);
                 dataLength = (uint) result.Length;
             }
             else
             {
-                handle = GCHandle.Alloc((object) www.bytes, GCHandleType.Pinned);
+                handle = GCHandle.Alloc(www.bytes, GCHandleType.Pinned);
                 dataLength = (uint) www.bytes.Length;
             }
 

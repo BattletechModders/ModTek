@@ -9,6 +9,7 @@ using ModTek.Util;
 using UnityEngine;
 using UnityEngine.UI;
 using static ModTek.Logging.Logger;
+using Object = UnityEngine.Object;
 
 // ReSharper disable UnusedMember.Local
 
@@ -123,7 +124,7 @@ namespace ModTek.UI
             }
 
             var canvasPrefab = assetBundle.LoadAsset<GameObject>("ProgressBar_Canvas");
-            var canvasGameObject = UnityEngine.Object.Instantiate(canvasPrefab);
+            var canvasGameObject = Object.Instantiate(canvasPrefab);
             var panelTitleText = GameObject.Find("ProgressBar_Title")?.GetComponent<Text>();
             var sliderText = GameObject.Find("ProgressBar_Slider_Text")?.GetComponent<Text>();
             var loadingText = GameObject.Find("ProgressBar_Loading_Text")?.GetComponent<Text>();
@@ -145,7 +146,7 @@ namespace ModTek.UI
             loadingBehavior.FinishAction = () =>
             {
                 assetBundle.Unload(true);
-                UnityEngine.Object.Destroy(canvasGameObject);
+                Object.Destroy(canvasGameObject);
                 TriggerGameLoading();
             };
 

@@ -1,18 +1,19 @@
-using BattleTech;
-using Harmony;
-using ModTek.UI;
-using ModTek.Util;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using BattleTech;
+using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Manifest.Mods;
 using ModTek.Misc;
 using ModTek.Patches;
 using ModTek.SoundBanks;
+using ModTek.UI;
+using ModTek.Util;
+using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 
 namespace ModTek
@@ -34,7 +35,7 @@ namespace ModTek
         internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
         // internal temp structures
-        private static System.Diagnostics.Stopwatch stopwatch = new();
+        private static Stopwatch stopwatch = new();
 
         // the end result of loading mods, these are used to push into game data through patches
 
@@ -92,7 +93,7 @@ namespace ModTek
             else
             {
                 Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
-                SettingsDef = new ModDefEx()
+                SettingsDef = new ModDefEx
                 {
                     Enabled = true,
                     PendingEnable = true,

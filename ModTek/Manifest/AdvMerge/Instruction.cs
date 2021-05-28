@@ -76,7 +76,7 @@ namespace ModTek.Manifest.AdvMerge
                         }
 
                         // same behavior as partial json merging
-                        jObject1.Merge(jObject2, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Replace });
+                        jObject1.Merge(jObject2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
                         break;
                     }
                     case MergeAction.ArrayConcat:
@@ -86,7 +86,7 @@ namespace ModTek.Manifest.AdvMerge
                             throw new Exception("JSONPath has to point to an array and Value has to be an array");
                         }
 
-                        jArray1.Merge(jArray2, new JsonMergeSettings() { MergeArrayHandling = MergeArrayHandling.Concat });
+                        jArray1.Merge(jArray2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
                         break;
                     }
                     default:

@@ -1,13 +1,13 @@
-using BattleTech.ModSupport;
-using BattleTech.UI;
-using BattleTech.UI.TMProWrapper;
-using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BattleTech.ModSupport;
+using BattleTech.UI;
+using BattleTech.UI.TMProWrapper;
+using Harmony;
 using ModTek.Logging;
 using ModTek.Manifest.Mods;
 using ModTek.Misc;
@@ -348,7 +348,8 @@ namespace ModTek.Patches
                 __instance.installedModsPanel.RefreshListViewItems();
                 return false;
             }
-            else if (button == "save")
+
+            if (button == "save")
             {
                 //ActiveOrDefaultSettings_SaveUserSettings.SaveModsState = true;
                 return true;
@@ -405,7 +406,7 @@ namespace ModTek.Patches
                     return false;
                 }
 
-                if (mod.PendingEnable == true)
+                if (mod.PendingEnable)
                 {
                     var deps = mod.GatherDependsOnMe();
                     if (deps.Count > 0)
@@ -427,15 +428,15 @@ namespace ModTek.Patches
                         GenericPopupBuilder.Create("Dependency conflict", text.ToString())
                             .AddButton(
                                 "Return",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = true;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
-                                })
+                                }
                             )
                             .AddButton(
                                 "Resolve",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = false;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
@@ -445,15 +446,15 @@ namespace ModTek.Patches
                                     }
 
                                     ____screen.installedModsPanel.RefreshListViewItems();
-                                })
+                                }
                             )
                             .AddButton(
                                 "Shoot own leg",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = false;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
-                                })
+                                }
                             )
                             .IsNestedPopupWithBuiltInFader()
                             .SetAlwaysOnTop()
@@ -487,15 +488,15 @@ namespace ModTek.Patches
                         GenericPopupBuilder.Create("Dependency conflict", text.ToString())
                             .AddButton(
                                 "Return",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = false;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
-                                })
+                                }
                             )
                             .AddButton(
                                 "Resolve",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = true;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
@@ -505,15 +506,15 @@ namespace ModTek.Patches
                                     }
 
                                     ____screen.installedModsPanel.RefreshListViewItems();
-                                })
+                                }
                             )
                             .AddButton(
                                 "Shoot own leg",
-                                (Action) (() =>
+                                () =>
                                 {
                                     mod.PendingEnable = true;
                                     ___toggleBox.SetToggled(mod.PendingEnable);
-                                })
+                                }
                             )
                             .IsNestedPopupWithBuiltInFader()
                             .SetAlwaysOnTop()

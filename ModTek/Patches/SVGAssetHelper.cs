@@ -19,7 +19,7 @@ namespace ModTek.Patches
     [HarmonyPatch("FromJSON")]
     [HarmonyPatch(MethodType.Normal)]
     [HarmonyPatch(
-        new Type[]
+        new[]
         {
             typeof(string)
         }
@@ -102,7 +102,7 @@ namespace ModTek.Patches
     [HarmonyPatch(MethodType.Normal)]
     internal static class DataManager_PrewarmComplete
     {
-        public static DataManager dataManager { get; private set; } = null;
+        public static DataManager dataManager { get; private set; }
 
         public static bool Prepare()
         {
@@ -203,8 +203,8 @@ namespace ModTek.Patches
             return UILookAndColorConstantsIcons.Contains(weaponCat.Icon);
         }
 
-        private static Action<ResourceLoadRequest<SVGAsset>> ResourceLoadRequest_Load = null;
-        private static Type SVGAssetLoadRequest = null;
+        private static Action<ResourceLoadRequest<SVGAsset>> ResourceLoadRequest_Load;
+        private static Type SVGAssetLoadRequest;
         private static MethodInfo m_StateSet = typeof(FileLoadRequest).GetProperty("State", BindingFlags.Instance | BindingFlags.Public).GetSetMethod(true);
         private static FieldInfo f_dataManager = typeof(FileLoadRequest).GetField("dataManager", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo f_manifestEntry = typeof(FileLoadRequest).GetField("manifestEntry", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -282,7 +282,7 @@ namespace ModTek.Patches
                 var dm = new DynamicMethod(
                     "ModTekResourceLoadRequestLoad",
                     null,
-                    new Type[]
+                    new[]
                     {
                         typeof(ResourceLoadRequest<SVGAsset>)
                     },
@@ -334,11 +334,11 @@ namespace ModTek.Patches
             {
                 __instance.dataManager()
                     .AssetBundleManager()
-                    .RequestAsset<SVGAsset>(
+                    .RequestAsset(
                         BattleTechResourceType.SVGAsset,
                         __instance.ResourceId,
                         new Action<SVGAsset>(
-                            (SVGAsset resource) =>
+                            resource =>
                             {
                                 SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
                                     .Invoke(
@@ -387,19 +387,17 @@ namespace ModTek.Patches
                 __instance.dataManager()
                     .RequestResourcesLoad_SVGAsset(
                         __instance.ManifestEntry.ResourcesLoadPath,
-                        new Action<SVGAsset>(
-                            (SVGAsset resource) =>
-                            {
-                                SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .Invoke(
-                                        __instance,
-                                        new object[]
-                                        {
-                                            resource
-                                        }
-                                    );
-                            }
-                        )
+                        resource =>
+                        {
+                            SVGAssetLoadRequest.GetMethod("AssetLoaded", BindingFlags.Instance | BindingFlags.NonPublic)
+                                .Invoke(
+                                    __instance,
+                                    new object[]
+                                    {
+                                        resource
+                                    }
+                                );
+                        }
                     );
             }
 

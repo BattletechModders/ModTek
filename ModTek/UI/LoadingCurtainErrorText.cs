@@ -37,7 +37,7 @@ namespace ModTek.UI
             }
             else
             {
-                currentMessage += $"\"output_log.txt\"\n";
+                currentMessage += "\"output_log.txt\"\n";
             }
         }
 

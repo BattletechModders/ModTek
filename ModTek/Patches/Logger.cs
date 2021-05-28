@@ -2,6 +2,7 @@ using BattleTech.UI;
 using Harmony;
 using ModTek.UI;
 using UnityEngine;
+using Logger = HBS.Logging.Logger;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -11,7 +12,7 @@ namespace ModTek.Patches
     /// <summary>
     /// Patch the logger to spit out errors to the loading screen curtain
     /// </summary>
-    [HarmonyPatch(typeof(HBS.Logging.Logger), "HandleUnityLog")]
+    [HarmonyPatch(typeof(Logger), "HandleUnityLog")]
     internal static class Logger_HandleUnityLog_Patch
     {
         public static bool Prepare()

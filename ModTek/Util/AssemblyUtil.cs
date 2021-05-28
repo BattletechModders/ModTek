@@ -65,7 +65,7 @@ namespace ModTek.Util
             }
             catch (Exception e)
             {
-                LogException($"\t", e);
+                LogException("\t", e);
                 return null;
             }
         }

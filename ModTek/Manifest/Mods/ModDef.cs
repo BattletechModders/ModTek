@@ -101,10 +101,10 @@ namespace ModTek.Manifest.Mods
         public JObject Settings { get; set; } = new();
 
         [JsonIgnore]
-        public bool LoadFail { get; set; } = false;
+        public bool LoadFail { get; set; }
 
         [JsonIgnore]
-        public bool PendingEnable { get; set; } = false;
+        public bool PendingEnable { get; set; }
 
         [JsonIgnore]
         public string FailReason { get; set; }

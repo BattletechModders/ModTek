@@ -71,10 +71,10 @@ namespace ModTek.Manifest.Mods
         {
             var deps = new Dictionary<ModDefEx, bool>();
             Logger.Log("Gathering " + mod.Name + "->Enable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
-            Logger.Log((string) " I'm depends on:");
+            Logger.Log(" I'm depends on:");
             GatherAffectingOnlineRec(mod, ref deps, 2);
             var conflicts = deps.Keys.ToHashSet();
-            Logger.Log((string) " Conflicts:");
+            Logger.Log(" Conflicts:");
             foreach (var cmod in conflicts)
             {
                 GatherConflicts(cmod, ref deps);
