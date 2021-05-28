@@ -26,6 +26,11 @@ namespace ModTek.Patches
     )]
     internal static class ApplicationConstants_FromJSON
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(ApplicationConstants __instance)
         {
             RLog.M.TWL(0, "ApplicationConstants.FromJSON. PrewarmRequests:");

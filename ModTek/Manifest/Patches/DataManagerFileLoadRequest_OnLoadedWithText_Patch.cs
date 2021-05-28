@@ -10,6 +10,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch]
     public static class DataManagerFileLoadRequest_OnLoadedWithText_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static IEnumerable<MethodBase> GetOnLoadedWithTextMethods()
         {
             var parent = typeof(DataManager.FileLoadRequest);

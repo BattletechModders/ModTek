@@ -106,6 +106,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class AudioEventManager_LoadAudioSettings
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
             RLog.M.TWL(0, "AudioEventManager.LoadAudioSettings");
@@ -131,6 +136,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class AudioSettingsModule_SaveSettings
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(AudioSettingsModule __instance)
         {
             RLog.M.TWL(0, "AudioSettingsModule.SaveSettings");
@@ -156,6 +166,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class WwiseManager_LoadCombatBanks
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
             RLog.M.TWL(0, "WwiseManager.LoadCombatBanks");
@@ -187,6 +202,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class WwiseManager_UnloadCombatBanks
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
             RLog.M.TWL(0, "WwiseManager.UnloadCombatBanks");
@@ -223,6 +243,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class LoadedAudioBank_UnloadBank
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(LoadedAudioBank __instance)
         {
             RLog.M.TWL(0, "LoadedAudioBank.UnloadBank " + __instance.name);
@@ -243,6 +268,11 @@ namespace ModTek.SoundBanks
     )]
     internal static class LoadedAudioBank_LoadBankExternal
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         [Obsolete]
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
         {

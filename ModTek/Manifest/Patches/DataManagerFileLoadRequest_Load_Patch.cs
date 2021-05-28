@@ -15,6 +15,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch]
     public static class DataManagerFileLoadRequest_Load_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         private static MethodInfo RequestAssetOriginal;
         private static MethodInfo RequestAssetReplacement;
         private static MethodInfo RequestResourcesLoadOriginal;

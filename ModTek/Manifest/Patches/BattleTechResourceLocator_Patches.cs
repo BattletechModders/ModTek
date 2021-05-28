@@ -12,6 +12,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), "RefreshTypedEntries")]
     public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix()
         {
             return false;
@@ -23,6 +28,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.Dispose))]
     public static class BattleTechResourceLocator_Dispose_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix()
         {
             BetterBTRL.Instance.Dispose();
@@ -33,6 +43,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.SetContentPackIndex))]
     public static class BattleTechResourceLocator_SetContentPackIndex_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(ContentPackIndex contentPackIndex)
         {
             BetterBTRL.Instance.SetContentPackIndex(contentPackIndex);
@@ -43,6 +58,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.ApplyAddendum))]
     public static class BattleTechResourceLocator_ApplyAddendum_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(VersionManifestAddendum addendum)
         {
             BetterBTRL.Instance.ApplyAddendum(addendum);
@@ -53,6 +73,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveAddendum))]
     public static class BattleTechResourceLocator_RemoveAddendum_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(VersionManifestAddendum addendum)
         {
             BetterBTRL.Instance.RemoveAddendum(addendum);
@@ -63,6 +88,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetAddendumByName))]
     public static class BattleTechResourceLocator_GetAddendumByName_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(string name, ref VersionManifestAddendum __result)
         {
             __result = BetterBTRL.Instance.GetAddendumByName(name);
@@ -73,6 +103,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.ApplyMemoryStore))]
     public static class BattleTechResourceLocator_ApplyMemoryStore_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(VersionManifestMemoryStore memoryStore)
         {
             BetterBTRL.Instance.ApplyMemoryStore(memoryStore);
@@ -83,6 +118,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveMemoryStore))]
     public static class BattleTechResourceLocator_RemoveMemoryStore_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(VersionManifestMemoryStore memoryStore)
         {
             BetterBTRL.Instance.RemoveMemoryStore(memoryStore);
@@ -93,6 +133,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetMemoryStoresContainingEntry))]
     public static class BattleTechResourceLocator_GetMemoryStoresContainingEntry_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(BattleTechResourceType resourceType, string id, ref List<VersionManifestMemoryStore> __result)
         {
             __result = BetterBTRL.Instance.GetMemoryStoresContainingEntry(resourceType, id);
@@ -103,6 +148,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetMemoryStoreByName))]
     public static class BattleTechResourceLocator_GetMemoryStoreByName_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(string name, ref VersionManifestMemoryStore __result)
         {
             __result = BetterBTRL.Instance.GetMemoryStoreByName(name);
@@ -113,6 +163,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntries))]
     public static class BattleTechResourceLocator_AllEntries_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(ref VersionManifestEntry[] __result)
         {
             __result = BetterBTRL.Instance.AllEntries();
@@ -123,6 +178,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntriesOfResource))]
     public static class BattleTechResourceLocator_AllEntriesOfResource_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry[] __result)
         {
             __result = BetterBTRL.Instance.AllEntriesOfResource(type, filterByOwnership);
@@ -133,6 +193,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntriesOfResourceFromAddendum))]
     public static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership, ref VersionManifestEntry[] __result)
         {
             __result = BetterBTRL.Instance.AllEntriesOfResourceFromAddendum(type, addendum, filterByOwnership);
@@ -143,6 +208,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.EntryByID))]
     public static class BattleTechResourceLocator_EntryByID_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(string id, BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry __result)
         {
             __result = BetterBTRL.Instance.EntryByID(id, type, filterByOwnership);
@@ -153,6 +223,11 @@ namespace ModTek.Manifest.Patches
     [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveEntry))]
     public static class BattleTechResourceLocator_RemoveEntry_Patch
     {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static bool Prefix(VersionManifestEntry entry)
         {
             BetterBTRL.Instance.RemoveEntry(entry);
