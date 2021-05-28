@@ -5,7 +5,7 @@ using ModTek.Manifest;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Patches
+namespace ModTek.SoundBanks
 {
     /// <summary>
     /// Patch LoadedAudioBank to use modded replacement SoundBank instead by changing the base path of the AkSoundEngine.

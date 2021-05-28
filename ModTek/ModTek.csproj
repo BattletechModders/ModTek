@@ -122,12 +122,11 @@
     <Compile Include="Manifest\Patches\SimGame_MDDExtensions_UpdateContract_Patch.cs" />
     <Compile Include="Misc\Configuration.cs" />
     <Compile Include="Misc\FilePaths.cs" />
-    <Compile Include="Patches\LoadedAudioBank.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
     <Compile Include="Patches\SVGAssetHelper.cs" />
-    <Compile Include="Patches\UIManagerPatches.cs" />
     <Compile Include="CustomTypes\CustomTagSet.cs" />
     <Compile Include="CustomTypes\CustomTag.cs" />
+    <Compile Include="SoundBanks\LoadedAudioBank.cs" />
     <Compile Include="SoundBanks\ProcessParameters.cs" />
     <Compile Include="SoundBanks\SoundBanksFeature.cs" />
     <Compile Include="SoundBanks\SoundBanksPatches.cs" />
