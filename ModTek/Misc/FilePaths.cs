@@ -38,11 +38,11 @@ namespace ModTek.Misc
         internal static string ModsDirectory { get; private set; }
         internal static string StreamingAssetsDirectory { get; private set; }
         internal static string StreamingAssetsDirectoryName { get; private set; }
-        internal static string DBCachePath { get; private set; }
+        internal static string MDDBCachePath { get; private set; }
         internal static string ChangedFlagPath { get; private set; }
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
         internal static string LogPath { get; set; }
-        internal static string AssetBundleDirectoryName { get; set; } = "AssetBundle"; // used for merging in asset bundles e.g. dlc
+        internal static string AssetBundleDirectoryName { get; set; } = "AssetBundleMerges"; // used for merging in asset bundles e.g. dlc
 
         public static bool SetupPaths()
         {
@@ -77,7 +77,7 @@ namespace ModTek.Misc
             LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
             MergeCachePath = Path.Combine(CacheDirectory, MERGE_CACHE_FILE_NAME);
             ModMDDBPath = Path.Combine(DatabaseDirectory, MDD_FILE_NAME);
-            DBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
+            MDDBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
             ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
 

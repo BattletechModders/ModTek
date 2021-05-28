@@ -3,29 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Manifest.Mods;
+using ModTek.Util;
 using RequestKey = System.Tuple<string, string>;
-using RequestCache = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.Cache.CacheEntry>;
+using RequestCache = System.Collections.Generic.Dictionary<System.Tuple<string, string>, ModTek.Manifest.Merges.MergeCacheEntry>;
 
 namespace ModTek.Manifest.BTRL
 {
-	internal class BetterBTRL
+    internal class BetterBTRL
 	{
         public static readonly BetterBTRL Instance = new();
 
         private ContentPackIndex packIndex;
         private readonly TypedManifest currentManifest = new();
+
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> hbsAddendums = new();
-        private readonly List<ModManifest> orderedModAddendums = new();
+        private readonly List<ModAddendumManifest> orderedModAddendums = new();
+        private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
-
-        private readonly Dictionary<Tuple<BattleTechResourceType, string>, VersionManifestEntry> cachedLoadRequests = new();
-
-        //
-
-        public VersionManifestEntry StringEntryByID(string id)
+        private void ContentPackLoaded()
         {
-            return currentManifest.StringEntryByID(id);
+            RefreshTypedEntries();
+            ModsManifest.BTRLContentPackLoaded();
+        }
+
+        internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
+        {
+            addendumEntryOverrides.GetOrCreate(addendumName).Add(manifestEntry);
+        }
+
+        private VersionManifestAddendum ApplyOverrides(VersionManifestAddendum addendum)
+        {
+            if (!addendumEntryOverrides.TryGetValue(addendum.Name, out var overrides))
+            {
+                return addendum;
+            }
+
+            var copy = new VersionManifestAddendum(addendum.Name);
+            copy.AddRange(addendum.Entries);
+            copy.AddRange(overrides); // duplicates are sorted inside TypedManifest
+            return copy;
         }
 
         // methods order is same as dnSpy lists them
@@ -38,33 +56,31 @@ namespace ModTek.Manifest.BTRL
             }
 
             var contentPackIndex = packIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Remove(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(RefreshTypedEntries));
+            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Remove(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
         }
 
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)
         {
             packIndex = contentPackIndex;
-            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Combine(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(RefreshTypedEntries));
+            contentPackIndex.contentPackLoadedCallback = (ContentPackIndex.OnContentPackLoaded)Delegate.Combine(contentPackIndex.contentPackLoadedCallback, new ContentPackIndex.OnContentPackLoaded(ContentPackLoaded));
         }
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
         {
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             hbsAddendums.Add(addendum);
-            RefreshTypedEntries();
+            RefreshTypedEntries(); // TODO needed?
         }
 
-        // TODO should be used when mod dlls were successfully loaded
-        public void AddModAddendum(VersionManifestAddendum addendum, List<string> resources)
+        public void AddModAddendum(ModAddendumManifest modManifest)
         {
-            var modManifest = new ModManifest { Addendum = addendum, RequiredOwnedResources = resources};
             orderedModAddendums.Add(modManifest);
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
-            RefreshTypedEntries();
+            RefreshTypedEntries(); // TODO needed?
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
@@ -90,7 +106,7 @@ namespace ModTek.Manifest.BTRL
             memoryStores.Add(memoryStore.Name, memoryStore);
             memoryStore.SubscribeToContentsChanged(IndexMemoryStore);
             IndexMemoryStore(memoryStore);
-            RefreshTypedEntries();
+            RefreshTypedEntries(); // TODO needed?
         }
 
 		public void RemoveMemoryStore(VersionManifestMemoryStore memoryStore)
@@ -104,7 +120,7 @@ namespace ModTek.Manifest.BTRL
             memoryStores.Remove(memoryStore.Name);
             memoryStore.SubscribeToContentsChanged(IndexMemoryStore);
             UnIndexMemoryStore(memoryStore);
-            RefreshTypedEntries();
+            RefreshTypedEntries(); // TODO needed?
         }
 
 		private void IndexMemoryStore(VersionManifestMemoryStore memoryStore)
@@ -177,27 +193,38 @@ namespace ModTek.Manifest.BTRL
         private BetterBTRL()
         {
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
-            RefreshTypedEntries();
+            RefreshTypedEntries(); // TODO needed?
         }
 
-		private void RefreshTypedEntries()
+        internal void RefreshTypedEntries()
         {
             currentManifest.Reset(defaultManifest.Entries);
+            var activeAndOwnedAddendums = new List<string>();
 
             foreach (var addendum in hbsAddendums)
             {
-                currentManifest.AddAddendum(addendum, packIndex);
+                var isOwned = packIndex.IsContentPackOwned(addendum.Name);
+                if (isOwned)
+                {
+                    activeAndOwnedAddendums.Add(addendum.Name);
+                }
+                currentManifest.AddAddendum(ApplyOverrides(addendum), isOwned);
             }
 
             foreach (var modAddendum in orderedModAddendums)
             {
-                currentManifest.AddModAddendum(modAddendum);
+                if (modAddendum.RequiredAddendums != null && modAddendum.RequiredAddendums.Except(activeAndOwnedAddendums).Any())
+                {
+                    // skip since not all requirements are met
+                    continue;
+                }
+                currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum), true);
             }
         }
 
         public VersionManifestEntry[] AllEntries()
         {
-            return currentManifest.AllEntries();
+            return currentManifest.AllEntries(false);
         }
 
 		public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
@@ -220,12 +247,5 @@ namespace ModTek.Manifest.BTRL
             // only used by ModLoader, which we disable anyway
             throw new NotImplementedException();
 		}
-
-        public void PatchMDD()
-        {
-            // go through all AddToDb
-            // if merge => put out error, say can't AddToDb merged stuff
-            ModsManifest.ApplyManifest();
-        }
     }
 }

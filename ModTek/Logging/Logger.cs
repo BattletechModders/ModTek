@@ -29,6 +29,14 @@ namespace ModTek.Logging
             logStream?.Flush();
         }
 
+        internal static void LogIf(bool condition, string message)
+        {
+            if (condition)
+            {
+                Log(message);
+            }
+        }
+
         internal static void Log(string message)
         {
             var stream = GetOrCreateStream();

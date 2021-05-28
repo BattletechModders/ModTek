@@ -15,11 +15,7 @@ namespace ModTek.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        public bool IsStreamingAssetPath => Path.Equals(FilePaths.StreamingAssetsDirectoryName);
         public bool IsAssetBundlePath => Path.Equals(FilePaths.AssetBundleDirectoryName);
-
-        [JsonIgnore]
-        public string AbsolutePath { get; set; }
 
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);
@@ -41,19 +37,20 @@ namespace ModTek.Manifest
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
         internal bool IsTypeCustomTag => Type == ModDefExLoading.CustomType_Tag;
         internal bool IsTypeCustomTagSet => Type == ModDefExLoading.CustomType_TagSet;
-        internal BattleTechResourceType? ResourceType => AddendumUtils.ResourceType(Type);
+        internal BattleTechResourceType? ResourceType => BTResourceUtils.ResourceType(Type);
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
 
         public string Id { get; set; }
 
         public string AddToAddendum { get; set; }
+        public string[] RequiredAddendums { get; set; }
         public string AssetBundleName { get; set; }
         public bool? AssetBundlePersistent { get; set; }
 
-        [JsonIgnore]
+        [DefaultValue(false)]
         public bool ShouldMergeJSON { get; set; }
 
-        [JsonIgnore]
+        [DefaultValue(false)]
         public bool ShouldAppendText { get; set; }
 
         [DefaultValue(true)]
@@ -65,8 +62,13 @@ namespace ModTek.Manifest
         }
 
         [JsonIgnore]
+        public ModDefEx ModDef { get; set; }
+        [JsonIgnore]
+        public string AbsolutePath => ModDef.GetFullPath(Path);
+
+        [JsonIgnore]
         private VersionManifestEntry customResourceEntry;
-        internal VersionManifestEntry GetCustomResourceEntry()
+        internal VersionManifestEntry CreateVersionManifestEntry()
         {
             return customResourceEntry ??= new VersionManifestEntry(
                 Id,

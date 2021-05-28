@@ -1,7 +1,8 @@
 ﻿using System;
+using BattleTech;
 using Newtonsoft.Json;
 
-namespace ModTek.Manifest.Merges.Cache
+namespace ModTek.Manifest
 {
     internal class FileVersionTuple : IEquatable<FileVersionTuple>
     {
@@ -9,11 +10,16 @@ namespace ModTek.Manifest.Merges.Cache
         public string Path { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
-        public DateTime Version { get; private set; }
+        public DateTime UpdatedOn { get; private set; }
 
-        internal static FileVersionTuple FromModEntry(ModEntry entry)
+        internal static FileVersionTuple From(ModEntry entry)
         {
-            return new() { Path = entry.AbsolutePath, Version = entry.LastWriteTimeUtc };
+            return new() { Path = entry.AbsolutePath, UpdatedOn = entry.LastWriteTimeUtc };
+        }
+
+        internal static FileVersionTuple From(VersionManifestEntry entry)
+        {
+            return new() { Path = entry.FilePath, UpdatedOn = entry.UpdatedOn };
         }
 
         // GENERATED CODE BELOW
@@ -30,7 +36,7 @@ namespace ModTek.Manifest.Merges.Cache
                 return true;
             }
 
-            return Path == other.Path && Version.Equals(other.Version);
+            return Path == other.Path && UpdatedOn.Equals(other.UpdatedOn);
         }
 
         public override bool Equals(object obj)
@@ -57,7 +63,7 @@ namespace ModTek.Manifest.Merges.Cache
         {
             unchecked
             {
-                return ((Path != null ? Path.GetHashCode() : 0) * 397) ^ Version.GetHashCode();
+                return ((Path != null ? Path.GetHashCode() : 0) * 397) ^ UpdatedOn.GetHashCode();
             }
         }
     }

@@ -4,7 +4,7 @@ using BattleTech.Framework;
 
 namespace ModTek.Manifest.MDD
 {
-    internal static class UpdateMDD
+    internal static class MDDBExtensions
     {
         // Copied from VersionManifestHotReload.InstantiateResourceAndUpdateMDDB
         public static void InstantiateResourceAndUpdateMDDB(this MetadataDatabase mddb, BattleTechResourceType resourceType, string id, string json)

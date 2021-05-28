@@ -9,15 +9,10 @@ using HBS.Util;
 using ModTek.Logging;
 using ModTek.Manifest.Mods;
 
-namespace ModTek.Util
+namespace ModTek.Manifest.MDD
 {
     internal static class AddendumUtils
     {
-        internal static BattleTechResourceType? ResourceType(string Type)
-        {
-            return Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
-        }
-
         public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {
             try
@@ -130,7 +125,6 @@ namespace ModTek.Util
                         continue;
                     }
 
-                    ;
                     if (names.ContainsKey(val.Name))
                     {
                         val.ID = names[val.Name];
@@ -163,7 +157,6 @@ namespace ModTek.Util
                         }
                     }
 
-                    ;
                     if (val.GetType() == typeof(FactionValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
@@ -221,7 +214,6 @@ namespace ModTek.Util
                             continue;
                         }
 
-                        ;
                         Logger.Log("\t\t[" + val.Name + ":" + val.ID + "]");
                     }
                 }

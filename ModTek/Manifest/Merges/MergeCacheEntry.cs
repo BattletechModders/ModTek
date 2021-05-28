@@ -8,15 +8,18 @@ using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Manifest.Merges.Cache
+namespace ModTek.Manifest.Merges
 {
-    internal class CacheEntry : IEquatable<CacheEntry>
+    internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
     {
         [JsonProperty(Required = Required.Always)]
         public string CachedFileName { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
-        public DateTime UpdatedOn { get; set; }
+        public string CachedUpdatedOn { get; private set; }
+
+        [JsonProperty(Required = Required.Always)]
+        public DateTime OriginalUpdatedOn { get; set; }
 
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();
@@ -28,20 +31,14 @@ namespace ModTek.Manifest.Merges.Cache
         internal string CachedPath => Path.Combine(Path.Combine(FilePaths.CacheDirectory, ResourceType), CachedFileName);
         private bool IsJsonMerge => FileUtils.IsJson(CachedFileName);
 
-        internal CacheEntry()
+        internal MergeCacheEntry()
         {
         }
 
-        internal CacheEntry(ModEntry entry)
+        internal MergeCacheEntry(ModEntry entry)
         {
             ResourceType = entry.Type;
             CachedFileName = entry.Id + entry.FileExtension;
-        }
-
-        internal void Update(VersionManifestEntry manifestEntry)
-        {
-            ResourceType = manifestEntry.Type;
-            UpdatedOn = manifestEntry.UpdatedOn;
         }
 
         internal void Add(ModEntry modEntry)
@@ -67,7 +64,7 @@ namespace ModTek.Manifest.Merges.Cache
                 }
             }
 
-            var merge = FileVersionTuple.FromModEntry(modEntry);
+            var merge = FileVersionTuple.From(modEntry);
             Merges.Add(merge);
         }
 
@@ -95,7 +92,7 @@ namespace ModTek.Manifest.Merges.Cache
 
         // GENERATED CODE BELOW, used Rider IDE for that
 
-        public bool Equals(CacheEntry other)
+        public bool Equals(MergeCacheEntry other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -107,7 +104,7 @@ namespace ModTek.Manifest.Merges.Cache
                 return true;
             }
 
-            return CachedFileName == other.CachedFileName && UpdatedOn.Equals(other.UpdatedOn) && Equals(Merges, other.Merges) && ResourceType == other.ResourceType;
+            return CachedFileName == other.CachedFileName && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Equals(Merges, other.Merges) && ResourceType == other.ResourceType;
         }
 
         public override bool Equals(object obj)
@@ -127,7 +124,7 @@ namespace ModTek.Manifest.Merges.Cache
                 return false;
             }
 
-            return Equals((CacheEntry) obj);
+            return Equals((MergeCacheEntry) obj);
         }
 
         public override int GetHashCode()
@@ -135,7 +132,7 @@ namespace ModTek.Manifest.Merges.Cache
             unchecked
             {
                 var hashCode = (CachedFileName != null ? CachedFileName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ UpdatedOn.GetHashCode();
+                hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ResourceType != null ? ResourceType.GetHashCode() : 0);
                 return hashCode;

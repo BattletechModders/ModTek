@@ -5,7 +5,8 @@ using System.Linq;
 using BattleTech;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Logging;
+using Harmony.ILCopying;
+using ModTek.CustomTypes;
 using ModTek.Manifest.BTRL;
 using ModTek.Manifest.MDD;
 using ModTek.Manifest.Merges;
@@ -21,11 +22,12 @@ namespace ModTek.Manifest
 {
     internal static class ModsManifest
     {
-        private static MergesDatabase mergesDatabase = new();
+        private static MergeCache mergeCache = new();
+        private static MDDBCache mddbCache = new();
 
         private static HashSet<string> systemIcons = new();
-        internal static HashSet<ModEntry> CustomTags = new();
-        internal static HashSet<ModEntry> CustomTagSets = new();
+        private static HashSet<ModEntry> CustomTags = new();
+        private static HashSet<ModEntry> CustomTagSets = new();
 
         internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
 
@@ -84,48 +86,62 @@ namespace ModTek.Manifest
             );
         }
 
-        internal static IEnumerator<ProgressReport> ProcessLoop()
+        internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             // there are no mods loaded, just return
             if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
             {
-                return Enumerable.Empty<ProgressReport>().GetEnumerator();
+                yield break;
             }
 
-            return CSharpUtils.Enumerate(
-                HandleModManifestsLoop(),
-                MDDHelper.AddToDBLoop()
-            );
-        }
-
-        private static IEnumerator<ProgressReport> HandleModManifestsLoop()
-        {
-            Logger.Log("\nAdding Mod Content...");
+            Log("\nAdding Mod Content...");
 
             // progress panel setup
             var entryCount = 0;
-            var numEntries = 0;
-            ModDefsDatabase.ModDefs.Do(entries => numEntries += entries.Value.Manifest.Count);
+            var mods = ModDefsDatabase.ModsInLoadOrder();
+            var numEntries = mods.Count;
 
-            foreach (var modDef in ModDefsDatabase.ModsInLoadOrder())
+            foreach (var modDef in mods)
             {
                 var modName = modDef.Name;
 
-                Logger.Log($"{modName}:");
-                yield return new ProgressReport(entryCount / (float) numEntries, $"Loading {modName}", "", true);
+                Log($"{modName}:");
+                yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", "", true);
 
-                CleanupManifest(modDef);
+                AddImplicitManifest(modDef);
 
+                var packager = new ModAddendumPackager(modName);
                 foreach (var modEntry in modDef.Manifest)
                 {
-                    yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", modEntry.Id);
+                    NormalizeAndAddModEntries(modDef, modEntry, packager);
+                }
+                packager.SaveToBTRL();
 
-                    NormalizeAndAddModEntries(modDef, modEntry);
+                LogIf(modDef.DataAddendumEntries.Count > 0, "DataAddendum:");
+                foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
+                {
+                    if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, modDef.Directory))
+                    {
+                        MDDBCache.HasChanges = true;
+                    }
                 }
             }
+
+            LogIf(CustomTags.Count > 0, "Processing CustomTags:");
+            foreach (var modEntry in CustomTags)
+            {
+                CustomTypeProcessor.AddOrUpdateTag(modEntry.AbsolutePath);
+            }
+            LogIf(CustomTagSets.Count > 0, "Processing CustomTagSets:");
+            foreach (var modEntry in CustomTagSets)
+            {
+                CustomTypeProcessor.AddOrUpdateTagSet(modEntry.AbsolutePath);
+            }
+
+            BetterBTRL.Instance.RefreshTypedEntries();
         }
 
-        private static void CleanupManifest(ModDefEx modDef)
+        private static void AddImplicitManifest(ModDefEx modDef)
         {
             if (modDef.LoadImplicitManifest)
             {
@@ -140,9 +156,9 @@ namespace ModTek.Manifest
             }
         }
 
-        private static void NormalizeAndAddModEntries(ModDefEx modDef, ModEntry entry)
+        private static void NormalizeAndAddModEntries(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
         {
-            entry.AbsolutePath = modDef.GetFullPath(entry.Path);
+            entry.ModDef = modDef;
 
             if (entry.IsFile)
             {
@@ -157,7 +173,7 @@ namespace ModTek.Manifest
                         entry.Type = "DebugSettings";
                     }
                 }
-                AddModEntry(entry);
+                AddModEntry(entry, packager);
             }
             else if (entry.IsDirectory)
             {
@@ -169,51 +185,49 @@ namespace ModTek.Manifest
                         foreach (var file in FileUtils.FindFiles(bundlePath, "*"))
                         {
                             var copy = entry.copy();
-                            copy.AssetBundleName = bundleName;
-                            copy.AbsolutePath = file;
+                            copy.AssetBundleName = bundleName; // TODO needed?
                             copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
                             copy.Id = Path.GetFileNameWithoutExtension(file);
-                            AddModEntry(copy);
+                            AddModEntry(copy, packager);
                         }
                     }
                 }
                 else
                 {
                     var pattern = entry.Type == nameof(SoundBankDef) ? "*.json" : "*";
-                    foreach (var file in FileUtils.FindFiles(entry.Path, pattern))
+                    foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, pattern))
                     {
                         var copy = entry.copy();
-                        copy.AbsolutePath = file;
                         copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
                         copy.Id = Path.GetFileNameWithoutExtension(file);
-                        AddModEntry(copy);
+                        AddModEntry(copy, packager);
                     }
                 }
             }
             else
             {
-                Logger.Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
+                Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
             }
         }
 
-        private static void AddModEntry(ModEntry entry)
+        private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
             if (entry.ShouldMergeJSON || entry.ShouldAppendText)
             {
                 if ((entry.ShouldMergeJSON && entry.IsJson)
                     || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
                 {
-                    mergesDatabase.AddModEntry(entry);
+                    mergeCache.AddModEntry(entry);
                 }
                 else
                 {
-                    Logger.Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
+                    Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
                 }
             }
             else if (entry.IsTypeCustomResource)
             {
-                Logger.Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
-                CustomResources[entry.Type][entry.Id] = entry.GetCustomResourceEntry();
+                Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
+                CustomResources[entry.Type][entry.Id] = entry.CreateVersionManifestEntry();
             }
             else if (entry.IsTypeSoundBankDef)
             {
@@ -232,21 +246,30 @@ namespace ModTek.Manifest
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
-                    Logger.Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.RelativePathToMods}");
+                    Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.RelativePathToMods}");
                     if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
                     {
                         systemIcons.Add(entry.Id);
                     }
                 }
 
-                Logger.Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");
-
-                BetterBTRL.Instance.AddModAddendum();
-                AddBTRLEntries;
+                Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");
+                if (!entry.AddToDB)
+                {
+                    mddbCache.Ignore(entry);
+                }
+                if (entry.AddToAddendum != null)
+                {
+                    BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
+                }
+                else
+                {
+                    packager.AddEntry(entry);
+                }
             }
             else
             {
-                Logger.Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
+                Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
             }
         }
 
@@ -258,39 +281,50 @@ namespace ModTek.Manifest
             }
         }
 
-        internal static VersionManifestEntry FindEntryByFileName(string fileName)
+        internal static void BTRLContentPackLoaded()
         {
-            return AddBTRLEntries.FindLast(x => Path.GetFileName(x.Path) == fileName)?.GetVersionManifestEntry()
-                ?? ModDefsDatabase.CachedVersionManifest.Find(x => Path.GetFileName(x.FilePath) == fileName);
+            PreloadAfterManifestComplete();
         }
 
-        internal static List<ModEntry> GetAddToDbEntries()
+        private static void PreloadAfterManifestComplete()
         {
-            return AddBTRLEntries.Where(x => x.AddToDB).ToList();
+            var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
+            foreach (var type in BTResourceUtils.StringTypes)
+            {
+                loadRequest.AddAllOfTypeBlindLoadRequest(type);
+            }
+            loadRequest.ProcessRequests();
+        }
+
+        private static void SaveCaches()
+        {
+            mergeCache.Save();
+            mddbCache.Save();
         }
 
         // only merges will be cached
         internal static string GetMergedContent(VersionManifestEntry entry)
         {
-            return mergesDatabase.GetMergedContent(entry);
+            return mergeCache.HasMergedContentCached(entry, true, out var content) ? content : null;
         }
 
         // make sure to update MDD if need be
         internal static string ContentLoaded(VersionManifestEntry entry, string content)
         {
-            var type = AddendumUtils.ResourceType(entry.Type);
-            if (type == null)
+            if (mergeCache.HasMerges(entry))
             {
-                Log($"Internal error: {entry.Id} has invalid type: {entry.Type}");
-                return null;
+                if (!mergeCache.HasMergedContentCached(entry, false, out _))
+                {
+                    content = mergeCache.MergeAndCacheContent(entry, content);
+                    mddbCache.Add(entry, content, false);
+                }
+            }
+            else
+            {
+                mddbCache.Add(entry, content);
             }
 
-            if (mergable && !merged)
-            {
-                var changedContent = mergesDatabase.MergeContentIfApplicable(entry, content);
-            }
-            mddbHelper.UpdateContent(type, id, version, changedContent ?? content);
-            return changedContent;
+            return content;
         }
     }
 }

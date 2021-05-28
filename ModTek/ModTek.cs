@@ -6,7 +6,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using BattleTech.Data;
 using ModTek.Logging;
 using ModTek.Manifest;
 using ModTek.Manifest.MDD;
@@ -166,7 +168,7 @@ namespace ModTek
         private static void LoadMods()
         {
             ProgressPanel.SubmitWork(ModDefsDatabase.InitModsLoop);
-            ProgressPanel.SubmitWork(ModsManifest.ProcessLoop);
+            ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishLoop);
@@ -174,7 +176,6 @@ namespace ModTek
 
         private static IEnumerator<ProgressReport> FinishLoop()
         {
-            // "Loop"
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
