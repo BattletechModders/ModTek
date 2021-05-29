@@ -30,7 +30,7 @@ namespace ModTek.Features.Manifest.MDD
                 {
                     Entries = JsonConvert.DeserializeObject<CacheDB>(File.ReadAllText(PersistentFilePath));
                     MetadataDatabase.ReloadFromDisk();
-                    Log("Loaded db cache.");
+                    Log("MDDB Cache: Loaded.");
                     return;
                 }
                 catch (Exception e)
@@ -48,7 +48,7 @@ namespace ModTek.Features.Manifest.MDD
             File.Copy(MDDBPath, ModMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
-            Log("Copying over DB and building new DB Cache.");
+            Log("MDDB Cache: Copying over DB and building new DB Cache.");
             Entries = new CacheDB();
             MetadataDatabase.ReloadFromDisk();
         }
@@ -58,6 +58,7 @@ namespace ModTek.Features.Manifest.MDD
         {
             if (!HasChanges)
             {
+                Log($"MDDB Cache: Changes detected.");
                 return;
             }
 
@@ -70,7 +71,7 @@ namespace ModTek.Features.Manifest.MDD
             }
             catch (Exception e)
             {
-                Log($"Couldn't write merge cache to {PersistentFilePath}", e);
+                Log($"MDDB Cache: Couldn't write mddb cache to {PersistentFilePath}", e);
             }
         }
 
@@ -79,7 +80,7 @@ namespace ModTek.Features.Manifest.MDD
             var type = BTConstants.ResourceType(entry.Type);
             if (!type.HasValue)
             {
-                Log($"Internal error: {entry.Id} has invalid type: {entry.Type}");
+                Log($"MDDB Cache: Internal error: {entry.Id} has invalid type: {entry.Type}");
                 return;
             }
 
