@@ -60,6 +60,8 @@ namespace ModTek.Misc
         }
 
         // ReSharper disable once ConvertToConstant.Local
+        // wanted to do compression mainly to force all normal cache data through here
+        // we need zipfile support to allow zipped mods
         private static readonly bool compress = true;
         private static string CompressedPath(string path)
         {
@@ -86,21 +88,32 @@ namespace ModTek.Misc
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
         )
         {
-            using var f = new FileStream(CompressedPath(path), FileMode.Create);
-            using var g = CompressedWriteStream(f);
-            using var s = new StreamWriter(g);
-            s.NewLine = "\n";
-            using var c = new CSVWriter(path);
-            c.Close();
-            File.Delete(path);
-            Traverse.Create(c).Field<TextWriter>("writer").Value = s;
-
-            CSVTemplatingUtility.WriteFieldNamesToRow<T>(c, flags);
-            c.AdvanceRow();
-            foreach (var entry in enumerable)
+            void process(CSVWriter csvWriter)
             {
-                CSVSerializationUtility.WriteFieldValuesToRow(entry, c, flags);
-                c.AdvanceRow();
+                CSVTemplatingUtility.WriteFieldNamesToRow<T>(csvWriter, flags);
+                csvWriter.AdvanceRow();
+                foreach (var entry in enumerable)
+                {
+                    CSVSerializationUtility.WriteFieldValuesToRow(entry, csvWriter, flags);
+                    csvWriter.AdvanceRow();
+                }
+            }
+
+            using var c = new CSVWriter(path);
+            if (compress)
+            {
+                using var f = new FileStream(CompressedPath(path), FileMode.Create);
+                using var g = CompressedWriteStream(f);
+                using var s = new StreamWriter(g);
+                s.NewLine = "\n";
+                c.Close();
+                File.Delete(path);
+                Traverse.Create(c).Field<TextWriter>("writer").Value = s;
+                process(c);
+            }
+            else
+            {
+                process(c);
             }
         }
 
