@@ -7,6 +7,7 @@ using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Features.Manifest.Merges
 {
@@ -82,7 +83,7 @@ namespace ModTek.Features.Manifest.Merges
             return Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
         }
 
-        // GENERATED CODE BELOW, used Rider IDE for that
+        // GENERATED CODE BELOW, used Rider IDE for that, Merges have to be done using SequenceEqual (rider uses Equals)
         public bool Equals(MergeCacheEntry other)
         {
             if (ReferenceEquals(null, other))
@@ -95,7 +96,7 @@ namespace ModTek.Features.Manifest.Merges
                 return true;
             }
 
-            return CachedPath == other.CachedPath && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Equals(Merges, other.Merges);
+            return CachedPath == other.CachedPath && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Merges.SequenceEqual(other.Merges);
         }
 
         public override bool Equals(object obj)

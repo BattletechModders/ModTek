@@ -102,12 +102,7 @@ namespace ModTek.Features.Manifest.Patches
 
         public static void RequestResourcesLoad(DataManager instance, string path, Action<TextAsset> onComplete)
         {
-            if (FinishWithMergedContent(onComplete.Target))
-            {
-                return;
-            }
-
-            Traverse.Create(instance).Method("RequestResourcesLoad").GetValue(path, onComplete);
+            throw new InvalidOperationException(); // TODO implement (how to test?)
         }
 
         public static void RequestAsset(AssetBundleManager instance, BattleTechResourceType type, string id, Action<TextAsset> loadedCallback)
@@ -134,8 +129,19 @@ namespace ModTek.Features.Manifest.Patches
                 return false;
             }
 
-            Traverse.Create(request).Method("OnLoadedWithText").GetValue(cachedContent);
+            request.OnLoadedWithText(cachedContent);
             return true;
+        }
+
+        private static void OnLoadedWithText(this DataManager.FileLoadRequest request, string content)
+        {
+            var method = request.GetType()
+                .GetMethod("OnLoadedWithText", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null)
+            {
+                throw new ArgumentException();
+            }
+            method.Invoke(request, new object[]{content});
         }
     }
 }

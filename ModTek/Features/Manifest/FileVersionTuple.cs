@@ -45,7 +45,7 @@ namespace ModTek.Features.Manifest
                 return true;
             }
 
-            return Path == other.Path && UpdatedOn.Equals(other.UpdatedOn);
+            return AssetBundleName == other.AssetBundleName && Path == other.Path && UpdatedOn.Equals(other.UpdatedOn);
         }
 
         public override bool Equals(object obj)
@@ -72,7 +72,10 @@ namespace ModTek.Features.Manifest
         {
             unchecked
             {
-                return ((Path != null ? Path.GetHashCode() : 0) * 397) ^ UpdatedOn.GetHashCode();
+                var hashCode = (AssetBundleName != null ? AssetBundleName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Path != null ? Path.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ UpdatedOn.GetHashCode();
+                return hashCode;
             }
         }
     }

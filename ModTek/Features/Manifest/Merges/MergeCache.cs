@@ -15,8 +15,9 @@ namespace ModTek.Features.Manifest.Merges
     {
         private static string PersistentFilePath => FilePaths.MergeCachePath;
 
-        private readonly MergeSets persistentSets;
-        private readonly MergeSets tempSets = new();
+        private readonly MergeSets persistentSets; // stuff in here was merged
+        private readonly MergeSets tempSets = new(); // stuff in here has merges queued
+        private static bool HasChanges;
 
         internal MergeCache()
         {
@@ -44,9 +45,16 @@ namespace ModTek.Features.Manifest.Merges
             try
             {
                 saveSW.Restart();
+                if (!HasChanges)
+                {
+                    Log($"Merge Cache: No changes detected, skipping save.");
+                    return;
+                }
+
                 var json = JsonConvert.SerializeObject(persistentSets, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 File.WriteAllText(PersistentFilePath, json);
                 Log($"Merge Cache: Saved to {PersistentFilePath}.");
+                HasChanges = false;
             }
             catch (Exception e)
             {
@@ -139,6 +147,7 @@ namespace ModTek.Features.Manifest.Merges
                 Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedAbsolutePath) ?? throw new InvalidOperationException());
                 File.WriteAllText(temp.CachedAbsolutePath, mergedContent);
                 persistentSets[key] = temp;
+                HasChanges = true;
             }
             catch (Exception e)
             {

@@ -251,7 +251,7 @@ namespace ModTek.Features.Manifest
         private static void PreloadFinished()
         {
             preloadSW.Stop();
-            LogIfSlow(preloadSW);
+            LogIfSlow(preloadSW, "Preloading");
             SaveCaches();
         }
 

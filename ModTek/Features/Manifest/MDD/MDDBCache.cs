@@ -62,7 +62,7 @@ namespace ModTek.Features.Manifest.MDD
                 saveSW.Restart();
                 if (!HasChanges)
                 {
-                    Log($"MDDB Cache: Changes detected.");
+                    Log($"MDDB Cache: No changes detected, skipping save.");
                     return;
                 }
                 MetadataDatabase.SaveMDDToPath();
