@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using BattleTech;
-using ModTek.Features.Manifest.BTRL;
 
-namespace ModTek.Features.Manifest.Mods
+namespace ModTek.Features.Manifest.BTRL
 {
     internal class ModAddendumPackager
     {

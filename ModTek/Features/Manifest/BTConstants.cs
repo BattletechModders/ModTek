@@ -21,7 +21,7 @@ namespace ModTek.Features.Manifest
 
         internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
         internal const string CustomType_DebugSettings = "DebugSettings";
-        internal const string CustomType_FixedSVGAsset = "FixedSVGAsset";
+        // internal const string CustomType_FixedSVGAsset = "FixedSVGAsset";
         internal const string CustomType_GameTip = "GameTip";
         internal const string CustomType_SoundBankDef = "SoundBankDef";
         internal const string CustomType_SoundBank = "SoundBank";
@@ -37,7 +37,7 @@ namespace ModTek.Features.Manifest
             CustomType_SoundBank,
             CustomType_SoundBankDef,
             CustomType_DebugSettings,
-            CustomType_FixedSVGAsset,
+            // CustomType_FixedSVGAsset,
             CustomType_Tag,
             CustomType_TagSet
         };

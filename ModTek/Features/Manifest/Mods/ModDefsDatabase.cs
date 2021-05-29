@@ -105,16 +105,15 @@ namespace ModTek.Features.Manifest.Mods
             yield return new ProgressReport(1, "Initializing Mods", "");
 
             // find all sub-directories that have a mod.json file
-            var modDirectories = Directory.GetDirectories(FilePaths.ModsDirectory).Where(x => File.Exists(Path.Combine(x, FilePaths.MOD_JSON_NAME))).ToArray();
-            //var modFiles = Directory.GetFiles(ModsDirectory, MOD_JSON_NAME, SearchOption.AllDirectories);
+            var modJsons = Directory.GetFiles(FilePaths.ModsDirectory, FilePaths.MOD_JSON_NAME, SearchOption.AllDirectories);
 
-            if (modDirectories.Length == 0)
+            if (modJsons.Length == 0)
             {
                 Logger.Log("No ModTek-compatible mods found.");
                 yield break;
             }
 
-            CreateModDefs(modDirectories);
+            CreateModDefs(modJsons);
             SetupModLoadOrderAndRemoveUnloadableMods();
 
             // try loading each mod
@@ -181,13 +180,12 @@ namespace ModTek.Features.Manifest.Mods
             }
         }
 
-        private static void CreateModDefs(string[] modDirectories)
+        private static void CreateModDefs(string[] modJsons)
         {
             // create ModDef objects for each mod.json file
-            foreach (var modDirectory in modDirectories)
+            foreach (var modDefPath in modJsons)
             {
                 ModDefEx modDef;
-                var modDefPath = Path.Combine(modDirectory, FilePaths.MOD_JSON_NAME);
                 try
                 {
                     modDef = ModDefEx.CreateFromPath(modDefPath);
@@ -198,7 +196,9 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    FailedToLoadMods.Add(FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDirectory));
+                    var modDir = Path.GetDirectoryName(modDefPath);
+                    var modDirRelative = FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDir);
+                    FailedToLoadMods.Add(modDirRelative);
                     Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }

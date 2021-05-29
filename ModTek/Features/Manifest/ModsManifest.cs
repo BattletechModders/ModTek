@@ -210,12 +210,29 @@ namespace ModTek.Features.Manifest
         {
             osw.Restart();
 
-            var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
-            foreach (var type in BTConstants.MDDTypes)
+            // how to detect deletion? -> only possible after index loaded
+
+            // default + mods-non-dlc | index + merge -> almost immediately
+            // check for changes here not possible since it might be overwritten by dlc + mods-dlc later
+
+            // dlc + mods-dlc | index -> after index loaded
+
+            // dlc + mods-dlc | merge -> after content loaded
+
+            // TODO merge and dbcache stuff whats not DLC
+
+            // TODO then do the same later
+
+            // TODO don't do preload if we dont need to
+            // if (manifest changed || merges_changed since last time)
             {
-                loadRequest.AddAllOfTypeBlindLoadRequest(type);
+                var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
+                foreach (var type in BTConstants.MDDTypes)
+                {
+                    loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
+                }
+                loadRequest.ProcessRequests();
             }
-            loadRequest.ProcessRequests();
         }
 
         private static void SaveCaches()
@@ -225,15 +242,15 @@ namespace ModTek.Features.Manifest
             sw.Start();
             mergeCache.Save();
             sw.Stop();
-            Log($"mergeCache.Save {sw.Elapsed}");
+            Log($"mergeCache.Save {sw.Elapsed.TotalSeconds}");
 
             sw.Start();
             mddbCache.Save();
             sw.Stop();
-            Log($"mddbCache.Save {sw.Elapsed}");
+            Log($"mddbCache.Save {sw.Elapsed.TotalSeconds}");
 
             osw.Stop();
-            Log($"PreloadAfterManifestComplete {osw.Elapsed}");
+            Log($"PreloadAfterManifestComplete {osw.Elapsed.TotalSeconds}");
         }
 
         // only merges will be cached
