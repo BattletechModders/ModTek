@@ -7,7 +7,7 @@ using ModTek.Features.Manifest;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Features.CustomTypes
+namespace ModTek.Features.CustomTags
 {
     internal static class CustomTagFeature
     {

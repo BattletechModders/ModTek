@@ -88,10 +88,10 @@
     <Compile Include="Features\CustomResources\Patches\GameTipList_ctor_Patch.cs" />
     <Compile Include="Features\CustomResources\Patches\LoadedAudioBank.cs" />
     <Compile Include="Features\CustomSVGAssets\SVGAssetFeature.cs" />
-    <Compile Include="Features\CustomTypes\CustomTag.cs" />
-    <Compile Include="Features\CustomTypes\CustomTagFeature.cs" />
-    <Compile Include="Features\CustomTypes\CustomTagSet.cs" />
-    <Compile Include="Features\CustomTypes\MetadataDatabaseExtensions.cs" />
+    <Compile Include="Features\CustomTags\CustomTag.cs" />
+    <Compile Include="Features\CustomTags\CustomTagFeature.cs" />
+    <Compile Include="Features\CustomTags\CustomTagSet.cs" />
+    <Compile Include="Features\CustomTags\MetadataDatabaseExtensions.cs" />
     <Compile Include="Features\Manifest\AdvMerge\AdvancedJSONMerge.cs" />
     <Compile Include="Features\Manifest\AdvMerge\Instruction.cs" />
     <Compile Include="Features\Manifest\AdvMerge\JSONMerger.cs" />

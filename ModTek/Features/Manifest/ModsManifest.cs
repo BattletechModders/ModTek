@@ -4,7 +4,7 @@ using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomSVGAssets;
-using ModTek.Features.CustomTypes;
+using ModTek.Features.CustomTags;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Merges;
