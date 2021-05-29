@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Manifest.Mods;
+using ModTek.Features.Manifest.Mods;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 

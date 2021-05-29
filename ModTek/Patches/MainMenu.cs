@@ -1,7 +1,7 @@
 using System.Linq;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Manifest.Mods;
+using ModTek.Features.Manifest.Mods;
 using ModTek.Misc;
 using ModTek.Util;
 

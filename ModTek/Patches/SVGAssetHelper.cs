@@ -8,8 +8,8 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
+using ModTek.Features.Manifest;
 using ModTek.Logging;
-using ModTek.Manifest;
 using SVGImporter;
 using static BattleTech.Data.DataManager;
 

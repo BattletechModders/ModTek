@@ -8,8 +8,8 @@ using BattleTech.ModSupport;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
+using ModTek.Features.Manifest.Mods;
 using ModTek.Logging;
-using ModTek.Manifest.Mods;
 using ModTek.Misc;
 using UnityEngine;
 
