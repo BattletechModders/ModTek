@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomSVGAssets.Patches;
@@ -149,6 +150,8 @@ namespace ModTek
                 Log("ModTek not enabled");
                 return;
             }
+
+            // UnityGameInstance.BattleTechGame.DataManager.HeatSinkDefs.TryGet("Gear_HeatSink_Generic_Standard")
 
             CustomResourcesFeature.Setup();
             LoadMods();

@@ -82,7 +82,7 @@ namespace ModTek.Features.Manifest.MDD
             }
         }
 
-        internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = true)
+        internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
         {
             var type = BTConstants.ResourceType(entry.Type);
             if (!type.HasValue)

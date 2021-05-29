@@ -261,23 +261,20 @@ namespace ModTek.Features.Manifest
             return mergeCache.HasMergedContentCached(entry, true, out var content) ? content : null;
         }
 
-        // make sure to update MDD if need be
-        internal static string ContentLoaded(VersionManifestEntry entry, string content)
+        internal static void ContentLoaded(VersionManifestEntry entry, ref string content)
         {
             if (mergeCache.HasMerges(entry))
             {
                 if (!mergeCache.HasMergedContentCached(entry, false, out _))
                 {
-                    content = mergeCache.MergeAndCacheContent(entry, content);
-                    mddbCache.Add(entry, content, false);
+                    mergeCache.MergeAndCacheContent(entry, ref content);
+                    mddbCache.Add(entry, content);
                 }
             }
             else
             {
-                mddbCache.Add(entry, content);
+                mddbCache.Add(entry, content, true);
             }
-
-            return content;
         }
     }
 }

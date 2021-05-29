@@ -40,9 +40,9 @@ namespace ModTek.Features.Manifest.Patches
             return GetOnLoadedWithTextMethods();
         }
 
-        public static void Postfix(VersionManifestEntry ___manifestEntry, ref string text)
+        public static void Prefix(VersionManifestEntry ___manifestEntry, ref string text)
         {
-            text = ModsManifest.ContentLoaded(___manifestEntry, text);
+            ModsManifest.ContentLoaded(___manifestEntry, ref text);
         }
     }
 }

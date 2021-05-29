@@ -118,34 +118,33 @@ namespace ModTek.Features.Manifest.Merges
             return true;
         }
 
-        internal string MergeAndCacheContent(VersionManifestEntry entry, string originalContent)
+        internal void MergeAndCacheContent(VersionManifestEntry entry, ref string content)
         {
-            if (originalContent == null)
+            if (content == null)
             {
-                return null;
+                return;
             }
 
             var key = CacheKeys.Unique(entry);
             if (!tempSets.TryGetValue(key, out var temp))
             {
-                return null;
+                return;
             }
 
-            string mergedContent;
             try
             {
-                mergedContent = temp.Merge(originalContent);
+                content = temp.Merge(content);
             }
             catch (Exception e)
             {
                 Log($"Merge Cache: Couldn't merge {temp.CachedAbsolutePath}", e);
-                return null;
+                return;
             }
 
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedAbsolutePath) ?? throw new InvalidOperationException());
-                File.WriteAllText(temp.CachedAbsolutePath, mergedContent);
+                File.WriteAllText(temp.CachedAbsolutePath, content);
                 persistentSets[key] = temp;
                 HasChanges = true;
             }
@@ -153,8 +152,6 @@ namespace ModTek.Features.Manifest.Merges
             {
                 Log($"Merge Cache: Couldn't write cached merge result to {temp.CachedAbsolutePath}", e);
             }
-
-            return mergedContent;
         }
 
         internal bool HasMerges(VersionManifestEntry entry)
