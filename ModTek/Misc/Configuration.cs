@@ -39,7 +39,7 @@ namespace ModTek.Misc
             }
             catch (Exception e)
             {
-                Logger.LogException("Reading configuration failed -- will rebuild it!", e);
+                Logger.Log("Reading configuration failed -- will rebuild it!", e);
                 return new Configuration();
             }
         }

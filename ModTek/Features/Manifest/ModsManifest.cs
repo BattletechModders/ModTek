@@ -78,9 +78,9 @@ namespace ModTek.Features.Manifest
                     modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
 
-                if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleDirectoryName)))
+                if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleMergesDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleDirectoryName, Path = FilePaths.AssetBundleDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleMergesDirectoryName, Path = FilePaths.AssetBundleMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
             }
         }
@@ -108,12 +108,13 @@ namespace ModTek.Features.Manifest
             }
             else if (entry.IsDirectory)
             {
-                if (entry.IsAssetBundlePath)
+
+                if (entry.IsAssetBundleMergesBasePath)
                 {
                     foreach (var bundlePath in Directory.GetDirectories(entry.AbsolutePath))
                     {
                         var bundleName = Path.GetFileName(bundlePath);
-                        foreach (var file in FileUtils.FindFiles(bundlePath, "*"))
+                        foreach (var file in FileUtils.FindFiles(bundlePath, ".json", ".csv", ".txt"))
                         {
                             var copy = entry.copy();
                             copy.AssetBundleName = bundleName; // TODO needed?
@@ -125,8 +126,8 @@ namespace ModTek.Features.Manifest
                 }
                 else
                 {
-                    var pattern = entry.Type == nameof(SoundBankDef) ? "*.json" : "*";
-                    foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, pattern))
+                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{".json"} : null;
+                    foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                     {
                         var copy = entry.copy();
                         copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
@@ -143,16 +144,12 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            if (entry.ShouldMergeJSON || entry.ShouldAppendText)
+            var logType = string.IsNullOrEmpty(entry.Type) ? "" : $" ({entry.Type})";
+            var logId = $"{entry.Id}{logType}: {entry.RelativePathToMods}";
+
+            if (mergeCache.AddModEntry(entry))
             {
-                if (entry.ShouldMergeJSON && entry.IsJson || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
-                {
-                    mergeCache.AddModEntry(entry);
-                }
-                else
-                {
-                    Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
-                }
+                Log($"\tMerge: {logId}");
                 return;
             }
 
@@ -161,21 +158,25 @@ namespace ModTek.Features.Manifest
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
+
+                    Log($"\tSVGAsset: {logId}");
                     SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
-                Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");
                 if (!entry.AddToDB)
                 {
+                    Log($"\tAddToDB=false: {logId}");
                     mddbCache.Ignore(entry);
                 }
 
                 if (entry.AddToAddendum != null)
                 {
+                    Log($"\tAddToAddendum: {logId}");
                     BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
                 }
                 else
                 {
+                    Log($"\tAdd/Replace: {logId}");
                     packager.AddEntry(entry);
                 }
 
@@ -184,16 +185,19 @@ namespace ModTek.Features.Manifest
 
             if (CustomResourcesFeature.Add(entry))
             {
+                Log($"\tAdd/Replace (CustomResource): {logId}");
                 return;
             }
 
-            if (!SoundBanksFeature.Add(entry))
+            if (SoundBanksFeature.Add(entry))
             {
+                Log($"\tAdd/Replace: {logId}");
                 return;
             }
 
             if (CustomTagFeature.Add(entry))
             {
+                Log($"\tAdd/Replace: {logId}");
                 return;
             }
 

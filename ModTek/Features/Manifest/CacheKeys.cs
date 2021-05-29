@@ -14,7 +14,7 @@ namespace ModTek.Features.Manifest
             return Unique(entry.Type, entry.Id);
         }
 
-        private static string Unique(string type, string id)
+        internal static string Unique(string type, string id)
         {
             return type + ":" + id;
         }

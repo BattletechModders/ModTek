@@ -30,6 +30,13 @@ namespace ModTek.Logging
             stream.Flush();
         }
 
+        internal static void Log(string message, Exception e)
+        {
+            stream.WriteLine(message);
+            stream.WriteLine(e.ToString());
+            stream.Flush();
+        }
+
         internal static void Log(string message, params object[] formatObjects)
         {
             stream.WriteLine(message, formatObjects);
@@ -39,13 +46,6 @@ namespace ModTek.Logging
         internal static void LogWithDate(string message, params object[] formatObjects)
         {
             Log(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
-        }
-
-        internal static void LogException(string message, Exception e)
-        {
-            stream.WriteLine(message);
-            stream.WriteLine(e.ToString());
-            stream.Flush();
         }
     }
 }

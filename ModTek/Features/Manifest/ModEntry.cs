@@ -15,7 +15,7 @@ namespace ModTek.Features.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        public bool IsAssetBundlePath => Path.Equals(FilePaths.AssetBundleDirectoryName);
+        public bool IsAssetBundleMergesBasePath => Path.Equals(FilePaths.AssetBundleMergesDirectoryName);
 
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);

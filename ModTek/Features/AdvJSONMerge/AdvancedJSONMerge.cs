@@ -22,12 +22,13 @@ namespace ModTek.Features.AdvJSONMerge
         {
             try
             {
+                // return JsonConvert.DeserializeObject<AdvancedJSONMerge>(File.ReadAllText(path));
                 var objCache = JsonUtils.ParseGameJSON(path);
                 return objCache.ToObject<AdvancedJSONMerge>();
             }
             catch (Exception e)
             {
-                Logger.LogException($"\tCould not read AdvancedJSONMerge in path: {path}", e);
+                Logger.Log($"\tCould not read AdvancedJSONMerge in path: {path}", e);
                 return null;
             }
         }

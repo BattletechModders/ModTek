@@ -139,7 +139,7 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    Logger.Log($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 

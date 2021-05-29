@@ -169,7 +169,7 @@ namespace ModTek.Features.Manifest.Mods
                         continue;
                     }
 
-                    Logger.LogException($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
+                    Logger.Log($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
                     FailedToLoadMods.Add(modName);
                     if (allModDefs.ContainsKey(modName))
                     {
@@ -199,7 +199,7 @@ namespace ModTek.Features.Manifest.Mods
                     var modDir = Path.GetDirectoryName(modDefPath);
                     var modDirRelative = FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDir);
                     FailedToLoadMods.Add(modDirRelative);
-                    Logger.LogException($"Error: Caught exception while parsing {modDefPath}", e);
+                    Logger.Log($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }
 

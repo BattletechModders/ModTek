@@ -29,7 +29,7 @@ namespace ModTek.Util
             }
             catch (Exception e)
             {
-                LogException($"\t{fileName}: While loading a .dll, an exception occured", e);
+                Log($"\t{fileName}: While loading a .dll, an exception occured", e);
                 return null;
             }
         }
@@ -65,7 +65,7 @@ namespace ModTek.Util
             }
             catch (Exception e)
             {
-                LogException("\t", e);
+                Log("\t", e);
                 return null;
             }
         }

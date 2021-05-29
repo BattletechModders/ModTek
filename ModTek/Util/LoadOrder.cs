@@ -104,7 +104,7 @@ namespace ModTek.Util
                 }
                 catch (Exception e)
                 {
-                    LogException("Loading cached load order failed, rebuilding it.", e);
+                    Log("Loading cached load order failed, rebuilding it.", e);
                 }
             }
 

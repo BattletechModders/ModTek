@@ -15,6 +15,7 @@ namespace ModTek.Features.AdvJSONMerge
         [JsonProperty(Required = Required.Always)]
         public string JSONPath;
 
+        [JsonProperty]
         public JToken Value;
 
         public bool Process(JObject root)

@@ -28,7 +28,7 @@ namespace ModTek.Features.Manifest.Merges
                 }
                 catch (Exception e)
                 {
-                    LogException("Loading merge cache failed.", e);
+                    Log("Loading merge cache failed.", e);
                 }
             }
 
@@ -58,7 +58,7 @@ namespace ModTek.Features.Manifest.Merges
             {
                 // lets find and fix un-typed sets
                 // TODO this way a good idea? we ignore all untyped if we find one typed.. so no
-                var noTypeKey = CacheKeys.Unique(entry);
+                var noTypeKey = CacheKeys.Unique(null, entry.Id);
                 if (!tempSets.TryGetValue(noTypeKey, out temp))
                 {
                     return false;
@@ -127,6 +127,7 @@ namespace ModTek.Features.Manifest.Merges
 
             try
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedPath) ?? throw new InvalidOperationException());
                 File.WriteAllText(temp.CachedPath, mergedContent);
                 persistentSets[key] = temp;
             }
@@ -144,14 +145,14 @@ namespace ModTek.Features.Manifest.Merges
             return tempSets.ContainsKey(key);
         }
 
-        internal void AddModEntry(ModEntry entry)
+        internal bool AddModEntry(ModEntry entry)
         {
             if (entry.Type == BTConstants.CustomType_AdvancedJSONMerge)
             {
                 var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
                 if (advMerge == null)
                 {
-                    return;
+                    return true;
                 }
 
                 var targets = new List<string>();
@@ -168,7 +169,7 @@ namespace ModTek.Features.Manifest.Merges
                 if (targets.Count == 0)
                 {
                     Log($"\tError: AdvancedJSONMerge: \"{entry.RelativePathToMods}\" didn't target any IDs. Skipping merge.");
-                    return;
+                    return true;
                 }
 
                 foreach (var target in targets)
@@ -178,11 +179,25 @@ namespace ModTek.Features.Manifest.Merges
                     copy.Type = advMerge.TargetType;
                     AddTemp(entry);
                 }
+
+                return true;
             }
-            else
+
+            if (entry.ShouldMergeJSON || entry.ShouldAppendText)
             {
-                AddTemp(entry);
+                if (entry.ShouldMergeJSON && entry.IsJson || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
+                {
+                    AddTemp(entry);
+                }
+                else
+                {
+                    Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
+                }
+
+                return true;
             }
+
+            return false;
         }
 
         private void AddTemp(ModEntry entry)

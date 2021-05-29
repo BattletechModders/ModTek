@@ -108,9 +108,12 @@ namespace ModTek.Util
             return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        internal static List<string> FindFiles(string path, string pattern)
+        internal static List<string> FindFiles(string basePath, params string[] suffixes)
         {
-            return Directory.GetFiles(path, pattern, SearchOption.AllDirectories).Where(filePath => !FileIsOnDenyList(filePath)).ToList();
+            return Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)
+                .Where(path => !FileIsOnDenyList(path))
+                .Where(path => suffixes == null || suffixes.Any(p => path.EndsWith(p, StringComparison.InvariantCultureIgnoreCase)))
+                .ToList();
         }
 
         internal static bool IsStringType(string name)

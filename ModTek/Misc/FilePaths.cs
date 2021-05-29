@@ -42,7 +42,7 @@ namespace ModTek.Misc
         internal static string ChangedFlagPath { get; private set; }
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
         internal static string LogPath { get; set; }
-        internal static string AssetBundleDirectoryName { get; set; } = "AssetBundleMerges"; // used for merging in asset bundles e.g. dlc
+        internal static string AssetBundleMergesDirectoryName { get; set; } = "AssetBundleMerges";
 
         internal static void SetupPaths()
         {

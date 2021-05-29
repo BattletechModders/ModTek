@@ -70,7 +70,6 @@ namespace ModTek.Features.CustomResources
             {
                 return false;
             }
-            Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
             CustomResources[entry.Type][entry.Id] = entry.CreateVersionManifestEntry();
             return true;
         }

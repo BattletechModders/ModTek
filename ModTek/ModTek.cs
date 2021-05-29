@@ -92,7 +92,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    LogException($"Error: Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
+                    Log($"Error: Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
                     Finish();
                     return;
                 }
@@ -140,7 +140,7 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                LogException("Error: PATCHING FAILED!", e);
+                Log("Error: PATCHING FAILED!", e);
                 return;
             }
 

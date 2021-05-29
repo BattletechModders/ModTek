@@ -35,7 +35,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
                 catch (Exception e)
                 {
-                    LogException("Loading db cache failed -- will rebuild it.", e);
+                    Log("Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
