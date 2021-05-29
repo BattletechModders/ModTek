@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech;
@@ -35,7 +36,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
                 catch (Exception e)
                 {
-                    Log("Loading db cache failed -- will rebuild it.", e);
+                    Log("MDDB Cache: Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -48,30 +49,36 @@ namespace ModTek.Features.Manifest.MDD
             File.Copy(MDDBPath, ModMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
-            Log("MDDB Cache: Copying over DB and building new DB Cache.");
+            Log("MDDB Cache: Copying over DB and rebuilding cache.");
             Entries = new CacheDB();
             MetadataDatabase.ReloadFromDisk();
         }
 
-        // TODO when to call? when do we know everything was loaded?
+        private readonly Stopwatch saveSW = new();
         internal void Save()
         {
-            if (!HasChanges)
-            {
-                Log($"MDDB Cache: Changes detected.");
-                return;
-            }
-
             try
             {
+                saveSW.Restart();
+                if (!HasChanges)
+                {
+                    Log($"MDDB Cache: Changes detected.");
+                    return;
+                }
                 MetadataDatabase.SaveMDDToPath();
                 var json = JsonConvert.SerializeObject(Entries, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 File.WriteAllText(PersistentFilePath, json);
+                Log($"MDDB Cache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
             catch (Exception e)
             {
                 Log($"MDDB Cache: Couldn't write mddb cache to {PersistentFilePath}", e);
+            }
+            finally
+            {
+                saveSW.Stop();
+                LogIfSlow(saveSW);
             }
         }
 

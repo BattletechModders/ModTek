@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Features.Manifest.Mods;
+using ModTek.Logging;
 using ModTek.Util;
 
 namespace ModTek.Features.Manifest.BTRL
@@ -32,13 +34,11 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
         {
-            // Log("BetterBTRL AddAddendumOverrideEntry");
             addendumEntryOverrides.GetOrCreate(addendumName).Add(manifestEntry);
         }
 
         private VersionManifestAddendum ApplyOverrides(VersionManifestAddendum addendum)
         {
-            // Log("BetterBTRL ApplyOverrides");
             if (!addendumEntryOverrides.TryGetValue(addendum.Name, out var overrides))
             {
                 return addendum;
@@ -59,7 +59,6 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
         {
-            // Log($"BetterBTRL ApplyAddendum {addendum.Name} {Environment.StackTrace}");
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             hbsAddendums.Add(addendum);
             RefreshTypedEntries(); // TODO needed?
@@ -67,20 +66,17 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void AddModAddendum(ModAddendumManifest modManifest)
         {
-            // Log("BetterBTRL AddModAddendum");
             orderedModAddendums.Add(modManifest);
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
-            // Log("BetterBTRL RemoveAddendum");
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             RefreshTypedEntries(); // TODO needed?
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
         {
-            // Log("BetterBTRL GetAddendumByName");
             return hbsAddendums.FirstOrDefault(x => x.Name == name);
         }
 
@@ -193,14 +189,14 @@ namespace ModTek.Features.Manifest.BTRL
 
         private BetterBTRL()
         {
-            // Log("BetterBTRL");
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
             SetContentPackIndex(UnityGameInstance.BattleTechGame?.DataManager?.ContentPackIndex);
         }
 
+        private Stopwatch sw = new();
         internal void RefreshTypedEntries()
         {
-            // Log("RefreshTypedEntries");
+            sw.Start();
             currentManifest.Reset(defaultManifest.Entries);
             var activeAndOwnedAddendums = new List<string>();
 
@@ -225,29 +221,27 @@ namespace ModTek.Features.Manifest.BTRL
 
                 currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum), true);
             }
+            sw.Stop();
+            Logger.LogIf(sw.ElapsedMilliseconds > 500, $"RefreshTypedEntries Total {sw.Elapsed}s");
         }
 
         public VersionManifestEntry[] AllEntries()
         {
-            // Log("AllEntries");
             return currentManifest.AllEntries(false);
         }
 
         public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership = false)
         {
-            // Log("AllEntriesOfResource");
             return currentManifest.AllEntriesOfResource(type, filterByOwnership);
         }
 
         public VersionManifestEntry[] AllEntriesOfResourceFromAddendum(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership = false)
         {
-            // Log("AllEntriesOfResourceFromAddendum");
             return addendum.Entries.Where(x => x.Type == type.ToString() && (!filterByOwnership || packIndex.IsResourceOwned(x.Id))).ToArray();
         }
 
         public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
         {
-            // Log("EntryByID");
             return currentManifest.GetEntryByID(id, type, filterByOwnership);
         }
 

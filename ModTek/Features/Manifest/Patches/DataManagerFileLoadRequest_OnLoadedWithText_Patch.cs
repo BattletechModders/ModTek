@@ -31,7 +31,6 @@ namespace ModTek.Features.Manifest.Patches
                     continue;
                 }
 
-                //Log($"Patching {method}");
                 yield return method;
             }
         }

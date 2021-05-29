@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using BattleTech;
 using ModTek.Features.AdvJSONMerge;
@@ -28,25 +29,33 @@ namespace ModTek.Features.Manifest.Merges
                 }
                 catch (Exception e)
                 {
-                    Log("Loading merge cache failed.", e);
+                    Log("Merge Cache: Loading merge cache failed.", e);
                 }
             }
 
             // create a new one if it doesn't exist or couldn't be added'
-            Log("Building new Merge Cache.");
+            Log("Merge Cache: Rebuilding cache.");
             persistentSets = new MergeSets();
         }
 
+        private readonly Stopwatch saveSW = new();
         internal void Save()
         {
             try
             {
+                saveSW.Restart();
                 var json = JsonConvert.SerializeObject(persistentSets, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 File.WriteAllText(PersistentFilePath, json);
+                Log($"Merge Cache: Saved to {PersistentFilePath}.");
             }
             catch (Exception e)
             {
-                Log($"Couldn't write merge cache to {PersistentFilePath}", e);
+                Log($"Merge Cache: Couldn't write to {PersistentFilePath}", e);
+            }
+            finally
+            {
+                saveSW.Stop();
+                LogIfSlow(saveSW);
             }
         }
 
@@ -65,7 +74,7 @@ namespace ModTek.Features.Manifest.Merges
                 }
 
                 tempSets.Remove(noTypeKey);
-                temp.ResourceType = entry.Type;
+                temp.SetCachedPath(entry);
                 tempSets[key] = temp;
             }
 
@@ -85,16 +94,16 @@ namespace ModTek.Features.Manifest.Merges
             {
                 if (fetchContent)
                 {
-                    cachedContent = File.ReadAllText(temp.CachedPath);
+                    cachedContent = File.ReadAllText(temp.CachedAbsolutePath);
                 }
-                else if (!File.Exists(temp.CachedPath))
+                else if (!File.Exists(temp.CachedAbsolutePath))
                 {
                     return false;
                 }
             }
             catch
             {
-                Log($"Couldn't read cached merge result at {temp.CachedPath}");
+                Log($"Merge Cache: Couldn't read cached merge result at {temp.CachedAbsolutePath}");
                 return false;
             }
 
@@ -121,19 +130,19 @@ namespace ModTek.Features.Manifest.Merges
             }
             catch (Exception e)
             {
-                Log($"Couldn't merge {temp.CachedPath}", e);
+                Log($"Merge Cache: Couldn't merge {temp.CachedAbsolutePath}", e);
                 return null;
             }
 
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedPath) ?? throw new InvalidOperationException());
-                File.WriteAllText(temp.CachedPath, mergedContent);
+                Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedAbsolutePath) ?? throw new InvalidOperationException());
+                File.WriteAllText(temp.CachedAbsolutePath, mergedContent);
                 persistentSets[key] = temp;
             }
             catch (Exception e)
             {
-                Log($"Couldn't write cached merge result to {temp.CachedPath}", e);
+                Log($"Merge Cache: Couldn't write cached merge result to {temp.CachedAbsolutePath}", e);
             }
 
             return mergedContent;

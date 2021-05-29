@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using ModTek.Misc;
 
@@ -30,25 +31,50 @@ namespace ModTek.Logging
             }
         }
 
+        internal static void LogIf(bool condition, object obj)
+        {
+            if (condition)
+            {
+                Log($"Method {GetFullMethodName()} called with {obj}");
+            }
+        }
+
+        internal static void LogIfSlow(Stopwatch sw, string id = null)
+        {
+            if (sw.ElapsedMilliseconds < 500)
+            {
+                return;
+            }
+
+            id ??= "Method " + GetFullMethodName();
+            LogWithDate($"{id} took {sw.Elapsed}");
+        }
+
+        private static string GetFullMethodName()
+        {
+            var frame = new StackTrace().GetFrame(2);
+            var method = frame.GetMethod();
+            var methodName = method.Name;
+            var className = method.ReflectedType?.FullName;
+            var fullMethodName = className + "." + methodName;
+            return fullMethodName;
+        }
+
         internal static void LogWithDate(string message)
         {
             Log(DateTime.Now.ToLongTimeString() + " - " + message);
         }
 
-        internal static void Log(string message, Exception e)
+        internal static void Log(string message = null, Exception e = null)
         {
             lock (lockObject)
             {
-                Log(message);
-                Log(e.ToString());
-            }
-        }
-
-        internal static void Log(string message)
-        {
-            lock (lockObject)
-            {
+                message ??= "Method " + GetFullMethodName() + " called";
                 stream.WriteLine(message);
+                if (e != null)
+                {
+                    stream.WriteLine(e.ToString());
+                }
             }
         }
     }

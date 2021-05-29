@@ -126,7 +126,10 @@
     <Compile Include="Features\Manifest\Patches\MetadataDatabase_MDD_DB_PATH_Patch.cs" />
     <Compile Include="Features\Manifest\Patches\MetadataDatabase_MDD_TMP_PATH_Patch.cs" />
     <Compile Include="Features\Manifest\Patches\SimGameConstants_FromJSON_Patch.cs" />
+    <Compile Include="Features\Manifest\Patches\SimGameState_RespondToDefsLoadComplete_Patch.cs" />
     <Compile Include="Features\Manifest\Patches\SimGame_MDDExtensions_UpdateContract_Patch.cs" />
+    <Compile Include="Features\Manifest\Patches\SkirmishMechBayPanel_LanceConfiguratorDataLoaded_Patch.cs" />
+    <Compile Include="Features\Manifest\Patches\SkirmishSettings_Beta_OnLoadComplete_Patch.cs" />
     <Compile Include="Features\SoundBanks\ProcessParameters.cs" />
     <Compile Include="Features\SoundBanks\SoundBanksFeature.cs" />
     <Compile Include="Features\SoundBanks\SoundBanksPatches.cs" />

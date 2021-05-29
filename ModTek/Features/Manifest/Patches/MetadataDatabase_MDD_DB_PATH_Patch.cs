@@ -16,14 +16,15 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
-        public static void Postfix(ref string __result)
+        public static bool Prefix(ref string __result)
         {
             if (string.IsNullOrEmpty(FilePaths.ModMDDBPath))
             {
-                return;
+                return true;
             }
 
             __result = FilePaths.ModMDDBPath;
+            return false;
         }
     }
 }

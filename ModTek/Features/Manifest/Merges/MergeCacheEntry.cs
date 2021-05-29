@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BattleTech;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
@@ -12,10 +13,11 @@ namespace ModTek.Features.Manifest.Merges
     internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
     {
         [JsonProperty(Required = Required.Always)]
-        public string CachedFileName { get; private set; }
+        public string CachedPath { get; private set; }
 
-        [JsonProperty(Required = Required.Always)]
-        public string CachedUpdatedOn { get; private set; }
+        // needed? not really?
+        // [JsonProperty(Required = Required.Always)]
+        // public string CachedUpdatedOn { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
         public DateTime OriginalUpdatedOn { get; set; }
@@ -23,12 +25,8 @@ namespace ModTek.Features.Manifest.Merges
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();
 
-        // can't be null on persistence, but can be for temp
-        [JsonProperty(Required = Required.Always)]
-        public string ResourceType { get; set; }
-
-        internal string CachedPath => Path.Combine(Path.Combine(FilePaths.CacheDirectory, ResourceType), CachedFileName);
-        private bool IsJsonMerge => FileUtils.IsJson(CachedFileName);
+        internal string CachedAbsolutePath => Path.Combine(FilePaths.CacheDirectory, CachedPath);
+        private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
 
         internal MergeCacheEntry()
         {
@@ -36,33 +34,28 @@ namespace ModTek.Features.Manifest.Merges
 
         internal MergeCacheEntry(ModEntry entry)
         {
-            ResourceType = entry.Type;
-            CachedFileName = entry.Id + entry.FileExtension;
+            if (entry.Type == null)
+            {
+                CachedPath = null;
+            }
+            else
+            {
+                SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
+            }
+        }
+
+        internal void SetCachedPath(VersionManifestEntry entry)
+        {
+            SetCachedPath(entry.Type, entry.Id, Path.GetExtension(entry.GetRawPath()));
+        }
+
+        private void SetCachedPath(string type, string id, string extension)
+        {
+            CachedPath = Path.Combine(type, id + extension);
         }
 
         internal void Add(ModEntry modEntry)
         {
-            if (IsJsonMerge && !modEntry.IsJson)
-            {
-                throw new ArgumentException($"Cannot mix json and csv for merges {CachedFileName}");
-            }
-
-            if (ResourceType != modEntry.Type)
-            {
-                if (ResourceType == null)
-                {
-                    ResourceType = modEntry.Type;
-                }
-                else if (modEntry.Type == null)
-                {
-                    // ignore
-                }
-                else
-                {
-                    throw new ArgumentException($"Cannot mix and match types for {CachedFileName}");
-                }
-            }
-
             var merge = FileVersionTuple.From(modEntry);
             Merges.Add(merge);
         }
@@ -90,7 +83,6 @@ namespace ModTek.Features.Manifest.Merges
         }
 
         // GENERATED CODE BELOW, used Rider IDE for that
-
         public bool Equals(MergeCacheEntry other)
         {
             if (ReferenceEquals(null, other))
@@ -103,7 +95,7 @@ namespace ModTek.Features.Manifest.Merges
                 return true;
             }
 
-            return CachedFileName == other.CachedFileName && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Equals(Merges, other.Merges) && ResourceType == other.ResourceType;
+            return CachedPath == other.CachedPath && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Equals(Merges, other.Merges);
         }
 
         public override bool Equals(object obj)
@@ -118,7 +110,7 @@ namespace ModTek.Features.Manifest.Merges
                 return true;
             }
 
-            if (obj.GetType() != GetType())
+            if (obj.GetType() != this.GetType())
             {
                 return false;
             }
@@ -130,10 +122,9 @@ namespace ModTek.Features.Manifest.Merges
         {
             unchecked
             {
-                var hashCode = CachedFileName != null ? CachedFileName.GetHashCode() : 0;
+                var hashCode = (CachedPath != null ? CachedPath.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (ResourceType != null ? ResourceType.GetHashCode() : 0);
                 return hashCode;
             }
         }

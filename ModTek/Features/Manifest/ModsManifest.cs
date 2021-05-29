@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomSVGAssets;
@@ -206,13 +208,20 @@ namespace ModTek.Features.Manifest
 
         internal static void BTRLContentPackLoaded()
         {
-            PreloadAfterManifestComplete();
+            Log("All content pack manifests loaded");
+            PreloadMergesAfterManifestComplete();
         }
 
-        private static Stopwatch osw = new();
-        private static void PreloadAfterManifestComplete()
+        internal static void SimGameOrSkirmishLoaded()
         {
-            osw.Restart();
+            Log("Skirmish or SimGame loaded");
+            SaveCaches();
+        }
+
+        private static Stopwatch preloadSW = new();
+        private static void PreloadMergesAfterManifestComplete()
+        {
+            preloadSW.Start();
 
             // how to detect deletion? -> only possible after index loaded
 
@@ -230,8 +239,8 @@ namespace ModTek.Features.Manifest
             // TODO don't do preload if we dont need to
             // if (manifest changed || merges_changed since last time)
             {
-                var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
-                foreach (var type in BTConstants.MDDTypes)
+                var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
+                foreach (var type in BTConstants.CCTypes.Concat(BTConstants.MDDTypes.Except(BTConstants.CCTypes)))
                 {
                     loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
                 }
@@ -239,22 +248,17 @@ namespace ModTek.Features.Manifest
             }
         }
 
+        private static void PreloadFinished()
+        {
+            preloadSW.Stop();
+            LogIfSlow(preloadSW);
+            SaveCaches();
+        }
+
         private static void SaveCaches()
         {
-            var sw = new Stopwatch();
-
-            sw.Start();
             mergeCache.Save();
-            sw.Stop();
-            Log($"mergeCache.Save {sw.Elapsed.TotalSeconds}");
-
-            sw.Start();
             mddbCache.Save();
-            sw.Stop();
-            Log($"mddbCache.Save {sw.Elapsed.TotalSeconds}");
-
-            osw.Stop();
-            Log($"PreloadAfterManifestComplete {osw.Elapsed.TotalSeconds}");
         }
 
         // only merges will be cached
