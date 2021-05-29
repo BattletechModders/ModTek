@@ -77,7 +77,7 @@ namespace ModTek.Features.Manifest.Merges
             var target = JsonUtils.ParseGameJSON(originalContent);
             foreach (var entry in Merges)
             {
-                var merge = JsonUtils.ParseGameJSON(entry.Path);
+                var merge = JsonUtils.ParseGameJSONFile(entry.AbsolutePath);
                 AdvJSONMergeFeature.MergeIntoTarget(target, merge);
             }
 
@@ -86,7 +86,7 @@ namespace ModTek.Features.Manifest.Merges
 
         private string TextAppend(string originalContent)
         {
-            return Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.Path));
+            return Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
         }
 
         // GENERATED CODE BELOW, used Rider IDE for that

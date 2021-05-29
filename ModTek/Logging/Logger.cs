@@ -6,13 +6,19 @@ namespace ModTek.Logging
 {
     internal static class Logger
     {
+        private static readonly object lockObject = new();
+
         private static StreamWriter stream;
         internal static void LogInit()
         {
-            if (stream == null)
+            lock (lockObject)
             {
-                Directory.CreateDirectory(FilePaths.TempModTekDirectory);
-                stream = File.CreateText(FilePaths.LogPath);
+                if (stream == null)
+                {
+                    Directory.CreateDirectory(FilePaths.TempModTekDirectory);
+                    stream = File.CreateText(FilePaths.LogPath);
+                    stream.AutoFlush = true;
+                }
             }
         }
 
@@ -24,28 +30,26 @@ namespace ModTek.Logging
             }
         }
 
-        internal static void Log(string message)
+        internal static void LogWithDate(string message)
         {
-            stream.WriteLine(message);
-            stream.Flush();
+            Log(DateTime.Now.ToLongTimeString() + " - " + message);
         }
 
         internal static void Log(string message, Exception e)
         {
-            stream.WriteLine(message);
-            stream.WriteLine(e.ToString());
-            stream.Flush();
+            lock (lockObject)
+            {
+                Log(message);
+                Log(e.ToString());
+            }
         }
 
-        internal static void Log(string message, params object[] formatObjects)
+        internal static void Log(string message)
         {
-            stream.WriteLine(message, formatObjects);
-            stream.Flush();
-        }
-
-        internal static void LogWithDate(string message, params object[] formatObjects)
-        {
-            Log(DateTime.Now.ToLongTimeString() + " - " + message, formatObjects);
+            lock (lockObject)
+            {
+                stream.WriteLine(message);
+            }
         }
     }
 }

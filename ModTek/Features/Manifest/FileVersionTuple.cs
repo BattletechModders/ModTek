@@ -1,5 +1,6 @@
 ﻿using System;
 using BattleTech;
+using ModTek.Misc;
 using Newtonsoft.Json;
 
 namespace ModTek.Features.Manifest
@@ -12,16 +13,21 @@ namespace ModTek.Features.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; private set; }
 
+        [JsonIgnore]
+        public string AbsolutePath => System.IO.Path.Combine(FilePaths.ModsDirectory, Path);
+
         [JsonProperty(Required = Required.Always)]
         public DateTime UpdatedOn { get; private set; }
 
         internal static FileVersionTuple From(ModEntry entry)
         {
+            // path for MergeCache is actually the relative path to the ModsDirectory
             return new() { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.LastWriteTimeUtc };
         }
 
         internal static FileVersionTuple From(VersionManifestEntry entry)
         {
+            // path for MDDBCache is just part of a unique identifier
             return new() { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
         }
 
