@@ -1,7 +1,7 @@
 using BattleTech.Data;
 using Newtonsoft.Json;
 
-namespace ModTek.Manifest.MDD.CustomTypes
+namespace ModTek.Manifest.CustomTypes
 {
     [JsonObject]
     internal class CustomTag

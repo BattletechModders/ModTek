@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using HBS;
+using ModTek.Manifest;
 using ModTek.UI;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
@@ -13,10 +14,15 @@ namespace ModTek.SoundBanks
     {
         internal static Dictionary<string, SoundBankDef> soundBanks = new();
 
-        internal static void AddSoundBankDef(string path)
+        internal static bool Add(ModEntry entry)
         {
+            if (!entry.IsTypeSoundBankDef)
+            {
+                return false;
+            }
             try
             {
+                var path = entry.AbsolutePath;
                 Log($"\tAdd SoundBankDef {path}");
                 var def = JsonConvert.DeserializeObject<SoundBankDef>(File.ReadAllText(path));
                 def.filename = Path.Combine(Path.GetDirectoryName(path), def.filename);
@@ -35,6 +41,7 @@ namespace ModTek.SoundBanks
             {
                 Log("\tError while reading SoundBankDef:" + e);
             }
+            return true;
         }
 
         internal static IEnumerator<ProgressReport> SoundBanksProcessing()

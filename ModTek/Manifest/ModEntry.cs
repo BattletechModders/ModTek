@@ -33,11 +33,8 @@ namespace ModTek.Manifest
 
         public string Type { get; set; }
         internal bool IsTypeStreamingAsset => Type == null;
-        internal bool IsTypeCustomResource => Type != null && ModsManifest.CustomResources.ContainsKey(Type);
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
-        internal bool IsTypeCustomTag => Type == ModDefExLoading.CustomType_Tag;
-        internal bool IsTypeCustomTagSet => Type == ModDefExLoading.CustomType_TagSet;
-        internal BattleTechResourceType? ResourceType => BTResourceUtils.ResourceType(Type);
+        internal BattleTechResourceType? ResourceType => Type == null ? null : BTConstants.ResourceType(Type);
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
 
         public string Id { get; set; }

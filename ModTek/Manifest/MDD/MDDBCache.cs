@@ -77,14 +77,14 @@ namespace ModTek.Manifest.MDD
 
         internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = true)
         {
-            var type = BTResourceUtils.ResourceType(entry.Type);
+            var type = BTConstants.ResourceType(entry.Type);
             if (!type.HasValue)
             {
                 Log($"Internal error: {entry.Id} has invalid type: {entry.Type}");
                 return;
             }
 
-            if (!BTResourceUtils.MDDTypes.Contains(type.Value))
+            if (!BTConstants.MDDTypes.Contains(type.Value))
             {
                 return;
             }

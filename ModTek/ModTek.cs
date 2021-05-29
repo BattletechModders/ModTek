@@ -149,11 +149,9 @@ namespace ModTek
                 return;
             }
 
-            ModsManifest.PrepareManifestAndCustomResources();
+            CustomResourcesFeature.Setup();
             LoadMods();
         }
-
-        // PATHS
 
         private static void LoadMods()
         {
@@ -161,16 +159,15 @@ namespace ModTek
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
-            ProgressPanel.SubmitWork(FinishLoop);
+            ProgressPanel.SubmitWork(FinishInitialLoadingLoop);
         }
 
-        private static IEnumerator<ProgressReport> FinishLoop()
+        private static IEnumerator<ProgressReport> FinishInitialLoadingLoop()
         {
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
-            ModsManifest.FinalizeResourceLoading();
-
+            CustomResourcesFeature.FinalizeResourceLoading();
             ModDefsDatabase.FinishedLoadingMods();
 
             Config?.ToFile(FilePaths.ConfigPath);

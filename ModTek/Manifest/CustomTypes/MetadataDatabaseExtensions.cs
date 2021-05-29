@@ -3,7 +3,7 @@ using System.Linq;
 using BattleTech.Data;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Manifest.MDD.CustomTypes
+namespace ModTek.Manifest.CustomTypes
 {
     internal static class MetadataDatabaseExtensions
     {

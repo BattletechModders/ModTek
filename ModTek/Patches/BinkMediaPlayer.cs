@@ -25,12 +25,7 @@ namespace ModTek.Patches
 
         public static bool Prefix(BinkMediaPlayer __instance, string videoName)
         {
-            var videoEntry = ModsManifest.CustomResources["Video"]
-                .Values.LastOrDefault(
-                    entry =>
-                        entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName)
-                );
-
+            var videoEntry = CustomResourcesFeature.GetVideo(videoName);
             if (videoEntry == null)
             {
                 return true;

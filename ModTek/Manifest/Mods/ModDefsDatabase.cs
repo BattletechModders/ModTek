@@ -284,7 +284,7 @@ namespace ModTek.Manifest.Mods
                     .Select(assemblyMod => ModDefs[assemblyMod])
                 )
                 {
-                    ModDefExLoading.FinishedLoading(modDef, ModLoadOrder, ModsManifest.CustomResources);
+                    ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
                 }
             }
             HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);

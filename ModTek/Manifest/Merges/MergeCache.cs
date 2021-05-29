@@ -147,7 +147,7 @@ namespace ModTek.Manifest.Merges
 
         internal void AddModEntry(ModEntry entry)
         {
-            if (entry.Type == ModDefExLoading.CustomType_AdvancedJSONMerge)
+            if (entry.Type == BTConstants.CustomType_AdvancedJSONMerge)
             {
                 var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
                 if (advMerge == null)

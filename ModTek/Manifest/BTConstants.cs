@@ -3,8 +3,47 @@ using BattleTech;
 
 namespace ModTek.Manifest
 {
-    internal static class BTResourceUtils
+    internal static class BTConstants
     {
+        internal static readonly string[] HBSContentNames =
+        {
+            ShadowHawkDlcContentName,
+            FlashPointContentName,
+            UrbanWarfareContentName,
+            HeavyMetalContentName
+        };
+
+        // probably not complete
+        internal const string ShadowHawkDlcContentName = "shadowhawkdlc";
+        internal const string FlashPointContentName = "flashpoint";
+        internal const string UrbanWarfareContentName = "urbanwarfare";
+        internal const string HeavyMetalContentName = "heavymetal";
+
+        internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
+        internal const string CustomType_DebugSettings = "DebugSettings";
+        internal const string CustomType_FixedSVGAsset = "FixedSVGAsset";
+        internal const string CustomType_GameTip = "GameTip";
+        internal const string CustomType_SoundBankDef = "SoundBankDef";
+        internal const string CustomType_SoundBank = "SoundBank";
+        internal const string CustomType_Tag = "CustomTag";
+        internal const string CustomType_TagSet = "CustomTagSet";
+        internal const string CustomType_Video = "Video";
+
+        internal static readonly string[] MODTEK_TYPES =
+        {
+            CustomType_Video,
+            CustomType_AdvancedJSONMerge,
+            CustomType_GameTip,
+            CustomType_SoundBank,
+            CustomType_SoundBankDef,
+            CustomType_DebugSettings,
+            CustomType_FixedSVGAsset,
+            CustomType_Tag,
+            CustomType_TagSet
+        };
+
+        internal static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
+
         internal static BattleTechResourceType? ResourceType(string Type)
         {
             return Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;

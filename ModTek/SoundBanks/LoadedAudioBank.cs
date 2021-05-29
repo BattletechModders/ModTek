@@ -20,12 +20,13 @@ namespace ModTek.SoundBanks
 
         public static void Prefix(string ___name)
         {
-            if (!ModsManifest.CustomResources["SoundBank"].ContainsKey(___name))
+            var entry = CustomResourcesFeature.GetSoundBank(___name);
+            if (entry == null)
             {
                 return;
             }
 
-            var directory = Path.GetDirectoryName(ModsManifest.CustomResources["SoundBank"][___name].FilePath);
+            var directory = Path.GetDirectoryName(entry.FilePath);
             AkSoundEngine.SetBasePath(directory);
         }
 
@@ -33,7 +34,7 @@ namespace ModTek.SoundBanks
         //System.IO.Compression.ZipFile.CreateFromDirectory("","",CompressionLevel.Fastest,true);
         public static void Postfix(string ___name)
         {
-            if (!ModsManifest.CustomResources["SoundBank"].ContainsKey(___name))
+            if (CustomResourcesFeature.GetSoundBank(___name) == null)
             {
                 return;
             }

@@ -5,8 +5,8 @@ using System.IO;
 using BattleTech;
 using BattleTech.UI;
 using ModTek.Manifest.BTRL;
+using ModTek.Manifest.CustomTypes;
 using ModTek.Manifest.MDD;
-using ModTek.Manifest.MDD.CustomTypes;
 using ModTek.Manifest.Merges;
 using ModTek.Manifest.Mods;
 using ModTek.Misc;
@@ -24,64 +24,10 @@ namespace ModTek.Manifest
         private static MDDBCache mddbCache = new();
 
         private static HashSet<string> systemIcons = new();
-        private static HashSet<ModEntry> CustomTags = new();
-        private static HashSet<ModEntry> CustomTagSets = new();
-
-        internal static Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources = new();
 
         internal static bool isInSystemIcons(string id)
         {
             return systemIcons.Contains(id);
-        }
-
-        internal static void PrepareManifestAndCustomResources()
-        {
-            // setup custom resources for ModTek types with fake VersionManifestEntries
-            CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
-            CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
-
-            // We intentionally DO NOT add tags and tagsets here, because AddModEntry() will skip values found in here
-            //CustomResources[CustomType_Tag] = new Dictionary<string, VersionManifestEntry>();
-            //CustomResources[CustomType_TagSet] = new Dictionary<string, VersionManifestEntry>();
-
-            CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
-            CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
-                "settings",
-                Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath),
-                "DebugSettings",
-                DateTime.Now,
-                "1"
-            );
-
-            CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
-            CustomResources["GameTip"]["general"] = new VersionManifestEntry(
-                "general",
-                Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
-                "GameTip",
-                DateTime.Now,
-                "1"
-            );
-            CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
-                "combat",
-                Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
-                "GameTip",
-                DateTime.Now,
-                "1"
-            );
-            CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
-                "lore",
-                Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
-                "GameTip",
-                DateTime.Now,
-                "1"
-            );
-            CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
-                "sim",
-                Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
-                "GameTip",
-                DateTime.Now,
-                "1"
-            );
         }
 
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
@@ -126,17 +72,7 @@ namespace ModTek.Manifest
                 }
             }
 
-            LogIf(CustomTags.Count > 0, "Processing CustomTags:");
-            foreach (var modEntry in CustomTags)
-            {
-                CustomTypeProcessor.AddOrUpdateTag(modEntry.AbsolutePath);
-            }
-
-            LogIf(CustomTagSets.Count > 0, "Processing CustomTagSets:");
-            foreach (var modEntry in CustomTagSets)
-            {
-                CustomTypeProcessor.AddOrUpdateTagSet(modEntry.AbsolutePath);
-            }
+            CustomTagFeature.ProcessTags();
 
             BetterBTRL.Instance.RefreshTypedEntries();
         }
@@ -225,25 +161,10 @@ namespace ModTek.Manifest
                 {
                     Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
                 }
+                return;
             }
-            else if (entry.IsTypeCustomResource)
-            {
-                Log($"\tAdd/Replace (CustomResource): \"{entry.RelativePathToMods}\" ({entry.Type})");
-                CustomResources[entry.Type][entry.Id] = entry.CreateVersionManifestEntry();
-            }
-            else if (entry.IsTypeSoundBankDef)
-            {
-                SoundBanksFeature.AddSoundBankDef(entry.AbsolutePath);
-            }
-            else if (entry.IsTypeCustomTag)
-            {
-                CustomTags.Add(entry);
-            }
-            else if (entry.IsTypeCustomTagSet)
-            {
-                CustomTagSets.Add(entry);
-            }
-            else if (entry.IsTypeBattleTechResourceType)
+
+            if (entry.IsTypeBattleTechResourceType)
             {
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
@@ -269,21 +190,27 @@ namespace ModTek.Manifest
                 {
                     packager.AddEntry(entry);
                 }
-            }
-            else
-            {
-                Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
-            }
-        }
 
-        internal static void FinalizeResourceLoading()
-        {
-            if (CustomResources["DebugSettings"]["settings"].FilePath != Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath))
-            {
-                DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
+                return;
             }
-        }
 
+            if (CustomResourcesFeature.Add(entry))
+            {
+                return;
+            }
+
+            if (!SoundBanksFeature.Add(entry))
+            {
+                return;
+            }
+
+            if (CustomTagFeature.Add(entry))
+            {
+                return;
+            }
+
+            Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
+        }
 
         internal static void BTRLContentPackLoaded()
         {
@@ -296,7 +223,7 @@ namespace ModTek.Manifest
             osw.Restart();
 
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => SaveCaches());
-            foreach (var type in BTResourceUtils.MDDTypes)
+            foreach (var type in BTConstants.MDDTypes)
             {
                 loadRequest.AddAllOfTypeBlindLoadRequest(type);
             }

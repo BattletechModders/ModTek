@@ -22,7 +22,7 @@ namespace ModTek.Manifest.Patches
 
         public static void Postfix(string filename, List<string> ___tips)
         {
-            var tipEntry = ModsManifest.CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
+            var tipEntry = CustomResourcesFeature.GetGameTip(filename);
             if (tipEntry == null)
             {
                 return;

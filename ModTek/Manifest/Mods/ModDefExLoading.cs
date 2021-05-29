@@ -13,49 +13,12 @@ namespace ModTek.Manifest.Mods
 {
     internal static class ModDefExLoading
     {
-        internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
-        internal const string CustomType_DebugSettings = "DebugSettings";
-        internal const string CustomType_FixedSVGAsset = "FixedSVGAsset";
-        internal const string CustomType_GameTip = "GameTip";
-        internal const string CustomType_SoundBankDef = "SoundBankDef";
-        internal const string CustomType_SoundBank = "SoundBank";
-        internal const string CustomType_Tag = "CustomTag";
-        internal const string CustomType_TagSet = "CustomTagSet";
-        internal const string CustomType_Video = "Video";
-
-        private static readonly string[] MODTEK_TYPES =
-        {
-            CustomType_Video,
-            CustomType_AdvancedJSONMerge,
-            CustomType_GameTip,
-            CustomType_SoundBank,
-            CustomType_SoundBankDef,
-            CustomType_DebugSettings,
-            CustomType_FixedSVGAsset,
-            CustomType_Tag,
-            CustomType_TagSet
-        };
-
-        private static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
             Logger.Log($"{modDef.Name} {modDef.Version}");
 
-            // read in custom resource types
-            foreach (var customResourceType in modDef.CustomResourceTypes)
-            {
-                if (VANILLA_TYPES.Contains(customResourceType) || MODTEK_TYPES.Contains(customResourceType))
-                {
-                    Logger.Log($"\tWarning: {modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
-                    continue;
-                }
-
-                if (!ModsManifest.CustomResources.ContainsKey(customResourceType))
-                {
-                    ModsManifest.CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
-                }
-            }
+            CustomResourcesFeature.ProcessModDef(modDef);
 
             // expand the manifest (parses all JSON as well)
             if (!CheckManifest(modDef))
@@ -195,7 +158,7 @@ namespace ModTek.Manifest.Mods
             return true;
         }
 
-        internal static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder, Dictionary<string, Dictionary<string, VersionManifestEntry>> CustomResources)
+        internal static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder)
         {
             var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
 
@@ -208,12 +171,7 @@ namespace ModTek.Manifest.Mods
 
             if (modDef.CustomResourceTypes.Count > 0)
             {
-                var customResources = new Dictionary<string, Dictionary<string, VersionManifestEntry>>();
-                foreach (var resourceType in modDef.CustomResourceTypes)
-                {
-                    customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
-                }
-
+                var customResources = CustomResourcesFeature.GetCopyOfResourceForType(modDef.CustomResourceTypes);
                 paramsDictionary.Add("customResources", customResources);
             }
 

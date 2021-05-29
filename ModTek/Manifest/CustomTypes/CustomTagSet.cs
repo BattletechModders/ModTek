@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ModTek.Manifest.MDD.CustomTypes
+namespace ModTek.Manifest.CustomTypes
 {
     [JsonObject]
     internal class CustomTagSet
