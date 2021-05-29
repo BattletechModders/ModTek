@@ -5,6 +5,7 @@ using System.IO;
 using BattleTech;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
+using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 using MergeSets = System.Collections.Generic.Dictionary<string, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
@@ -21,11 +22,11 @@ namespace ModTek.Features.Manifest.Merges
 
         internal MergeCache()
         {
-            if (File.Exists(PersistentFilePath))
+            if (ModTekCacheStorage.CompressedExists(PersistentFilePath))
             {
                 try
                 {
-                    persistentSets = JsonConvert.DeserializeObject<MergeSets>(File.ReadAllText(PersistentFilePath));
+                    persistentSets = ModTekCacheStorage.CompressedReadFrom<MergeSets>(PersistentFilePath);
                     return;
                 }
                 catch (Exception e)
@@ -51,8 +52,7 @@ namespace ModTek.Features.Manifest.Merges
                     return;
                 }
 
-                var json = JsonConvert.SerializeObject(persistentSets, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                File.WriteAllText(PersistentFilePath, json);
+                ModTekCacheStorage.CompressedWriteTo(persistentSets, PersistentFilePath);
                 Log($"Merge Cache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -102,9 +102,9 @@ namespace ModTek.Features.Manifest.Merges
             {
                 if (fetchContent)
                 {
-                    cachedContent = File.ReadAllText(temp.CachedAbsolutePath);
+                    cachedContent = ModTekCacheStorage.CompressedStringReadFrom(temp.CachedAbsolutePath);
                 }
-                else if (!File.Exists(temp.CachedAbsolutePath))
+                else if (!ModTekCacheStorage.CompressedExists(temp.CachedAbsolutePath))
                 {
                     return false;
                 }
@@ -144,7 +144,7 @@ namespace ModTek.Features.Manifest.Merges
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedAbsolutePath) ?? throw new InvalidOperationException());
-                File.WriteAllText(temp.CachedAbsolutePath, content);
+                ModTekCacheStorage.CompressedStringWriteTo(temp.CachedAbsolutePath, content);
                 persistentSets[key] = temp;
                 HasChanges = true;
             }

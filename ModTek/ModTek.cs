@@ -79,7 +79,7 @@ namespace ModTek
             if (File.Exists(FilePaths.ChangedFlagPath))
             {
                 File.Delete(FilePaths.ChangedFlagPath);
-                FileUtils.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
+                ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
                 Directory.CreateDirectory(FilePaths.CacheDirectory);
                 Directory.CreateDirectory(FilePaths.DatabaseDirectory);
             }

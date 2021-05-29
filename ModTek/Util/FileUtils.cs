@@ -2,68 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Logging;
 
 namespace ModTek.Util
 {
     internal static class FileUtils
     {
-        internal static void CleanModTekTempDir(DirectoryInfo baseDir)
-        {
-            if (!baseDir.Exists)
-            {
-                return;
-            }
-
-            foreach (var dir in baseDir.EnumerateDirectories())
-            {
-                CleanModTekTempDir(dir);
-            }
-
-            var files = baseDir.GetFiles();
-            foreach (var file in files)
-            {
-                if (file.Name == "ModTek.log")
-                {
-                    continue;
-                }
-
-                if (file.Name == "ModTek_runtime_log.txt")
-                {
-                    continue;
-                }
-
-                file.IsReadOnly = false;
-                RLog.M.TWL(0, "delete file " + file.FullName);
-                try
-                {
-                    file.Delete();
-                }
-                catch (Exception)
-                {
-                }
-            }
-
-            RLog.M.TWL(0, "delete directory " + baseDir.FullName);
-            try
-            {
-                baseDir.Delete();
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        internal static string ResolvePath(string basePath, string relativePath)
-        {
-            if (!Path.IsPathRooted(relativePath))
-            {
-                relativePath = Path.Combine(basePath, relativePath);
-            }
-
-            return Path.GetFullPath(relativePath);
-        }
-
         internal static string GetRelativePath(string basePath, string absolutePath)
         {
             if (!Path.IsPathRooted(absolutePath))
@@ -114,11 +57,6 @@ namespace ModTek.Util
                 .Where(path => !FileIsOnDenyList(path))
                 .Where(path => suffixes == null || suffixes.Any(p => path.EndsWith(p, StringComparison.InvariantCultureIgnoreCase)))
                 .ToList();
-        }
-
-        internal static bool IsStringType(string name)
-        {
-            return IsJson(name) || IsCsv(name) || IsTxt(name);
         }
 
         internal static bool IsJson(string name)

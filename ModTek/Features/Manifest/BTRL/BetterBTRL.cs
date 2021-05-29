@@ -5,8 +5,8 @@ using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Logging;
 using ModTek.Util;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Features.Manifest.BTRL
 {
@@ -22,12 +22,15 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly List<ModAddendumManifest> orderedModAddendums = new();
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
+        private bool HasChanges;
+
         internal void TryFinalizeDataLoad(ContentPackIndex contentPackIndex)
         {
-            packIndex = contentPackIndex;
-            RefreshTypedEntries();
+            SetContentPackIndex(contentPackIndex);
             if (contentPackIndex.AllContentPacksLoaded())
             {
+                currentManifest.DumpToDisk();
+                Log("Owned content packs: " + packIndex?.GetOwnedContentPacks().Aggregate((a, b) => $"{a} {b}"));
                 ModsManifest.BTRLContentPackLoaded();
             }
         }
@@ -35,6 +38,7 @@ namespace ModTek.Features.Manifest.BTRL
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
         {
             addendumEntryOverrides.GetOrCreate(addendumName).Add(manifestEntry);
+            HasChanges = true;
         }
 
         private VersionManifestAddendum ApplyOverrides(VersionManifestAddendum addendum)
@@ -55,24 +59,32 @@ namespace ModTek.Features.Manifest.BTRL
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)
         {
             packIndex = contentPackIndex;
+            HasChanges = true;
+            RefreshTypedEntries();
         }
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
         {
-            hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
+            if (hbsAddendums.Any(x => addendum.Name.Equals(x.Name)))
+            {
+                return;
+            }
             hbsAddendums.Add(addendum);
-            RefreshTypedEntries(); // TODO needed?
+            HasChanges = true;
+            RefreshTypedEntries();
         }
 
         public void AddModAddendum(ModAddendumManifest modManifest)
         {
             orderedModAddendums.Add(modManifest);
+            HasChanges = true;
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
             hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
-            RefreshTypedEntries(); // TODO needed?
+            HasChanges = true;
+            RefreshTypedEntries();
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
@@ -98,7 +110,7 @@ namespace ModTek.Features.Manifest.BTRL
             memoryStores.Add(memoryStore.Name, memoryStore);
             memoryStore.SubscribeToContentsChanged(IndexMemoryStore);
             IndexMemoryStore(memoryStore);
-            RefreshTypedEntries(); // TODO needed?
+            RefreshTypedEntries();
         }
 
         public void RemoveMemoryStore(VersionManifestMemoryStore memoryStore)
@@ -112,7 +124,7 @@ namespace ModTek.Features.Manifest.BTRL
             memoryStores.Remove(memoryStore.Name);
             memoryStore.SubscribeToContentsChanged(IndexMemoryStore);
             UnIndexMemoryStore(memoryStore);
-            RefreshTypedEntries(); // TODO needed?
+            RefreshTypedEntries();
         }
 
         private void IndexMemoryStore(VersionManifestMemoryStore memoryStore)
@@ -194,21 +206,27 @@ namespace ModTek.Features.Manifest.BTRL
         }
 
         private Stopwatch sw = new();
-        internal void RefreshTypedEntries()
+        internal void RefreshTypedEntries() // this is called way too often in vanilla cases, but not sure what depends on this
         {
+            if (!HasChanges) // it changes all the time anyway
+            {
+                return;
+            }
+
             sw.Start();
-            currentManifest.Reset(defaultManifest.Entries);
+            currentManifest.Reset(defaultManifest.Entries, packIndex);
             var activeAndOwnedAddendums = new List<string>();
 
             foreach (var addendum in hbsAddendums)
             {
-                var isOwned = packIndex?.IsContentPackOwned(addendum.Name) ?? false;
+                // if content pack index not yet loaded, assume its owned (vanilla behavior)
+                var isOwned = packIndex?.IsContentPackOwned(addendum.Name) ?? true;
                 if (isOwned)
                 {
                     activeAndOwnedAddendums.Add(addendum.Name);
                 }
 
-                currentManifest.AddAddendum(ApplyOverrides(addendum), isOwned);
+                currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
 
             foreach (var modAddendum in orderedModAddendums)
@@ -219,10 +237,10 @@ namespace ModTek.Features.Manifest.BTRL
                     continue;
                 }
 
-                currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum), true);
+                currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum));
             }
             sw.Stop();
-            Logger.LogIf(sw.ElapsedMilliseconds > 500, $"RefreshTypedEntries Total {sw.Elapsed}s");
+            LogIf(sw.ElapsedMilliseconds > 500, $"RefreshTypedEntries Total {sw.Elapsed}s");
         }
 
         public VersionManifestEntry[] AllEntries()
@@ -248,6 +266,7 @@ namespace ModTek.Features.Manifest.BTRL
         public void RemoveEntry(VersionManifestEntry entry)
         {
             // only used by ModLoader, which we disable anyway
+            // we dont support removal, since we cannot remove base types from MDDB anyway
             throw new NotImplementedException();
         }
     }

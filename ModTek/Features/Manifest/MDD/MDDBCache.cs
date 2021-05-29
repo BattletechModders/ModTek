@@ -6,7 +6,7 @@ using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Misc;
-using Newtonsoft.Json;
+using ModTek.Util;
 using static ModTek.Logging.Logger;
 using CacheDB = System.Collections.Generic.Dictionary<string, ModTek.Features.Manifest.FileVersionTuple>;
 
@@ -25,11 +25,11 @@ namespace ModTek.Features.Manifest.MDD
 
         internal MDDBCache()
         {
-            if (!string.IsNullOrEmpty(PersistentFilePath) && File.Exists(PersistentFilePath) && File.Exists(ModMDDBPath))
+            if (!string.IsNullOrEmpty(PersistentFilePath) && ModTekCacheStorage.CompressedExists(PersistentFilePath) && File.Exists(ModMDDBPath))
             {
                 try
                 {
-                    Entries = JsonConvert.DeserializeObject<CacheDB>(File.ReadAllText(PersistentFilePath));
+                    Entries = ModTekCacheStorage.CompressedReadFrom<CacheDB>(PersistentFilePath);
                     MetadataDatabase.ReloadFromDisk();
                     Log("MDDB Cache: Loaded.");
                     return;
@@ -66,8 +66,8 @@ namespace ModTek.Features.Manifest.MDD
                     return;
                 }
                 MetadataDatabase.SaveMDDToPath();
-                var json = JsonConvert.SerializeObject(Entries, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                File.WriteAllText(PersistentFilePath, json);
+
+                ModTekCacheStorage.CompressedWriteTo(Entries, PersistentFilePath);
                 Log($"MDDB Cache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }

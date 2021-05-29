@@ -208,7 +208,6 @@ namespace ModTek.Features.Manifest
 
         internal static void BTRLContentPackLoaded()
         {
-            Log("All content pack manifests loaded");
             VerifyCaches();
         }
 

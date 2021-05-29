@@ -22,7 +22,7 @@ namespace ModTek.Features.AdvJSONMerge
         {
             try
             {
-                var objCache = JsonUtils.ParseGameJSONFile(path);
+                var objCache = HBSJsonUtils.ParseGameJSONFile(path);
                 return objCache.ToObject<AdvancedJSONMerge>();
             }
             catch (Exception e)

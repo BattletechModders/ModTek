@@ -68,10 +68,10 @@ namespace ModTek.Features.Manifest.Merges
 
         private string JsonMerge(string originalContent)
         {
-            var target = JsonUtils.ParseGameJSON(originalContent);
+            var target = HBSJsonUtils.ParseGameJSON(originalContent);
             foreach (var entry in Merges)
             {
-                var merge = JsonUtils.ParseGameJSONFile(entry.AbsolutePath);
+                var merge = HBSJsonUtils.ParseGameJSONFile(entry.AbsolutePath);
                 AdvJSONMergeFeature.MergeIntoTarget(target, merge);
             }
 

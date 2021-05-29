@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BattleTech;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Features.Manifest.BTRL
 {
@@ -21,11 +22,13 @@ namespace ModTek.Features.Manifest.BTRL
             {
                 var addendumName = "Mod_" + ModName + (Index > 0 ? Index.ToString() : "");
                 manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredAddendums);
+                Log($"Created addendum {addendumName} with requirements {entry.RequiredAddendums}");
                 addendums.Add(manifest);
                 Index++;
             }
 
-            manifest.Addendum.Add(entry.CreateVersionManifestEntry());
+            var manifestEntry = entry.CreateVersionManifestEntry();
+            manifest.Addendum.Add(manifestEntry);
         }
 
         internal void SaveToBTRL()

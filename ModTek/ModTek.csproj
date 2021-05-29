@@ -139,6 +139,7 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Misc\Configuration.cs" />
     <Compile Include="Misc\FilePaths.cs" />
+    <Compile Include="Misc\ModTekCacheStorage.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\CSharpUtils.cs" />
@@ -146,7 +147,7 @@
     <Compile Include="Util\FileUtils.cs" />
     <Compile Include="Util\HarmonyUtils.cs" />
     <Compile Include="UI\LoadingCurtainErrorText.cs" />
-    <Compile Include="Util\JsonUtils.cs" />
+    <Compile Include="Util\HBSJsonUtils.cs" />
     <Compile Include="Util\LoadOrder.cs" />
     <Compile Include="ModTek.cs" />
     <Compile Include="Injection.cs" />

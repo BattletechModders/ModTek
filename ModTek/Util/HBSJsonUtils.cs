@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace ModTek.Util
 {
-    internal static class JsonUtils
+    internal static class HBSJsonUtils
     {
         internal static JObject ParseGameJSONFile(string path, bool log = false)
         {

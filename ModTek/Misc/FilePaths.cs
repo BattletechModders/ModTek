@@ -8,6 +8,7 @@ namespace ModTek.Misc
     internal static class FilePaths
     {
         internal const string MOD_JSON_NAME = "mod.json";
+        internal static string AssetBundleMergesDirectoryName { get; set; } = "AssetBundleMerges";
 
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MODTEK_DIRECTORY_NAME = "ModTek";
@@ -22,6 +23,8 @@ namespace ModTek.Misc
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
         private const string CHANGED_FLAG_NAME = ".changed";
+        private const string MANIFEST_ALL_NAME = "ManifestAll.csv";
+        private const string MANIFEST_OWNED_NAME = "ManifestOwned.csv";
 
         internal static string ModTekDirectory { get; private set; }
         internal static string TempModTekDirectory { get; private set; }
@@ -42,7 +45,8 @@ namespace ModTek.Misc
         internal static string ChangedFlagPath { get; private set; }
         internal static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
         internal static string LogPath { get; set; }
-        internal static string AssetBundleMergesDirectoryName { get; set; } = "AssetBundleMerges";
+        internal static string ManifestAllDumpPath { get; set; }
+        internal static string ManifestOwnedDumpPath { get; set; }
 
         internal static void SetupPaths()
         {
@@ -70,6 +74,8 @@ namespace ModTek.Misc
             TempModTekDirectory = Path.Combine(ModsDirectory, TEMP_MODTEK_DIRECTORY_NAME);
             CacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
             DatabaseDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
+            ManifestAllDumpPath = Path.Combine(TempModTekDirectory, MANIFEST_ALL_NAME);
+            ManifestOwnedDumpPath = Path.Combine(TempModTekDirectory, MANIFEST_OWNED_NAME);
 
             ChangedFlagPath = Path.Combine(TempModTekDirectory, CHANGED_FLAG_NAME);
             LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
@@ -80,6 +86,7 @@ namespace ModTek.Misc
             MDDBCachePath = Path.Combine(DatabaseDirectory, DB_CACHE_FILE_NAME);
             ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
             ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
+
         }
     }
 }
