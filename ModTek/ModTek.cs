@@ -71,8 +71,8 @@ namespace ModTek
             stopwatch.Start();
 
             // creates the directories above it as well
-            Directory.CreateDirectory(FilePaths.CacheDirectory);
-            Directory.CreateDirectory(FilePaths.DatabaseDirectory);
+            Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
+            Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
 
             RLog.InitLog(FilePaths.TempModTekDirectory, true);
             RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -80,8 +80,8 @@ namespace ModTek
             {
                 File.Delete(FilePaths.ChangedFlagPath);
                 ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
-                Directory.CreateDirectory(FilePaths.CacheDirectory);
-                Directory.CreateDirectory(FilePaths.DatabaseDirectory);
+                Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
+                Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
             }
 
             if (File.Exists(FilePaths.ModTekSettingsPath))

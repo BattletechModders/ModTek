@@ -6,7 +6,6 @@ using BattleTech;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
-using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 using MergeSets = System.Collections.Generic.Dictionary<string, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
 
@@ -14,7 +13,8 @@ namespace ModTek.Features.Manifest.Merges
 {
     internal class MergeCache
     {
-        private static string PersistentFilePath => FilePaths.MergeCachePath;
+        private static string PersistentDirPath => FilePaths.MergeCacheDirectory;
+        private readonly string PersistentFilePath;
 
         private readonly MergeSets persistentSets; // stuff in here was merged
         private readonly MergeSets tempSets = new(); // stuff in here has merges queued
@@ -22,6 +22,8 @@ namespace ModTek.Features.Manifest.Merges
 
         internal MergeCache()
         {
+            PersistentFilePath = Path.Combine(PersistentDirPath, "merge_cache.json");
+
             if (ModTekCacheStorage.CompressedExists(PersistentFilePath))
             {
                 try
@@ -34,6 +36,8 @@ namespace ModTek.Features.Manifest.Merges
                     Log("Merge Cache: Loading merge cache failed.", e);
                 }
             }
+
+            FileUtils.CleanDirectory(PersistentDirPath);
 
             // create a new one if it doesn't exist or couldn't be added'
             Log("Merge Cache: Rebuilding cache.");

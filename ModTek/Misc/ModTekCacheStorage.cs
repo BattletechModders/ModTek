@@ -73,7 +73,7 @@ namespace ModTek.Misc
         }
         private static Stream CompressedReadStream(Stream stream)
         {
-            return compress ? new GZipStream(stream, CompressionLevel.Fastest) : stream;
+            return compress ? new GZipStream(stream, CompressionMode.Decompress) : stream;
         }
 
         internal static bool CompressedExists(string path)

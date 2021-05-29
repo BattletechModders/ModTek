@@ -73,5 +73,14 @@ namespace ModTek.Util
         {
             return name.EndsWith(".txt");
         }
+
+        internal static void CleanDirectory(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+            }
+            Directory.CreateDirectory(path);
+        }
     }
 }

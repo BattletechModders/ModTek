@@ -19,7 +19,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> hbsAddendums = new();
-        private readonly List<ModAddendumManifest> orderedModAddendums = new();
+        private readonly List<ModAddendumManifest> orderedModAddendumManifests = new();
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
         private bool HasChanges;
@@ -31,6 +31,22 @@ namespace ModTek.Features.Manifest.BTRL
             {
                 currentManifest.DumpToDisk();
                 Log("Owned content packs: " + packIndex?.GetOwnedContentPacks().Aggregate((a, b) => $"{a} {b}"));
+                Log("HBS Addendums: " + hbsAddendums.Select(x => x.Name).Aggregate((a, b) => $"{a} {b}"));
+
+                Log("Mod Addendums:");
+                foreach (var modAddendum in orderedModAddendumManifests)
+                {
+                    string requires;
+                    if (modAddendum.RequiredAddendums == null || modAddendum.RequiredAddendums.Length == 0)
+                    {
+                        requires = "";
+                    }
+                    else
+                    {
+                        requires = " requires: " + modAddendum.RequiredAddendums.Aggregate((a, b) => $"{a} {b}");
+                    }
+                    Log($"\t{modAddendum.Addendum.Name}{requires}");
+                }
                 ModsManifest.BTRLContentPackLoaded();
             }
         }
@@ -76,7 +92,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void AddModAddendum(ModAddendumManifest modManifest)
         {
-            orderedModAddendums.Add(modManifest);
+            orderedModAddendumManifests.Add(modManifest);
             HasChanges = true;
         }
 
@@ -229,7 +245,7 @@ namespace ModTek.Features.Manifest.BTRL
                 currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
 
-            foreach (var modAddendum in orderedModAddendums)
+            foreach (var modAddendum in orderedModAddendumManifests)
             {
                 if (modAddendum.RequiredAddendums != null && modAddendum.RequiredAddendums.Except(activeAndOwnedAddendums).Any())
                 {

@@ -14,7 +14,9 @@ namespace ModTek.Features.Manifest.MDD
 {
     internal class MDDBCache
     {
-        private static string PersistentFilePath => FilePaths.MDDBCachePath;
+        private static string PersistentDirPath => FilePaths.MDDBCacheDirectory;
+        private readonly string PersistentFilePath;
+
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
@@ -25,7 +27,9 @@ namespace ModTek.Features.Manifest.MDD
 
         internal MDDBCache()
         {
-            if (!string.IsNullOrEmpty(PersistentFilePath) && ModTekCacheStorage.CompressedExists(PersistentFilePath) && File.Exists(ModMDDBPath))
+            PersistentFilePath = Path.Combine(PersistentDirPath, "database_cache.json");
+
+            if (ModTekCacheStorage.CompressedExists(PersistentFilePath) && File.Exists(ModMDDBPath))
             {
                 try
                 {
@@ -40,11 +44,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
             }
 
-            // delete mod db if it exists the cache does not
-            if (File.Exists(ModMDDBPath))
-            {
-                File.Delete(ModMDDBPath);
-            }
+            FileUtils.CleanDirectory(PersistentDirPath);
 
             File.Copy(MDDBPath, ModMDDBPath);
 

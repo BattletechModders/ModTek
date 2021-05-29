@@ -15,7 +15,8 @@ namespace ModTek.Features.CustomResources
     {
         private static readonly CustomResourcesDict CustomResources = new();
 
-        private static string DefaultDebugSettingsPath;
+        private static string DefaultDebugSettingsAbsolutePath;
+        private static string DebugSettingsPath { get; } = Path.Combine(Path.Combine("data", "debug"), "settings.json");
 
         internal static void Setup()
         {
@@ -24,10 +25,10 @@ namespace ModTek.Features.CustomResources
             CustomResources.Add(BTConstants.CustomType_SoundBank, new Dictionary<string, VersionManifestEntry>());
 
             CustomResources.Add(BTConstants.CustomType_DebugSettings, new Dictionary<string, VersionManifestEntry>());
-            DefaultDebugSettingsPath = Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath);
+            DefaultDebugSettingsAbsolutePath = Path.Combine(FilePaths.StreamingAssetsDirectory, DebugSettingsPath);
             CustomResources[BTConstants.CustomType_DebugSettings]["settings"] = new VersionManifestEntry(
                 "settings",
-                DefaultDebugSettingsPath,
+                DefaultDebugSettingsAbsolutePath,
                 "DebugSettings",
                 DateTime.Now,
                 "1"
@@ -93,7 +94,7 @@ namespace ModTek.Features.CustomResources
 
         internal static void FinalizeResourceLoading()
         {
-            if (CustomResources[BTConstants.CustomType_DebugSettings]["settings"].FilePath != DefaultDebugSettingsPath)
+            if (CustomResources[BTConstants.CustomType_DebugSettings]["settings"].FilePath != DefaultDebugSettingsAbsolutePath)
             {
                 DebugBridge.LoadSettings(CustomResources[BTConstants.CustomType_DebugSettings]["settings"].FilePath);
             }

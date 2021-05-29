@@ -26,7 +26,7 @@ namespace ModTek.Features.Manifest.Merges
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();
 
-        internal string CachedAbsolutePath => Path.Combine(FilePaths.CacheDirectory, CachedPath);
+        internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
 
         internal MergeCacheEntry()
