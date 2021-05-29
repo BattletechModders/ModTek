@@ -20,12 +20,12 @@ namespace ModTek.Features.CustomResources
         internal static void Setup()
         {
             // setup custom resources for ModTek types with fake VersionManifestEntries
-            CustomResources.Add("Video", new Dictionary<string, VersionManifestEntry>());
-            CustomResources.Add("SoundBank", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add(BTConstants.CustomType_Video, new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add(BTConstants.CustomType_SoundBank, new Dictionary<string, VersionManifestEntry>());
 
-            CustomResources.Add("DebugSettings", new Dictionary<string, VersionManifestEntry>());
+            CustomResources.Add(BTConstants.CustomType_DebugSettings, new Dictionary<string, VersionManifestEntry>());
             DefaultDebugSettingsPath = Path.Combine(FilePaths.StreamingAssetsDirectory, FilePaths.DebugSettingsPath);
-            CustomResources["DebugSettings"]["settings"] = new VersionManifestEntry(
+            CustomResources[BTConstants.CustomType_DebugSettings]["settings"] = new VersionManifestEntry(
                 "settings",
                 DefaultDebugSettingsPath,
                 "DebugSettings",
@@ -33,29 +33,29 @@ namespace ModTek.Features.CustomResources
                 "1"
             );
 
-            CustomResources.Add("GameTip", new Dictionary<string, VersionManifestEntry>());
-            CustomResources["GameTip"]["general"] = new VersionManifestEntry(
+            CustomResources.Add(BTConstants.CustomType_GameTip, new Dictionary<string, VersionManifestEntry>());
+            CustomResources[BTConstants.CustomType_GameTip]["general"] = new VersionManifestEntry(
                 "general",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "general.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            CustomResources["GameTip"]["combat"] = new VersionManifestEntry(
+            CustomResources[BTConstants.CustomType_GameTip]["combat"] = new VersionManifestEntry(
                 "combat",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "combat.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            CustomResources["GameTip"]["lore"] = new VersionManifestEntry(
+            CustomResources[BTConstants.CustomType_GameTip]["lore"] = new VersionManifestEntry(
                 "lore",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "lore.txt")),
                 "GameTip",
                 DateTime.Now,
                 "1"
             );
-            CustomResources["GameTip"]["sim"] = new VersionManifestEntry(
+            CustomResources[BTConstants.CustomType_GameTip]["sim"] = new VersionManifestEntry(
                 "sim",
                 Path.Combine(FilePaths.StreamingAssetsDirectory, Path.Combine("GameTips", "sim.txt")),
                 "GameTip",
@@ -94,9 +94,9 @@ namespace ModTek.Features.CustomResources
 
         internal static void FinalizeResourceLoading()
         {
-            if (CustomResources["DebugSettings"]["settings"].FilePath != DefaultDebugSettingsPath)
+            if (CustomResources[BTConstants.CustomType_DebugSettings]["settings"].FilePath != DefaultDebugSettingsPath)
             {
-                DebugBridge.LoadSettings(CustomResources["DebugSettings"]["settings"].FilePath);
+                DebugBridge.LoadSettings(CustomResources[BTConstants.CustomType_DebugSettings]["settings"].FilePath);
             }
         }
 
@@ -112,17 +112,17 @@ namespace ModTek.Features.CustomResources
 
         internal static VersionManifestEntry GetGameTip(string filename)
         {
-            return CustomResources["GameTip"].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
+            return CustomResources[BTConstants.CustomType_GameTip].Values.LastOrDefault(entry => entry.Id == Path.GetFileNameWithoutExtension(filename));
         }
 
         public static VersionManifestEntry GetVideo(string videoName)
         {
-            return CustomResources["Video"].Values.LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
+            return CustomResources[BTConstants.CustomType_Video].Values.LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
         }
 
         public static VersionManifestEntry GetSoundBank(string name)
         {
-            return CustomResources["SoundBank"].TryGetValue(name, out var entry) ? entry : null;
+            return CustomResources[BTConstants.CustomType_SoundBank].TryGetValue(name, out var entry) ? entry : null;
         }
     }
 }

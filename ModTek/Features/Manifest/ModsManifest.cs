@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using BattleTech;
-using BattleTech.UI;
 using ModTek.Features.CustomResources;
+using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.CustomTypes;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
@@ -13,7 +13,6 @@ using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
-using SVGImporter;
 using static ModTek.Logging.Logger;
 
 namespace ModTek.Features.Manifest
@@ -22,13 +21,6 @@ namespace ModTek.Features.Manifest
     {
         private static MergeCache mergeCache = new();
         private static MDDBCache mddbCache = new();
-
-        private static HashSet<string> systemIcons = new();
-
-        internal static bool isInSystemIcons(string id)
-        {
-            return systemIcons.Contains(id);
-        }
 
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
@@ -169,11 +161,7 @@ namespace ModTek.Features.Manifest
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
-                    Log($"Processing SVG entry of: {entry.Id}  type: {entry.Type}  name: {nameof(SVGAsset)}  path: {entry.RelativePathToMods}");
-                    if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
-                    {
-                        systemIcons.Add(entry.Id);
-                    }
+                    SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
                 Log($"\tAdd/Replace: \"{entry.RelativePathToMods}\" ({entry.Type})");

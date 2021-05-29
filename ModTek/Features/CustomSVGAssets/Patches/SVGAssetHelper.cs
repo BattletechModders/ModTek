@@ -8,12 +8,11 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Features.Manifest;
 using ModTek.Logging;
 using SVGImporter;
 using static BattleTech.Data.DataManager;
 
-namespace ModTek.Patches
+namespace ModTek.Features.CustomSVGAssets.Patches
 {
     [HarmonyPatch(typeof(ApplicationConstants))]
     [HarmonyPatch("FromJSON")]
@@ -65,7 +64,7 @@ namespace ModTek.Patches
                     }
 
                     var id = "UILookAndColorConstants." + field.Name;
-                    if (ModsManifest.isInSystemIcons(id))
+                    if (SVGAssetFeature.isInSystemIcons(id))
                     {
                         svgs.Add(id);
                     }
