@@ -209,13 +209,15 @@ namespace ModTek.Features.Manifest
         internal static void BTRLContentPackLoaded()
         {
             Log("All content pack manifests loaded");
-            PreloadMergesAfterManifestComplete();
+            VerifyCaches();
         }
 
-        internal static void SimGameOrSkirmishLoaded()
+        private static void VerifyCaches()
         {
-            Log("Skirmish or SimGame loaded");
-            SaveCaches();
+            // TODO implement
+            // remove old or outdated entries (outdated detection allows to skip preloads)
+            // without replacement, fix of MDD might be problematic => deletion of cache during startup might be simpler
+            PreloadMergesAfterManifestComplete();
         }
 
         private static Stopwatch preloadSW = new();
@@ -223,20 +225,6 @@ namespace ModTek.Features.Manifest
         {
             preloadSW.Start();
 
-            // how to detect deletion? -> only possible after index loaded
-
-            // default + mods-non-dlc | index + merge -> almost immediately
-            // check for changes here not possible since it might be overwritten by dlc + mods-dlc later
-
-            // dlc + mods-dlc | index -> after index loaded
-
-            // dlc + mods-dlc | merge -> after content loaded
-
-            // TODO merge and dbcache stuff whats not DLC
-
-            // TODO then do the same later
-
-            // TODO don't do preload if we dont need to
             // if (manifest changed || merges_changed since last time)
             {
                 var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
@@ -252,6 +240,12 @@ namespace ModTek.Features.Manifest
         {
             preloadSW.Stop();
             LogIfSlow(preloadSW, "Preloading");
+            SaveCaches();
+        }
+
+        internal static void SimGameOrSkirmishLoaded()
+        {
+            Log("Skirmish or SimGame loaded");
             SaveCaches();
         }
 
