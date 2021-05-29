@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
-namespace ModTek.Features.Manifest.AdvMerge
+namespace ModTek.Features.AdvJSONMerge
 {
     internal class Instruction
     {

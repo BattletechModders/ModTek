@@ -83,6 +83,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Features\AdvJSONMerge\AdvancedJSONMerge.cs" />
+    <Compile Include="Features\AdvJSONMerge\AdvJSONMergeFeature.cs" />
+    <Compile Include="Features\AdvJSONMerge\Instruction.cs" />
+    <Compile Include="Features\AdvJSONMerge\MergeAction.cs" />
     <Compile Include="Features\CustomResources\CustomResourcesFeature.cs" />
     <Compile Include="Features\CustomResources\Patches\BinkMediaPlayer.cs" />
     <Compile Include="Features\CustomResources\Patches\GameTipList_ctor_Patch.cs" />
@@ -92,10 +96,6 @@
     <Compile Include="Features\CustomTags\CustomTagFeature.cs" />
     <Compile Include="Features\CustomTags\CustomTagSet.cs" />
     <Compile Include="Features\CustomTags\MetadataDatabaseExtensions.cs" />
-    <Compile Include="Features\Manifest\AdvMerge\AdvancedJSONMerge.cs" />
-    <Compile Include="Features\Manifest\AdvMerge\Instruction.cs" />
-    <Compile Include="Features\Manifest\AdvMerge\JSONMerger.cs" />
-    <Compile Include="Features\Manifest\AdvMerge\MergeAction.cs" />
     <Compile Include="Features\Manifest\BTConstants.cs" />
     <Compile Include="Features\Manifest\BTRL\BetterBTRL.cs" />
     <Compile Include="Features\Manifest\BTRL\ModAddendumManifest.cs" />

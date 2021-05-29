@@ -1,4 +1,4 @@
-﻿namespace ModTek.Features.Manifest.AdvMerge
+﻿namespace ModTek.Features.AdvJSONMerge
 {
     internal enum MergeAction
     {

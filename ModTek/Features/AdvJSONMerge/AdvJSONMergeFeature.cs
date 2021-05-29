@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using static ModTek.Logging.Logger;
 
-namespace ModTek.Features.Manifest.AdvMerge
+namespace ModTek.Features.AdvJSONMerge
 {
-    internal static class JSONMerger
+    internal static class AdvJSONMergeFeature
     {
         private static bool IsAdvancedJSONMerge(JObject merge)
         {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using BattleTech;
-using ModTek.Features.Manifest.AdvMerge;
+using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;

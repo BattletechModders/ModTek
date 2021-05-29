@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Features.Manifest.AdvMerge;
+using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -78,7 +78,7 @@ namespace ModTek.Features.Manifest.Merges
             foreach (var entry in Merges)
             {
                 var merge = JsonUtils.ParseGameJSON(entry.Path);
-                JSONMerger.MergeIntoTarget(target, merge);
+                AdvJSONMergeFeature.MergeIntoTarget(target, merge);
             }
 
             return target.ToString(Formatting.Indented);

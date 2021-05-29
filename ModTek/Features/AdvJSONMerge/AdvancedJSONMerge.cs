@@ -4,12 +4,15 @@ using ModTek.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Manifest.AdvMerge
+namespace ModTek.Features.AdvJSONMerge
 {
     internal class AdvancedJSONMerge
     {
+        [JsonProperty]
         public string TargetID;
+        [JsonProperty]
         public List<string> TargetIDs;
+        [JsonProperty]
         public string TargetType;
 
         [JsonProperty(Required = Required.Always)]
