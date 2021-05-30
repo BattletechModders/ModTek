@@ -107,11 +107,11 @@ namespace ModTek.Features.Manifest.BTRL
             try
             {
                 ModTekCacheStorage.CompressedCSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
-                Log($"TypedManifest: Saved to {ManifestDumpPath}.");
+                Log($"Manifest: Saved to {ManifestDumpPath}.");
             }
             catch (Exception e)
             {
-                Log($"TypedManifest: Failed to save to {ManifestDumpPath}", e);
+                Log($"Manifest: Failed to save to {ManifestDumpPath}", e);
             }
         }
     }
