@@ -39,15 +39,20 @@ namespace ModTek.Logging
             }
         }
 
-        internal static void LogIfSlow(Stopwatch sw, string id = null)
+        internal static void LogIfSlow(Stopwatch sw, string id = null, long threshold = 1000, bool resetIfLogged = true)
         {
-            if (sw.ElapsedMilliseconds < 500)
+            if (sw.ElapsedMilliseconds < threshold)
             {
                 return;
             }
 
             id ??= "Method " + GetFullMethodName();
             LogWithDate($"{id} took {sw.Elapsed}");
+
+            if (resetIfLogged)
+            {
+                sw.Reset();
+            }
         }
 
         private static string GetFullMethodName()

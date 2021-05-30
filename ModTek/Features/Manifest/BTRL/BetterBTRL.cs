@@ -29,26 +29,32 @@ namespace ModTek.Features.Manifest.BTRL
             SetContentPackIndex(contentPackIndex);
             if (contentPackIndex.AllContentPacksLoaded())
             {
-                currentManifest.DumpToDisk();
-                Log("Owned content packs: " + packIndex?.GetOwnedContentPacks().Aggregate((a, b) => $"{a} {b}"));
-                Log("HBS Addendums: " + hbsAddendums.Select(x => x.Name).Aggregate((a, b) => $"{a} {b}"));
-
-                Log("Mod Addendums:");
-                foreach (var modAddendum in orderedModAddendumManifests)
-                {
-                    string requires;
-                    if (modAddendum.RequiredAddendums == null || modAddendum.RequiredAddendums.Length == 0)
-                    {
-                        requires = "";
-                    }
-                    else
-                    {
-                        requires = " requires: " + modAddendum.RequiredAddendums.Aggregate((a, b) => $"{a} {b}");
-                    }
-                    Log($"\t{modAddendum.Addendum.Name}{requires}");
-                }
-                ModsManifest.BTRLContentPackLoaded();
+                ContentPackManifestsLoaded();
             }
+        }
+
+        private void ContentPackManifestsLoaded()
+        {
+            currentManifest.DumpToDisk();
+            Log("Owned content packs: " + packIndex?.GetOwnedContentPacks().Aggregate((a, b) => $"{a} {b}"));
+            Log("HBS Addendums: " + hbsAddendums.Select(x => x.Name).Aggregate((a, b) => $"{a} {b}"));
+
+            Log("Mod Addendums:");
+            foreach (var modAddendum in orderedModAddendumManifests)
+            {
+                string requires;
+                if (modAddendum.RequiredAddendums == null || modAddendum.RequiredAddendums.Length == 0)
+                {
+                    requires = "";
+                }
+                else
+                {
+                    requires = " requires: " + modAddendum.RequiredAddendums.Aggregate((a, b) => $"{a} {b}");
+                }
+                Log($"\t{modAddendum.Addendum.Name}{requires}");
+            }
+
+            ModsManifest.VerifyCaches();
         }
 
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)

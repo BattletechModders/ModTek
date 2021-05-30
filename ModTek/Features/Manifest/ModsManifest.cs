@@ -206,17 +206,34 @@ namespace ModTek.Features.Manifest
             Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
         }
 
-        internal static void BTRLContentPackLoaded()
-        {
-            VerifyCaches();
-        }
-
-        private static void VerifyCaches()
+        internal static void VerifyCaches()
         {
             // TODO implement
             // remove old or outdated entries (outdated detection allows to skip preloads)
             // without replacement, fix of MDD might be problematic => deletion of cache during startup might be simpler
-            PreloadMergesAfterManifestComplete();
+
+            // this is problematic, merge cache could tell that data in mddb cache is out of date
+            // mddb cache can look at BTRL and see what data is missing or too much
+
+            // BTRL has final list of mod + hbs data versions
+            // merge cache has temp, persistent and file versions
+            // mddb cache has index and mddb
+
+            // what if we combine both caches into one?
+            // manifest of what we want -> BTRL(base,hbs,mods)/full + mc.temp/merges
+            // manifest of what is already saved -> mc.persis/mergedRes + mddbc/full+mergedRes
+
+            var HasMissingInMerge = true; //mergeCache.Cleanup();
+            var HasMissingInMDDB = true; //mddbCache.Cleanup();
+            if (HasMissingInMerge || HasMissingInMDDB)
+            {
+                PreloadMergesAfterManifestComplete();
+            }
+            else
+            {
+                Log("Skipping preload, no missing MDDB data detected.");
+                SaveCaches();
+            }
         }
 
         private static Stopwatch preloadSW = new();
@@ -224,15 +241,15 @@ namespace ModTek.Features.Manifest
         {
             preloadSW.Start();
 
-            // if (manifest changed || merges_changed since last time)
+            // TODO not even sure if we need this phase, but vanilla has all data preloaded in their MDDB
+            Log("Preloading MDDB related data.");
+
+            var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
+            foreach (var type in BTConstants.CCTypes.Concat(BTConstants.MDDTypes.Except(BTConstants.CCTypes)))
             {
-                var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
-                foreach (var type in BTConstants.CCTypes.Concat(BTConstants.MDDTypes.Except(BTConstants.CCTypes)))
-                {
-                    loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
-                }
-                loadRequest.ProcessRequests();
+                loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
             }
+            loadRequest.ProcessRequests();
         }
 
         private static void PreloadFinished()
@@ -254,7 +271,6 @@ namespace ModTek.Features.Manifest
             mddbCache.Save();
         }
 
-        // only merges will be cached
         internal static string GetMergedContent(VersionManifestEntry entry)
         {
             return mergeCache.HasMergedContentCached(entry, true, out var content) ? content : null;

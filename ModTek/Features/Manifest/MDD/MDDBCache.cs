@@ -82,6 +82,7 @@ namespace ModTek.Features.Manifest.MDD
             }
         }
 
+        private readonly Stopwatch sw = new();
         internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
         {
             var type = BTConstants.ResourceType(entry.Type);
@@ -117,7 +118,10 @@ namespace ModTek.Features.Manifest.MDD
                 }
             }
 
+            sw.Start();
             MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type.Value, entry.Id, content);
+            sw.Stop();
+            LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");
             Entries.Add(key, FileVersionTuple.From(entry));
             HasChanges = true;
         }
