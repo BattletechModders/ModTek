@@ -369,7 +369,7 @@ namespace ModTek.Features.Manifest.Merges
 
             string collectRelatedFilePaths()
             {
-                return CSharpUtils.List(cacheEntry.Merges.Select(x => x.ToString()));
+                return CSharpUtils.AsTextList(cacheEntry.Merges.Select(x => x.ToString()));
             }
 
             if (entriesById == null || entriesById.Length < 1)

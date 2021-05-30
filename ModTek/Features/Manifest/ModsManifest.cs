@@ -205,6 +205,7 @@ namespace ModTek.Features.Manifest
 
         internal static void VerifyCaches()
         {
+            Log();
             var preloadResources = new HashSet<CacheKey>();
 
             var rebuildMDDB = false;

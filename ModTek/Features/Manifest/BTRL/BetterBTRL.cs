@@ -36,12 +36,16 @@ namespace ModTek.Features.Manifest.BTRL
         {
             currentManifest.DumpToDisk();
 
-            Log("Owned content packs: " + CSharpUtils.List(packIndex?.GetOwnedContentPacks()));
-            Log("Mod addendums requiring content packs:" + CSharpUtils.List(
-               orderedModAddendumManifests
-                   .Where(x => x.RequiredContentPacks != null && x.RequiredContentPacks.Length > 0)
-                   .Select(x => $"{x.Addendum.Name} requires: {string.Join(",", x.RequiredContentPacks)}")
-            ));
+            var contentPacks = packIndex?.GetOwnedContentPacks();
+            LogIf(contentPacks != null && contentPacks.Count > 0, "Owned content packs: " + contentPacks.AsTextList());
+
+            var modsWithRequirements = orderedModAddendumManifests
+                .Where(x => x.RequiredContentPacks != null && x.RequiredContentPacks.Length > 0)
+                .ToList();
+            LogIf(modsWithRequirements.Count > 0, "Mod addendums requiring content packs:" + modsWithRequirements
+                .Select(x => $"{x.Addendum.Name} requires: {string.Join(",", x.RequiredContentPacks)}")
+                .AsTextList()
+            );
 
             ModsManifest.VerifyCaches();
         }
