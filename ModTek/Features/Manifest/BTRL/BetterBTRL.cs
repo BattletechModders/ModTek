@@ -40,11 +40,8 @@ namespace ModTek.Features.Manifest.BTRL
             Log("Mod addendums requiring content packs:" + CSharpUtils.List(
                orderedModAddendumManifests
                    .Where(x => x.RequiredContentPacks != null && x.RequiredContentPacks.Length > 0)
-                   .Select(x => {
-                       var requires = " requires: " + x.RequiredContentPacks.Aggregate((a, b) => $"{a} {b}");
-                       return $"{x.Addendum.Name}{requires}";
-                   })
-               ));
+                   .Select(x => $"{x.Addendum.Name} requires: {string.Join(",", x.RequiredContentPacks)}")
+            ));
 
             ModsManifest.VerifyCaches();
         }
