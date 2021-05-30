@@ -35,23 +35,16 @@ namespace ModTek.Features.Manifest.BTRL
         private void ContentPackManifestsLoaded()
         {
             currentManifest.DumpToDisk();
-            Log("Owned content packs: " + packIndex?.GetOwnedContentPacks().Aggregate((a, b) => $"{a} {b}"));
-            Log("HBS Addendums: " + hbsAddendums.Select(x => x.Name).Aggregate((a, b) => $"{a} {b}"));
 
-            Log("Mod Addendums:");
-            foreach (var modAddendum in orderedModAddendumManifests)
-            {
-                string requires;
-                if (modAddendum.RequiredAddendums == null || modAddendum.RequiredAddendums.Length == 0)
-                {
-                    requires = "";
-                }
-                else
-                {
-                    requires = " requires: " + modAddendum.RequiredAddendums.Aggregate((a, b) => $"{a} {b}");
-                }
-                Log($"\t{modAddendum.Addendum.Name}{requires}");
-            }
+            Log("Owned content packs: " + CSharpUtils.List(packIndex?.GetOwnedContentPacks()));
+            Log("Mod addendums requiring content packs:" + CSharpUtils.List(
+               orderedModAddendumManifests
+                   .Where(x => x.RequiredContentPacks != null && x.RequiredContentPacks.Length > 0)
+                   .Select(x => {
+                       var requires = " requires: " + x.RequiredContentPacks.Aggregate((a, b) => $"{a} {b}");
+                       return $"{x.Addendum.Name}{requires}";
+                   })
+               ));
 
             ModsManifest.VerifyCaches();
         }
@@ -241,25 +234,17 @@ namespace ModTek.Features.Manifest.BTRL
 
             sw.Start();
             currentManifest.Reset(defaultManifest.Entries, packIndex);
-            var activeAndOwnedAddendums = new List<string>();
+            var ownedContentPacks = packIndex?.GetOwnedContentPacks() ?? new List<string>();
 
             foreach (var addendum in hbsAddendums)
             {
-                // if content pack index not yet loaded, assume its owned (vanilla behavior)
-                var isOwned = packIndex?.IsContentPackOwned(addendum.Name) ?? true;
-                if (isOwned)
-                {
-                    activeAndOwnedAddendums.Add(addendum.Name);
-                }
-
                 currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
 
             foreach (var modAddendum in orderedModAddendumManifests)
             {
-                if (modAddendum.RequiredAddendums != null && modAddendum.RequiredAddendums.Except(activeAndOwnedAddendums).Any())
+                if (modAddendum.RequiredContentPacks != null && modAddendum.RequiredContentPacks.Except(ownedContentPacks).Any())
                 {
-                    // skip since not all requirements are met
                     continue;
                 }
 

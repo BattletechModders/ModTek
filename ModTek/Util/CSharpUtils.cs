@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ModTek.Util
 {
@@ -13,6 +14,16 @@ namespace ModTek.Util
                     yield return enumerator.Current;
                 }
             }
+        }
+
+        internal static string List(IEnumerable<string> items, string prefix = "\n - ")
+        {
+            if (items == null)
+            {
+                return null;
+            }
+            var str = items.Aggregate((current, item) => current + prefix + item);
+            return string.IsNullOrEmpty(str) ? null : prefix + str;
         }
     }
 }

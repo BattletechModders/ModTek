@@ -42,10 +42,11 @@ namespace ModTek.Features.Manifest
             {
                 var modName = modDef.Name;
 
-                Log($"{modName}:");
                 yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", "", true);
 
                 AddImplicitManifest(modDef);
+
+                LogIf(modDef.Manifest.Count> 0, $"{modName} Manifest:");
 
                 var packager = new ModAddendumPackager(modName);
                 foreach (var modEntry in modDef.Manifest)
@@ -55,7 +56,7 @@ namespace ModTek.Features.Manifest
 
                 packager.SaveToBTRL();
 
-                LogIf(modDef.DataAddendumEntries.Count > 0, "DataAddendum:");
+                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modName}DataAddendum:");
                 foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
                 {
                     if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, modDef.Directory))
@@ -145,12 +146,9 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            var logType = string.IsNullOrEmpty(entry.Type) ? "" : $" ({entry.Type})";
-            var logId = $"{entry.Id}{logType}: {entry.RelativePathToMods}";
 
             if (mergeCache.AddModEntry(entry))
             {
-                Log($"\tMerge: {logId}");
                 return;
             }
 
@@ -160,24 +158,24 @@ namespace ModTek.Features.Manifest
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
 
-                    Log($"\tSVGAsset: {logId}");
+                    Log($"\tSVGAsset: {entry}");
                     SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
                 if (!entry.AddToDB)
                 {
-                    Log($"\tAddToDB=false: {logId}");
+                    Log($"\tAddToDB=false: {entry}");
                     mddbCache.Ignore(entry);
                 }
 
                 if (entry.AddToAddendum != null)
                 {
-                    Log($"\tAddToAddendum: {logId}");
+                    Log($"\tAddToAddendum: {entry}");
                     BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
                 }
                 else
                 {
-                    Log($"\tAdd/Replace: {logId}");
+                    Log($"\tAdd/Replace: {entry}");
                     packager.AddEntry(entry);
                 }
 
@@ -186,19 +184,19 @@ namespace ModTek.Features.Manifest
 
             if (CustomResourcesFeature.Add(entry))
             {
-                Log($"\tAdd/Replace (CustomResource): {logId}");
+                Log($"\tAdd/Replace (CustomResource): {entry}");
                 return;
             }
 
             if (SoundBanksFeature.Add(entry))
             {
-                Log($"\tAdd/Replace: {logId}");
+                Log($"\tAdd/Replace: {entry}");
                 return;
             }
 
             if (CustomTagFeature.Add(entry))
             {
-                Log($"\tAdd/Replace: {logId}");
+                Log($"\tAdd/Replace: {entry}");
                 return;
             }
 

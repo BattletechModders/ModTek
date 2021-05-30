@@ -40,7 +40,7 @@ namespace ModTek.Features.Manifest
         public string Id { get; set; }
 
         public string AddToAddendum { get; set; }
-        public string[] RequiredAddendums { get; set; }
+        public string[] RequiredContentPacks { get; set; }
         public string AssetBundleName { get; set; }
         public bool? AssetBundlePersistent { get; set; }
 
@@ -64,9 +64,13 @@ namespace ModTek.Features.Manifest
         [JsonIgnore]
         public string AbsolutePath => ModDef.GetFullPath(Path);
 
+        public override string ToString()
+        {
+            return $"{Id} ({Type}): {RelativePathToMods}";
+        }
+
         [JsonIgnore]
         private VersionManifestEntry customResourceEntry;
-
         internal VersionManifestEntry CreateVersionManifestEntry()
         {
             return customResourceEntry ??= new VersionManifestEntry(

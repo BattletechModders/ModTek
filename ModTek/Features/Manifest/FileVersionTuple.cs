@@ -34,6 +34,11 @@ namespace ModTek.Features.Manifest
             return new() { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
         }
 
+        public override string ToString()
+        {
+            return Path;
+        }
+
         public bool Equals(VersionManifestEntry entry)
         {
             if (AssetBundleName != entry.AssetBundleName)

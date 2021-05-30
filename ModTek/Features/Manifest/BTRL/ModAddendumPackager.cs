@@ -18,11 +18,11 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void AddEntry(ModEntry entry)
         {
-            if (manifest == null || manifest.RequiredAddendums != entry.RequiredAddendums)
+            if (manifest == null || manifest.RequiredContentPacks != entry.RequiredContentPacks)
             {
                 var addendumName = "Mod_" + ModName + (Index > 0 ? Index.ToString() : "");
-                manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredAddendums);
-                Log($"Created addendum {addendumName} with requirements {entry.RequiredAddendums}");
+                manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredContentPacks);
+                // Log($"Created addendum {addendumName} with requirements {entry.RequiredContentPacks}");
                 addendums.Add(manifest);
                 Index++;
             }

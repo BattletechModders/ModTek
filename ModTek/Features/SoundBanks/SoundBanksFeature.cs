@@ -46,7 +46,7 @@ namespace ModTek.Features.SoundBanks
 
         internal static IEnumerator<ProgressReport> SoundBanksProcessing()
         {
-            Log($"Processing sound banks ({soundBanks.Count}):");
+            LogIf(soundBanks.Count > 0, $"Processing sound banks ({soundBanks.Count}):");
             if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
             {
                 Log("\tWWise manager not inited");

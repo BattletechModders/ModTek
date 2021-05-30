@@ -221,6 +221,7 @@ namespace ModTek.Features.Manifest.Merges
 
         private void AddTemp(ModEntry entry)
         {
+            Log($"\tMerge: {entry}");
             if (entry.Type == null)
             {
                 // check if id already mapped to a type
@@ -366,14 +367,19 @@ namespace ModTek.Features.Manifest.Merges
         {
             var entriesById = BetterBTRL.Instance.EntriesByID(id);
 
+            string collectRelatedFilePaths()
+            {
+                return CSharpUtils.List(cacheEntry.Merges.Select(x => x.ToString()));
+            }
+
             if (entriesById == null || entriesById.Length < 1)
             {
-                Log($"MergeCache: Couldn't resolve type for {id}, entry missing in manifest.");
+                Log($"MergeCache: Couldn't resolve type for {id}, entry missing in manifest.{collectRelatedFilePaths()}");
                 return false;
             }
             if (entriesById.Length > 1)
             {
-                Log($"MergeCache: Couldn't resolve type for {id}, multiple types found for same id in manifest, please specify type.");
+                Log($"MergeCache: Couldn't resolve type for {id}, multiple types found for same id in manifest, please specify type.{collectRelatedFilePaths()}");
                 return false;
             }
 
