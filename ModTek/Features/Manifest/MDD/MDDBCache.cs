@@ -130,7 +130,10 @@ namespace ModTek.Features.Manifest.MDD
             MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");
-            Entries.Add(key, FileVersionTuple.From(entry));
+            if (!entry.IsInDefaultMDDB())
+            {
+                Entries.Add(key, FileVersionTuple.From(entry));
+            }
             HasChanges = true;
         }
 

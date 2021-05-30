@@ -278,6 +278,7 @@ namespace ModTek.Features.Manifest
                 if (!mergeCache.HasMergedContentCached(entry, false, out _))
                 {
                     mergeCache.MergeAndCacheContent(entry, ref content);
+                    // merges dont modify the UpdateOn timestamp, force update MDDB here!
                     mddbCache.Add(entry, content);
                 }
             }
