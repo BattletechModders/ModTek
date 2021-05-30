@@ -282,7 +282,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
         {
-            return currentManifest.GetEntryByID(id, type, filterByOwnership);
+            return currentManifest.EntryByID(id, type, filterByOwnership);
         }
 
         public void RemoveEntry(VersionManifestEntry entry)

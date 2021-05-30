@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
@@ -14,7 +15,9 @@ namespace ModTek.Features.Manifest.Mods
     {
         private readonly TypedDict manifestAll = new();
         private readonly TypedDict manifestOwned = new();
-        private readonly List<VersionManifestAddendum> addendums = new();
+
+        private static readonly string ManifestAllDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "ManifestAll.csv");
+        private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
 
         private ContentPackIndex contentPackIndex;
         public void Reset(IEnumerable<VersionManifestEntry> defaultEntries, ContentPackIndex packIndex)
@@ -45,7 +48,7 @@ namespace ModTek.Features.Manifest.Mods
             return default;
         }
 
-        public VersionManifestEntry GetEntryByID(string id, BattleTechResourceType type, bool filterByOwnership)
+        public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership)
         {
             if (GetContent(filterByOwnership).TryGetValue(type.ToString(), out var dict) && dict.TryGetValue(id, out var entry))
             {
@@ -91,21 +94,21 @@ namespace ModTek.Features.Manifest.Mods
         {
             try
             {
-                ModTekCacheStorage.CompressedCSVWriteTo(FilePaths.ManifestAllDumpPath, manifestAll.Values.SelectMany(x => x.Values));
-                Log($"TypedManifest: Saved to {FilePaths.ManifestAllDumpPath}.");
+                ModTekCacheStorage.CompressedCSVWriteTo(ManifestAllDumpPath, manifestAll.Values.SelectMany(x => x.Values));
+                Log($"TypedManifest: Saved to {ManifestAllDumpPath}.");
             }
             catch (Exception e)
             {
-                Log($"TypedManifest: Failed to save to {FilePaths.ManifestAllDumpPath}", e);
+                Log($"TypedManifest: Failed to save to {ManifestAllDumpPath}", e);
             }
             try
             {
-                ModTekCacheStorage.CompressedCSVWriteTo(FilePaths.ManifestOwnedDumpPath, manifestOwned.Values.SelectMany(x => x.Values));
-                Log($"TypedManifest: Saved to {FilePaths.ManifestOwnedDumpPath}.");
+                ModTekCacheStorage.CompressedCSVWriteTo(ManifestDumpPath, manifestOwned.Values.SelectMany(x => x.Values));
+                Log($"TypedManifest: Saved to {ManifestDumpPath}.");
             }
             catch (Exception e)
             {
-                Log($"TypedManifest: Failed to save to {FilePaths.ManifestOwnedDumpPath}", e);
+                Log($"TypedManifest: Failed to save to {ManifestDumpPath}", e);
             }
         }
     }
