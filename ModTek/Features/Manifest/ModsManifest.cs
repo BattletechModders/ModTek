@@ -207,11 +207,11 @@ namespace ModTek.Features.Manifest
 
         internal static void VerifyCaches()
         {
-            var requestLoad = new List<CacheKey>();
+            var requestLoad = new HashSet<CacheKey>();
 
             var flagForRebuild = false;
-            mergeCache.CleanCache(ref flagForRebuild, requestLoad);
-            mddbCache.CleanCache(ref flagForRebuild, requestLoad);
+            mergeCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
+            mddbCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
 
             if (flagForRebuild || requestLoad.Count > 0)
             {

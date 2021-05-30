@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.Manifest.Mods;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
 
@@ -74,6 +73,11 @@ namespace ModTek.Features.Manifest.BTRL
             copy.AddRange(addendum.Entries);
             copy.AddRange(overrides); // duplicates are sorted inside TypedManifest
             return copy;
+        }
+
+        internal VersionManifestEntry[] EntriesByID(string id)
+        {
+            return currentManifest.EntriesByID(id);
         }
 
         // methods order is same as dnSpy lists them

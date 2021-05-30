@@ -27,20 +27,9 @@ namespace ModTek.Features.Manifest.Merges
         internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
 
-        internal MergeCacheEntry()
+        internal void SetCachedPath(ModEntry entry)
         {
-        }
-
-        internal MergeCacheEntry(ModEntry entry)
-        {
-            if (entry.Type == null)
-            {
-                CachedPath = null;
-            }
-            else
-            {
-                SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
-            }
+            SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
         }
 
         internal void SetCachedPath(VersionManifestEntry entry)

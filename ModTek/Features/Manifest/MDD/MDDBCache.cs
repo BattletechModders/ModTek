@@ -141,10 +141,11 @@ namespace ModTek.Features.Manifest.MDD
             ignored.Add(key);
         }
 
-        internal void CleanCache(ref bool flagForRebuild, List<CacheKey> requestLoad)
+        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> requestLoad)
         {
             if (!flagForRebuild)
             {
+                // find entries missing in cache
                 foreach (var type in BTConstants.MDDTypes)
                 {
                     foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type).Where(x => !x.IsInDefaultMDDB()))
@@ -156,14 +157,16 @@ namespace ModTek.Features.Manifest.MDD
                         }
                         else
                         {
+                            Log($"MDDBCache: {key} missing in cache.");
                             requestLoad.Add(key);
                         }
                     }
                 }
 
+                // find entries that shouldn't be in cache (anymore)
                 if (Entries.Any(x => !x.Value.CacheHit))
                 {
-                    Log($"MDDBCache: Found some unused MDDB cache entries.");
+                    Log($"MDDBCache: Found some left overs in cache, rebuilding.");
                     flagForRebuild = true;
                 }
             }

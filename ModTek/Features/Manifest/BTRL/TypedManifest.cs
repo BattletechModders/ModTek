@@ -14,6 +14,7 @@ namespace ModTek.Features.Manifest.BTRL
     internal class TypedManifest
     {
         private readonly TypedDict manifest = new();
+        private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new();
 
         private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
 
@@ -24,6 +25,7 @@ namespace ModTek.Features.Manifest.BTRL
             contentPackIndex = packIndex;
             AllContentPacksOwned = contentPackIndex?.AreContactPacksOwned(contentPackIndex.GetAllLoadedContentPackIds());
             manifest.Clear();
+            idToTypes.Clear();
             SetEntries(defaultEntries);
         }
 
@@ -76,12 +78,28 @@ namespace ModTek.Features.Manifest.BTRL
             return default;
         }
 
+        internal VersionManifestEntry[] EntriesByID(string id)
+        {
+            if (idToTypes.TryGetValue(id, out var set))
+            {
+                return set.Select(type => EntryByID(id, type, false)).ToArray();
+            }
+            return default;
+        }
+
         private void SetEntries(IEnumerable<VersionManifestEntry> entries)
         {
             foreach (var entry in entries)
             {
                 var dict = manifest.GetOrCreate(entry.Type);
                 dict[entry.Id] = entry;
+
+                var resourceType = BTConstants.ResourceType(entry.Type);
+                if (resourceType.HasValue)
+                {
+                    var types = idToTypes.GetOrCreate(entry.Id);
+                    types.Add(resourceType.Value);
+                }
             }
         }
 

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using ModTek.Features.AdvJSONMerge;
+using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
@@ -20,11 +21,18 @@ namespace ModTek.Features.Manifest.Merges
 
         private readonly CacheDB persistentSets; // stuff in here was merged
         private readonly CacheDB tempSets = new(); // stuff in here has merges queued
+
+        // additional temp stuff
+        private readonly Dictionary<string, MergeCacheEntry> idToUntypedSet = new(); // stuff in here needs to be promoted to tempSets
+        private readonly Dictionary<string, MergeCacheEntry> idToTypedSet = new(); // the first with a type claims this
+
         private static bool HasChanges;
+        private readonly TypeResolver typeResolver;
 
         internal MergeCache()
         {
             PersistentFilePath = Path.Combine(PersistentDirPath, "merge_cache.json");
+            typeResolver = new TypeResolver(this);
 
             if (ModTekCacheStorage.CompressedExists(PersistentFilePath))
             {
@@ -77,22 +85,10 @@ namespace ModTek.Features.Manifest.Merges
         internal bool HasMergedContentCached(VersionManifestEntry entry, bool fetchContent, out string cachedContent)
         {
             cachedContent = null;
-            var key = new CacheKey(entry);
-            if (!tempSets.TryGetValue(key, out var temp))
+            if (!typeResolver.TryGetTempAndPromoteTypeless(entry, out var key, out var temp))
             {
-                // lets find and fix un-typed sets
-                // TODO this way a good idea? we ignore all untyped if we find one typed.. so no
-                var noTypeKey = new CacheKey(null, entry.Id);
-                if (!tempSets.TryGetValue(noTypeKey, out temp))
-                {
-                    return false;
-                }
-
-                tempSets.Remove(noTypeKey);
-                temp.SetCachedPath(entry);
-                tempSets[key] = temp;
+                return false;
             }
-
             temp.OriginalUpdatedOn = entry.UpdatedOn;
 
             if (!persistentSets.TryGetValue(key, out var persist))
@@ -224,33 +220,88 @@ namespace ModTek.Features.Manifest.Merges
 
         private void AddTemp(ModEntry entry)
         {
-            var key = new CacheKey(entry);
-            if (!tempSets.TryGetValue(key, out var set))
+            if (entry.Type == null)
             {
-                set = new MergeCacheEntry(entry);
+                // check if already resolved
+                if (idToTypedSet.TryGetValue(entry.Id, out var typedSet))
+                {
+                    typedSet.Add(entry);
+                }
+                else // otherwise add to untyped set
+                {
+                    if (!idToUntypedSet.TryGetValue(entry.Id, out var untypedSet))
+                    {
+                        untypedSet = new MergeCacheEntry();
+                    }
+                    idToUntypedSet.Add(entry.Id, untypedSet);
+                }
+            }
+            else
+            {
+                var key = new CacheKey(entry);
+
+                // if temp set exists, someone else already promoted any untyped
+                if (tempSets.TryGetValue(key, out var set))
+                {
+                    set.Add(entry);
+                    return;
+                }
+
+                // if untyped found, use that, otherwise create new
+                if (idToUntypedSet.TryGetValue(entry.Id, out set))
+                {
+                    idToUntypedSet.Remove(entry.Id);
+                    idToTypedSet.Add(entry.Id, set);
+                }
+                else
+                {
+                    set = new MergeCacheEntry();
+                    if (!idToTypedSet.ContainsKey(entry.Id))
+                    {
+                        idToTypedSet.Add(entry.Id, set);
+                    }
+                }
+                set.SetCachedPath(entry);
+                set.Add(entry);
                 tempSets[key] = set;
             }
-
-            set.Add(entry);
         }
 
-        internal void CleanCache(ref bool flagForRebuild, List<CacheKey> requestLoad)
+        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> requestLoad)
         {
-            // ModTekCacheStorage.CompressedWriteTo(persistentSets.ToList(), Path.Combine(PersistentDirPath, "CleanupComparePersistent.json"));
-            // ModTekCacheStorage.CompressedWriteTo(tempSets.ToList(), Path.Combine(PersistentDirPath, "CleanupCompareTemp.json"));
-
-            foreach (var kv in tempSets)
+            // find all still typeless and merge with typed
+            foreach (var kv in tempSets.ToList())
             {
-                if (persistentSets.TryGetValue(kv.Key, out var value) && value.Equals(kv.Value))
+                var key = kv.Key;
+                if (key.Type != null)
+                {
+                    continue;
+                }
+
+                typeResolver.SetTypeViaBTRL(kv.Value, ref key);
+            }
+
+            // find entries missing in cache
+            foreach (var kv in tempSets.ToList())
+            {
+                var key = kv.Key;
+                if (key.Type == null)
+                {
+                    continue;
+                }
+
+                if (persistentSets.TryGetValue(key, out var value) && value.Equals(kv.Value))
                 {
                     value.CacheHit = true;
                 }
                 else
                 {
-                    Log($"MergeCache: {kv.Key} missing in cache.");
-                    requestLoad.Add(kv.Key);
+                    Log($"MergeCache: {key} missing in cache.");
+                    requestLoad.Add(key);
                 }
             }
+
+            // find entries that shouldn't be in cache (anymore)
             foreach (var kv in persistentSets.ToList())
             {
                 if (kv.Value.CacheHit)
@@ -276,11 +327,73 @@ namespace ModTek.Features.Manifest.Merges
                 var resourceType = BTConstants.ResourceType(kv.Key.Type);
                 if (!resourceType.HasValue || BTConstants.MDDTypes.All(x => x != resourceType.Value))
                 {
+
                     continue;
                 }
 
                 flagForRebuild = true;
                 break;
+            }
+        }
+
+        private class TypeResolver
+        {
+            private readonly MergeCache mergeCache;
+
+            public TypeResolver(MergeCache mergeCache)
+            {
+                this.mergeCache = mergeCache;
+            }
+
+            internal bool TryGetTempAndPromoteTypeless(VersionManifestEntry manifestEntryWithType, out CacheKey key, out MergeCacheEntry temp)
+            {
+                key = new CacheKey(null, manifestEntryWithType.Id);
+
+                // find and promote typeless, otherwise just find direct cache key
+                if (mergeCache.tempSets.TryGetValue(key, out temp))
+                {
+                    SetTypeViaManifestEntry(temp, manifestEntryWithType, ref key);
+                }
+                else
+                {
+                    key = new CacheKey(manifestEntryWithType);
+                    if (!mergeCache.tempSets.TryGetValue(key, out temp))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            internal bool SetTypeViaBTRL(MergeCacheEntry cacheEntry, ref CacheKey key)
+            {
+                var entriesById = BetterBTRL.Instance.EntriesByID(key.Id);
+
+                if (entriesById == null || entriesById.Length < 1)
+                {
+                    Log($"MergeCache: Couldn't resolve type for {key.Id}, entry missing in manifest.");
+                    return false;
+                }
+                if (entriesById.Length > 1)
+                {
+                    Log($"MergeCache: Couldn't resolve type for {key.Id}, multiple types found for same id in manifest, please specify type.");
+                    return false;
+                }
+
+                var manifestEntry = entriesById.First();
+                SetTypeViaManifestEntry(cacheEntry, manifestEntry, ref key);
+                return true;
+            }
+
+            internal void SetTypeViaManifestEntry(MergeCacheEntry cacheEntry, VersionManifestEntry manifestEntry, ref CacheKey key)
+            {
+                cacheEntry.SetCachedPath(manifestEntry);
+                mergeCache.tempSets.Remove(key);
+                key = new CacheKey(manifestEntry);
+                cacheEntry.SetCachedPath(manifestEntry);
+                mergeCache.tempSets[key] = cacheEntry;
+                Log($"MergeCache: Resolved type {key.Type} for {key.Id}.");
             }
         }
     }
