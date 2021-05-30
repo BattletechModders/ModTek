@@ -81,7 +81,7 @@ namespace ModTek.Features.Manifest
 
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleMergesDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Type = FilePaths.AssetBundleMergesDirectoryName, Path = FilePaths.AssetBundleMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.AssetBundleMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
             }
         }
@@ -210,8 +210,15 @@ namespace ModTek.Features.Manifest
             var requestLoad = new HashSet<CacheKey>();
 
             var flagForRebuild = false;
+            var sw = new Stopwatch();
+            sw.Start();
             mergeCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
+            sw.Stop();
+            LogIfSlow(sw, "Merge Cache Cleanup");
+            sw.Restart();
             mddbCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
+            sw.Stop();
+            LogIfSlow(sw, "MDDB Cache Cleanup");
 
             if (flagForRebuild || requestLoad.Count > 0)
             {

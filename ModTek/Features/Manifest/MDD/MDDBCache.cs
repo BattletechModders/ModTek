@@ -94,14 +94,13 @@ namespace ModTek.Features.Manifest.MDD
         private readonly Stopwatch sw = new();
         internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
         {
-            var type = BTConstants.ResourceType(entry.Type);
-            if (!type.HasValue)
+            if (!BTConstants.ResourceType(entry.Type, out var type))
             {
                 Log($"MDDB Cache: Internal error: {entry.Id} has invalid type: {entry.Type}");
                 return;
             }
 
-            if (!BTConstants.MDDTypes.Contains(type.Value))
+            if (!BTConstants.MDDTypes.Contains(type))
             {
                 return;
             }
@@ -128,7 +127,7 @@ namespace ModTek.Features.Manifest.MDD
             }
 
             sw.Start();
-            MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type.Value, entry.Id, content);
+            MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");
             Entries.Add(key, FileVersionTuple.From(entry));
@@ -148,7 +147,7 @@ namespace ModTek.Features.Manifest.MDD
                 // find entries missing in cache
                 foreach (var type in BTConstants.MDDTypes)
                 {
-                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type).Where(x => !x.IsInDefaultMDDB()))
+                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type, true).Where(x => !x.IsInDefaultMDDB()))
                     {
                         var key = new CacheKey(manifestEntry);
                         if (Entries.TryGetValue(key, out var entry) && entry.Equals(manifestEntry))
@@ -164,15 +163,19 @@ namespace ModTek.Features.Manifest.MDD
                 }
 
                 // find entries that shouldn't be in cache (anymore)
-                if (Entries.Any(x => !x.Value.CacheHit))
+                foreach (var kv in Entries)
                 {
-                    Log($"MDDBCache: Found some left overs in cache, rebuilding.");
-                    flagForRebuild = true;
+                    if (!kv.Value.CacheHit)
+                    {
+                        Log($"MDDBCache: {kv.Key} left over in cache.");
+                        flagForRebuild = true;
+                    }
                 }
             }
 
             if (flagForRebuild)
             {
+                Log($"MDDBCache: Rebuilding.");
                 requestLoad.Clear();
                 Reset();
             }

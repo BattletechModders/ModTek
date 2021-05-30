@@ -94,11 +94,10 @@ namespace ModTek.Features.Manifest.BTRL
                 var dict = manifest.GetOrCreate(entry.Type);
                 dict[entry.Id] = entry;
 
-                var resourceType = BTConstants.ResourceType(entry.Type);
-                if (resourceType.HasValue)
+                if (BTConstants.ResourceType(entry.Type, out var resourceType))
                 {
                     var types = idToTypes.GetOrCreate(entry.Id);
-                    types.Add(resourceType.Value);
+                    types.Add(resourceType);
                 }
             }
         }

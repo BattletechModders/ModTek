@@ -42,9 +42,14 @@ namespace ModTek.Features.Manifest
 
         internal static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
 
-        internal static BattleTechResourceType? ResourceType(string Type)
+        internal static bool ResourceType(string Type, out BattleTechResourceType type)
         {
-            return Enum.TryParse<BattleTechResourceType>(Type, out var resType) ? resType : null;
+            if (Type == null)
+            {
+                type = BattleTechResourceType.AbilityDef;
+                return false;
+            }
+            return Enum.TryParse(Type, out type);
         }
 
         internal static readonly BattleTechResourceType[] MDDTypes =

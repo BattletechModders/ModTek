@@ -16,7 +16,7 @@ namespace ModTek.Features.Manifest.Merges
         public string CachedPath { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
-        public DateTime? OriginalUpdatedOn { get; set; }
+        public DateTime? OriginalUpdatedOn { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();
@@ -32,9 +32,10 @@ namespace ModTek.Features.Manifest.Merges
             SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
         }
 
-        internal void SetCachedPath(VersionManifestEntry entry)
+        internal void SetCachedPathAndUpdatedOn(VersionManifestEntry entry)
         {
             SetCachedPath(entry.Type, entry.Id, Path.GetExtension(entry.GetRawPath()));
+            OriginalUpdatedOn = entry.UpdatedOn;
         }
 
         private void SetCachedPath(string type, string id, string extension)

@@ -266,7 +266,7 @@ namespace ModTek.Features.Manifest.BTRL
                 currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum));
             }
             sw.Stop();
-            LogIf(sw.ElapsedMilliseconds > 500, $"RefreshTypedEntries Total {sw.Elapsed}s");
+            LogIfSlow(sw);
         }
 
         public VersionManifestEntry[] AllEntries()
