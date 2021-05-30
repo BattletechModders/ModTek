@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
-using MergeSets = System.Collections.Generic.Dictionary<string, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
+using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
+using CacheKeyValue = System.Collections.Generic.KeyValuePair<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
 
 namespace ModTek.Features.Manifest.Merges
 {
@@ -16,8 +18,8 @@ namespace ModTek.Features.Manifest.Merges
         private static string PersistentDirPath => FilePaths.MergeCacheDirectory;
         private readonly string PersistentFilePath;
 
-        private readonly MergeSets persistentSets; // stuff in here was merged
-        private readonly MergeSets tempSets = new(); // stuff in here has merges queued
+        private readonly CacheDB persistentSets; // stuff in here was merged
+        private readonly CacheDB tempSets = new(); // stuff in here has merges queued
         private static bool HasChanges;
 
         internal MergeCache()
@@ -28,7 +30,8 @@ namespace ModTek.Features.Manifest.Merges
             {
                 try
                 {
-                    persistentSets = ModTekCacheStorage.CompressedReadFrom<MergeSets>(PersistentFilePath);
+                    persistentSets = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
+                        .ToDictionary(kv => kv.Key, kv => kv.Value);;
                     return;
                 }
                 catch (Exception e)
@@ -41,7 +44,7 @@ namespace ModTek.Features.Manifest.Merges
 
             // create a new one if it doesn't exist or couldn't be added'
             Log("Merge Cache: Rebuilding cache.");
-            persistentSets = new MergeSets();
+            persistentSets = new CacheDB();
         }
 
         private readonly Stopwatch saveSW = new();
@@ -56,7 +59,7 @@ namespace ModTek.Features.Manifest.Merges
                     return;
                 }
 
-                ModTekCacheStorage.CompressedWriteTo(persistentSets, PersistentFilePath);
+                ModTekCacheStorage.CompressedWriteTo(persistentSets.ToList(), PersistentFilePath);
                 Log($"Merge Cache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -74,12 +77,12 @@ namespace ModTek.Features.Manifest.Merges
         internal bool HasMergedContentCached(VersionManifestEntry entry, bool fetchContent, out string cachedContent)
         {
             cachedContent = null;
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             if (!tempSets.TryGetValue(key, out var temp))
             {
                 // lets find and fix un-typed sets
                 // TODO this way a good idea? we ignore all untyped if we find one typed.. so no
-                var noTypeKey = CacheKeys.Unique(null, entry.Id);
+                var noTypeKey = new CacheKey(null, entry.Id);
                 if (!tempSets.TryGetValue(noTypeKey, out temp))
                 {
                     return false;
@@ -129,7 +132,7 @@ namespace ModTek.Features.Manifest.Merges
                 return;
             }
 
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             if (!tempSets.TryGetValue(key, out var temp))
             {
                 return;
@@ -160,7 +163,7 @@ namespace ModTek.Features.Manifest.Merges
 
         internal bool HasMerges(VersionManifestEntry entry)
         {
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             return tempSets.ContainsKey(key);
         }
 
@@ -221,7 +224,7 @@ namespace ModTek.Features.Manifest.Merges
 
         private void AddTemp(ModEntry entry)
         {
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             if (!tempSets.TryGetValue(key, out var set))
             {
                 set = new MergeCacheEntry(entry);
@@ -229,6 +232,39 @@ namespace ModTek.Features.Manifest.Merges
             }
 
             set.Add(entry);
+        }
+
+        internal void CleanCache(out bool flagForRebuild, List<CacheKey> requestLoad)
+        {
+            flagForRebuild = false;
+            foreach (var kv in tempSets)
+            {
+                if (persistentSets.TryGetValue(kv.Key, out var value) && value.Equals(kv.Value))
+                {
+                    value.CacheHit = true;
+                }
+                else
+                {
+                    requestLoad.Add(kv.Key);
+                }
+            }
+            foreach (var kv in persistentSets.ToList())
+            {
+                if (kv.Value.CacheHit)
+                {
+                    continue;
+                }
+
+                persistentSets.Remove(kv.Key);
+                var resourceType = BTConstants.ResourceType(kv.Key.Type);
+                if (!resourceType.HasValue || BTConstants.MDDTypes.All(x => x != resourceType.Value))
+                {
+                    continue;
+                }
+
+                flagForRebuild = true;
+                break;
+            }
         }
     }
 }

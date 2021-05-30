@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -208,30 +207,18 @@ namespace ModTek.Features.Manifest
 
         internal static void VerifyCaches()
         {
-            // TODO implement
-            // remove old or outdated entries (outdated detection allows to skip preloads)
-            // without replacement, fix of MDD might be problematic => deletion of cache during startup might be simpler
+            var requestLoad = new List<CacheKey>();
 
-            // this is problematic, merge cache could tell that data in mddb cache is out of date
-            // mddb cache can look at BTRL and see what data is missing or too much
+            mergeCache.CleanCache(out var flagForRebuild, requestLoad);
+            mddbCache.CleanCache(ref flagForRebuild, requestLoad);
 
-            // BTRL has final list of mod + hbs data versions
-            // merge cache has temp, persistent and file versions
-            // mddb cache has index and mddb
-
-            // what if we combine both caches into one?
-            // manifest of what we want -> BTRL(base,hbs,mods)/full + mc.temp/merges
-            // manifest of what is already saved -> mc.persis/mergedRes + mddbc/full+mergedRes
-
-            var HasMissingInMerge = true; //mergeCache.Cleanup();
-            var HasMissingInMDDB = true; //mddbCache.Cleanup();
-            if (HasMissingInMerge || HasMissingInMDDB)
+            if (flagForRebuild || requestLoad.Count > 0)
             {
-                PreloadMergesAfterManifestComplete();
+                PreloadMergesAfterManifestComplete(); //flagForRebuild, requestLoad
             }
             else
             {
-                Log("Skipping preload, no missing MDDB data detected.");
+                Log("Skipping preload, no changes in MDDB data detected.");
                 SaveCaches();
             }
         }

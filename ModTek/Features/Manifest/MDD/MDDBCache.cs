@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
-using CacheDB = System.Collections.Generic.Dictionary<string, ModTek.Features.Manifest.FileVersionTuple>;
+using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
+using CacheKeyValue = System.Collections.Generic.KeyValuePair<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
 
 namespace ModTek.Features.Manifest.MDD
 {
@@ -20,7 +22,7 @@ namespace ModTek.Features.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<string> ignored = new();
+        private readonly HashSet<CacheKey> ignored = new();
 
         private CacheDB Entries { get; }
         internal static bool HasChanges;
@@ -33,7 +35,8 @@ namespace ModTek.Features.Manifest.MDD
             {
                 try
                 {
-                    Entries = ModTekCacheStorage.CompressedReadFrom<CacheDB>(PersistentFilePath);
+                    Entries = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
+                        .ToDictionary(kv => kv.Key, kv => kv.Value);
                     MetadataDatabase.ReloadFromDisk();
                     Log("MDDB Cache: Loaded.");
                     return;
@@ -44,13 +47,19 @@ namespace ModTek.Features.Manifest.MDD
                 }
             }
 
+            Entries = new CacheDB();
+            Reset();
+        }
+
+        private void Reset()
+        {
             FileUtils.CleanDirectory(PersistentDirPath);
 
             File.Copy(MDDBPath, ModMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
             Log("MDDB Cache: Copying over DB and rebuilding cache.");
-            Entries = new CacheDB();
+            Entries.Clear();
             MetadataDatabase.ReloadFromDisk();
         }
 
@@ -67,7 +76,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
                 MetadataDatabase.SaveMDDToPath();
 
-                ModTekCacheStorage.CompressedWriteTo(Entries, PersistentFilePath);
+                ModTekCacheStorage.CompressedWriteTo(Entries.ToList(), PersistentFilePath);
                 Log($"MDDB Cache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -97,7 +106,7 @@ namespace ModTek.Features.Manifest.MDD
                 return;
             }
 
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             if (ignored.Contains(key))
             {
                 return;
@@ -128,8 +137,41 @@ namespace ModTek.Features.Manifest.MDD
 
         internal void Ignore(ModEntry entry)
         {
-            var key = CacheKeys.Unique(entry);
+            var key = new CacheKey(entry);
             ignored.Add(key);
+        }
+
+        internal void CleanCache(ref bool flagForRebuild, List<CacheKey> requestLoad)
+        {
+            if (!flagForRebuild)
+            {
+                foreach (var type in BTConstants.MDDTypes)
+                {
+                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type))
+                    {
+                        var key = new CacheKey(manifestEntry);
+                        if (Entries.TryGetValue(key, out var entry) && entry.Equals(manifestEntry))
+                        {
+                            entry.CacheHit = true;
+                        }
+                        else
+                        {
+                            requestLoad.Add(key);
+                        }
+                    }
+                }
+
+                if (Entries.Any(x => !x.Value.CacheHit))
+                {
+                    flagForRebuild = true;
+                }
+            }
+
+            if (flagForRebuild)
+            {
+                Reset();
+                requestLoad.Clear();
+            }
         }
     }
 }

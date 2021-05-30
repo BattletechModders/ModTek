@@ -100,7 +100,8 @@
     <Compile Include="Features\Manifest\BTRL\BetterBTRL.cs" />
     <Compile Include="Features\Manifest\BTRL\ModAddendumManifest.cs" />
     <Compile Include="Features\Manifest\BTRL\ModAddendumPackager.cs" />
-    <Compile Include="Features\Manifest\CacheKeys.cs" />
+    <Compile Include="Features\Manifest\BTRL\TypedManifest.cs" />
+    <Compile Include="Features\Manifest\CacheKey.cs" />
     <Compile Include="Features\Manifest\FileVersionTuple.cs" />
     <Compile Include="Features\Manifest\MDD\AddendumUtils.cs" />
     <Compile Include="Features\Manifest\MDD\MDDBCache.cs" />
@@ -116,7 +117,6 @@
     <Compile Include="Features\Manifest\Mods\ModDefExLoading.cs" />
     <Compile Include="Features\Manifest\Mods\ModDefsDatabase.cs" />
     <Compile Include="Features\Manifest\Mods\ModState.cs" />
-    <Compile Include="Features\Manifest\Mods\TypedManifest.cs" />
     <Compile Include="Features\Manifest\Patches\AssetBundleManager_AssetBundleNameToFilepath_Patch.cs" />
     <Compile Include="Features\Manifest\Patches\AssetBundleManager_AssetBundleNameToFileURL_Patch.cs" />
     <Compile Include="Features\Manifest\Patches\BattleTechResourceLocator_Patches.cs" />

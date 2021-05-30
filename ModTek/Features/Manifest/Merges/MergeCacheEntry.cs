@@ -7,7 +7,6 @@ using ModTek.Features.AdvJSONMerge;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
 
 namespace ModTek.Features.Manifest.Merges
 {
@@ -16,15 +15,14 @@ namespace ModTek.Features.Manifest.Merges
         [JsonProperty(Required = Required.Always)]
         public string CachedPath { get; private set; }
 
-        // needed? not really?
-        // [JsonProperty(Required = Required.Always)]
-        // public string CachedUpdatedOn { get; private set; }
-
         [JsonProperty(Required = Required.Always)]
         public DateTime OriginalUpdatedOn { get; set; }
 
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();
+
+        [JsonIgnore]
+        public bool CacheHit { get; set; } // used during cleanup
 
         internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);

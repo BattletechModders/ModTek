@@ -19,6 +19,9 @@ namespace ModTek.Features.Manifest
         [JsonProperty(Required = Required.Always)]
         public DateTime UpdatedOn { get; private set; }
 
+        [JsonIgnore]
+        public bool CacheHit { get; set; } // used during cleanup
+
         internal static FileVersionTuple From(ModEntry entry)
         {
             // path for MergeCache is actually the relative path to the ModsDirectory
@@ -29,6 +32,26 @@ namespace ModTek.Features.Manifest
         {
             // path for MDDBCache is just part of a unique identifier
             return new() { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
+        }
+
+        public bool Equals(VersionManifestEntry entry)
+        {
+            if (AssetBundleName != entry.AssetBundleName)
+            {
+                return false;
+            }
+
+            if (UpdatedOn != entry.UpdatedOn)
+            {
+                return false;
+            }
+
+            if (Path != entry.GetRawPath())
+            {
+                return false;
+            }
+
+            return true;
         }
 
         // GENERATED CODE BELOW
