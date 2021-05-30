@@ -209,7 +209,8 @@ namespace ModTek.Features.Manifest
         {
             var requestLoad = new List<CacheKey>();
 
-            mergeCache.CleanCache(out var flagForRebuild, requestLoad);
+            var flagForRebuild = false;
+            mergeCache.CleanCache(ref flagForRebuild, requestLoad);
             mddbCache.CleanCache(ref flagForRebuild, requestLoad);
 
             if (flagForRebuild || requestLoad.Count > 0)

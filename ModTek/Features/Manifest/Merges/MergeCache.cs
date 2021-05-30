@@ -234,9 +234,11 @@ namespace ModTek.Features.Manifest.Merges
             set.Add(entry);
         }
 
-        internal void CleanCache(out bool flagForRebuild, List<CacheKey> requestLoad)
+        internal void CleanCache(ref bool flagForRebuild, List<CacheKey> requestLoad)
         {
-            flagForRebuild = false;
+            // ModTekCacheStorage.CompressedWriteTo(persistentSets.ToList(), Path.Combine(PersistentDirPath, "CleanupComparePersistent.json"));
+            // ModTekCacheStorage.CompressedWriteTo(tempSets.ToList(), Path.Combine(PersistentDirPath, "CleanupCompareTemp.json"));
+
             foreach (var kv in tempSets)
             {
                 if (persistentSets.TryGetValue(kv.Key, out var value) && value.Equals(kv.Value))
@@ -245,6 +247,7 @@ namespace ModTek.Features.Manifest.Merges
                 }
                 else
                 {
+                    Log($"MergeCache: {kv.Key} missing in cache.");
                     requestLoad.Add(kv.Key);
                 }
             }
@@ -256,6 +259,20 @@ namespace ModTek.Features.Manifest.Merges
                 }
 
                 persistentSets.Remove(kv.Key);
+                try
+                {
+                    if (File.Exists(kv.Value.CachedAbsolutePath))
+                    {
+                        File.Delete(kv.Value.CachedAbsolutePath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log($"MergeCache: Error when deleting cached file for {kv.Key}", e);
+                }
+
+                Log($"MergeCache: {kv.Key} left over in cache.");
+
                 var resourceType = BTConstants.ResourceType(kv.Key.Type);
                 if (!resourceType.HasValue || BTConstants.MDDTypes.All(x => x != resourceType.Value))
                 {

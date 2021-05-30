@@ -147,7 +147,7 @@ namespace ModTek.Features.Manifest.MDD
             {
                 foreach (var type in BTConstants.MDDTypes)
                 {
-                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type))
+                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type).Where(x => !x.IsInDefaultMDDB()))
                     {
                         var key = new CacheKey(manifestEntry);
                         if (Entries.TryGetValue(key, out var entry) && entry.Equals(manifestEntry))
@@ -163,14 +163,15 @@ namespace ModTek.Features.Manifest.MDD
 
                 if (Entries.Any(x => !x.Value.CacheHit))
                 {
+                    Log($"MDDBCache: Found some unused MDDB cache entries.");
                     flagForRebuild = true;
                 }
             }
 
             if (flagForRebuild)
             {
-                Reset();
                 requestLoad.Clear();
+                Reset();
             }
         }
     }

@@ -16,7 +16,7 @@ namespace ModTek.Features.Manifest.Merges
         public string CachedPath { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
-        public DateTime OriginalUpdatedOn { get; set; }
+        public DateTime? OriginalUpdatedOn { get; set; }
 
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new();

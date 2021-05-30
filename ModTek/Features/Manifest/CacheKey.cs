@@ -6,9 +6,9 @@ namespace ModTek.Features.Manifest
 {
     public class CacheKey : IEquatable<CacheKey>
     {
-        [JsonProperty]
+        [JsonProperty(Required = Required.Always)]
         internal readonly string Type;
-        [JsonProperty]
+        [JsonProperty(Required = Required.Always)]
         internal readonly string Id;
 
         [JsonConstructor]
@@ -32,6 +32,11 @@ namespace ModTek.Features.Manifest
         {
             Type = entry.Type;
             Id = entry.Id;
+        }
+
+        public override string ToString()
+        {
+            return $"{Id} ({Type})";
         }
 
         // GENERATED CODE BELOW
