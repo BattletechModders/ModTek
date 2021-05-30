@@ -207,22 +207,22 @@ namespace ModTek.Features.Manifest
 
         internal static void VerifyCaches()
         {
-            var requestLoad = new HashSet<CacheKey>();
+            var preloadResources = new HashSet<CacheKey>();
 
-            var flagForRebuild = false;
+            var rebuildMDDB = false;
             var sw = new Stopwatch();
             sw.Start();
-            mergeCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
+            mergeCache.CleanCacheWithCompleteManifest(ref rebuildMDDB, preloadResources);
             sw.Stop();
             LogIfSlow(sw, "Merge Cache Cleanup");
             sw.Restart();
-            mddbCache.CleanCacheWithCompleteManifest(ref flagForRebuild, requestLoad);
+            mddbCache.CleanCacheWithCompleteManifest(ref rebuildMDDB, preloadResources);
             sw.Stop();
             LogIfSlow(sw, "MDDB Cache Cleanup");
 
-            if (flagForRebuild || requestLoad.Count > 0)
+            if (rebuildMDDB || preloadResources.Count > 0)
             {
-                PreloadMergesAfterManifestComplete(); //flagForRebuild, requestLoad
+                PreloadMergesAfterManifestComplete(rebuildMDDB, preloadResources); //flagForRebuild, requestLoad
             }
             else
             {
@@ -232,7 +232,7 @@ namespace ModTek.Features.Manifest
         }
 
         private static Stopwatch preloadSW = new();
-        private static void PreloadMergesAfterManifestComplete()
+        private static void PreloadMergesAfterManifestComplete(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             preloadSW.Start();
 
@@ -240,9 +240,22 @@ namespace ModTek.Features.Manifest
             Log("Preloading MDDB related data.");
 
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
-            foreach (var type in BTConstants.CCTypes.Concat(BTConstants.MDDTypes.Except(BTConstants.CCTypes)))
+            if (rebuildMDDB)
             {
-                loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
+                foreach (var type in BTConstants.MDDTypes)
+                {
+                    loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
+                }
+            }
+            else
+            {
+                foreach (var resource in preloadResources)
+                {
+                    if (BTConstants.ResourceType(resource.Type, out var resourceType))
+                    {
+                        loadRequest.AddBlindLoadRequest(resourceType, resource.Id);
+                    }
+                }
             }
             loadRequest.ProcessRequests();
         }

@@ -65,16 +65,6 @@ namespace ModTek.Features.Manifest
             BattleTechResourceType.UpgradeDef
         };
 
-        // from CustomComponents mod
-        internal static readonly BattleTechResourceType[] CCTypes =
-        {
-            BattleTechResourceType.HeatSinkDef,
-            BattleTechResourceType.UpgradeDef,
-            BattleTechResourceType.WeaponDef,
-            BattleTechResourceType.AmmunitionBoxDef,
-            BattleTechResourceType.JumpJetDef
-        };
-
         internal static readonly BattleTechResourceType[] StringTypes =
         {
             // one time

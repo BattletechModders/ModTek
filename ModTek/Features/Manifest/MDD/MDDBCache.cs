@@ -143,7 +143,7 @@ namespace ModTek.Features.Manifest.MDD
             ignored.Add(key);
         }
 
-        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> requestLoad)
+        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
         {
             if (!flagForRebuild)
             {
@@ -160,7 +160,7 @@ namespace ModTek.Features.Manifest.MDD
                         else
                         {
                             Log($"MDDBCache: {key} missing in cache.");
-                            requestLoad.Add(key);
+                            preloadResources.Add(key);
                         }
                     }
                 }
@@ -179,7 +179,7 @@ namespace ModTek.Features.Manifest.MDD
             if (flagForRebuild)
             {
                 Log($"MDDBCache: Rebuilding.");
-                requestLoad.Clear();
+                preloadResources.Clear();
                 Reset();
             }
         }

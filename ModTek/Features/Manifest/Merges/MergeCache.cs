@@ -264,7 +264,7 @@ namespace ModTek.Features.Manifest.Merges
             }
         }
 
-        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> requestLoad)
+        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
         {
             PromoteAllUntypedIfPossible();
 
@@ -293,7 +293,7 @@ namespace ModTek.Features.Manifest.Merges
                 else
                 {
                     Log($"MergeCache: {key} missing in cache.");
-                    requestLoad.Add(key);
+                    preloadResources.Add(key);
                 }
             }
 
@@ -304,6 +304,8 @@ namespace ModTek.Features.Manifest.Merges
                 {
                     continue;
                 }
+
+                Log($"MergeCache: {kv.Key} left over in cache.");
 
                 persistentSets.Remove(kv.Key);
                 try
@@ -317,8 +319,6 @@ namespace ModTek.Features.Manifest.Merges
                 {
                     Log($"MergeCache: Error when deleting cached file for {kv.Key}", e);
                 }
-
-                Log($"MergeCache: {kv.Key} left over in cache.");
 
                 if (!BTConstants.ResourceType(kv.Key.Type, out var resourceType)
                     || BTConstants.MDDTypes.All(x => x != resourceType))
