@@ -138,7 +138,7 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            CustomStreamingAssetsFeature.NormalizedModEntry(entry);
+            CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
 
             if (mergeCache.AddModEntry(entry))
             {

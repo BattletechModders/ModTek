@@ -77,7 +77,7 @@ namespace ModTek.Features.CustomStreamingAssets
             )
         };
 
-        internal static void NormalizedModEntry(ModEntry entry)
+        internal static void FindAndSetMatchingCustomStreamingAssetsType(ModEntry entry)
         {
             if (entry.Type != null || !entry.IsStreamingAssetsMergesBasePath)
             {
