@@ -89,8 +89,10 @@
     <Compile Include="Features\AdvJSONMerge\MergeAction.cs" />
     <Compile Include="Features\CustomResources\CustomResourcesFeature.cs" />
     <Compile Include="Features\CustomResources\Patches\BinkMediaPlayer.cs" />
-    <Compile Include="Features\CustomResources\Patches\GameTipList_ctor_Patch.cs" />
     <Compile Include="Features\CustomResources\Patches\LoadedAudioBank.cs" />
+    <Compile Include="Features\CustomStreamingAssets\CustomStreamingAssetsFeature.cs" />
+    <Compile Include="Features\CustomStreamingAssets\Patches\DebugSettings_Load_Patch.cs" />
+    <Compile Include="Features\CustomStreamingAssets\Patches\GameTipList_ctor_Patch.cs" />
     <Compile Include="Features\CustomSVGAssets\SVGAssetFeature.cs" />
     <Compile Include="Features\CustomTags\CustomTag.cs" />
     <Compile Include="Features\CustomTags\CustomTagFeature.cs" />

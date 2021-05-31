@@ -6,6 +6,7 @@ using System.Reflection;
 using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
+using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
@@ -171,7 +172,7 @@ namespace ModTek
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("\nFinishing Up");
 
-            CustomResourcesFeature.FinalizeResourceLoading();
+            CustomStreamingAssetsFeature.LoadDebugSettings();
             ModDefsDatabase.FinishedLoadingMods();
 
             Config?.ToFile(FilePaths.ConfigPath);

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
+using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.CustomTags;
 using ModTek.Features.Manifest.BTRL;
@@ -98,14 +98,6 @@ namespace ModTek.Features.Manifest
                     entry.Id = entry.FileNameWithoutExtension;
                 }
 
-                if (entry.IsTypeStreamingAsset)
-                {
-                    if (entry.Id == "settings")
-                    {
-                        entry.Type = "DebugSettings";
-                    }
-                }
-
                 AddModEntry(entry, packager);
             }
             else if (entry.IsDirectory)
@@ -146,6 +138,7 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
+            CustomStreamingAssetsFeature.NormalizedModEntry(entry);
 
             if (mergeCache.AddModEntry(entry))
             {
@@ -278,12 +271,23 @@ namespace ModTek.Features.Manifest
             mddbCache.Save();
         }
 
+        internal static string GetMergedContentOrReadAllTextAndMerge(VersionManifestEntry entry)
+        {
+            var content = GetMergedContent(entry);
+            if (content == null)
+            {
+                content = File.ReadAllText(entry.FilePath);
+                MergeContentIfApplicable(entry, ref content);
+            }
+            return content;
+        }
+
         internal static string GetMergedContent(VersionManifestEntry entry)
         {
             return mergeCache.HasMergedContentCached(entry, true, out var content) ? content : null;
         }
 
-        internal static void ContentLoaded(VersionManifestEntry entry, ref string content)
+        internal static void MergeContentIfApplicable(VersionManifestEntry entry, ref string content)
         {
             if (mergeCache.HasMerges(entry))
             {

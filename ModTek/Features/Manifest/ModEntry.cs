@@ -16,6 +16,7 @@ namespace ModTek.Features.Manifest
         public string Path { get; set; }
 
         public bool IsAssetBundleMergesBasePath => Path.Equals(FilePaths.AssetBundleMergesDirectoryName);
+        public bool IsStreamingAssetsMergesBasePath => Path.StartsWith(FilePaths.StreamingAssetsDirectoryName);
 
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);
@@ -32,7 +33,6 @@ namespace ModTek.Features.Manifest
         internal bool IsCsv => FileUtils.IsCsv(Path);
 
         public string Type { get; set; }
-        internal bool IsTypeStreamingAsset => Type == null;
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
         internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : null;
         internal bool IsTypeBattleTechResourceType => ResourceType != null;

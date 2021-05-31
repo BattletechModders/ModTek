@@ -94,13 +94,7 @@ namespace ModTek.Features.Manifest.MDD
         private readonly Stopwatch sw = new();
         internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
         {
-            if (!BTConstants.ResourceType(entry.Type, out var type))
-            {
-                Log($"MDDB Cache: Internal error: {entry.Id} has invalid type: {entry.Type}");
-                return;
-            }
-
-            if (!BTConstants.MDDTypes.Contains(type))
+            if (!BTConstants.ResourceType(entry.Type, out var type) || !BTConstants.MDDTypes.Contains(type))
             {
                 return;
             }

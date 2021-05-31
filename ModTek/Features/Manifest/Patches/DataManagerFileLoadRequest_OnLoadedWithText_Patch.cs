@@ -42,7 +42,7 @@ namespace ModTek.Features.Manifest.Patches
 
         public static void Prefix(VersionManifestEntry ___manifestEntry, ref string text)
         {
-            ModsManifest.ContentLoaded(___manifestEntry, ref text);
+            ModsManifest.MergeContentIfApplicable(___manifestEntry, ref text);
         }
     }
 }

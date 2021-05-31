@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.CustomStreamingAssets;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
@@ -27,6 +28,7 @@ namespace ModTek.Features.Manifest.BTRL
             manifest.Clear();
             idToTypes.Clear();
             SetEntries(defaultEntries);
+            SetEntries(CustomStreamingAssetsFeature.DefaultCustomStreamingAssets);
         }
 
         private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable, bool filterByOwnership)
@@ -59,6 +61,16 @@ namespace ModTek.Features.Manifest.BTRL
             if (manifest.TryGetValue(type.ToString(), out var dict))
             {
                 return FilterUnowned(dict.Values, filterByOwnership).ToArray();
+            }
+
+            return default;
+        }
+
+        public VersionManifestEntry CustomEntryByID(string id, string type)
+        {
+            if (manifest.TryGetValue(type, out var dict) && dict.TryGetValue(id, out var entry))
+            {
+                return entry;
             }
 
             return default;

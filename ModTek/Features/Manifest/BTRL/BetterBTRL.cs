@@ -74,6 +74,11 @@ namespace ModTek.Features.Manifest.BTRL
             return currentManifest.EntriesByID(id);
         }
 
+        public VersionManifestEntry CustomEntryByID(string id, string type)
+        {
+            return currentManifest.CustomEntryByID(id, type);
+        }
+
         // methods order is same as dnSpy lists them
 
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)

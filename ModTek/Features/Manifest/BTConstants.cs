@@ -33,9 +33,9 @@ namespace ModTek.Features.Manifest
             CustomType_Video,
             CustomType_AdvancedJSONMerge,
             CustomType_GameTip,
+            CustomType_DebugSettings,
             CustomType_SoundBank,
             CustomType_SoundBankDef,
-            CustomType_DebugSettings,
             CustomType_Tag,
             CustomType_TagSet
         };
