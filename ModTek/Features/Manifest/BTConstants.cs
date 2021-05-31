@@ -1,46 +1,41 @@
 ﻿using System;
+using System.Linq;
 using BattleTech;
+using BattleTech.ModSupport.Utils;
+using ModTek.Features.CustomResources;
+using ModTek.Features.CustomStreamingAssets;
+using ModTek.Features.CustomTags;
+using ModTek.Features.SoundBanks;
 
 namespace ModTek.Features.Manifest
 {
     internal static class BTConstants
     {
+        // possibly not complete
         internal static readonly string[] HBSContentNames =
         {
-            ShadowHawkDlcContentName,
-            FlashPointContentName,
-            UrbanWarfareContentName,
-            HeavyMetalContentName
+            "shadowhawkdlc",
+            "flashpoint",
+            "urbanwarfare",
+            "heavymetal"
         };
 
-        // probably not complete
-        internal const string ShadowHawkDlcContentName = "shadowhawkdlc";
-        internal const string FlashPointContentName = "flashpoint";
-        internal const string UrbanWarfareContentName = "urbanwarfare";
-        internal const string HeavyMetalContentName = "heavymetal";
+        internal const string CustomType_AdvancedJSONMerge = nameof(AdvancedJSONMerge);
+        internal const string CustomType_SoundBankDef = nameof(SoundBankDef);
+        internal const string CustomType_Tag = nameof(CustomTag);
+        internal const string CustomType_TagSet = nameof(CustomTagSet);
 
-        internal const string CustomType_AdvancedJSONMerge = "AdvancedJSONMerge";
-        internal const string CustomType_DebugSettings = "DebugSettings";
-        internal const string CustomType_GameTip = "GameTip";
-        internal const string CustomType_SoundBankDef = "SoundBankDef";
-        internal const string CustomType_SoundBank = "SoundBank";
-        internal const string CustomType_Tag = "CustomTag";
-        internal const string CustomType_TagSet = "CustomTagSet";
-        internal const string CustomType_Video = "Video";
-
-        internal static readonly string[] MODTEK_TYPES =
+        internal static readonly string[] PREDEFINED_TYPES = new []
         {
-            CustomType_Video,
             CustomType_AdvancedJSONMerge,
-            CustomType_GameTip,
-            CustomType_DebugSettings,
-            CustomType_SoundBank,
             CustomType_SoundBankDef,
             CustomType_Tag,
             CustomType_TagSet
-        };
-
-        internal static readonly string[] VANILLA_TYPES = Enum.GetNames(typeof(BattleTechResourceType));
+        }
+            .Concat(Enum.GetNames(typeof(BattleTechResourceType)))
+            .Concat(CustomStreamingAssetsFeature.CSATypeNames)
+            .Concat(CustomResourcesFeature.CRTypeNames)
+            .ToArray();
 
         internal static bool ResourceType(string Type, out BattleTechResourceType type)
         {
@@ -65,18 +60,23 @@ namespace ModTek.Features.Manifest
             BattleTechResourceType.UpgradeDef
         };
 
-        internal static readonly BattleTechResourceType[] StringTypes =
+        internal static readonly BattleTechResourceType[] StringOneTimeTypes =
         {
-            // one time
             BattleTechResourceType.ApplicationConstants,
             BattleTechResourceType.AudioConstants,
             BattleTechResourceType.BehaviorVariableScope,
             BattleTechResourceType.CombatGameConstants,
             BattleTechResourceType.MechStatisticsConstants,
             BattleTechResourceType.SimGameConstants,
-            // simple text
+        };
+
+        internal static readonly BattleTechResourceType[] StringSimpleTextTypes =
+        {
             BattleTechResourceType.SimpleText,
-            // json
+        };
+
+        internal static readonly BattleTechResourceType[] StringJsonTypes =
+        {
             BattleTechResourceType.AbilityDef,
             BattleTechResourceType.AmmunitionBoxDef,
             BattleTechResourceType.AmmunitionDef,

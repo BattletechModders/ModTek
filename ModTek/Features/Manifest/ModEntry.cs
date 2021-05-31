@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using BattleTech;
+using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
 using ModTek.Misc;
@@ -36,6 +38,7 @@ namespace ModTek.Features.Manifest
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
         internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : null;
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
+        internal bool IsTypeCustomStreamingAsset => Type != null && CustomStreamingAssetsFeature.CSATypeNames.Contains(Type);
 
         public string Id { get; set; }
 

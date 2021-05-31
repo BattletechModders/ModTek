@@ -145,7 +145,7 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (entry.IsTypeBattleTechResourceType)
+            if (entry.IsTypeBattleTechResourceType || entry.IsTypeCustomStreamingAsset)
             {
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)

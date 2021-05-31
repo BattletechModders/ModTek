@@ -11,6 +11,14 @@ namespace ModTek.Features.CustomStreamingAssets
     // custom resources do require a type
     internal static class CustomStreamingAssetsFeature
     {
+        private enum CSAType
+        {
+            DebugSettings,
+            GameTip
+        }
+
+        internal static readonly string[] CSATypeNames = Enum.GetNames(typeof(CSAType));
+
         internal static void LoadDebugSettings()
         {
             DebugBridge.LoadDefaultSettings();
@@ -18,15 +26,15 @@ namespace ModTek.Features.CustomStreamingAssets
 
         public static string GetDebugSettings()
         {
-            var entry = BetterBTRL.Instance.CustomEntryByID("settings", BTConstants.CustomType_DebugSettings);
-            Log($"debug settings entry: {entry}");
+            var entry = BetterBTRL.Instance.CustomEntryByID("settings", CSAType.DebugSettings.ToString());
+            Log($"Debug settings: {entry.FilePath}");
             return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
         }
 
         internal static string GetGameTip(string path)
         {
             var id = Path.GetFileNameWithoutExtension(path);
-            var entry = BetterBTRL.Instance.CustomEntryByID(id, BTConstants.CustomType_GameTip);
+            var entry = BetterBTRL.Instance.CustomEntryByID(id, CSAType.GameTip.ToString());
             return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
         }
 
@@ -35,35 +43,35 @@ namespace ModTek.Features.CustomStreamingAssets
             new(
                 "settings",
                 Path.Combine(Path.Combine("data", "debug"), "settings.json"),
-                BTConstants.CustomType_DebugSettings,
+                CSAType.DebugSettings.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
             new(
                 "general",
                 Path.Combine("GameTips", "general.txt"),
-                BTConstants.CustomType_GameTip,
+                CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
             new(
                 "combat",
                 Path.Combine("GameTips", "combat.txt"),
-                BTConstants.CustomType_GameTip,
+                CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
             new(
                 "lore",
                 Path.Combine("GameTips", "lore.txt"),
-                BTConstants.CustomType_GameTip,
+                CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
             new(
                 "sim",
                 Path.Combine("GameTips", "sim.txt"),
-                BTConstants.CustomType_GameTip,
+                CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             )
@@ -71,7 +79,7 @@ namespace ModTek.Features.CustomStreamingAssets
 
         internal static void NormalizedModEntry(ModEntry entry)
         {
-            if (!entry.IsStreamingAssetsMergesBasePath || entry.Type != null)
+            if (entry.Type != null || !entry.IsStreamingAssetsMergesBasePath)
             {
                 return;
             }
@@ -79,13 +87,13 @@ namespace ModTek.Features.CustomStreamingAssets
             switch (entry.Id)
             {
                 case "settings":
-                    entry.Type = BTConstants.CustomType_DebugSettings;
+                    entry.Type = CSAType.DebugSettings.ToString();
                     break;
                 case "general":
                 case "combat":
                 case "lore":
                 case "sim":
-                    entry.Type = BTConstants.CustomType_GameTip;
+                    entry.Type = CSAType.GameTip.ToString();
                     break;
             }
         }
