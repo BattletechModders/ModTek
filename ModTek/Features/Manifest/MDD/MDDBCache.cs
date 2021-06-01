@@ -94,7 +94,7 @@ namespace ModTek.Features.Manifest.MDD
         private readonly Stopwatch sw = new();
         internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
         {
-            if (!BTConstants.ResourceType(entry.Type, out var type) || !BTConstants.MDDTypes.Contains(type))
+            if (!BTConstants.ResourceType(entry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))
             {
                 return;
             }
@@ -142,7 +142,7 @@ namespace ModTek.Features.Manifest.MDD
             if (!flagForRebuild)
             {
                 // find entries missing in cache
-                foreach (var type in BTConstants.MDDTypes)
+                foreach (var type in BTConstants.MDDBTypes)
                 {
                     foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type, true).Where(x => !x.IsInDefaultMDDB()))
                     {

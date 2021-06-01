@@ -234,7 +234,7 @@ namespace ModTek.Features.Manifest
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
             if (rebuildMDDB)
             {
-                foreach (var type in BTConstants.MDDTypes)
+                foreach (var type in BTConstants.MDDBTypes)
                 {
                     loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
                 }

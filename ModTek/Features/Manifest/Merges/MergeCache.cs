@@ -322,7 +322,7 @@ namespace ModTek.Features.Manifest.Merges
                 }
 
                 if (!BTConstants.ResourceType(kv.Key.Type, out var resourceType)
-                    || BTConstants.MDDTypes.All(x => x != resourceType))
+                    || BTConstants.MDDBTypes.All(x => x != resourceType))
                 {
                     continue;
                 }

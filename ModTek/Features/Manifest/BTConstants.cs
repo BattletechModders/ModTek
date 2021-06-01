@@ -47,7 +47,7 @@ namespace ModTek.Features.Manifest
             return Enum.TryParse(Type, out type);
         }
 
-        internal static readonly BattleTechResourceType[] MDDTypes =
+        internal static readonly BattleTechResourceType[] MDDBTypes =
         {
             BattleTechResourceType.ContractOverride,
             BattleTechResourceType.LanceDef,
