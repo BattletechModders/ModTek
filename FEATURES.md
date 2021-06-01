@@ -18,7 +18,7 @@
 
 2) In order to support merging DLC content, Merges are delayed until load is requested.
    Custom resources are loaded outside of modtek and therefore can't merge.
-   Can be possible to implement eager meging and late merging, 
+   Can be possible to implement eager and late merging in parallel, 
    as late merging is only useful for dlc content and mods relying on it.
 
 Resources:
