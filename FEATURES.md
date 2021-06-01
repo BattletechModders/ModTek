@@ -1,19 +1,21 @@
 # Features
-  
-|                         | Untyped Merges | Merges           | Replacements | Deletions        | MDDB Update |
-|-------------------------|----------------|------------------|--------------|------------------|-------------|
-| Custom Streaming Assets | x              | x                | x            | -                | -           |
-| StreamingAssets         | x              | x                | x            | -                | x           |
-| Content Packs           | x              | x                | x            | -                | x           |
-| New Mod Content         | -              | x                | x            | - <sup>(2)</sup> | x           |
-| Custom Resources        | -              | - <sup>(1)</sup> | x            | - <sup>(2)</sup> | -           |
 
-<sup>(1)</sup>:
-Merges are delayed until load is requested, in order to support merging DLC content.
-Custom resources are loaded outside of modtek.
+# Manifest Manipulation
 
-<sup>(2)</sup>:
-Older ModTek supports this, newer does not anymore. Merges are delayed until DLC loads, which is
+|                         | Untyped Merges | Merges  | Replacements | Deletions | MDDB Update |
+|-------------------------|----------------|---------|--------------|-----------|-------------|
+| Custom Streaming Assets | x              | x       | x            | -         | -           |
+| StreamingAssets         | x              | x       | x            | -         | x           |
+| Content Packs           | x              | x       | x            | -         | x           |
+| New Mod Content         | -              | x       | x            | - (1)     | x           |
+| Custom Resources        | -              | - (1&2) | x            | - (1)     | -           |
+
+1) Support was dropped in ModTek v2.
+
+2) In order to support merging DLC content, Merges are delayed until load is requested.
+   Custom resources are loaded outside of modtek and therefore can't merge.
+   Can be possible to implement eager meging and late merging, 
+   as late merging is only useful for dlc content and mods relying on it.
 
 Resources:
 - Custom Streaming Assets: DebugSettings and GameTip found in StreamingAssets but not BTRL.
@@ -53,3 +55,16 @@ Resource Modification Types:
   
 - MDDB Update: MDDB is used by the game to index and then find certain types of data:
   ContractOverride, LanceDef, PilotDef, SimGameEventDef, MechDef, WeaponDef, TurretDef, VehicleDef, UpgradeDef.
+  
+# Merging
+- JSON
+- Adv JSON Merging
+- TXT, CSV Appending
+
+# Custom Resources
+
+# Custom SVG Assets
+
+# Sound Banks
+
+# Custom Tags
