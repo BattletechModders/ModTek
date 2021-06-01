@@ -41,9 +41,8 @@ Resource Modification Types:
   since there is only one id, auto-merging can happen.
   All base game files that are mergable only have one type per id.
   
-- Merges: All typed merges requires the type to be specified,
-  mods could have used the same name for different resources.
-  Only CSV, JSON and TXT can be merged.
+- Merges: Resources with of vanilla type (BattleTechResourceType)
+  and file type csv, txt and json can be merged.
   JSON merges are done with Newtonsoft JSON.NET.
   Txt and CSV merges simply append any text to the existing file.
   
