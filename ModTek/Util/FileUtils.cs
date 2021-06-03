@@ -59,20 +59,48 @@ namespace ModTek.Util
                 .ToList();
         }
 
+        internal const string JSON_TYPE = ".json";
+        internal const string CSV_TYPE = ".csv";
+        internal const string TXT_TYPE = ".txt";
+
         internal static bool IsJson(string name)
         {
-            return name.EndsWith(".json");
+            return name.HasExtension(JSON_TYPE);
         }
 
         internal static bool IsCsv(string name)
         {
-            return name.EndsWith(".csv");
+            return name.HasExtension(CSV_TYPE);
         }
 
         internal static bool IsTxt(string name)
         {
-            return name.EndsWith(".txt");
+            return name.HasExtension(TXT_TYPE);
         }
+
+        internal static string GetExtension(this string str)
+        {
+            var index = str.LastIndexOf('.');
+            return index >= 0 ? str.Substring(index) : default;
+        }
+
+        internal static bool HasExtension(this string str, string ext)
+        {
+            var index = str.LastIndexOf('.');
+            return index >= 0 && str.Substring(index).Equals(ext);
+        }
+
+        internal static bool HasStringExtension(this string str)
+        {
+            var ext = str.GetExtension();
+            return ext != null && StringExtensions.Contains(ext);
+        }
+
+        internal static readonly string[] StringExtensions = {
+            JSON_TYPE,
+            CSV_TYPE,
+            TXT_TYPE,
+        };
 
         internal static void CleanDirectory(string path)
         {

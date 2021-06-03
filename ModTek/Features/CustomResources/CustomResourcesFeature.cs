@@ -54,9 +54,10 @@ namespace ModTek.Features.CustomResources
         internal static CustomResourcesDict GetResourceDictionariesForTypes(IEnumerable<string> modDefCustomResourceTypes)
         {
             return modDefCustomResourceTypes
-                .ToDictionary(resourceType => resourceType, resourceType =>
-                        BetterBTRL.Instance.AllEntriesOfType(resourceType)?.ToDictionary(e => e.Id)
-                        ?? new Dictionary<string, VersionManifestEntry>());
+                .ToDictionary(
+                    resourceType => resourceType,
+                    resourceType => BetterBTRL.Instance.AllEntriesOfType(resourceType).ToDictionary(e => e.Id)
+                    );
         }
 
         public static VersionManifestEntry GetVideo(string videoName)

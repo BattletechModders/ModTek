@@ -18,6 +18,7 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new();
 
         private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
+        private static readonly VersionManifestEntry[] emptyArray = new VersionManifestEntry[0];
 
         private bool? AllContentPacksOwned;
         private ContentPackIndex contentPackIndex;
@@ -63,7 +64,7 @@ namespace ModTek.Features.Manifest.BTRL
                 return dict.Values.ToArray();
             }
 
-            return default;
+            return emptyArray;
         }
 
         public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership)
@@ -73,7 +74,7 @@ namespace ModTek.Features.Manifest.BTRL
                 return FilterUnowned(dict.Values, filterByOwnership).ToArray();
             }
 
-            return default;
+            return emptyArray;
         }
 
         public VersionManifestEntry EntryByIDAndType(string id, string type)
@@ -106,7 +107,7 @@ namespace ModTek.Features.Manifest.BTRL
             {
                 return set.Select(type => EntryByID(id, type, false)).ToArray();
             }
-            return default;
+            return emptyArray;
         }
 
         private void SetEntries(IEnumerable<VersionManifestEntry> entries)

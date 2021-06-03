@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
@@ -104,22 +105,11 @@ namespace ModTek.Features.Manifest
             {
                 if (entry.IsContentPackMergesBasePath)
                 {
-                    foreach (var contentPackMergesPath in Directory.GetDirectories(entry.AbsolutePath))
-                    {
-                        var contentPackName = Path.GetFileName(contentPackMergesPath);
-                        foreach (var file in FileUtils.FindFiles(contentPackMergesPath, ".json", ".csv", ".txt"))
-                        {
-                            var copy = entry.copy();
-                            copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                            copy.Id = Path.GetFileNameWithoutExtension(file);
-                            copy.RequiredContentPacks = new[] { contentPackName };
-                            AddModEntry(copy, packager);
-                        }
-                    }
+                    ExpandContentPackMerges(modDef, entry, packager);
                 }
                 else
                 {
-                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{".json"} : null;
+                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{"*"+FileUtils.JSON_TYPE} : null;
                     foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                     {
                         var copy = entry.copy();
@@ -132,6 +122,41 @@ namespace ModTek.Features.Manifest
             else
             {
                 Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
+            }
+        }
+
+        private static void ExpandContentPackMerges(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
+        {
+            foreach (var contentPackMergesPath in Directory.GetDirectories(entry.AbsolutePath))
+            {
+                var contentPackName = Path.GetFileName(contentPackMergesPath);
+                if (!BTConstants.HBSContentNames.Contains(contentPackName))
+                {
+                    Log($"Unknown content pack {contentPackName} in {entry.AbsolutePath}");
+                }
+
+                foreach (var typesPath in Directory.GetDirectories(contentPackMergesPath))
+                {
+                    var typeName = Path.GetFileName(typesPath);
+                    if (!BTConstants.ResourceType(typeName, out _))
+                    {
+                        Log($"Unknown resource type {typeName} in {contentPackMergesPath}");
+                        continue;
+                    }
+
+                    foreach (var file in FileUtils.FindFiles(typesPath, FileUtils.JSON_TYPE, FileUtils.CSV_TYPE, FileUtils.TXT_TYPE))
+                    {
+                        var copy = entry.copy();
+                        copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
+                        copy.Id = Path.GetFileNameWithoutExtension(file);
+                        copy.Type = typeName;
+                        copy.RequiredContentPacks = new[]
+                        {
+                            contentPackName
+                        };
+                        AddModEntry(copy, packager);
+                    }
+                }
             }
         }
 
