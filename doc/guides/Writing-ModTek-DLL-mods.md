@@ -2,7 +2,7 @@ This will be a guide for writing a fairly simple mod -- making the Leopard have 
 
 ## Getting Started
 
-The easiest way to change how the game works is to see if you can do it by editing the game's JSON and writing a ModTek JSON mod -- some examples are [here](https://github.com/BattletechModders/ModTek/wiki/Writing-ModTek-JSON-mods). You should only spend your time and effort if that time and effort is required to get your project working. HBS has provided a lot of tweaks to the way that the game works in JSON files and it's not uncommon that they've got something already in place. In this case however, there are none used by the game so we'll just have to make it.
+The easiest way to change how the game works is to see if you can do it by editing the game's JSON and writing a ModTek JSON mod -- some examples are [here](Writing-ModTek-JSON-mods.md). You should only spend your time and effort if that time and effort is required to get your project working. HBS has provided a lot of tweaks to the way that the game works in JSON files and it's not uncommon that they've got something already in place. In this case however, there are none used by the game so we'll just have to make it.
 
 ### Tools
 

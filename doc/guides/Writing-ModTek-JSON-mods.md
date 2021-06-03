@@ -4,13 +4,13 @@ ModTek makes mods that change JSON values or add new JSON files far, far better 
 
 Developing a JSON mod for ModTek is fairly straightforward and in this article/guide, we'll build three different mods. First, we'll make a simple mod that changes the `StreamingAssets/data/constants/AudioConstants.json` file as suggested by [Alec Meer at RockPaperShotgun](https://www.rockpapershotgun.com/2018/05/02/battletech-speed-fix/) based on community findings. After that, we'll build a mod that changes a hardpoint on a mech chassis. Finally we'll add new variants of an existing chassis.
 
-For all of the examples, we will first need to write a `mod.json` file for ModTek to read. Much more in-depth documentation for that [is here](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-Format).
+For all of the examples, we will first need to write a `mod.json` file for ModTek to read. Much more in-depth documentation for that [is here](The-mod.json-Format.md).
 
 *Note: The log file at the path `BATTLETECH/Mods/.modtek/ModTek.log` is very helpful for figuring out if something has worked or not. There is also the game log located at `BATTLETECH/BattleTech_Data/output_log.txt` that can tell you if something broke in the game.*
 
 ## EliminateAudioDelays, making simple changes to an existing JSON file
 
-As described in the `mod.json` [article](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-Format), we'll setup ours to look like this:
+As described in the `mod.json` [article](The-mod.json-Format.md), we'll setup ours to look like this:
 
 ```json
 {
