@@ -132,9 +132,9 @@ These fields determine if ModTek should load your mod based on the other install
 |Field|Type|Description|
 |:---|:---:|---|
 |Manifest|array\<object\>|Entries that will be added to the game|
-|RemoveManifestEntries|array\<string\>|Entries that will be removed from the game *(added in 0.7.0)*|
+|RemoveManifestEntries|array\<string\>|Entries that will be removed from the game *(added in 0.7.0/removed in v2.0)*|
 |CustomResourceTypes|array\<string\>|Custom resource types that this mod adds or consumes *(added in 0.7.0)*|
-|LoadImplicitManifest|bool|If the manifest should include the implicit StreamingAssets directory entry, *default true*|
+|LoadImplicitManifest|bool|If the manifest should include the implicit StreamingAssets and ContentPackMerges directory entries, *default true*|
 
 Each entry is a JObject with the following fields:
 
@@ -147,6 +147,7 @@ Each entry is a JObject with the following fields:
 |AssetBundlePersistent|bool||
 |AddToAddendum|string|The VersionManifest addundum that this entry should be added to, if not provided, not added to any addendum|
 |AddToDB|bool|If this entry should be added to the MetadataDatabase (MDD/MDDB), only for particular types|
+|RequiredContentPacks|array\<string\>|A list of content packs the entry requires, valid values are: shadowhawkdlc, flashpoint, urbanwarfare and heavymetal|
 |ShouldMergeJSON|bool|If this .json file should be merged to an existing entry|
 |ShouldAppendText|bool|If this .csv/.txt file should be appended to an existing entry *(added in 0.7.0)*|
 
