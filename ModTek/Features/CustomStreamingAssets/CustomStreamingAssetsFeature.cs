@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using BattleTech;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
@@ -19,6 +20,11 @@ namespace ModTek.Features.CustomStreamingAssets
 
         internal static readonly string[] CSATypeNames = Enum.GetNames(typeof(CSAType));
 
+        internal static bool IsCustomStreamingAssetsType(string type)
+        {
+            return type != null && CSATypeNames.Contains(type);
+        }
+
         internal static void LoadDebugSettings()
         {
             DebugBridge.LoadDefaultSettings();
@@ -26,7 +32,7 @@ namespace ModTek.Features.CustomStreamingAssets
 
         public static string GetDebugSettings()
         {
-            var entry = BetterBTRL.Instance.CustomEntryByID("settings", CSAType.DebugSettings.ToString());
+            var entry = BetterBTRL.Instance.EntryByIDAndType("settings", CSAType.DebugSettings.ToString());
             Log($"Debug settings: {entry.FilePath}");
             return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
         }
@@ -34,7 +40,7 @@ namespace ModTek.Features.CustomStreamingAssets
         internal static string GetGameTip(string path)
         {
             var id = Path.GetFileNameWithoutExtension(path);
-            var entry = BetterBTRL.Instance.CustomEntryByID(id, CSAType.GameTip.ToString());
+            var entry = BetterBTRL.Instance.EntryByIDAndType(id, CSAType.GameTip.ToString());
             return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
         }
 

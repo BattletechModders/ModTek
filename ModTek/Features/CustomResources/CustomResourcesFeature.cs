@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using ModTek.Features.Manifest;
+using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.Mods;
 using static ModTek.Logging.Logger;
 using CustomResourcesDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
@@ -12,7 +13,7 @@ namespace ModTek.Features.CustomResources
 {
     internal static class CustomResourcesFeature
     {
-        private static readonly CustomResourcesDict CustomResources = new();
+        private static readonly HashSet<string> CustomResources = new();
 
         private enum CRType
         {
@@ -23,19 +24,14 @@ namespace ModTek.Features.CustomResources
 
         internal static void Setup()
         {
-            // setup custom resources for ModTek types with fake VersionManifestEntries
-            CustomResources.Add(CRType.Video.ToString(), new Dictionary<string, VersionManifestEntry>());
-            CustomResources.Add(CRType.SoundBank.ToString(), new Dictionary<string, VersionManifestEntry>());
+            // setup custom resources for ModTek types
+            CustomResources.Add(CRType.Video.ToString());
+            CustomResources.Add(CRType.SoundBank.ToString());
         }
 
-        internal static bool Add(ModEntry entry)
+        internal static bool IsCustomResourceType(string type)
         {
-            if (entry.Type == null || !CustomResources.ContainsKey(entry.Type))
-            {
-                return false;
-            }
-            CustomResources[entry.Type][entry.Id] = entry.CreateVersionManifestEntry();
-            return true;
+            return type != null && CustomResources.Contains(type);
         }
 
         internal static void ProcessModDef(ModDefEx modDef)
@@ -48,31 +44,30 @@ namespace ModTek.Features.CustomResources
                     continue;
                 }
 
-                if (!CustomResources.ContainsKey(customResourceType))
+                if (!CustomResources.Contains(customResourceType))
                 {
-                    CustomResources.Add(customResourceType, new Dictionary<string, VersionManifestEntry>());
+                    CustomResources.Add(customResourceType);
                 }
             }
         }
 
-        internal static CustomResourcesDict GetCopyOfResourceForType(HashSet<string> modDefCustomResourceTypes)
+        internal static CustomResourcesDict GetResourceDictionariesForTypes(IEnumerable<string> modDefCustomResourceTypes)
         {
-            var customResources = new CustomResourcesDict();
-            foreach (var resourceType in modDefCustomResourceTypes)
-            {
-                customResources.Add(resourceType, new Dictionary<string, VersionManifestEntry>(CustomResources[resourceType]));
-            }
-            return customResources;
+            return modDefCustomResourceTypes
+                .ToDictionary(resourceType => resourceType, resourceType =>
+                        BetterBTRL.Instance.AllEntriesOfType(resourceType)?.ToDictionary(e => e.Id)
+                        ?? new Dictionary<string, VersionManifestEntry>());
         }
 
         public static VersionManifestEntry GetVideo(string videoName)
         {
-            return CustomResources[CRType.Video.ToString()].Values.LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
+            return BetterBTRL.Instance.AllEntriesOfType(CRType.Video.ToString())
+                .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
         }
 
-        public static VersionManifestEntry GetSoundBank(string name)
+        public static VersionManifestEntry GetSoundBank(string id)
         {
-            return CustomResources[CRType.SoundBank.ToString()].TryGetValue(name, out var entry) ? entry : null;
+            return BetterBTRL.Instance.EntryByIDAndType(CRType.SoundBank.ToString(), id);
         }
     }
 }

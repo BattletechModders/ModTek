@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
+using ModTek.Features.Manifest.BTRL;
 using ModTek.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -170,7 +173,7 @@ namespace ModTek.Features.Manifest.Mods
 
             if (modDef.CustomResourceTypes.Count > 0)
             {
-                var customResources = CustomResourcesFeature.GetCopyOfResourceForType(modDef.CustomResourceTypes);
+                var customResources = CustomResourcesFeature.GetResourceDictionariesForTypes(modDef.CustomResourceTypes);
                 paramsDictionary.Add("customResources", customResources);
             }
 

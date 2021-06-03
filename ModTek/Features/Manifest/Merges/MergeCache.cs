@@ -222,6 +222,12 @@ namespace ModTek.Features.Manifest.Merges
         private void AddTemp(ModEntry entry)
         {
             Log($"\tMerge: {entry}");
+            if (entry.IsTypeCustomResource)
+            {
+                Log($"\t\tError: Custom resources can't be merged.");
+                return;
+            }
+
             if (entry.Type == null)
             {
                 // check if id already mapped to a type

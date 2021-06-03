@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.CustomResources;
 using ModTek.Util;
 using static ModTek.Logging.Logger;
 
@@ -74,9 +75,14 @@ namespace ModTek.Features.Manifest.BTRL
             return currentManifest.EntriesByID(id);
         }
 
-        internal VersionManifestEntry CustomEntryByID(string id, string type)
+        internal VersionManifestEntry[] AllEntriesOfType(string type)
         {
-            return currentManifest.CustomEntryByID(id, type);
+            return currentManifest.AllEntriesOfType(type);
+        }
+
+        internal VersionManifestEntry EntryByIDAndType(string id, string type)
+        {
+            return currentManifest.EntryByIDAndType(id, type);
         }
 
         private void RemoveAddendumForMemoryStore(VersionManifestAddendum addendum)

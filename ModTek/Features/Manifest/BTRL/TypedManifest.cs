@@ -56,6 +56,16 @@ namespace ModTek.Features.Manifest.BTRL
             return FilterUnowned(manifest.Values.SelectMany(x => x.Values), filterByOwnership).ToArray();
         }
 
+        public VersionManifestEntry[] AllEntriesOfType(string type)
+        {
+            if (manifest.TryGetValue(type, out var dict))
+            {
+                return dict.Values.ToArray();
+            }
+
+            return default;
+        }
+
         public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership)
         {
             if (manifest.TryGetValue(type.ToString(), out var dict))
@@ -66,7 +76,7 @@ namespace ModTek.Features.Manifest.BTRL
             return default;
         }
 
-        public VersionManifestEntry CustomEntryByID(string id, string type)
+        public VersionManifestEntry EntryByIDAndType(string id, string type)
         {
             if (manifest.TryGetValue(type, out var dict) && dict.TryGetValue(id, out var entry))
             {

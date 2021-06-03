@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using BattleTech;
+using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
@@ -17,7 +17,7 @@ namespace ModTek.Features.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        public bool IsAssetBundleMergesBasePath => Path.Equals(FilePaths.AssetBundleMergesDirectoryName);
+        public bool IsContentPackMergesBasePath => Path.Equals(FilePaths.ContentPackMergesDirectoryName);
         public bool IsStreamingAssetsMergesBasePath => Path.StartsWith(FilePaths.StreamingAssetsDirectoryName);
 
         // directory based methods, used during normalization
@@ -38,7 +38,8 @@ namespace ModTek.Features.Manifest
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
         internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : null;
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
-        internal bool IsTypeCustomStreamingAsset => Type != null && CustomStreamingAssetsFeature.CSATypeNames.Contains(Type);
+        internal bool IsTypeCustomStreamingAsset => CustomStreamingAssetsFeature.IsCustomStreamingAssetsType(Type);
+        internal bool IsTypeCustomResource => CustomResourcesFeature.IsCustomResourceType(Type);
 
         public string Id { get; set; }
 

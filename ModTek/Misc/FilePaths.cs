@@ -8,7 +8,7 @@ namespace ModTek.Misc
     internal static class FilePaths
     {
         internal const string MOD_JSON_NAME = "mod.json";
-        internal static string AssetBundleMergesDirectoryName { get; set; } = "AssetBundleMerges";
+        internal static string ContentPackMergesDirectoryName { get; set; } = "ContentPackMerges";
 
         private const string MODS_DIRECTORY_NAME = "Mods";
         private const string MODTEK_DIRECTORY_NAME = "ModTek";

@@ -51,7 +51,7 @@ namespace ModTek.Features.Manifest
                 var packager = new ModAddendumPackager(modName);
                 foreach (var modEntry in modDef.Manifest)
                 {
-                    NormalizeAndAddModEntries(modDef, modEntry, packager);
+                    NormalizeAndExpandAndAddModEntries(modDef, modEntry, packager);
                 }
 
                 packager.SaveToBTRL();
@@ -80,14 +80,14 @@ namespace ModTek.Features.Manifest
                     modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
 
-                if (Directory.Exists(modDef.GetFullPath(FilePaths.AssetBundleMergesDirectoryName)))
+                if (Directory.Exists(modDef.GetFullPath(FilePaths.ContentPackMergesDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.AssetBundleMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.ContentPackMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
                 }
             }
         }
 
-        private static void NormalizeAndAddModEntries(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
+        private static void NormalizeAndExpandAndAddModEntries(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
         {
             entry.ModDef = modDef;
 
@@ -102,18 +102,17 @@ namespace ModTek.Features.Manifest
             }
             else if (entry.IsDirectory)
             {
-
-                if (entry.IsAssetBundleMergesBasePath)
+                if (entry.IsContentPackMergesBasePath)
                 {
-                    foreach (var bundlePath in Directory.GetDirectories(entry.AbsolutePath))
+                    foreach (var contentPackMergesPath in Directory.GetDirectories(entry.AbsolutePath))
                     {
-                        var bundleName = Path.GetFileName(bundlePath);
-                        foreach (var file in FileUtils.FindFiles(bundlePath, ".json", ".csv", ".txt"))
+                        var contentPackName = Path.GetFileName(contentPackMergesPath);
+                        foreach (var file in FileUtils.FindFiles(contentPackMergesPath, ".json", ".csv", ".txt"))
                         {
                             var copy = entry.copy();
-                            copy.AssetBundleName = bundleName; // TODO needed?
                             copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
                             copy.Id = Path.GetFileNameWithoutExtension(file);
+                            copy.RequiredContentPacks = new[] { contentPackName };
                             AddModEntry(copy, packager);
                         }
                     }
@@ -145,7 +144,7 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (entry.IsTypeBattleTechResourceType || entry.IsTypeCustomStreamingAsset)
+            if (entry.IsTypeBattleTechResourceType)
             {
                 var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
@@ -171,13 +170,24 @@ namespace ModTek.Features.Manifest
                     Log($"\tAdd/Replace: {entry}");
                     packager.AddEntry(entry);
                 }
-
                 return;
             }
 
-            if (CustomResourcesFeature.Add(entry))
+            if (entry.IsTypeCustomStreamingAsset)
             {
-                Log($"\tAdd/Replace (CustomResource): {entry}");
+                packager.AddEntry(entry);
+                return;
+            }
+
+            if (entry.IsTypeCustomResource)
+            {
+                Log($"\tAdd/Replace: {entry}");
+                if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
+                {
+                    Log($"\t\tError: Custom resources don't support RequiredContentPacks.");
+                    return;
+                }
+                packager.AddEntry(entry);
                 return;
             }
 
