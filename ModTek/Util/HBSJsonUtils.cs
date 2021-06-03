@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Harmony;
@@ -19,6 +20,15 @@ namespace ModTek.Util
         internal static JObject ParseGameJSON(string content, bool log = false)
         {
             Logger.LogIf(log,"content: " + content);
+
+            try
+            {
+                return JObject.Parse(content);
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
 
             var commentsStripped = StripHBSCommentsFromJSON(content);
             Logger.LogIf(log, "commentsStripped: " + commentsStripped);
