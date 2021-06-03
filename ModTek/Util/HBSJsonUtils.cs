@@ -25,7 +25,7 @@ namespace ModTek.Util
             {
                 return JObject.Parse(content);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
@@ -14,7 +13,6 @@ using ModTek.Features.SoundBanks;
 using ModTek.Logging;
 using ModTek.Misc;
 using ModTek.UI;
-using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Logging.Logger;
 

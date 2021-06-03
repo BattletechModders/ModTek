@@ -60,13 +60,13 @@ namespace ModTek.Features.CustomResources
                     );
         }
 
-        public static VersionManifestEntry GetVideo(string videoName)
+        internal static VersionManifestEntry GetVideo(string videoName)
         {
             return BetterBTRL.Instance.AllEntriesOfType(CRType.Video.ToString())
                 .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
         }
 
-        public static VersionManifestEntry GetSoundBank(string id)
+        internal static VersionManifestEntry GetSoundBank(string id)
         {
             return BetterBTRL.Instance.EntryByIDAndType(CRType.SoundBank.ToString(), id);
         }

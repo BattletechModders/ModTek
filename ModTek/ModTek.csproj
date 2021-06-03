@@ -135,7 +135,6 @@
     <Compile Include="Features\SoundBanks\ProcessParameters.cs" />
     <Compile Include="Features\SoundBanks\SoundBanksFeature.cs" />
     <Compile Include="Features\SoundBanks\SoundBanksPatches.cs" />
-    <Compile Include="Features\SoundBanks\SoundBanksProcessHelper.cs" />
     <Compile Include="Features\CustomSVGAssets\Patches\SVGAssetHelper.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\Logger.cs" />
@@ -143,6 +142,7 @@
     <Compile Include="Misc\FilePaths.cs" />
     <Compile Include="Misc\ModTekCacheStorage.cs" />
     <Compile Include="Patches\ModLoaderPatches.cs" />
+    <Compile Include="Public\SoundBanksProcessHelper.cs" />
     <Compile Include="Util\AssemblyUtil.cs" />
     <Compile Include="Util\CSharpUtils.cs" />
     <Compile Include="Util\DictionaryExtensions.cs" />

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using ModTek.Features.SoundBanks;
 
-namespace ModTek.Features.SoundBanks
+namespace ModTek.Public
 {
     public static class SoundBanksProcessHelper
     {
@@ -18,14 +19,9 @@ namespace ModTek.Features.SoundBanks
             }
         }
 
-        internal static ProcessParameters GetRegistredProcParams(string soundbank)
+        internal static ProcessParameters GetRegisteredProcParams(string soundbank)
         {
-            if (procParams.TryGetValue(soundbank, out var p))
-            {
-                return p;
-            }
-
-            return null;
+            return procParams.TryGetValue(soundbank, out var p) ? p : null;
         }
     }
 }

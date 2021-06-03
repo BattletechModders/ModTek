@@ -10,6 +10,7 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.Logging;
+using ModTek.Public;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -291,7 +292,7 @@ namespace ModTek.Features.SoundBanks
             }
 
             RLog.M.WL(1, "'" + uri + "' loaded");
-            var pparams = SoundBanksProcessHelper.GetRegistredProcParams(__instance.name);
+            var pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
             GCHandle? handle = null;
             var dataLength = (uint) www.bytes.Length;
             if (pparams != null)
