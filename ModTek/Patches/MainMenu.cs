@@ -1,6 +1,8 @@
 using System.Linq;
 using BattleTech.UI;
 using Harmony;
+using ModTek.Features.Manifest.Mods;
+using ModTek.Misc;
 using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
@@ -12,20 +14,27 @@ namespace ModTek.Patches
     /// Adds popup message with all of the mods that failed to load if any.
     /// </summary>
     [HarmonyPatch(typeof(MainMenu), "Init")]
-    public static class MainMenu_Init_Patch
+    internal static class MainMenu_Init_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix()
         {
-            if (ModTek.FailedToLoadMods.Count <= 0)
+            if (ModDefsDatabase.FailedToLoadMods.Count <= 0)
+            {
                 return;
+            }
 
-            GenericPopupBuilder.Create("Some Mods Didn't Load",
-                    $"Check \"{ModTek.GetRelativePath(Logger.LogPath, ModTek.GameDirectory)}\" for more info\n\n"
-                    + string.Join(", ", ModTek.FailedToLoadMods.ToArray()))
+            GenericPopupBuilder.Create(
+                    "Some Mods Didn't Load",
+                    $"Check \"{FileUtils.GetRelativePath(FilePaths.GameDirectory, FilePaths.LogPath)}\" for more info\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
+                )
                 .AddButton("Continue")
                 .Render();
-            ModTek.FailedToLoadMods.Clear();
+            ModDefsDatabase.FailedToLoadMods.Clear();
         }
     }
 }

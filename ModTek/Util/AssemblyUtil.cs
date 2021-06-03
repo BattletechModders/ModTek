@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Util
 {
@@ -29,7 +29,7 @@ namespace ModTek.Util
             }
             catch (Exception e)
             {
-                LogException($"\t{fileName}: While loading a .dll, an exception occured", e);
+                Log($"\t{fileName}: While loading a .dll, an exception occured", e);
                 return null;
             }
         }
@@ -41,12 +41,18 @@ namespace ModTek.Util
             {
                 var types = new List<Type>();
                 if (typeName == null)
+                {
                     types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
+                }
                 else
+                {
                     types.Add(assembly.GetType(typeName));
+                }
 
                 if (types.Count == 0)
+                {
                     return null;
+                }
 
                 var methods = new List<MethodInfo>();
                 foreach (var type in types)
@@ -56,9 +62,10 @@ namespace ModTek.Util
                 }
 
                 return methods.ToArray();
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
-                LogException($"\t", e);
+                Log("\t", e);
                 return null;
             }
         }
@@ -80,7 +87,9 @@ namespace ModTek.Util
             {
                 var name = parameter.Name;
                 if (!paramsDictionary.ContainsKey(name) || paramsDictionary[name].GetType() != parameter.ParameterType)
+                {
                     return false;
+                }
 
                 parameterList.Add(paramsDictionary[name]);
                 parametersStrings.Add($"{parameter.ParameterType.Name} {name}");
@@ -99,7 +108,9 @@ namespace ModTek.Util
             if (parameters == null)
             {
                 if (methodParameters.Length != 0)
+                {
                     return false;
+                }
 
                 Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}()' using parameter type");
                 method.Invoke(null, null);
@@ -107,13 +118,17 @@ namespace ModTek.Util
             }
 
             if (parameters.Length != methodParameters.Length)
+            {
                 return false;
+            }
 
             var parametersStrings = new List<string>();
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i].GetType() != methodParameters[i].ParameterType)
+                {
                     return false;
+                }
 
                 parametersStrings.Add($"{methodParameters[i].ParameterType.Name} {methodParameters[i].Name}");
             }

@@ -1,10 +1,12 @@
 using System.IO;
+using ModTek.Misc;
+using ModTek.Util;
 using TMPro;
 using UnityEngine;
 
 namespace ModTek.UI
 {
-    public static class LoadingCurtainErrorText
+    internal static class LoadingCurtainErrorText
     {
         private static GameObject textGameObject;
         private static TextMeshProUGUI tmProText;
@@ -21,22 +23,30 @@ namespace ModTek.UI
         public static void Clear()
         {
             if (tmProText == null)
+            {
                 return;
+            }
 
             tmProText.text = "";
             currentMessage = "[ModTek] Detected errors (might not be important!) -- For more info check ";
 
-            var cleanLogPath = Path.Combine(ModTek.ModsDirectory, "cleaned_output_log.txt");
+            var cleanLogPath = Path.Combine(FilePaths.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
-                currentMessage += $"\"{ModTek.GetRelativePath(cleanLogPath, ModTek.GameDirectory)}\"\n";
+            {
+                currentMessage += $"\"{FileUtils.GetRelativePath(FilePaths.GameDirectory, cleanLogPath)}\"\n";
+            }
             else
-                currentMessage += $"\"output_log.txt\"\n";
+            {
+                currentMessage += "\"output_log.txt\"\n";
+            }
         }
 
         public static void Setup(GameObject parent)
         {
             if (parent == null || parentLoadingCurtain == parent)
+            {
                 return;
+            }
 
             parentLoadingCurtain = parent;
 

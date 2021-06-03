@@ -5,12 +5,6 @@ VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek", "ModTek\ModTek.csproj", "{8D955C2C-D75B-453C-99D1-B337BBF82CCA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{07E5D5B5-E51C-4CD8-8FA9-8241FAF6440F}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-		UNLICENSE = UNLICENSE
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekUnitTests", "ModTekUnitTests\ModTekUnitTests.csproj", "{0924FD5F-434E-4278-A326-0F43697F4355}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekInjector", "ModTekInjector\ModTekInjector.csproj", "{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}"

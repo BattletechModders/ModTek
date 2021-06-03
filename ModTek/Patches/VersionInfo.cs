@@ -10,9 +10,13 @@ namespace ModTek.Patches
     /// Patch the GetReleaseVersion method to tack on the ModTek version to the game version in the main menu
     /// </summary>
     [HarmonyPatch(typeof(VersionInfo), "GetReleaseVersion")]
-    public static class VersionInfo_GetReleaseVersion_Patch
+    internal static class VersionInfo_GetReleaseVersion_Patch
     {
-        public static bool Prepare() { return ModTek.Enabled; }
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
         public static void Postfix(ref string __result)
         {
             var old = __result;

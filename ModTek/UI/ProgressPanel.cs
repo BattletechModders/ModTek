@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Harmony;
+using ModTek.Misc;
+using ModTek.Util;
 using UnityEngine;
 using UnityEngine.UI;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
+using Object = UnityEngine.Object;
 
 // ReSharper disable UnusedMember.Local
 
@@ -42,7 +45,7 @@ namespace ModTek.UI
             public Slider Slider { get; set; }
             public Action FinishAction { get; set; }
 
-            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
+            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new();
 
             private void Start()
             {
@@ -71,11 +74,11 @@ namespace ModTek.UI
                         }
                         catch (Exception e)
                         {
-                            LogException("\nUncaught ModTek exception!", e);
+                            Log("\nUncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
-                            LoadingText.text = $"See \"{ModTek.GetRelativePath(LogPath, ModTek.GameDirectory)}\"";
+                            LoadingText.text = $"See \"{FileUtils.GetRelativePath(FilePaths.GameDirectory, FilePaths.LogPath)}\"";
 
                             ModTek.Finish();
 
@@ -85,7 +88,9 @@ namespace ModTek.UI
                         var report = workEnumerator.Current;
 
                         if (sw.ElapsedMilliseconds <= FRAME_TIME && !report.ForceFrame)
+                        {
                             continue;
+                        }
 
                         Slider.value = report.Progress;
                         SliderText.text = report.SliderText;
@@ -119,7 +124,7 @@ namespace ModTek.UI
             }
 
             var canvasPrefab = assetBundle.LoadAsset<GameObject>("ProgressBar_Canvas");
-            var canvasGameObject = UnityEngine.Object.Instantiate(canvasPrefab);
+            var canvasGameObject = Object.Instantiate(canvasPrefab);
             var panelTitleText = GameObject.Find("ProgressBar_Title")?.GetComponent<Text>();
             var sliderText = GameObject.Find("ProgressBar_Slider_Text")?.GetComponent<Text>();
             var loadingText = GameObject.Find("ProgressBar_Loading_Text")?.GetComponent<Text>();
@@ -141,7 +146,7 @@ namespace ModTek.UI
             loadingBehavior.FinishAction = () =>
             {
                 assetBundle.Unload(true);
-                UnityEngine.Object.Destroy(canvasGameObject);
+                Object.Destroy(canvasGameObject);
                 TriggerGameLoading();
             };
 

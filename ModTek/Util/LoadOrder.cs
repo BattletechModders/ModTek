@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTek.Features.Manifest.Mods;
 using Newtonsoft.Json;
-using static ModTek.Util.Logger;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Util
 {
@@ -20,7 +21,9 @@ namespace ModTek.Util
             foreach (var modDef in modDefs.Values)
             {
                 if (!modDef.HasConflicts(tryToLoad))
+                {
                     continue;
+                }
 
                 modDefsCopy.Remove(modDef.Name);
                 hasConflicts.Add(modDef.Name);
@@ -32,7 +35,9 @@ namespace ModTek.Util
             foreach (var modName in cachedOrder)
             {
                 if (!modDefsCopy.ContainsKey(modName) || !modDefsCopy[modName].AreDependenciesResolved(loadOrder))
+                {
                     continue;
+                }
 
                 modDefsCopy.Remove(modName);
                 loadOrder.Add(modName);
@@ -60,13 +65,16 @@ namespace ModTek.Util
                     var modDef = modDefs[unloaded[i]];
 
                     if (!modDef.AreDependenciesResolved(loadOrder))
+                    {
                         continue;
+                    }
 
                     unloaded.RemoveAt(i);
                     loadOrder.Add(modDef.Name);
                     removedThisPass++;
                 }
-            } while (removedThisPass > 0 && unloaded.Count > 0);
+            }
+            while (removedThisPass > 0 && unloaded.Count > 0);
 
             unloaded.AddRange(hasConflicts);
             return loadOrder;
@@ -75,7 +83,9 @@ namespace ModTek.Util
         public static void ToFile(List<string> order, string path)
         {
             if (order == null)
+            {
                 return;
+            }
 
             File.WriteAllText(path, JsonConvert.SerializeObject(order, Formatting.Indented));
         }
@@ -94,7 +104,7 @@ namespace ModTek.Util
                 }
                 catch (Exception e)
                 {
-                    LogException("Loading cached load order failed, rebuilding it.", e);
+                    Log("Loading cached load order failed, rebuilding it.", e);
                 }
             }
 
@@ -110,12 +120,16 @@ namespace ModTek.Util
             foreach (var modDef in modDefs.Values)
             {
                 if (modDef.OptionallyDependsOn.Count == 0)
+                {
                     continue;
+                }
 
                 foreach (var optDep in modDef.OptionallyDependsOn)
                 {
                     if (modDefs.ContainsKey(optDep))
+                    {
                         modDef.DependsOn.Add(optDep);
+                    }
                 }
             }
         }
