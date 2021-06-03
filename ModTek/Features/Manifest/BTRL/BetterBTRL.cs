@@ -74,9 +74,16 @@ namespace ModTek.Features.Manifest.BTRL
             return currentManifest.EntriesByID(id);
         }
 
-        public VersionManifestEntry CustomEntryByID(string id, string type)
+        internal VersionManifestEntry CustomEntryByID(string id, string type)
         {
             return currentManifest.CustomEntryByID(id, type);
+        }
+
+        private void RemoveAddendumForMemoryStore(VersionManifestAddendum addendum)
+        {
+            hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
+            HasChanges = true;
+            RefreshTypedEntries();
         }
 
         // methods order is same as dnSpy lists them
@@ -107,9 +114,9 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
-            hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
-            HasChanges = true;
-            RefreshTypedEntries();
+            // only used internally by BTRL
+            // we dont support removal, since we cannot remove base types from MDDB anyway
+            throw new NotImplementedException();
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
@@ -145,7 +152,7 @@ namespace ModTek.Features.Manifest.BTRL
                 return;
             }
 
-            RemoveAddendum(memoryStore);
+            RemoveAddendumForMemoryStore(memoryStore);
             memoryStores.Remove(memoryStore.Name);
             memoryStore.SubscribeToContentsChanged(IndexMemoryStore);
             UnIndexMemoryStore(memoryStore);
