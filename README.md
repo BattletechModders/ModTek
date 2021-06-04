@@ -20,6 +20,18 @@ Installation of ModTek is straightforward. You download a .zip file, extract it 
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu with "/W MODTEK". If you don't see this something has gone wrong.
 
+# Documentation
+
+Topics:
+- [Features](doc/FEATURES.md)
+- [The Drop-Dead-Simple-Guide to Installing BTML & ModTek & ModTek mods](doc/QUICKSTART.md)
+- [The mod.json Format](doc/MOD_JSON_FORMAT.md)
+- [Writing ModTek JSON mods](doc/MOD_JSON.md)
+- [Writing ModTek DLL mods](doc/MOD_DLL.md)
+
+## Developing ModTek
+
+Information on how to build and release ModTek is documented in [DEVELOPING.md](DEVELOPING.md).
 
 ## Enabling or Disabling
 
@@ -35,13 +47,6 @@ Some people worry about running `ModTekInjector.exe` as it's an unknown, unsigne
 
 Generally, updates can be dealt with by re-running `ModTekInjector.exe` -- though sometimes ModTek will have to if certain game API's change. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
 
-# Features
-
-see [Features](doc/FEATURES.md)
-
-# Developing ModTek
-
-Information on how to build and release ModTek is documented in [DEVELOPING.md](DEVELOPING.md).
 
 ## License
 
