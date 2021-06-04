@@ -18,7 +18,7 @@ using static ModTek.Logging.Logger;
 
 namespace ModTek
 {
-    public static class ModTek
+    public static partial class ModTek
     {
         // ok fields
         internal static Configuration Config;

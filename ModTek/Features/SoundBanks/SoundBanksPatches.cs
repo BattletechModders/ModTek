@@ -10,51 +10,20 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.Logging;
-using ModTek.Public;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace ModTek.Features.SoundBanks
 {
-    public enum SoundBankType
-    {
-        Default,
-        Combat,
-        Voice
-    }
-
-    public class SoundBankDef
-    {
-        [JsonIgnore]
-        public bool loaded { get; set; }
-
-        public string name { get; set; }
-        public string filename { get; set; }
-        public List<uint> volumeRTPCIds { get; set; }
-        public float volumeShift { get; set; }
-        public SoundBankType type { get; set; }
-        public Dictionary<string, uint> events { get; set; }
-
-        public SoundBankDef()
-        {
-            events = new Dictionary<string, uint>();
-            type = SoundBankType.Default;
-            loaded = false;
-            volumeRTPCIds = new List<uint>();
-            volumeShift = 0f;
-        }
-    }
-
     internal static class CustomSoundHelper
     {
         private static FieldInfo f_guidIdMap = typeof(WwiseManager).GetField("guidIdMap", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        public static Dictionary<string, uint> guidIdMap(this WwiseManager manager)
+        private static Dictionary<string, uint> guidIdMap(this WwiseManager manager)
         {
             return (Dictionary<string, uint>) f_guidIdMap.GetValue(manager);
         }
 
-        public static void registerEvents(this SoundBankDef bank)
+        internal static void registerEvents(this SoundBankDef bank)
         {
             bank.loaded = true;
             foreach (var ev in bank.events)
@@ -71,7 +40,7 @@ namespace ModTek.Features.SoundBanks
             }
         }
 
-        public static void setVolume(this SoundBankDef bank)
+        internal static void setVolume(this SoundBankDef bank)
         {
             var volume = AudioEventManager.MasterVolume / 100f;
             switch (bank.type)
