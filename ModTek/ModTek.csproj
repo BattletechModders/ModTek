@@ -28,6 +28,12 @@
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
   </PropertyGroup>
+  <PropertyGroup>
+    <AssemblySearchPaths>
+      $(AssemblySearchPaths);
+      $(ReferencePath);
+    </AssemblySearchPaths>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <Private>False</Private>

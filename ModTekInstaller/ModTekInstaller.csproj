@@ -95,5 +95,8 @@
     <PackageReference Include="Mono.Options">
       <Version>6.6.0.161</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.2</Version>
+    </PackageReference>
   </ItemGroup>
 </Project>
