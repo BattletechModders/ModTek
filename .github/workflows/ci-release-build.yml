@@ -62,8 +62,7 @@ jobs:
         draft: false
         prerelease: false
         body: |
-          Works with ModLoader and ModTek
-          - ModTek.zip contains the ModTek tools, please unzip them to BattleTechGame/mods/ModTek and run the injector.
+          ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
     - name: Upload Release Asset
       id: upload-release-asset
       uses: actions/upload-release-asset@master
