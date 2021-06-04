@@ -59,8 +59,8 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: ${{ github.ref }}
-        draft: false
-        prerelease: false
+        draft: true
+        prerelease: true
         body: |
           ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
     - name: Upload Release Asset
