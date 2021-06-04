@@ -1,4 +1,5 @@
 // ReSharper disable All
+#pragma warning disable 436
 
 //
 // Options.cs

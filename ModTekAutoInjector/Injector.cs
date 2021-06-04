@@ -1,14 +1,14 @@
+#pragma warning disable 436
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-//using Ionic.Zip;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Options;
-using Newtonsoft.Json;
 using static System.Console;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 
@@ -244,7 +244,7 @@ namespace ModTekAutoInjector
 
                 PromptForKey(OptionsIn.RequireKeyPress);
                 return RC_NORMAL;
-               
+
             }
             catch (BackupFileNotFound e)
             {
