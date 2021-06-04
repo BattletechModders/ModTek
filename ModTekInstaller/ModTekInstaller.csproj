@@ -36,28 +36,53 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\Mods\ModTek\0Harmony.dll</HintPath>
+        <Private>False</Private>
     </Reference>
     <Reference Include="Ionic.Zip">
-      <HintPath>..\..\Mods\ModTek\Ionic.Zip.dll</HintPath>
+        <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\BattleTech_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+        <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Deployment">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Http">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+        <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+        <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Injector.cs" />
