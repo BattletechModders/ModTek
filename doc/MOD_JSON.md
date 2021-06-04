@@ -20,7 +20,7 @@ As described in the `mod.json` [article](The-mod.json-Format.md), we'll setup ou
     "Description": "Get rid of those delays!",
     "Author": "mpstark",
     "Website": "www.github.com/BattletechModders/ModTek",
-    "Contact": "fakeemail@fakeemail.com",
+    "Contact": "fakeemail@fakeemail.com"
 }
 ```
 

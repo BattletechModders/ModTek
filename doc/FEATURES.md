@@ -96,12 +96,14 @@ To use Advanced JSON Merging, add a manifest to your `mod.json` and add an "Adva
 Example Manifest with Advanced JSON Merging entry.
 
 ```JSON
-"Manifest": [
-    {
-        "Type": "AdvancedJSONMerge",
-        "Path": "advanced"
-    }
-]
+{
+    "Manifest": [
+        {
+            "Type": "AdvancedJSONMerge",
+            "Path": "advanced"
+        }
+    ]
+}
 ```
 
 Example Advanced JSON Merging instructions json `advanced/blackknight_changes.json`

@@ -93,7 +93,7 @@ These fields determine if your mod will be loaded based on the BattleTech versio
 {
     "Name": "MyAwesomeMod",
     "Enabled": true,
-    "BattleTechVersion": "1.4",
+    "BattleTechVersion": "1.4"
 }
 ```
 
@@ -102,7 +102,7 @@ These fields determine if your mod will be loaded based on the BattleTech versio
     "Name": "MyAwesomeMod",
     "Enabled": true,
     "BattleTechVersionMin": "1.2",
-    "BattleTechVersionMax": "1.3.2",
+    "BattleTechVersionMax": "1.3.2"
 }
 ```
 
@@ -158,7 +158,7 @@ Each entry is a JObject with the following fields:
 
     "Manifest": [
         { "Type": "MechDef", "Path": "MyMechDefs" },
-        { "Type": "MechDef", "Path": "MyMechDefMerges", "ShouldMergeJSON": true }
+        { "Type": "MechDef", "Path": "MyMechDefMerges", "ShouldMergeJSON": true },
         { "Type": "ChassisDef", "Path": "MyChassisDefs/chassisdef_specific_chassis.json" }
     ]
 }
