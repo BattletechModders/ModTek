@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,14 +8,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ModTek</RootNamespace>
     <AssemblyName>ModTek</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFramework>net472</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>preview</LangVersion>
     <Prefer32Bit>false</Prefer32Bit>
-    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
@@ -81,89 +79,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Features\AdvJSONMerge\AdvancedJSONMerge.cs" />
-    <Compile Include="Features\AdvJSONMerge\AdvJSONMergeFeature.cs" />
-    <Compile Include="Features\AdvJSONMerge\Instruction.cs" />
-    <Compile Include="Features\AdvJSONMerge\MergeAction.cs" />
-    <Compile Include="Features\CustomResources\CustomResourcesFeature.cs" />
-    <Compile Include="Features\CustomResources\Patches\BinkMediaPlayer.cs" />
-    <Compile Include="Features\CustomResources\Patches\LoadedAudioBank.cs" />
-    <Compile Include="Features\CustomStreamingAssets\CustomStreamingAssetsFeature.cs" />
-    <Compile Include="Features\CustomStreamingAssets\Patches\DebugSettings_Load_Patch.cs" />
-    <Compile Include="Features\CustomStreamingAssets\Patches\GameTipList_ctor_Patch.cs" />
-    <Compile Include="Features\CustomSVGAssets\SVGAssetFeature.cs" />
-    <Compile Include="Features\CustomTags\CustomTag.cs" />
-    <Compile Include="Features\CustomTags\CustomTagFeature.cs" />
-    <Compile Include="Features\CustomTags\CustomTagSet.cs" />
-    <Compile Include="Features\CustomTags\MetadataDatabaseExtensions.cs" />
-    <Compile Include="Features\Manifest\BTConstants.cs" />
-    <Compile Include="Features\Manifest\BTRL\BetterBTRL.cs" />
-    <Compile Include="Features\Manifest\BTRL\ModAddendumManifest.cs" />
-    <Compile Include="Features\Manifest\BTRL\ModAddendumPackager.cs" />
-    <Compile Include="Features\Manifest\BTRL\TypedManifest.cs" />
-    <Compile Include="Features\Manifest\CacheKey.cs" />
-    <Compile Include="Features\Manifest\FileVersionTuple.cs" />
-    <Compile Include="Features\Manifest\MDD\AddendumUtils.cs" />
-    <Compile Include="Features\Manifest\MDD\MDDBCache.cs" />
-    <Compile Include="Features\Manifest\MDD\MDDBExtensions.cs" />
-    <Compile Include="Features\Manifest\MDD\VersionManifestEntryExtensions.cs" />
-    <Compile Include="Features\Manifest\Merges\MergeCache.cs" />
-    <Compile Include="Features\Manifest\Merges\MergeCacheEntry.cs" />
-    <Compile Include="Features\Manifest\ModEntry.cs" />
-    <Compile Include="Features\Manifest\ModsManifest.cs" />
-    <Compile Include="Features\Manifest\Mods\DataAddendumEntry.cs" />
-    <Compile Include="Features\Manifest\Mods\ModDef.cs" />
-    <Compile Include="Features\Manifest\Mods\ModDefExExtensions.cs" />
-    <Compile Include="Features\Manifest\Mods\ModDefExLoading.cs" />
-    <Compile Include="Features\Manifest\Mods\ModDefsDatabase.cs" />
-    <Compile Include="Features\Manifest\Mods\ModState.cs" />
-    <Compile Include="Features\Manifest\Patches\AssetBundleManager_AssetBundleNameToFilepath_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\AssetBundleManager_AssetBundleNameToFileURL_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\BattleTechResourceLocator_Patches.cs" />
-    <Compile Include="Features\Manifest\Patches\ContentPackIndex_TryFinalizeDataLoad_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\DataManagerFileLoadRequest_Load_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\DataManagerFileLoadRequest_OnLoadedWithText_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\MetadataDatabase_MDD_DB_PATH_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\MetadataDatabase_MDD_TMP_PATH_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\SimGameConstants_FromJSON_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\SimGameState_RespondToDefsLoadComplete_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\SimGame_MDDExtensions_UpdateContract_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\SkirmishMechBayPanel_LanceConfiguratorDataLoaded_Patch.cs" />
-    <Compile Include="Features\Manifest\Patches\SkirmishSettings_Beta_OnLoadComplete_Patch.cs" />
-    <Compile Include="Features\SoundBanks\ProcessParameters.cs" />
-    <Compile Include="Features\SoundBanks\SoundBanksFeature.cs" />
-    <Compile Include="Features\SoundBanks\SoundBanksPatches.cs" />
-    <Compile Include="Features\CustomSVGAssets\Patches\SVGAssetHelper.cs" />
-    <Compile Include="Logging\Log.cs" />
-    <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Misc\Configuration.cs" />
-    <Compile Include="Misc\FilePaths.cs" />
-    <Compile Include="Misc\ModTekCacheStorage.cs" />
-    <Compile Include="Patches\ModLoaderPatches.cs" />
-    <Compile Include="Public\SoundBanksProcessHelper.cs" />
-    <Compile Include="Util\AssemblyUtil.cs" />
-    <Compile Include="Util\CSharpUtils.cs" />
-    <Compile Include="Util\DictionaryExtensions.cs" />
-    <Compile Include="Util\FileUtils.cs" />
-    <Compile Include="Util\HarmonyUtils.cs" />
-    <Compile Include="UI\LoadingCurtainErrorText.cs" />
-    <Compile Include="Util\HBSJsonUtils.cs" />
-    <Compile Include="Util\LoadOrder.cs" />
-    <Compile Include="ModTek.cs" />
-    <Compile Include="Injection.cs" />
-    <Compile Include="Patches\ActivateAfterInit.cs" />
-    <Compile Include="Patches\Logger.cs" />
-    <Compile Include="Patches\LoadingCurtain.cs" />
-    <Compile Include="Patches\MainMenu.cs" />
-    <Compile Include="Patches\VersionInfo.cs" />
-    <Compile Include="UI\ProgressPanel.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="GitVersion.MsBuild">
-      <Version>5.6.10</Version>
+    <PackageReference Include="GitVersion.MsBuild" Version="5.6.10">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
