@@ -1,11 +1,16 @@
 #!/bin/bash
 
+export PATH="/c/Program Files/7-Zip/:$PATH"
+
+SEVENZIP="7z"
+
 set -ex
 
-cd ..
+rm -fr dist/
 
-SEVENZIP="/c/Program Files/7-Zip/7z"
+dotnet build ModTek --configuration Release --no-incremental -p:OutputPath=../dist/ "$@"
+dotnet build ModTekInjector --configuration Release --no-incremental -p:OutputPath=../dist/ "$@"
 
-INCLUDES="-i!ModTek/*.dll -i!ModTek/modtekassetbundle -i!ModTek/ModTekInjector.exe -i!ModTek/README.md -i!ModTek/UNLICENSE"
+INCLUDES="-i!./dist/* -i!README.md -i!UNLICENSE"
 
-"$SEVENZIP" a -tzip -mx9 ModTek/ModTek.zip $EXCLUDES_ALL $INCLUDES
+"$SEVENZIP" a -tzip -mx9 dist/ModTek.zip $INCLUDES

@@ -7,10 +7,7 @@
 
 # ModTek
 
-modtekassetbundle
-/*.dll
-/*.exe
-/*.exe.config
+dist/
 
 # User-specific files
 *.suo

@@ -32,7 +32,7 @@ namespace ModTekInjector
         private const string INJECT_METHOD = "LoadModTek";
 
         private const string GAME_DLL_FILE_NAME = "Assembly-CSharp.dll";
-        private const string HARMONY_DLL_FILE_NAME = "0Harmony.dll";
+        // private const string HARMONY_DLL_FILE_NAME = "0Harmony.dll";
         private const string HOOK_TYPE = "BattleTech.Main";
         private const string HOOK_METHOD = "Start";
 
@@ -163,17 +163,17 @@ namespace ModTekInjector
                 var gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + BACKUP_FILE_EXT);
                 var modTekDLLPath = Path.Combine(Directory.GetCurrentDirectory(), MODTEK_DLL_FILE_NAME);
                 var modDirectory = Path.Combine(Directory.GetCurrentDirectory(), "..");
-                string HarmonySrcDLLPath = Path.Combine(Directory.GetCurrentDirectory(), HARMONY_DLL_FILE_NAME);
-                string HarmonyDstDLLPath = Path.Combine(managedDirectory, HARMONY_DLL_FILE_NAME);
-                if (File.Exists(HarmonySrcDLLPath) == false)
+                // string HarmonySrcDLLPath = Path.Combine(Directory.GetCurrentDirectory(), HARMONY_DLL_FILE_NAME);
+                // string HarmonyDstDLLPath = Path.Combine(managedDirectory, HARMONY_DLL_FILE_NAME);
+                if (File.Exists(modTekDLLPath) == false)
                 {
                     SayModTekAssemblyMissingError(modTekDLLPath);
                     return RC_MISSING_MODTEK_ASSEMBLY;
                 }
-                if (File.Exists(HarmonyDstDLLPath) == false)
-                {
-                    File.Copy(HarmonySrcDLLPath, HarmonyDstDLLPath);
-                }
+                // if (File.Exists(HarmonyDstDLLPath) == false)
+                // {
+                //     File.Copy(HarmonySrcDLLPath, HarmonyDstDLLPath);
+                // }
                 if (!File.Exists(gameDLLPath))
                 {
                     SayGameAssemblyMissingError(OptionsIn.ManagedDirectory);
