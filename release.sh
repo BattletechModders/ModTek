@@ -8,9 +8,10 @@ set -ex
 
 rm -fr dist/
 
-dotnet build ModTek --configuration Release --no-incremental -p:OutputPath=../dist/ "$@"
-dotnet build ModTekInjector --configuration Release --no-incremental -p:OutputPath=../dist/ "$@"
+dotnet build ModTek --configuration Release --no-incremental -p:OutputPath=../dist/ModTek "$@"
+dotnet build ModTekInjector --configuration Release --no-incremental -p:OutputPath=../dist/ModTek "$@"
 
-INCLUDES="-i!./dist/* -i!README.md -i!UNLICENSE"
+cp -a README.md dist/ModTek
+cp -a UNLICENSE dist/ModTek
 
-"$SEVENZIP" a -tzip -mx9 dist/ModTek.zip $INCLUDES
+"$SEVENZIP" a -tzip -mx9 dist/ModTek.zip -ir!./dist/ModTek
