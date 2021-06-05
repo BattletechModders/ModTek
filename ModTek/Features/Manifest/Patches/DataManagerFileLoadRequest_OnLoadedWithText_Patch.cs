@@ -40,6 +40,7 @@ namespace ModTek.Features.Manifest.Patches
             return GetOnLoadedWithTextMethods();
         }
 
+        [HarmonyPriority(Priority.High)]
         public static void Prefix(VersionManifestEntry ___manifestEntry, ref string text)
         {
             ModsManifest.MergeContentIfApplicable(___manifestEntry, ref text);
