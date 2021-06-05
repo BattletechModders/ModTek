@@ -12,9 +12,10 @@ namespace ModTek.Features.Manifest.Mods
     internal static class ModDefsDatabase
     {
         internal static List<string> ModLoadOrder;
-        internal static Dictionary<string, ModDefEx> ModDefs = new();
-        internal static Dictionary<string, ModDefEx> allModDefs = new();
+        private static readonly Dictionary<string, ModDefEx> ModDefs = new();
+        internal static readonly Dictionary<string, ModDefEx> allModDefs = new();
         internal static HashSet<string> FailedToLoadMods { get; } = new();
+        private static readonly HashSet<string> BlockList = new();
 
         // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
@@ -123,21 +124,15 @@ namespace ModTek.Features.Manifest.Mods
             {
                 var modDef = ModDefs[modName];
 
+                if (BlockList.Contains(modName))
+                {
+                    OnModLoadFailure(modName, $"Warning: Mod {modName} is blocked and won't be loaded!", canIgnoreFailure: false);
+                    continue;
+                }
+
                 if (modDef.DependsOn.Intersect(FailedToLoadMods).Any())
                 {
-                    ModDefs.Remove(modName);
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        Logger.Log($"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
-                        if (allModDefs.ContainsKey(modName))
-                        {
-                            allModDefs[modName].LoadFail = true;
-                            allModDefs[modName].FailReason = $"Warning: Skipping load of {modName} because one of its dependencies failed to load.";
-                        }
-
-                        FailedToLoadMods.Add(modName);
-                    }
-
+                    OnModLoadFailure(modName, $"Warning: Skipping load of {modName} because one of its dependencies failed to load.");
                     continue;
                 }
 
@@ -147,35 +142,12 @@ namespace ModTek.Features.Manifest.Mods
                 {
                     if (!ModDefExLoading.LoadMod(modDef, out var reason))
                     {
-                        ModDefs.Remove(modName);
-
-                        if (!modDef.IgnoreLoadFailure)
-                        {
-                            FailedToLoadMods.Add(modName);
-                            if (allModDefs.ContainsKey(modName))
-                            {
-                                allModDefs[modName].LoadFail = true;
-                                allModDefs[modName].FailReason = reason;
-                            }
-                        }
+                        OnModLoadFailure(modName, reason);
                     }
                 }
                 catch (Exception e)
                 {
-                    ModDefs.Remove(modName);
-
-                    if (modDef.IgnoreLoadFailure)
-                    {
-                        continue;
-                    }
-
-                    Logger.Log($"Error: Tried to load mod: {modDef.Name}, but something went wrong. Make sure all of your JSON is correct!", e);
-                    FailedToLoadMods.Add(modName);
-                    if (allModDefs.ContainsKey(modName))
-                    {
-                        allModDefs[modName].LoadFail = true;
-                        allModDefs[modName].FailReason = "Error: Tried to load mod: " + modDef.Name + ", but something went wrong. Make sure all of your JSON is correct!" + e;
-                    }
+                    OnModLoadFailure(modName, $"Error: Tried to load mod: {modName}, but something went wrong. Make sure all of your JSON is correct!", e);
                 }
             }
         }
@@ -228,17 +200,7 @@ namespace ModTek.Features.Manifest.Mods
 
                 if (!modDef.ShouldTryLoad(ModDefs.Keys.ToList(), out var reason, out _))
                 {
-                    Logger.Log($"Not loading {modDef.Name} because {reason}");
-                    if (!modDef.IgnoreLoadFailure)
-                    {
-                        FailedToLoadMods.Add(modDef.Name);
-                        if (allModDefs.ContainsKey(modDef.Name))
-                        {
-                            allModDefs[modDef.Name].LoadFail = true;
-                            modDef.FailReason = reason;
-                        }
-                    }
-
+                    OnModLoadFailure(modDef.Name, $"Not loading {modDef.Name} because {reason}");
                     continue;
                 }
 
@@ -252,21 +214,33 @@ namespace ModTek.Features.Manifest.Mods
             ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
             foreach (var modName in notLoaded)
             {
-                var modDef = ModDefs[modName];
-                ModDefs.Remove(modName);
-                if (modDef.IgnoreLoadFailure)
-                {
-                    continue;
-                }
+                OnModLoadFailure(modName, $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
+            }
+        }
 
-                if (allModDefs.ContainsKey(modName))
-                {
-                    allModDefs[modName].LoadFail = true;
-                    allModDefs[modName].FailReason = $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.";
-                }
+        private static void OnModLoadFailure(string modName, string reason, Exception e = null, bool canIgnoreFailure = true)
+        {
+            ModDefs.Remove(modName);
 
-                Logger.Log($"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
-                FailedToLoadMods.Add(modName);
+            if (allModDefs.TryGetValue(modName, out var modDef))
+            {
+                if (canIgnoreFailure && modDef.IgnoreLoadFailure)
+                {
+                    return;
+                }
+                modDef.LoadFail = true;
+                modDef.FailReason = reason;
+            }
+
+            FailedToLoadMods.Add(modName);
+
+            if (e != null)
+            {
+                Logger.Log(reason, e);
+            }
+            else
+            {
+                Logger.Log(reason);
             }
         }
 
