@@ -9,6 +9,7 @@
     <RootNamespace>ModTekUnitTests</RootNamespace>
     <AssemblyName>ModTekUnitTests</AssemblyName>
     <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <FileAlignment>512</FileAlignment>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>

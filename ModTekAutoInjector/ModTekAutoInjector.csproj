@@ -9,6 +9,7 @@
     <RootNamespace>ModTekAutoInjector</RootNamespace>
     <AssemblyName>ModTekAutoInjector</AssemblyName>
     <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <ErrorReport>prompt</ErrorReport>

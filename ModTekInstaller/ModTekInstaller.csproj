@@ -8,6 +8,7 @@
     <RootNamespace>ModTekInstaller</RootNamespace>
     <AssemblyName>ModTekInstaller</AssemblyName>
     <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
