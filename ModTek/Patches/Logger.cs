@@ -1,3 +1,4 @@
+using System.Linq;
 using BattleTech.UI;
 using Harmony;
 using ModTek.UI;
@@ -22,7 +23,7 @@ namespace ModTek.Patches
 
         public static void Postfix(string logString, string stackTrace, LogType type)
         {
-            if (!ModTek.HasLoaded || type != LogType.Error && type != LogType.Exception || ModTek.Config.UseErrorWhiteList && !ModTek.Config.ErrorWhitelist.Exists(logString.StartsWith))
+            if (!ModTek.HasLoaded || type != LogType.Error && type != LogType.Exception || ModTek.Config.UseErrorWhiteList && !ModTek.Config.ErrorWhitelist.Any(logString.StartsWith))
             {
                 return;
             }

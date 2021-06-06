@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using ModTek.Logging;
 using Newtonsoft.Json;
@@ -8,47 +7,77 @@ namespace ModTek.Misc
 {
     internal class Configuration
     {
-        public bool ShowLoadingScreenErrors = true;
-        public bool ShowErrorPopup = true;
-        public bool UseErrorWhiteList = true;
-        public List<string> ErrorWhitelist = new() { "Data.DataManager [ERROR] ManifestEntry is null" };
-        public bool EnableDebugLogging = true;
+        [JsonProperty]
+        internal bool ShowLoadingScreenErrors = true;
 
-        public void ToFile(string path)
+        [JsonProperty]
+        internal bool ShowErrorPopup = true;
+
+        [JsonProperty]
+        internal bool UseErrorWhiteList = true;
+
+        [JsonProperty]
+        internal string[] ErrorWhitelist = { "Data.DataManager [ERROR] ManifestEntry is null" };
+
+        [JsonProperty]
+        internal bool EnableDebugLogging = true;
+
+        [JsonProperty]
+        internal bool CleanupConfigOverride = true;
+
+        [JsonProperty]
+        internal bool UseFileCompression = true;
+
+        [JsonProperty]
+        internal string[] BlockedMods = {}; // "FYLS"
+
+        internal static Configuration FromDefaultFile()
         {
-            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
+            var path = FilePaths.ConfigPath;
+            var config = new Configuration();
+            config.WriteDefaultConfig();
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    var text = File.ReadAllText(path);
+                    JsonConvert.PopulateObject(
+                        text,
+                        config,
+                        new JsonSerializerSettings
+                        {
+                            ObjectCreationHandling = ObjectCreationHandling.Replace,
+                            DefaultValueHandling = DefaultValueHandling.Ignore,
+                            NullValueHandling = NullValueHandling.Ignore
+                        }
+                    );
+                    Logger.Log($"Loaded config from path: {path}");
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("Reading configuration failed, using defaults", e);
+                }
+            }
+            else
+            {
+                File.WriteAllText(path, "{}");
+            }
+
+            Logger.Log($"Configuration: {config}");
+            return config;
         }
 
-        public static Configuration FromFile(string path)
+        private void WriteDefaultConfig()
         {
-            if (!File.Exists(path))
-            {
-                Logger.Log("Building new config.");
-                return new Configuration();
-            }
-
-            try
-            {
-                var text = File.ReadAllText(path);
-                var config = JsonConvert.DeserializeObject<Configuration>(
-                    text,
-                    new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace }
-                );
-                Logger.Log($"Loaded config from path: {path}");
-                return config;
-            }
-            catch (Exception e)
-            {
-                Logger.Log("Reading configuration failed -- will rebuild it!", e);
-                return new Configuration();
-            }
+            File.WriteAllText(FilePaths.ConfigDefaultsPath, JsonConvert.SerializeObject(this,
+                Formatting.Indented
+            ));
         }
 
         public override string ToString()
         {
-            return $"ShowLoadingScreenErrors: {ShowLoadingScreenErrors}  ShowErrorPopup: {ShowErrorPopup}  " +
-                $"EnableDebugLogging: {EnableDebugLogging}  UseErrorWhiteList: {UseErrorWhiteList}  " +
-                $"ErrorWhiteList: {string.Join("','", ErrorWhitelist)}";
+            return JsonConvert.SerializeObject(this, Formatting.None);
         }
     }
 }

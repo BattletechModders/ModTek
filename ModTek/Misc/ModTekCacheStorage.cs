@@ -62,7 +62,7 @@ namespace ModTek.Misc
         // ReSharper disable once ConvertToConstant.Local
         // wanted to do compression mainly to force all normal cache data through here
         // we need zipfile support to allow zipped mods
-        private static readonly bool compress = true;
+        private static bool compress => ModTek.Config.UseFileCompression;
         private static string CompressedPath(string path)
         {
             return compress ? path + ".gz" : path;

@@ -127,7 +127,7 @@ namespace ModTek
             }
 
             // read config
-            Config = Configuration.FromFile(FilePaths.ConfigPath);
+            Config = Configuration.FromDefaultFile();
 
             ModDefExLoading.Setup();
 
@@ -172,8 +172,6 @@ namespace ModTek
 
             CustomStreamingAssetsFeature.LoadDebugSettings();
             ModDefsDatabase.FinishedLoadingMods();
-
-            Config?.ToFile(FilePaths.ConfigPath);
 
             Finish();
         }

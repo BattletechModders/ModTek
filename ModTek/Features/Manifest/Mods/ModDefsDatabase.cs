@@ -15,7 +15,6 @@ namespace ModTek.Features.Manifest.Mods
         private static readonly Dictionary<string, ModDefEx> ModDefs = new();
         internal static readonly Dictionary<string, ModDefEx> allModDefs = new();
         internal static HashSet<string> FailedToLoadMods { get; } = new();
-        private static readonly HashSet<string> BlockList = new();
 
         // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
@@ -124,7 +123,7 @@ namespace ModTek.Features.Manifest.Mods
             {
                 var modDef = ModDefs[modName];
 
-                if (BlockList.Contains(modName))
+                if (ModTek.Config.BlockedMods.Contains(modName))
                 {
                     OnModLoadFailure(modName, $"Warning: Mod {modName} is blocked and won't be loaded!", canIgnoreFailure: false);
                     continue;

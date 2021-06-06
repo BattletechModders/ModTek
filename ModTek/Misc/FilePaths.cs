@@ -20,6 +20,7 @@ namespace ModTek.Misc
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string CONFIG_FILE_NAME = "config.json";
+        private const string CONFIG_DEFAULTS_FILE_NAME = "config.defaults.json";
         private const string CHANGED_FLAG_NAME = ".changed";
 
         internal static string ModTekDirectory { get; private set; }
@@ -31,6 +32,7 @@ namespace ModTek.Misc
         internal static string LoadOrderPath { get; private set; }
         internal static string HarmonySummaryPath { get; private set; }
         internal static string ConfigPath { get; private set; }
+        internal static string ConfigDefaultsPath { get; private set; }
         internal static string ModTekSettingsPath { get; private set; }
         internal static string GameDirectory { get; private set; }
         internal static string ModsDirectory { get; private set; }
@@ -72,6 +74,7 @@ namespace ModTek.Misc
             LoadOrderPath = Path.Combine(TempModTekDirectory, LOAD_ORDER_FILE_NAME);
             ModMDDBPath = Path.Combine(MDDBCacheDirectory, MDD_FILE_NAME);
             ConfigPath = Path.Combine(ModTekDirectory, CONFIG_FILE_NAME);
+            ConfigDefaultsPath = Path.Combine(ModTekDirectory, CONFIG_DEFAULTS_FILE_NAME);
             ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
 
         }
