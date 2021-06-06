@@ -41,17 +41,17 @@ namespace ModTek.Features.Logging.Patches
                     exception,
                     location
                 );
-                if (FYLSFeature.ModSettings.preserveFullLog)
+                if (LoggingFeature.Settings.preserveFullLog)
                 {
                     BTLogger.Full(logString);
                 }
 
-                if (!FYLSFeature.LogPrefixesMatcher.IsMatch(logString))
+                if (!LoggingFeature.LogPrefixesMatcher.IsMatch(logString))
                 {
                     BTLogger.Clean(logString);
                 }
 
-                return !FYLSFeature.ModSettings.skipOriginalLoggers;
+                return !LoggingFeature.Settings.skipOriginalLoggers;
             }
             catch (Exception e)
             {

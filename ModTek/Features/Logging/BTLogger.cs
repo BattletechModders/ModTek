@@ -20,7 +20,7 @@ namespace ModTek.Features.Logging
             CleanWriter.WriteLine($"{DateTime.Now} Cleaned Log");
             CleanWriter.WriteLine(new string('-', 80));
             CleanWriter.WriteLine(VersionInfo.GetFormattedInfo());
-            if (FYLSFeature.ModSettings.preserveFullLog)
+            if (LoggingFeature.Settings.preserveFullLog)
             {
                 FullWriter = new StreamWriter(FullLogFilePath, false);
                 FullWriter.AutoFlush = true;

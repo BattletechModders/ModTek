@@ -50,7 +50,7 @@ namespace ModTek
             }
 
             FilePaths.SetupPaths();
-            LogInit();
+            LoggingFeature.InitMTLogger();
             try
             {
                 var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
@@ -108,10 +108,9 @@ namespace ModTek
 
             // read config
             Config = Configuration.FromDefaultFile();
-            FYLSFeature.Init();
+            LoggingFeature.InitBTLogger();
+            LoggingFeature.InitRTLogger();
 
-            RLog.InitLog(FilePaths.TempModTekDirectory, true);
-            RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
             if (File.Exists(FilePaths.ChangedFlagPath))
             {
                 File.Delete(FilePaths.ChangedFlagPath);
