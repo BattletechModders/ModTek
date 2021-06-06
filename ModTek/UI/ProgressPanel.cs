@@ -80,7 +80,7 @@ namespace ModTek.UI
                             SliderText.text = "ModTek Died!";
                             LoadingText.text = $"See \"{FileUtils.GetRelativePath(FilePaths.GameDirectory, FilePaths.LogPath)}\"";
 
-                            ModTek.Finish();
+                            ModTek.FinishAndCleanup();
 
                             yield break;
                         }

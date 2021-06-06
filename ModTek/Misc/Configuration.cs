@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using ModTek.Logging;
+using ModTek.Features.FYLS;
 using Newtonsoft.Json;
+using static ModTek.Logging.Logger;
 
 namespace ModTek.Misc
 {
@@ -23,13 +24,13 @@ namespace ModTek.Misc
         internal bool EnableDebugLogging = true;
 
         [JsonProperty]
-        internal bool CleanupConfigOverride = true;
-
-        [JsonProperty]
         internal bool UseFileCompression = true;
 
         [JsonProperty]
-        internal string[] BlockedMods = {}; // "FYLS"
+        internal string[] BlockedMods = { "FYLS" };
+
+        [JsonProperty]
+        internal FYLSSettings FYLSSettings = new();
 
         internal static Configuration FromDefaultFile()
         {
@@ -52,11 +53,11 @@ namespace ModTek.Misc
                             NullValueHandling = NullValueHandling.Ignore
                         }
                     );
-                    Logger.Log($"Loaded config from path: {path}");
+                    Log($"Loaded config from path: {path}");
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("Reading configuration failed, using defaults", e);
+                    Log("Reading configuration failed, using defaults", e);
                 }
             }
             else
@@ -64,7 +65,7 @@ namespace ModTek.Misc
                 File.WriteAllText(path, "{}");
             }
 
-            Logger.Log($"Configuration: {config}");
+            Log($"Configuration: {config}");
             return config;
         }
 

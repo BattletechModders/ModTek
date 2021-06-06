@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using Harmony;
 using HBS.Util;
@@ -25,19 +24,8 @@ namespace ModTek.Misc
                 CleanModTekTempDir(dir);
             }
 
-            var files = baseDir.GetFiles();
-            foreach (var file in files)
+            foreach (var file in baseDir.EnumerateFiles())
             {
-                if (file.Name == "ModTek.log")
-                {
-                    continue;
-                }
-
-                if (file.Name == "ModTek_runtime_log.txt")
-                {
-                    continue;
-                }
-
                 file.IsReadOnly = false;
                 RLog.M.TWL(0, "delete file " + file.FullName);
                 try
@@ -46,6 +34,7 @@ namespace ModTek.Misc
                 }
                 catch (Exception)
                 {
+                    // ignored
                 }
             }
 
@@ -56,6 +45,7 @@ namespace ModTek.Misc
             }
             catch (Exception)
             {
+                // ignored
             }
         }
 

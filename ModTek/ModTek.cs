@@ -7,6 +7,7 @@ using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets.Patches;
+using ModTek.Features.FYLS;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
@@ -34,10 +35,7 @@ namespace ModTek
         internal const string MODTEK_DEF_NAME = "ModTek";
         internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
-        // internal temp structures
         private static Stopwatch stopwatch = new();
-
-        // the end result of loading mods, these are used to push into game data through patches
 
         // INITIALIZATION (called by injected code)
         public static void Init()
@@ -69,20 +67,6 @@ namespace ModTek
         private static void Start(string version) {
             stopwatch.Start();
 
-            // creates the directories above it as well
-            Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
-            Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
-
-            RLog.InitLog(FilePaths.TempModTekDirectory, true);
-            RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
-            if (File.Exists(FilePaths.ChangedFlagPath))
-            {
-                File.Delete(FilePaths.ChangedFlagPath);
-                ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
-                Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
-                Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
-            }
-
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {
                 try
@@ -93,7 +77,7 @@ namespace ModTek
                 catch (Exception e)
                 {
                     Log($"Error: Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
-                    Finish();
+                    FinishAndCleanup();
                     return;
                 }
             }
@@ -117,19 +101,25 @@ namespace ModTek
             }
 
             // load progress bar
-            if (Enabled)
+            if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{version}"))
             {
-                if (!ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{version}"))
-                {
-                    Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
-                    Finish();
-                }
+                Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
+                FinishAndCleanup();
             }
 
             // read config
             Config = Configuration.FromDefaultFile();
+            FYLSFeature.Init();
 
-            ModDefExLoading.Setup();
+            RLog.InitLog(FilePaths.TempModTekDirectory, true);
+            RLog.M.TWL(0, "Init ModTek version " + Assembly.GetExecutingAssembly().GetName().Version);
+            if (File.Exists(FilePaths.ChangedFlagPath))
+            {
+                File.Delete(FilePaths.ChangedFlagPath);
+                ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
+                Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
+                Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
+            }
 
             try
             {
@@ -147,10 +137,11 @@ namespace ModTek
             if (Enabled == false)
             {
                 Log("ModTek not enabled");
+                FinishAndCleanup();
                 return;
             }
 
-            // UnityGameInstance.BattleTechGame.DataManager.HeatSinkDefs.TryGet("Gear_HeatSink_Generic_Standard")
+            ModDefExLoading.Setup();
 
             CustomResourcesFeature.Setup();
             LoadMods();
@@ -173,10 +164,10 @@ namespace ModTek
             CustomStreamingAssetsFeature.LoadDebugSettings();
             ModDefsDatabase.FinishedLoadingMods();
 
-            Finish();
+            FinishAndCleanup();
         }
 
-        internal static void Finish()
+        internal static void FinishAndCleanup()
         {
             HasLoaded = true;
 
