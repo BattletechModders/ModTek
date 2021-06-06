@@ -6,7 +6,7 @@ using BattleTech;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.Mods;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 using CustomResourcesDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
 namespace ModTek.Features.CustomResources

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using BattleTech;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.BTRL
 {

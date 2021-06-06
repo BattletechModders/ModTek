@@ -1,7 +1,7 @@
 ﻿using Harmony;
 using UnityEngine;
 
-namespace ModTek.Features.FYLS.Patches
+namespace ModTek.Features.Logging.Patches
 {
     [HarmonyPatch(typeof(Debug), "logger", MethodType.Getter)]
     internal static class DebugLoggerAttacher

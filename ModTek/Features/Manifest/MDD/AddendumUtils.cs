@@ -7,7 +7,7 @@ using BattleTech;
 using BattleTech.Data;
 using HBS.Util;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Logging;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.MDD
 {
@@ -20,14 +20,14 @@ namespace ModTek.Features.Manifest.MDD
                 var type = typeof(FactionEnumeration).Assembly.GetType(dataAddendumEntry.Name);
                 if (type == null)
                 {
-                    Logger.Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.Name);
+                    Log("\tError: Could not find DataAddendum class named " + dataAddendumEntry.Name);
                     return false;
                 }
 
                 var property = type.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty);
                 if (property == null)
                 {
-                    Logger.Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Could not find static method [Instance] on class named [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
@@ -35,25 +35,25 @@ namespace ModTek.Features.Manifest.MDD
                 var pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
                 if (pCachedEnumerationValueList == null)
                 {
-                    Logger.Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Class does not implement property CachedEnumerationValueList property on class named [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
                 var f_enumerationValueList = type.BaseType.GetField("enumerationValueList", BindingFlags.Instance | BindingFlags.NonPublic);
                 if (f_enumerationValueList == null)
                 {
-                    Logger.Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Class does not implement field enumerationValueList on class named [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
                 var enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
                 if (enumList == null)
                 {
-                    Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
-                Logger.Log("\tCurrent values [" + dataAddendumEntry.Name + "]");
+                Log("\tCurrent values [" + dataAddendumEntry.Name + "]");
                 var maxIndex = 0;
                 var names = new Dictionary<string, int>();
                 var ids = new Dictionary<int, string>();
@@ -66,7 +66,7 @@ namespace ModTek.Features.Manifest.MDD
                     }
 
                     ;
-                    Logger.Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                    Log("\t\t[" + val.Name + ":" + val.ID + "]");
                     if (maxIndex < val.ID)
                     {
                         maxIndex = val.ID;
@@ -95,14 +95,14 @@ namespace ModTek.Features.Manifest.MDD
                 var pRefreshStaticData = type.GetMethod("RefreshStaticData");
                 if (pRefreshStaticData == null)
                 {
-                    Logger.Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Class does not implement method pRefreshStaticData property on class named [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
                 var jdataAddEnum = bdataAddendum as IJsonTemplated;
                 if (jdataAddEnum == null)
                 {
-                    Logger.Log("\tError: not IJsonTemplated [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: not IJsonTemplated [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
@@ -111,12 +111,12 @@ namespace ModTek.Features.Manifest.MDD
                 enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
                 if (enumList == null)
                 {
-                    Logger.Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
+                    Log("\tError: Can't get CachedEnumerationValueList from [" + dataAddendumEntry.Name + "]");
                     return false;
                 }
 
                 var needFlush = false;
-                Logger.Log("\tLoading values [" + dataAddendumEntry.Name + "] from " + dataAddendumEntry.Path);
+                Log("\tLoading values [" + dataAddendumEntry.Name + "] from " + dataAddendumEntry.Path);
                 for (var index = 0; index < enumList.Count; ++index)
                 {
                     var val = enumList[index] as EnumValue;
@@ -142,7 +142,7 @@ namespace ModTek.Features.Manifest.MDD
                             }
                             else
                             {
-                                Logger.Log("\tError value with same id:" + val.ID + " but different name " + ids[val.ID] + " already exist. Value: " + val.Name + " will not be added");
+                                Log("\tError value with same id:" + val.ID + " but different name " + ids[val.ID] + " already exist. Value: " + val.Name + " will not be added");
                                 continue;
                             }
                         }
@@ -160,43 +160,43 @@ namespace ModTek.Features.Manifest.MDD
                     if (val.GetType() == typeof(FactionValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateFactionValue(val as FactionValue);
-                        Logger.Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
+                        Log("\t\tAddind FactionValue to db [" + val.Name + ":" + val.ID + "]");
                         needFlush = true;
                     }
                     else if (val.GetType() == typeof(WeaponCategoryValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(val as WeaponCategoryValue);
-                        Logger.Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                        Log("\t\tAddind WeaponCategoryValue to db [" + val.Name + ":" + val.ID + "]");
                         needFlush = true;
                     }
                     else if (val.GetType() == typeof(AmmoCategoryValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateAmmoCategoryValue(val as AmmoCategoryValue);
-                        Logger.Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                        Log("\t\tAddind AmmoCategoryValue to db [" + val.Name + ":" + val.ID + "]");
                         needFlush = true;
                     }
                     else if (val.GetType() == typeof(ContractTypeValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateContractTypeValue(val as ContractTypeValue);
-                        Logger.Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
+                        Log("\t\tAddind ContractTypeValue to db [" + val.Name + ":" + val.ID + "]");
                         needFlush = true;
                     }
                     else if (val.GetType() == typeof(ShipUpgradeCategoryValue))
                     {
                         MetadataDatabase.Instance.InsertOrUpdateEnumValue(val, "ShipUpgradeCategory", true);
-                        Logger.Log("\t\tAddind ShipUpgradeCategoryValue to db [" + val.Name + ":" + val.ID + "]");
+                        Log("\t\tAddind ShipUpgradeCategoryValue to db [" + val.Name + ":" + val.ID + "]");
                         needFlush = true;
                     }
                     else
                     {
-                        Logger.Log("\t\tUnknown enum type");
+                        Log("\t\tUnknown enum type");
                         break;
                     }
                 }
 
                 if (needFlush)
                 {
-                    Logger.Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.Name + "] path[" + dataAddendumEntry.Path + "]");
+                    Log("\tLog: DataAddendum successfully loaded name[" + dataAddendumEntry.Name + "] path[" + dataAddendumEntry.Path + "]");
                     pRefreshStaticData.Invoke(
                         bdataAddendum,
                         new object[]
@@ -205,7 +205,7 @@ namespace ModTek.Features.Manifest.MDD
                     );
                     f_enumerationValueList.SetValue(bdataAddendum, null);
                     enumList = pCachedEnumerationValueList.GetValue(bdataAddendum, null) as IList;
-                    Logger.Log("\tUpdated values [" + dataAddendumEntry.Name + "]");
+                    Log("\tUpdated values [" + dataAddendumEntry.Name + "]");
                     for (var index = 0; index < enumList.Count; ++index)
                     {
                         var val = enumList[index] as EnumValue;
@@ -214,7 +214,7 @@ namespace ModTek.Features.Manifest.MDD
                             continue;
                         }
 
-                        Logger.Log("\t\t[" + val.Name + ":" + val.ID + "]");
+                        Log("\t\t[" + val.Name + ":" + val.ID + "]");
                     }
                 }
 
@@ -222,8 +222,8 @@ namespace ModTek.Features.Manifest.MDD
             }
             catch (Exception ex)
             {
-                Logger.Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.Name + "]");
-                Logger.Log(ex.ToString());
+                Log("\tException: Exception caught while processing DataAddendum [" + dataAddendumEntry.Name + "]");
+                Log(ex.ToString());
                 return false;
             }
         }

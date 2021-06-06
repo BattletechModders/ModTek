@@ -8,7 +8,7 @@ using BattleTech.Data;
 using Harmony;
 using HBS.Data;
 using UnityEngine;
-using Logger = ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -119,7 +119,7 @@ namespace ModTek.Features.Manifest.Patches
         {
             if (actionTarget is not DataManager.FileLoadRequest request)
             {
-                Logger.Log("Internal Error: request can't be not FileLoadRequest");
+                Log("Internal Error: request can't be not FileLoadRequest");
                 return false;
             }
 

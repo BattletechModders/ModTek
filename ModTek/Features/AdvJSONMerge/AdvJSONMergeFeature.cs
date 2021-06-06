@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.AdvJSONMerge
 {

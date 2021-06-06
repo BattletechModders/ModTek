@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Reflection;
 using Harmony;
 using HBS.Util;
-using ModTek.Logging;
+using ModTek.Features.Logging;
 using Newtonsoft.Json;
 
 namespace ModTek.Misc

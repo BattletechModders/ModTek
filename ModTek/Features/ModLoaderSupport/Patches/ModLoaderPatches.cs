@@ -8,12 +8,12 @@ using BattleTech.ModSupport;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Logging;
 using ModTek.Misc;
 using UnityEngine;
 
-namespace ModTek.Patches
+namespace ModTek.Features.ModLoaderSupport.Patches
 {
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("AreModsEnabled")]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using BattleTech;
 using Harmony;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

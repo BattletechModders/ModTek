@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace ModTek.Features.FYLS
+namespace ModTek.Features.Logging
 {
     internal static class FYLSFeature
     {
-        internal static FYLSSettings ModSettings => ModTek.Config.FYLSSettings;
+        internal static LoggingSettings ModSettings => ModTek.Config.Logging;
         internal static Regex LogPrefixesMatcher;
 
         public static void Init()

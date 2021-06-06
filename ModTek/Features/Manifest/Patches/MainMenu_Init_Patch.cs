@@ -8,7 +8,7 @@ using ModTek.Util;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Patches
+namespace ModTek.Features.Manifest.Patches
 {
     /// <summary>
     /// Adds popup message with all of the mods that failed to load if any.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using HBS.Logging;
 using UnityEngine;
 
-namespace ModTek.Features.FYLS
+namespace ModTek.Features.Logging
 {
     internal class LoggerProxy : ILogHandler
     {

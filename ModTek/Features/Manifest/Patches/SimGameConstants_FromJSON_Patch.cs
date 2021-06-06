@@ -1,6 +1,6 @@
 using BattleTech;
 using Harmony;
-using ModTek.Logging;
+using ModTek.Features.Logging;
 
 namespace ModTek.Features.Manifest.Patches
 {

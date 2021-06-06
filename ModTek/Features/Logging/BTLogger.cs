@@ -2,8 +2,9 @@ using System;
 using System.IO;
 using ModTek.Misc;
 
-namespace ModTek.Features.FYLS
+namespace ModTek.Features.Logging
 {
+    // TODO integrate all Loggers: BTLogger, MTLogger and RTLog!
     internal static class BTLogger
     {
         private static string CleanLogFilePath => Path.Combine(FilePaths.TempModTekDirectory, "battletech_log.txt");

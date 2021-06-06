@@ -4,7 +4,7 @@ using System.Linq;
 using BattleTech;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomStreamingAssets
 {

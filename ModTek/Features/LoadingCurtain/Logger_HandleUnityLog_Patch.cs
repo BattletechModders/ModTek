@@ -8,12 +8,12 @@ using Logger = HBS.Logging.Logger;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Patches
+namespace ModTek.Features.LoadingCurtain
 {
     /// <summary>
     /// Patch the logger to spit out errors to the loading screen curtain
     /// </summary>
-    [HarmonyPatch(typeof(Logger), "HandleUnityLog")]
+    [HarmonyPatch(typeof(Logger), "HandleUnityLog")] // TODO integrate with logging feature?!
     internal static class Logger_HandleUnityLog_Patch
     {
         public static bool Prepare()
@@ -28,11 +28,11 @@ namespace ModTek.Patches
                 return;
             }
 
-            if (LoadingCurtain.IsVisible && ModTek.Config.ShowLoadingScreenErrors)
+            if (BattleTech.UI.LoadingCurtain.IsVisible && ModTek.Config.ShowLoadingScreenErrors)
             {
                 LoadingCurtainErrorText.AddMessage(logString);
             }
-            else if (!LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
+            else if (!BattleTech.UI.LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
             {
                 GenericPopupBuilder.Create("ModTek Detected Error", logString)
                     .AddButton("Continue")

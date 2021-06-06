@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using ModTek.Features.Manifest.Mods;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Util
 {

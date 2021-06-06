@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
 
-namespace ModTek.Features.FYLS
+namespace ModTek.Features.Logging
 {
-    internal class FYLSSettings
+    internal class LoggingSettings
     {
         [JsonProperty]
         public string[] PrefixesToIgnore = {};

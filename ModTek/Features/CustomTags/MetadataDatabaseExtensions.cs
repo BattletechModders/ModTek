@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using BattleTech.Data;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomTags
 {

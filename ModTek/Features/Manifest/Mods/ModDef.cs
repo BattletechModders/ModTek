@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ModTek.Logging;
+using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;

@@ -15,7 +15,7 @@ using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest
 {

@@ -5,7 +5,7 @@ using BattleTech.Data;
 using HBS.Collections;
 using ModTek.Features.Manifest;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomTags
 {

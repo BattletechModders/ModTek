@@ -6,7 +6,7 @@ using HBS;
 using ModTek.Features.Manifest;
 using ModTek.UI;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.SoundBanks
 {

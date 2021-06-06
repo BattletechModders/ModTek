@@ -9,7 +9,7 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using ModTek.Logging;
+using ModTek.Features.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.SoundBanks

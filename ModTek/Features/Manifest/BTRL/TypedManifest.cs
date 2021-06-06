@@ -7,7 +7,7 @@ using BattleTech.Data;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Misc;
 using ModTek.Util;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 using TypedDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
 namespace ModTek.Features.Manifest.BTRL

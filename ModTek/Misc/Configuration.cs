@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using ModTek.Features.FYLS;
+using ModTek.Features.Logging;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Misc
 {
@@ -30,7 +30,7 @@ namespace ModTek.Misc
         internal string[] BlockedMods = { "FYLS" };
 
         [JsonProperty]
-        internal FYLSSettings FYLSSettings = new();
+        internal LoggingSettings Logging = new();
 
         internal static Configuration FromDefaultFile()
         {

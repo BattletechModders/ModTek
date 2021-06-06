@@ -8,7 +8,7 @@ using BattleTech.Data;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.Util;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
 using CacheKeyValue = System.Collections.Generic.KeyValuePair<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
 

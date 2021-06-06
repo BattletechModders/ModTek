@@ -1,6 +1,6 @@
 ﻿using Harmony;
 
-namespace ModTek.Features.FYLS.Patches
+namespace ModTek.Features.Logging.Patches
 {
     [HarmonyPatch(typeof(HBS.Logging.Logger), "HandleUnityLog", MethodType.Normal)]
     internal static class LogAttacher

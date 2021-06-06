@@ -7,15 +7,14 @@ using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets.Patches;
-using ModTek.Features.FYLS;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
-using ModTek.Logging;
 using ModTek.Misc;
 using ModTek.UI;
 using Newtonsoft.Json;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek
 {

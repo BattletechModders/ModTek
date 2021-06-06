@@ -2,9 +2,9 @@
 using System.Reflection;
 using Harmony;
 using HBS.Logging;
-using static ModTek.Logging.Logger;
+using static ModTek.Features.Logging.MTLogger;
 
-namespace ModTek.Features.FYLS.Patches
+namespace ModTek.Features.Logging.Patches
 {
     [HarmonyPatch]
     internal static class LogAtLevelAttacher

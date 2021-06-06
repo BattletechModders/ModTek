@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Logging;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Mods
 {
@@ -58,7 +58,7 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             yield return new ProgressReport(1, "Gather enable influence tree", string.Empty, true);
-            Logger.Log("FAIL LIST:");
+            Log("FAIL LIST:");
             foreach (var mod in allModDefs.Values)
             {
                 if (mod.Enabled == false)
@@ -72,13 +72,13 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                Logger.Log($"\t{mod.Name} fail {mod.FailReason}");
+                Log($"\t{mod.Name} fail {mod.FailReason}");
                 foreach (var dmod in mod.AffectingOnline)
                 {
                     var state = dmod.Key.Enabled && dmod.Key.LoadFail == false;
                     if (state != dmod.Value)
                     {
-                        Logger.Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                        Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
                     }
                 }
 
@@ -86,7 +86,7 @@ namespace ModTek.Features.Manifest.Mods
                 {
                     if (allModDefs.ContainsKey(deps) == false)
                     {
-                        Logger.Log($"\t\tdepends on {deps} but abcent");
+                        Log($"\t\tdepends on {deps} but abcent");
                     }
                 }
             }
@@ -109,7 +109,7 @@ namespace ModTek.Features.Manifest.Mods
 
             if (modJsons.Length == 0)
             {
-                Logger.Log("No ModTek-compatible mods found.");
+                Log("No ModTek-compatible mods found.");
                 yield break;
             }
 
@@ -118,7 +118,7 @@ namespace ModTek.Features.Manifest.Mods
 
             // try loading each mod
             var numModsLoaded = 0;
-            Logger.Log("");
+            Log("");
             foreach (var modName in ModLoadOrder)
             {
                 var modDef = ModDefs[modName];
@@ -170,7 +170,7 @@ namespace ModTek.Features.Manifest.Mods
                     var modDir = Path.GetDirectoryName(modDefPath);
                     var modDirRelative = FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDir);
                     FailedToLoadMods.Add(modDirRelative);
-                    Logger.Log($"Error: Caught exception while parsing {modDefPath}", e);
+                    Log($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }
 
@@ -235,11 +235,11 @@ namespace ModTek.Features.Manifest.Mods
 
             if (e != null)
             {
-                Logger.Log(reason, e);
+                Log(reason, e);
             }
             else
             {
-                Logger.Log(reason);
+                Log(reason);
             }
         }
 
@@ -251,7 +251,7 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             {
-                Logger.Log("\nCalling FinishedLoading:");
+                Log("\nCalling FinishedLoading:");
                 foreach (var modDef in ModLoadOrder
                     .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
                     .Select(assemblyMod => ModDefs[assemblyMod])

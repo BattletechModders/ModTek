@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ModTek.Logging;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Mods
 {
@@ -8,7 +8,7 @@ namespace ModTek.Features.Manifest.Mods
         public static void GatherAffectingOfflineRec(this ModDefEx mod)
         {
             var deps = new Dictionary<ModDefEx, bool>();
-            Logger.Log("Gathering " + mod.Name + "->Disable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
+            Log("Gathering " + mod.Name + "->Disable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
             GatherAffectingOfflineRec(mod, ref deps, 1);
             mod.AffectingOffline = deps;
         }
@@ -20,7 +20,7 @@ namespace ModTek.Features.Manifest.Mods
                 if (deps.ContainsKey(dmod) == false)
                 {
                     var i = new string(' ', level);
-                    Logger.Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
                     deps.Add(dmod, false);
                     GatherAffectingOfflineRec(dmod, ref deps, level + 1);
                 }
@@ -34,14 +34,14 @@ namespace ModTek.Features.Manifest.Mods
                 var i = new string(' ', level);
                 if (ModDefsDatabase.allModDefs.ContainsKey(dep) == false)
                 {
-                    Logger.Log(i + dep + " state:Absent!");
+                    Log(i + dep + " state:Absent!");
                     continue;
                 }
 
                 var dmod = ModDefsDatabase.allModDefs[dep];
                 if (deps.ContainsKey(dmod) == false)
                 {
-                    Logger.Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                    Log(i + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
                     deps.Add(dmod, true);
                     GatherAffectingOnlineRec(dmod, ref deps, level + 1);
                 }
@@ -54,12 +54,12 @@ namespace ModTek.Features.Manifest.Mods
             {
                 if (ModDefsDatabase.allModDefs.ContainsKey(dep) == false)
                 {
-                    Logger.Log("  due to " + mod.Name + " with " + dep + " state:Abcent");
+                    Log("  due to " + mod.Name + " with " + dep + " state:Abcent");
                     continue;
                 }
 
                 var dmod = ModDefsDatabase.allModDefs[dep];
-                Logger.Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
+                Log("  due to " + mod.Name + " with " + dmod.Name + " state:" + dmod.Enabled + " fail:" + (dmod.LoadFail ? dmod.FailReason : "no"));
                 if (deps.ContainsKey(dmod) == false)
                 {
                     deps.Add(dmod, false);
@@ -70,11 +70,11 @@ namespace ModTek.Features.Manifest.Mods
         public static void GatherAffectingOnline(this ModDefEx mod)
         {
             var deps = new Dictionary<ModDefEx, bool>();
-            Logger.Log("Gathering " + mod.Name + "->Enable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
-            Logger.Log(" I'm depends on:");
+            Log("Gathering " + mod.Name + "->Enable influence. My state:" + mod.Enabled + " fail:" + (mod.LoadFail ? mod.FailReason : "no"));
+            Log(" I'm depends on:");
             GatherAffectingOnlineRec(mod, ref deps, 2);
             var conflicts = deps.Keys.ToHashSet();
-            Logger.Log(" Conflicts:");
+            Log(" Conflicts:");
             foreach (var cmod in conflicts)
             {
                 GatherConflicts(cmod, ref deps);

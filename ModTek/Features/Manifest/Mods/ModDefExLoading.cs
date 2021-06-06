@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Manifest.BTRL;
-using ModTek.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Mods
 {
@@ -18,7 +15,7 @@ namespace ModTek.Features.Manifest.Mods
 
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
-            Logger.Log($"{modDef.Name} {modDef.Version}");
+            Log($"{modDef.Name} {modDef.Version}");
 
             CustomResourcesFeature.ProcessModDef(modDef);
 
@@ -46,13 +43,13 @@ namespace ModTek.Features.Manifest.Mods
             {
                 if (string.IsNullOrEmpty(entry.Path))
                 {
-                    Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
+                    Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
                     return false;
                 }
 
                 if (string.IsNullOrEmpty(entry.Type))
                 {
-                    Logger.Log($"\tError: {modDef.Name} has a manifest entry that is missing its type! Aborting load.");
+                    Log($"\tError: {modDef.Name} has a manifest entry that is missing its type! Aborting load.");
                     return false;
                 }
             }
@@ -71,7 +68,7 @@ namespace ModTek.Features.Manifest.Mods
 
             if (!File.Exists(dllPath))
             {
-                Logger.Log($"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
+                Log($"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
                 return false;
             }
 
@@ -92,14 +89,14 @@ namespace ModTek.Features.Manifest.Mods
             var assembly = AssemblyUtil.LoadDLL(dllPath);
             if (assembly == null)
             {
-                Logger.Log($"\tError: Failed to load mod assembly at path {dllPath}.");
+                Log($"\tError: Failed to load mod assembly at path {dllPath}.");
                 return false;
             }
 
             var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
             if (methods == null || methods.Length == 0)
             {
-                Logger.Log($"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                Log($"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
                 return false;
             }
 
@@ -142,11 +139,11 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    Logger.Log($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    Log($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 
-                Logger.Log($"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                Log($"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                 return false;
             }
 
@@ -181,7 +178,7 @@ namespace ModTek.Features.Manifest.Mods
             {
                 if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                 {
-                    Logger.Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                    Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                 }
             }
         }

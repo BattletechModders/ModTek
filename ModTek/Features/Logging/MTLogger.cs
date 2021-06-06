@@ -3,9 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using ModTek.Misc;
 
-namespace ModTek.Logging
+namespace ModTek.Features.Logging
 {
-    internal static class Logger
+    // TODO integrate all Loggers: BTLogger, MTLogger and RTLog!
+    internal static class MTLogger
     {
         private static readonly object lockObject = new();
 
