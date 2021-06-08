@@ -176,9 +176,16 @@ namespace ModTek.Features.Manifest.Mods
 
             foreach (var method in methods)
             {
-                if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                try
                 {
-                    Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                    if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                    {
+                        Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
                 }
             }
         }
