@@ -56,7 +56,7 @@ jobs:
             with:
                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
                 automatic_release_tag: "latest"
-                title: "Latest Development build (unstable)"
+                title: "Latest (unstable)"
                 prerelease: true
                 files: ModTek.zip
 
