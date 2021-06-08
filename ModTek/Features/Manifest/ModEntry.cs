@@ -70,7 +70,20 @@ namespace ModTek.Features.Manifest
 
         public override string ToString()
         {
-            return $"{Id} ({Type}): {RelativePathToMods}";
+            var extra = "";
+            if (AddToAddendum != null)
+            {
+                extra += $" AddToAddendum={AddToAddendum}";
+            }
+            if (AssetBundleName != null)
+            {
+                extra += $" AssetBundleName={AssetBundleName}";
+            }
+            if (Type != null)
+            {
+                extra += $" Type={Type}";
+            }
+            return $"{Id} ({extra}): {RelativePathToMods}";
         }
 
         [JsonIgnore]
