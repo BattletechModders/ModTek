@@ -51,12 +51,12 @@ namespace ModTek
 
             FilePaths.SetupPaths();
             LoggingFeature.InitMTLogger();
+            LoggingFeature.InitRTLogger();
             try
             {
-                var version = Assembly.GetExecutingAssembly().GetInformationalVersion();
-                Log($"ModTek v{version}");
+                Log($"ModTek v{Assembly.GetExecutingAssembly().GetInformationalVersion()}");
                 Log($"{DateTime.Now}");
-                Start(version);
+                Start();
             }
             catch (Exception e)
             {
@@ -71,15 +71,17 @@ namespace ModTek
             return attributes.Length == 0 ? "" : ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
         }
 
-        private static void Start(string version) {
+        private static void Start() {
             stopwatch.Start();
+
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {
                 try
                 {
                     SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
-                    SettingsDef.Version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+                    SettingsDef.Version = version;
                 }
                 catch (Exception e)
                 {
@@ -117,7 +119,6 @@ namespace ModTek
             // read config
             Config = Configuration.FromDefaultFile();
             LoggingFeature.InitBTLogger();
-            LoggingFeature.InitRTLogger();
 
             if (File.Exists(FilePaths.ChangedFlagPath))
             {
