@@ -53,14 +53,22 @@ namespace ModTek
             LoggingFeature.InitMTLogger();
             try
             {
-                var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
-                Log($"ModTek v{version} -- {DateTime.Now}");
+                var version = Assembly.GetExecutingAssembly().GetInformationalVersion();
+                Log($"ModTek v{version}");
+                Log($"{DateTime.Now}");
                 Start(version);
             }
             catch (Exception e)
             {
                 Log("Fatal error", e);
             }
+        }
+
+        private static string GetInformationalVersion(this Assembly assembly)
+        {
+            var attributes = assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+
+            return attributes.Length == 0 ? "" : ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
         }
 
         private static void Start(string version) {
@@ -71,7 +79,7 @@ namespace ModTek
                 try
                 {
                     SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
-                    SettingsDef.Version = version;
+                    SettingsDef.Version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
                 }
                 catch (Exception e)
                 {
