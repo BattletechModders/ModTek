@@ -103,13 +103,18 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
         {
-            if (hbsAddendums.Any(x => addendum.Name.Equals(x.Name)))
+            if (ContainsAddendum(addendum.Name))
             {
                 return;
             }
             hbsAddendums.Add(addendum);
             HasChanges = true;
             RefreshTypedEntries();
+        }
+
+        private bool ContainsAddendum(string name)
+        {
+            return hbsAddendums.Any(x => name.Equals(x.Name));
         }
 
         public void AddModAddendum(ModAddendumManifest modManifest)
@@ -240,6 +245,25 @@ namespace ModTek.Features.Manifest.BTRL
         private BetterBTRL()
         {
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
+
+            // move auto-detected addendums from inside the default manifest to BetterBTRL
+            foreach (var addendum in defaultManifest.ActiveAddendums)
+            {
+                ApplyAddendum(addendum);
+            }
+            defaultManifest.ClearAddendums();
+
+            // now apply all addendums references as CSV, doesn't seem to be used but better safe than sorry
+            foreach (var entry in defaultManifest.FindAll(x => x.IsAddendum))
+            {
+                if (ContainsAddendum(entry.Name) || entry.IsFileAsset)
+                {
+                    continue;
+                }
+
+                var addendum = VersionManifestUtilities.AddendumFromCSV(entry.FilePath);
+                ApplyAddendum(addendum);
+            }
             SetContentPackIndex(UnityGameInstance.BattleTechGame?.DataManager?.ContentPackIndex);
         }
 
