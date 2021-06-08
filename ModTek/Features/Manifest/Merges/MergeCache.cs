@@ -199,17 +199,15 @@ namespace ModTek.Features.Manifest.Merges
                 return true;
             }
 
-            if (entry.ShouldMergeJSON || entry.ShouldAppendText)
+            if (entry.ShouldMergeJSON && entry.IsJson)
             {
-                if (entry.ShouldMergeJSON && entry.IsJson || entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
-                {
-                    AddTemp(entry);
-                }
-                else
-                {
-                    Log($"\tError: ShouldMergeJSON requires .json and ShouldAppendText requires .txt or .csv: \"{entry.RelativePathToMods}\".");
-                }
+                AddTemp(entry);
+                return true;
+            }
 
+            if (entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
+            {
+                AddTemp(entry);
                 return true;
             }
 

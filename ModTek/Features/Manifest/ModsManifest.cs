@@ -92,7 +92,11 @@ namespace ModTek.Features.Manifest
         {
             entry.ModDef = modDef;
 
-            if (entry.IsFile)
+            if (entry.AssetBundleName != null)
+            {
+                AddModEntry(entry, packager);
+            }
+            else if (entry.IsFile)
             {
                 if (string.IsNullOrEmpty(entry.Id))
                 {
