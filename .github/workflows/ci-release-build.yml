@@ -41,6 +41,25 @@ jobs:
         name: dist
         path: "./ModTek/dist/ModTek.zip"
 
+  latest:
+      needs: build
+      runs-on: ubuntu-latest
+      if: github.ref == 'refs/heads/master'
+      steps:
+          - name: Download Build
+            uses: actions/download-artifact@master
+            with:
+                name:  dist
+                path: .
+          - name: Latest Release
+            uses: "marvinpinto/action-automatic-releases@latest"
+            with:
+                repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                automatic_release_tag: "latest"
+                name: "Latest Development build (unstable)"
+                prerelease: true
+                files: ModTek.zip
+
   release:
     needs: build
     runs-on: ubuntu-latest
