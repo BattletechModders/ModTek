@@ -14,6 +14,7 @@ using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
+using ModTek.Util;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -55,8 +56,8 @@ namespace ModTek
             LoggingFeature.InitRTLogger();
             try
             {
-                Log($"ModTek v{Assembly.GetExecutingAssembly().GetInformationalVersion()}");
-                Log($"{DateTime.Now}");
+                Log($"ModTek v{VersionTools.LongVersion}");
+                Log($"Started logging at {DateTime.Now}");
                 Start();
             }
             catch (Exception e)
@@ -65,24 +66,15 @@ namespace ModTek
             }
         }
 
-        private static string GetInformationalVersion(this Assembly assembly)
-        {
-            var attributes = assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
-
-            return attributes.Length == 0 ? "" : ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
-        }
-
         private static void Start() {
             stopwatch.Start();
-
-            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {
                 try
                 {
                     SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
-                    SettingsDef.Version = version;
+                    SettingsDef.Version = VersionTools.ShortVersion;
                 }
                 catch (Exception e)
                 {
@@ -100,7 +92,7 @@ namespace ModTek
                     Enabled = true,
                     PendingEnable = true,
                     Name = MODTEK_DEF_NAME,
-                    Version = version,
+                    Version = VersionTools.ShortVersion,
                     Description = "Mod system for HBS's PC game BattleTech.",
                     Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum",
                     Website = "https://github.com/BattletechModders/ModTek"
@@ -111,7 +103,7 @@ namespace ModTek
             }
 
             // load progress bar
-            if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{version}"))
+            if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{VersionTools.ShortVersion}"))
             {
                 Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                 FinishAndCleanup();

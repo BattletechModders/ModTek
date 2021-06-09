@@ -1,5 +1,6 @@
 using System.Reflection;
 using Harmony;
+using ModTek.Util;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -20,7 +21,7 @@ namespace ModTek.Patches
         public static void Postfix(ref string __result)
         {
             var old = __result;
-            __result = old + $"\nw/ ModTek v{Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}";
+            __result = old + $"\nw/ ModTek v{VersionTools.ShortVersion}";
         }
     }
 }
