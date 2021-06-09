@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.2
 
 Features:
-- Introduced CI using github, see "actions" tab if you have the rights. All branches are build and pushes to master are publishes as "latest". Pushed tags are build and draft release are created wit the assets containing the versioned build.
+- Introduced CI using github, see "actions" tab if you have the rights. All branches are build and pushes to master are publishes as "latest". Pushed tags are build and draft release are created with the assets containing the versioned build.
 
 Bug Fixes:
 - Properly catch mods throwing exceptions in FinishedLoading.
