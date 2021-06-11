@@ -78,12 +78,22 @@ namespace ModTek.Features.Manifest
             {
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.StreamingAssetsDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry
+                    {
+                        Path = FilePaths.StreamingAssetsDirectoryName,
+                        ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
+                        ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
+                    });
                 }
 
                 if (Directory.Exists(modDef.GetFullPath(FilePaths.ContentPackMergesDirectoryName)))
                 {
-                    modDef.Manifest.Add(new ModEntry { Path = FilePaths.ContentPackMergesDirectoryName, ShouldMergeJSON = true, ShouldAppendText = true });
+                    modDef.Manifest.Add(new ModEntry
+                    {
+                        Path = FilePaths.ContentPackMergesDirectoryName,
+                        ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
+                        ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
+                    });
                 }
             }
         }

@@ -27,6 +27,12 @@ namespace ModTek.Misc
         internal bool UseFileCompression = true;
 
         [JsonProperty]
+        internal bool ImplicitManifestShouldMergeJSON = true;
+
+        [JsonProperty]
+        internal bool ImplicitManifestShouldAppendText = false;
+
+        [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
 
         [JsonProperty]
