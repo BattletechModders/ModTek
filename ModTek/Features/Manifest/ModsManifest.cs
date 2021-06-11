@@ -171,7 +171,10 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            FixMissingType(entry);
+            if (!FixMissingType(entry))
+            {
+                return;
+            }
 
             if (mergeCache.AddModEntry(entry))
             {
@@ -240,31 +243,32 @@ namespace ModTek.Features.Manifest
             Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
         }
 
-        private static void FixMissingType(ModEntry entry)
+        private static bool FixMissingType(ModEntry entry)
         {
             if (entry.Type != null)
             {
-                return;
+                return true;
             }
 
             CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
 
+            var ext = entry.Path.GetExtension();
             var entriesById = BetterBTRL.Instance.EntriesByID(entry.Id)
+                .Where(x => ext.Equals(x.GetRawPath().GetExtension()))
                 .ToList();
 
-            if (entriesById.Count == 0)
+            switch (entriesById.Count)
             {
-                Log($"\t\tError: Can't resolve type, no types found for id, please specify manually.");
-                return;
+                case 0:
+                    Log($"\t\tError: Can't resolve type, no types found for id, please specify manually.");
+                    return false;
+                case > 1:
+                    Log($"\t\tError: Can't resolve type, more than one type found for id, please specify manually.");
+                    return false;
+                default:
+                    entry.Type = entriesById[0].Type;
+                    return true;
             }
-
-            if (entriesById.Count > 1)
-            {
-                Log($"\t\tError: Can't resolve type, more than one type found for id, please specify manually.");
-                return;
-            }
-
-            entry.Type = entriesById[0].Type;
         }
 
         internal static void VerifyCaches()
