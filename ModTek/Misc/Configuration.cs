@@ -30,7 +30,7 @@ namespace ModTek.Misc
         internal bool ImplicitManifestShouldMergeJSON = true;
 
         [JsonProperty]
-        internal bool ImplicitManifestShouldAppendText = false;
+        internal bool ImplicitManifestShouldAppendText = true;
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };

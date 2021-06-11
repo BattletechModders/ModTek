@@ -1,6 +1,30 @@
 ﻿# Release notes
+
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
+
+## 2.0 Major Changes
+
+For users:
+- Moved Wiki content to main repository.
+
+For modders:
+- Support for merging DLC content. Overall "improved" support for DLC content, maybe fixes issues with online shops.
+- Dropped support for BTRL removals and CustomResources merging.
+- StreamingAssets resources are now better supported, only need to use the correct filename to merge. No need to mirror the path in StreamingAssets or supply a type for merges outside.
+- CSVs are now merged by default when under StreamingAssets (before it was replacing and not appending). Behavior can be changed with ImplicitManifestShouldAppendText in ModTek config.
+
+More details found below.
+
+## latest (to be tagged)
+
+Features:
+- The default merging behavior of the implicit manifest can be changed.
+  See ModTek config: ImplicitManifestShouldMergeJSON and ImplicitManifestShouldAppendText.
+
+Bug Fixes:
+- Fixes for types being wrongly derived, not derived and producing exceptions.
+- CSV found in YourMod/StreamingAssets should not be appended but act as replacements.
 
 ## 2.0.2
 
@@ -21,17 +45,11 @@ Features:
 Bug Fixes:
 - OnLoadedWithText patch was given higher priority to keep compatibility with KMission's CustomBundle mods.
 
-## 2.0.0
+## 2.0.x
 
-For users and modders:
-- Support for merging DLC content. Overall "improved" support for DLC content, maybe fixes issues with online shops.
-- Dropped support for BTRL removals and CustomResources merging.
-- StreamingAssets resources are now better supported, only need to use the correct filename to merge. No need to mirror the path in StreamingAssets or supply a type for merges outside. GameTips and DebugSettings are now special cases for StreamingAssets instead of custom resources.
-- Moved Wiki content to main repo.
-
-For ModTek devs:
 - Restructured ModTek into "Features" and modularized code. Still lots of static classes with state and cross-calling between classes, but better than before.
 - Modernized csproj in use, now using the latest and greatest from MS. (imports and listing of all files went away) Fully compatible now with the dotnet build suite.
+- GameTips and DebugSettings are now special cases for StreamingAssets instead of custom resources.
 
 ## Before 2.0
 
