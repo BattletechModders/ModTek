@@ -82,7 +82,7 @@ namespace ModTek.Features.Manifest
             {
                 extra += $" Type={Type}";
             }
-            return $"{Id} ({extra}): {RelativePathToMods}";
+            return $"{Id} ({extra} ): {RelativePathToMods}";
         }
 
         [JsonIgnore]

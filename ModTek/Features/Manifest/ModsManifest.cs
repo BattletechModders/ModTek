@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech;
-using ModTek.Features.CustomResources;
+using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.CustomTags;
@@ -94,21 +94,19 @@ namespace ModTek.Features.Manifest
 
             if (entry.AssetBundleName != null)
             {
-                if (string.IsNullOrEmpty(entry.Id))
-                {
-                    entry.Id = entry.FileNameWithoutExtension;
-                }
-
                 AddModEntry(entry, packager);
             }
             else if (entry.IsFile)
             {
-                if (string.IsNullOrEmpty(entry.Id))
+                if (entry.Type == BTConstants.CustomType_AdvancedJSONMerge)
                 {
-                    entry.Id = entry.FileNameWithoutExtension;
+                    ExpandAdvancedMerges(entry, packager);
+                }
+                else
+                {
+                    AddModEntry(entry, packager);
                 }
 
-                AddModEntry(entry, packager);
             }
             else if (entry.IsDirectory)
             {
@@ -123,14 +121,47 @@ namespace ModTek.Features.Manifest
                     {
                         var copy = entry.copy();
                         copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                        copy.Id = Path.GetFileNameWithoutExtension(file);
-                        AddModEntry(copy, packager);
+                        NormalizeAndExpandAndAddModEntries(modDef, copy, packager); // could lead to adv json merges that again expand
                     }
                 }
             }
             else
             {
                 Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
+            }
+        }
+
+        private static void ExpandAdvancedMerges(ModEntry entry, ModAddendumPackager packager)
+        {
+            var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
+            if (advMerge == null)
+            {
+                return;
+            }
+
+            var targets = new List<string>();
+            if (!string.IsNullOrEmpty(advMerge.TargetID))
+            {
+                targets.Add(advMerge.TargetID);
+            }
+
+            if (advMerge.TargetIDs != null)
+            {
+                targets.AddRange(advMerge.TargetIDs);
+            }
+
+            if (targets.Count == 0)
+            {
+                targets.Add(entry.FileNameWithoutExtension);
+            }
+
+            foreach (var target in targets)
+            {
+                var copy = entry.copy();
+                copy.Id = target;
+                copy.Type = advMerge.TargetType;
+                copy.ShouldMergeJSON = true;
+                AddModEntry(copy, packager);
             }
         }
 
@@ -157,7 +188,6 @@ namespace ModTek.Features.Manifest
                     {
                         var copy = entry.copy();
                         copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                        copy.Id = Path.GetFileNameWithoutExtension(file);
                         copy.Type = typeName;
                         copy.RequiredContentPacks = new[]
                         {
@@ -171,7 +201,7 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            if (!FixMissingType(entry))
+            if (!FixMissingIdAndType(entry))
             {
                 return;
             }
@@ -240,19 +270,25 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
+            Log($"\tError: Type of entry unknown: {entry}.");
         }
 
-        private static bool FixMissingType(ModEntry entry)
+        private static bool FixMissingIdAndType(ModEntry entry)
         {
-            if (entry.Type != null)
+            // fix missing id
+            if (string.IsNullOrEmpty(entry.Id))
+            {
+                entry.Id = entry.FileNameWithoutExtension;
+            }
+
+            if (!string.IsNullOrEmpty(entry.Type))
             {
                 return true;
             }
 
             CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
 
-            if (entry.Type != null)
+            if (!string.IsNullOrEmpty(entry.Type))
             {
                 return true;
             }

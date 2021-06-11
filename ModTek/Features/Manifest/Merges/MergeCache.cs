@@ -163,42 +163,6 @@ namespace ModTek.Features.Manifest.Merges
 
         internal bool AddModEntry(ModEntry entry)
         {
-            if (entry.Type == BTConstants.CustomType_AdvancedJSONMerge)
-            {
-                var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
-                if (advMerge == null)
-                {
-                    return true;
-                }
-
-                var targets = new List<string>();
-                if (!string.IsNullOrEmpty(advMerge.TargetID))
-                {
-                    targets.Add(advMerge.TargetID);
-                }
-
-                if (advMerge.TargetIDs != null)
-                {
-                    targets.AddRange(advMerge.TargetIDs);
-                }
-
-                if (targets.Count == 0)
-                {
-                    Log($"\tError: AdvancedJSONMerge: \"{entry.RelativePathToMods}\" didn't target any IDs. Skipping merge.");
-                    return true;
-                }
-
-                foreach (var target in targets)
-                {
-                    var copy = entry.copy();
-                    copy.Id = target;
-                    copy.Type = advMerge.TargetType;
-                    AddTemp(copy);
-                }
-
-                return true;
-            }
-
             if (entry.ShouldMergeJSON && entry.IsJson)
             {
                 AddTemp(entry);
