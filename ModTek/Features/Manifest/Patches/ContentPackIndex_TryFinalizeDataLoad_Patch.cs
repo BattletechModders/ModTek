@@ -1,6 +1,8 @@
-﻿using BattleTech.Data;
+﻿using System;
+using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Manifest.BTRL;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -14,7 +16,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static void Postfix(ContentPackIndex __instance)
         {
-            BetterBTRL.Instance.TryFinalizeDataLoad(__instance);
+            try
+            {
+                BetterBTRL.Instance.TryFinalizeDataLoad(__instance);
+            }
+            catch (Exception e)
+            {
+                Log("Error finalizing content pack index loading", e);
+            }
         }
     }
 }
