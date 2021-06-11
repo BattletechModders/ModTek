@@ -223,28 +223,6 @@ namespace ModTek.Features.Manifest.Merges
                 return;
             }
 
-            if (entry.Type == null)
-            {
-                // we are only interested in .json .txt .csv
-                var entriesById = BetterBTRL.Instance.EntriesByID(entry.Id)
-                    .Where(x => x.IsStringContent())
-                    .ToList();
-
-                if (entriesById.Count == 0)
-                {
-                    Log($"\t\tError: Can't resolve type, no types found for id, please specify manually.");
-                    return;
-                }
-
-                if (entriesById.Count > 1)
-                {
-                    Log($"\t\tError: Can't resolve type, more than one type found for id, please specify manually.");
-                    return;
-                }
-
-                entry.Type = entriesById[0].Type;
-            }
-
             var key = new CacheKey(entry);
             var temp = tempSets.GetOrCreate(key);
             temp.SetCachedPath(entry);

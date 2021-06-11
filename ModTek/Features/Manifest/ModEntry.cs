@@ -18,7 +18,6 @@ namespace ModTek.Features.Manifest
         public string Path { get; set; }
 
         public bool IsContentPackMergesBasePath => Path.Equals(FilePaths.ContentPackMergesDirectoryName);
-        public bool IsStreamingAssetsMergesBasePath => Path.StartsWith(FilePaths.StreamingAssetsDirectoryName);
 
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);

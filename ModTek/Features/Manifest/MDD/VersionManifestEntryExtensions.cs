@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using BattleTech;
-using ModTek.Util;
 
 namespace ModTek.Features.Manifest.MDD
 {
@@ -19,11 +18,6 @@ namespace ModTek.Features.Manifest.MDD
         private static bool IsContentPackAssetBundle(this VersionManifestEntry entry)
         {
             return entry.IsAssetBundled && BTConstants.HBSContentNames.Contains(entry.AssetBundleName);
-        }
-
-        internal static bool IsStringContent(this VersionManifestEntry entry)
-        {
-            return entry.GetRawPath().HasStringExtension();
         }
     }
 }

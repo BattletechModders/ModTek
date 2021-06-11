@@ -85,11 +85,6 @@ namespace ModTek.Features.CustomStreamingAssets
 
         internal static void FindAndSetMatchingCustomStreamingAssetsType(ModEntry entry)
         {
-            if (entry.Type != null || !entry.IsStreamingAssetsMergesBasePath)
-            {
-                return;
-            }
-
             switch (entry.Id)
             {
                 case "settings":

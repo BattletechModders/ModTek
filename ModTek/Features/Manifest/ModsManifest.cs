@@ -171,7 +171,7 @@ namespace ModTek.Features.Manifest
 
         private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
         {
-            CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
+            FixMissingType(entry);
 
             if (mergeCache.AddModEntry(entry))
             {
@@ -238,6 +238,33 @@ namespace ModTek.Features.Manifest
             }
 
             Log($"\tError: Type of entry unknown: \"{entry.RelativePathToMods}\".");
+        }
+
+        private static void FixMissingType(ModEntry entry)
+        {
+            if (entry.Type != null)
+            {
+                return;
+            }
+
+            CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
+
+            var entriesById = BetterBTRL.Instance.EntriesByID(entry.Id)
+                .ToList();
+
+            if (entriesById.Count == 0)
+            {
+                Log($"\t\tError: Can't resolve type, no types found for id, please specify manually.");
+                return;
+            }
+
+            if (entriesById.Count > 1)
+            {
+                Log($"\t\tError: Can't resolve type, more than one type found for id, please specify manually.");
+                return;
+            }
+
+            entry.Type = entriesById[0].Type;
         }
 
         internal static void VerifyCaches()
