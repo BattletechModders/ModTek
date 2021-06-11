@@ -203,6 +203,12 @@ namespace ModTek.Features.Manifest.Merges
                     if (BTConstants.ResourceType(kv.Key.Type, out var resourceType))
                     {
                         var manifestEntry = BetterBTRL.Instance.EntryByID(kv.Key.Id, resourceType);
+                        if (manifestEntry == null)
+                        {
+                            // can happen if the type was specified explicitly for merge, but the actual base resource never was supplied by any mod
+                            Log($"MergeCache: Warning: Resource {kv.Key}/{resourceType} is missing, can't preload.");
+                            continue;
+                        }
                         kv.Value.SetCachedPathAndUpdatedOn(manifestEntry);
                     }
                 }
