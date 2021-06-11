@@ -252,6 +252,11 @@ namespace ModTek.Features.Manifest
 
             CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
 
+            if (entry.Type != null)
+            {
+                return true;
+            }
+
             var ext = entry.Path.GetExtension();
             var entriesById = BetterBTRL.Instance.EntriesByID(entry.Id)
                 .Where(x => ext.Equals(x.GetRawPath().GetExtension()))
