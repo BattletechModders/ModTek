@@ -32,11 +32,16 @@ namespace ModTek.Misc
         [JsonProperty]
         internal LoggingSettings Logging = new();
 
+
+        private static string ConfigPath => Path.Combine(FilePaths.ModTekDirectory, "config.json");
+        private static string ConfigDefaultsPath => Path.Combine(FilePaths.ModTekDirectory, "config.defaults.json");
+        private static string ConfigLastPath => Path.Combine(FilePaths.ModTekDirectory, "config.last.json");
+
         internal static Configuration FromDefaultFile()
         {
-            var path = FilePaths.ConfigPath;
+            var path = ConfigPath;
             var config = new Configuration();
-            config.WriteDefaultConfig();
+            config.WriteConfig(ConfigDefaultsPath);
 
             if (File.Exists(path))
             {
@@ -65,13 +70,14 @@ namespace ModTek.Misc
                 File.WriteAllText(path, "{}");
             }
 
-            Log($"Configuration: {config}");
+            config.WriteConfig(ConfigLastPath);
+
             return config;
         }
 
-        private void WriteDefaultConfig()
+        private void WriteConfig(string path)
         {
-            File.WriteAllText(FilePaths.ConfigDefaultsPath, JsonConvert.SerializeObject(this,
+            File.WriteAllText(path, JsonConvert.SerializeObject(this,
                 Formatting.Indented
             ));
         }
