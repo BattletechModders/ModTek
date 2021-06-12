@@ -286,9 +286,7 @@ namespace ModTek.Features.Manifest
                 return true;
             }
 
-            CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry);
-
-            if (!string.IsNullOrEmpty(entry.Type))
+            if (CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry))
             {
                 return true;
             }

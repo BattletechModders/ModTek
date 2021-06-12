@@ -83,20 +83,22 @@ namespace ModTek.Features.CustomStreamingAssets
             )
         };
 
-        internal static void FindAndSetMatchingCustomStreamingAssetsType(ModEntry entry)
+        internal static bool FindAndSetMatchingCustomStreamingAssetsType(ModEntry entry)
         {
             switch (entry.Id)
             {
                 case "settings":
                     entry.Type = CSAType.DebugSettings.ToString();
-                    break;
+                    return true;
                 case "general":
                 case "combat":
                 case "lore":
                 case "sim":
                     entry.Type = CSAType.GameTip.ToString();
-                    break;
+                    return true;
             }
+
+            return false;
         }
     }
 }
