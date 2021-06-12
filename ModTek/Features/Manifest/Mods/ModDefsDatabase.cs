@@ -95,8 +95,8 @@ namespace ModTek.Features.Manifest.Mods
         internal static List<ModDefEx> ModsInLoadOrder()
         {
             return ModLoadOrder
-                .Where(name => ModDefs.ContainsKey(name))
-                .Select(name => ModDefs[name])
+                .Select(name => ModDefs.TryGetValue(name, out var modDef) ? modDef : null)
+                .Where(modDef => modDef != null)
                 .ToList();
         }
 
@@ -252,10 +252,7 @@ namespace ModTek.Features.Manifest.Mods
 
             {
                 Log("\nCalling FinishedLoading:");
-                foreach (var modDef in ModLoadOrder
-                    .Where(name => ModDefs.ContainsKey(name) && ModDefs[name].Assembly != null)
-                    .Select(assemblyMod => ModDefs[assemblyMod])
-                )
+                foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
                 {
                     ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
                 }
