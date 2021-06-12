@@ -11,7 +11,7 @@ namespace ModTek.Features.Manifest.Mods
 {
     internal static class ModDefsDatabase
     {
-        internal static List<string> ModLoadOrder;
+        private static List<string> ModLoadOrder;
         private static readonly Dictionary<string, ModDefEx> ModDefs = new();
         internal static readonly Dictionary<string, ModDefEx> allModDefs = new();
         internal static HashSet<string> FailedToLoadMods { get; } = new();

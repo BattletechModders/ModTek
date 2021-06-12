@@ -21,40 +21,28 @@ namespace ModTek.Features.Manifest
 {
     internal static class ModsManifest
     {
-        private static MergeCache mergeCache = new();
-        private static MDDBCache mddbCache = new();
+        private static readonly MergeCache mergeCache = new();
+        private static readonly MDDBCache mddbCache = new();
 
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
-            // there are no mods loaded, just return
-            if (ModDefsDatabase.ModLoadOrder == null || ModDefsDatabase.ModLoadOrder.Count == 0)
-            {
-                yield break;
-            }
-
-            Log("\nAdding Mod Content...");
-
-            // progress panel setup
-            var entryCount = 0;
             var mods = ModDefsDatabase.ModsInLoadOrder();
-            var numEntries = mods.Count;
+            LogIf(mods.Count > 0, "\nAdding Mod Content...");
 
-            foreach (var modDef in mods)
+            foreach (var (modDef, index) in mods.WithIndex())
             {
                 var modName = modDef.Name;
 
-                yield return new ProgressReport(entryCount++ / (float) numEntries, $"Loading {modName}", "", true);
+                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modName}", "", true);
 
                 AddImplicitManifest(modDef);
 
                 LogIf(modDef.Manifest.Count> 0, $"{modName} Manifest:");
-
                 var packager = new ModAddendumPackager(modName);
                 foreach (var modEntry in modDef.Manifest)
                 {
                     NormalizeAndExpandAndAddModEntries(modDef, modEntry, packager);
                 }
-
                 packager.SaveToBTRL();
 
                 LogIf(modDef.DataAddendumEntries.Count > 0, $"{modName}DataAddendum:");
@@ -74,27 +62,29 @@ namespace ModTek.Features.Manifest
 
         private static void AddImplicitManifest(ModDefEx modDef)
         {
-            if (modDef.LoadImplicitManifest)
+            if (!modDef.LoadImplicitManifest)
             {
-                if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
-                {
-                    modDef.Manifest.Add(new ModEntry
-                    {
-                        Path = FilePaths.StreamingAssetsDirectoryName,
-                        ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
-                        ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
-                    });
-                }
+                return;
+            }
 
-                if (Directory.Exists(modDef.GetFullPath(FilePaths.ContentPackMergesDirectoryName)))
+            if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
+            {
+                modDef.Manifest.Add(new ModEntry
                 {
-                    modDef.Manifest.Add(new ModEntry
-                    {
-                        Path = FilePaths.ContentPackMergesDirectoryName,
-                        ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
-                        ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
-                    });
-                }
+                    Path = FilePaths.StreamingAssetsDirectoryName,
+                    ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
+                    ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
+                });
+            }
+
+            if (Directory.Exists(modDef.GetFullPath(FilePaths.ContentPackMergesDirectoryName)))
+            {
+                modDef.Manifest.Add(new ModEntry
+                {
+                    Path = FilePaths.ContentPackMergesDirectoryName,
+                    ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
+                    ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
+                });
             }
         }
 
