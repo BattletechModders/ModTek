@@ -16,19 +16,16 @@ For modders:
 
 More details found below.
 
-## latest (to be tagged)
+## 2.0.3
 
-Features:
-- The default merging behavior of the implicit manifest can be changed.
+- The default merging behavior of the implicit manifest can be changed. Allows to revert merging behavior for CSVs back to pre-ModTek v2.
   See ModTek config: ImplicitManifestShouldMergeJSON and ImplicitManifestShouldAppendText.
 
 Bug Fixes:
-- Fixes for types being wrongly derived, not derived and producing exceptions.
-- CSV found in YourMod/StreamingAssets should not be appended but act as replacements.
+- Fixes for types being wrongly/not derived derived and producing exceptions.
 
 ## 2.0.2
 
-Features:
 - Introduced CI using github, see "actions" tab if you have the rights. All branches are build and pushes to master are publishes as "latest". Pushed tags are build and draft release are created with the assets containing the versioned build.
 
 Bug Fixes:
@@ -38,14 +35,13 @@ Bug Fixes:
 
 ## 2.0.1
 
-Features:
 - Added ability to block mods by name.
 - Integrated FYLS into ModTek. All logging in BattleTech (core or mods) are coming up in .modtek/battletech_log.txt
 
 Bug Fixes:
 - OnLoadedWithText patch was given higher priority to keep compatibility with KMission's CustomBundle mods.
 
-## 2.0.x
+## 2.0.0
 
 - Restructured ModTek into "Features" and modularized code. Still lots of static classes with state and cross-calling between classes, but better than before.
 - Modernized csproj in use, now using the latest and greatest from MS. (imports and listing of all files went away) Fully compatible now with the dotnet build suite.
