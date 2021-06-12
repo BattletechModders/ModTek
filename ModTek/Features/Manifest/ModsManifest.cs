@@ -31,21 +31,19 @@ namespace ModTek.Features.Manifest
 
             foreach (var (modDef, index) in mods.WithIndex())
             {
-                var modName = modDef.Name;
-
-                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modName}", "", true);
+                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modDef.Name}", "", true);
 
                 AddImplicitManifest(modDef);
 
-                LogIf(modDef.Manifest.Count> 0, $"{modName} Manifest:");
-                var packager = new ModAddendumPackager(modName);
+                LogIf(modDef.Manifest.Count> 0, $"{modDef.Name} Manifest:");
+                var packager = new ModAddendumPackager(modDef.Name);
                 foreach (var modEntry in modDef.Manifest)
                 {
                     NormalizeAndExpandAndAddModEntries(modDef, modEntry, packager);
                 }
                 packager.SaveToBTRL();
 
-                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modName}DataAddendum:");
+                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.Name} DataAddendum:");
                 foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
                 {
                     if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, modDef.Directory))
@@ -299,10 +297,10 @@ namespace ModTek.Features.Manifest
             switch (entriesById.Count)
             {
                 case 0:
-                    Log($"\t\tError: Can't resolve type, no types found for id, please specify manually.");
+                    Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually.");
                     return false;
                 case > 1:
-                    Log($"\t\tError: Can't resolve type, more than one type found for id, please specify manually.");
+                    Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually.");
                     return false;
                 default:
                     entry.Type = entriesById[0].Type;
@@ -337,7 +335,7 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static Stopwatch preloadSW = new();
+        private static readonly Stopwatch preloadSW = new();
         private static void PreloadMergesAfterManifestComplete(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             preloadSW.Start();
@@ -409,7 +407,7 @@ namespace ModTek.Features.Manifest
                 {
                     mergeCache.MergeAndCacheContent(entry, ref content);
                     // merges dont modify the UpdateOn timestamp, force update MDDB here!
-                    mddbCache.Add(entry, content);
+                    mddbCache.Add(entry, content, false);
                 }
             }
             else

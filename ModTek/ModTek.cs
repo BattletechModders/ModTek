@@ -144,10 +144,10 @@ namespace ModTek
             ModDefExLoading.Setup();
             CustomResourcesFeature.Setup();
 
-            LoadMods();
+            LoadUsingProgressPanel();
         }
 
-        private static void LoadMods()
+        private static void LoadUsingProgressPanel()
         {
             ProgressPanel.SubmitWork(ModDefsDatabase.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);

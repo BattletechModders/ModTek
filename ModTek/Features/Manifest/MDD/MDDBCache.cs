@@ -92,7 +92,7 @@ namespace ModTek.Features.Manifest.MDD
         }
 
         private readonly Stopwatch sw = new();
-        internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated = false)
+        internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated)
         {
             if (!BTConstants.ResourceType(entry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))
             {

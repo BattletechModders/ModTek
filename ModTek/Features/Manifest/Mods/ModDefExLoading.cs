@@ -12,19 +12,12 @@ namespace ModTek.Features.Manifest.Mods
 {
     internal static class ModDefExLoading
     {
-
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
             Log($"{modDef.Name} {modDef.Version}");
 
+            // although manifest related, CR listings are mostly relevant for the FinishedLoading call
             CustomResourcesFeature.ProcessModDef(modDef);
-
-            // expand the manifest (parses all JSON as well)
-            if (!CheckManifest(modDef))
-            {
-                reason = "Failures in manifest";
-                return false;
-            }
 
             // load the mod assembly
             if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
@@ -34,29 +27,6 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             reason = "Success";
-            return true;
-        }
-
-        private static bool CheckManifest(ModDefEx modDef)
-        {
-            foreach (var entry in modDef.Manifest)
-            {
-                if (string.IsNullOrEmpty(entry.Path))
-                {
-                    Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
-                    return false;
-                }
-
-                if (string.IsNullOrEmpty(entry.Type))
-                {
-                    Log($"\tError: {modDef.Name} has a manifest entry that is missing its type! Aborting load.");
-                    return false;
-                }
-            }
-
-            // Logger.Log($"\tError: {modDef.Name} has a Prefab '{entry.Id}' that's referencing an AssetBundle '{entry.AssetBundleName}' that hasn't been loaded. Put the assetbundle first in the manifest!");
-            // Logger.Log($"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
-            // Logger.Log($"\tWarning: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
             return true;
         }
 

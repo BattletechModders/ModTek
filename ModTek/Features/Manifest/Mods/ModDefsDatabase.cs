@@ -137,6 +137,13 @@ namespace ModTek.Features.Manifest.Mods
 
                 yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
 
+                // expand the manifest (parses all JSON as well)
+                if (!CheckManifest(modDef))
+                {
+                    OnModLoadFailure(modName, "Failures in manifest");
+                    continue;
+                }
+
                 try
                 {
                     if (!ModDefExLoading.LoadMod(modDef, out var reason))
@@ -149,6 +156,20 @@ namespace ModTek.Features.Manifest.Mods
                     OnModLoadFailure(modName, $"Error: Tried to load mod: {modName}, but something went wrong. Make sure all of your JSON is correct!", e);
                 }
             }
+        }
+
+        private static bool CheckManifest(ModDefEx modDef)
+        {
+            if (modDef.Manifest.Any(entry => string.IsNullOrEmpty(entry.Path)))
+            {
+                Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
+                return false;
+            }
+
+            // Logger.Log($"\tError: {modDef.Name} has a Prefab '{entry.Id}' that's referencing an AssetBundle '{entry.AssetBundleName}' that hasn't been loaded. Put the assetbundle first in the manifest!");
+            // Logger.Log($"\tError: {modDef.Name} has a manifest entry that has a type '{modEntry.Type}' that doesn't match an existing type and isn't declared in CustomResourceTypes");
+            // Logger.Log($"\tWarning: Manifest specifies file/directory of {modEntry.Type} at path {modEntry.Path}, but it's not there. Continuing to load.");
+            return true;
         }
 
         private static void CreateModDefs(string[] modJsons)
