@@ -20,14 +20,22 @@ Installation of ModTek is straightforward. You download a .zip file, extract it 
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu with "/W MODTEK". If you don't see this something has gone wrong.
 
-# Documentation
+# Further Documentation
 
-Topics:
-- [Features](doc/FEATURES.md)
 - [The Drop-Dead-Simple-Guide to Installing BTML & ModTek & ModTek mods](doc/QUICKSTART.md)
+- [A Brief Primer on Developing ModTek Mods](doc/PRIMER.md)
 - [The mod.json Format](doc/MOD_JSON_FORMAT.md)
 - [Writing ModTek JSON mods](doc/MOD_JSON.md)
 - [Writing ModTek DLL mods](doc/MOD_DLL.md)
+- [Advanced JSON Merging](doc/ADVANCED_JSON_MERGING.md)
+- [DebugSettings](doc/CUSTOM_TYPE_DEBUGSETTINGS.md)
+- [SVGAssets](doc/CUSTOM_TYPE_SVGASSET.md)
+- [Custom Tags and Tagsets](doc/CUSTOM_TYPE_CUSTOMTAGS.md)
+- [SoundBanks](doc/CUSTOM_TYPE_SOUNDBANKS.md)
+- Custom Video - TBD
+- [Dynamic Enums / DataAddendumEntries](doc/DATA_ADDENDUM_ENTRIES.md)
+- [Manifest Manipulation](doc/MANIFEST.md)
+- [Content Pack Assets](doc/CONTENT_PACK_ASSETS.md)
 
 ## Developing ModTek
 

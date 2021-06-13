@@ -17,7 +17,7 @@ namespace ModTek.Features.Manifest
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        public bool IsContentPackMergesBasePath => Path.Equals(FilePaths.ContentPackMergesDirectoryName);
+        public bool IsModdedContentPackBasePath => Path.Equals(FilePaths.ModdedContentPackDirectoryName);
 
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);

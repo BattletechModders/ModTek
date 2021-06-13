@@ -16,6 +16,10 @@ For modders:
 
 More details found below.
 
+## 2.0.next
+
+- Renamed ContentPackMerges/ to ContentPackAssets/ , support same behavior as StreamingAssets just that you still have to provide a Type and the related content is only loaded when the dlc content is owned.
+
 ## 2.0.3
 
 - The default merging behavior of the implicit manifest can be changed. Allows to revert merging behavior for CSVs back to pre-ModTek v2.

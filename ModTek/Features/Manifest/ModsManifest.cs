@@ -75,11 +75,11 @@ namespace ModTek.Features.Manifest
                 });
             }
 
-            if (Directory.Exists(modDef.GetFullPath(FilePaths.ContentPackMergesDirectoryName)))
+            if (Directory.Exists(modDef.GetFullPath(FilePaths.ModdedContentPackDirectoryName)))
             {
                 modDef.Manifest.Add(new ModEntry
                 {
-                    Path = FilePaths.ContentPackMergesDirectoryName,
+                    Path = FilePaths.ModdedContentPackDirectoryName,
                     ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
                     ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
                 });
@@ -108,9 +108,9 @@ namespace ModTek.Features.Manifest
             }
             else if (entry.IsDirectory)
             {
-                if (entry.IsContentPackMergesBasePath)
+                if (entry.IsModdedContentPackBasePath)
                 {
-                    ExpandContentPackMerges(modDef, entry, packager);
+                    ExpandModdedContentPack(modDef, entry, packager);
                 }
                 else
                 {
@@ -163,26 +163,26 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static void ExpandContentPackMerges(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
+        private static void ExpandModdedContentPack(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
         {
-            foreach (var contentPackMergesPath in Directory.GetDirectories(entry.AbsolutePath))
+            foreach (var packPath in Directory.GetDirectories(entry.AbsolutePath))
             {
-                var contentPackName = Path.GetFileName(contentPackMergesPath);
+                var contentPackName = Path.GetFileName(packPath);
                 if (!BTConstants.HBSContentNames.Contains(contentPackName))
                 {
                     Log($"Unknown content pack {contentPackName} in {entry.AbsolutePath}");
                 }
 
-                foreach (var typesPath in Directory.GetDirectories(contentPackMergesPath))
+                foreach (var typesPath in Directory.GetDirectories(packPath))
                 {
                     var typeName = Path.GetFileName(typesPath);
                     if (!BTConstants.ResourceType(typeName, out _))
                     {
-                        Log($"Unknown resource type {typeName} in {contentPackMergesPath}");
+                        Log($"Unknown resource type {typeName} in {packPath}");
                         continue;
                     }
 
-                    foreach (var file in FileUtils.FindFiles(typesPath, FileUtils.JSON_TYPE, FileUtils.CSV_TYPE, FileUtils.TXT_TYPE))
+                    foreach (var file in FileUtils.FindFiles(typesPath))
                     {
                         var copy = entry.copy();
                         copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
