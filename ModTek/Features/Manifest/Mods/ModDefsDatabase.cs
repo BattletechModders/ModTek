@@ -104,8 +104,18 @@ namespace ModTek.Features.Manifest.Mods
         {
             yield return new ProgressReport(1, "Initializing Mods", "");
 
-            // find all sub-directories that have a mod.json file
-            var modJsons = Directory.GetFiles(FilePaths.ModsDirectory, FilePaths.MOD_JSON_NAME, SearchOption.AllDirectories);
+            string[] modJsons;
+            if (ModTek.Config.SearchModsInSubDirectories)
+            {
+                modJsons = Directory.GetFiles(FilePaths.ModsDirectory, FilePaths.MOD_JSON_NAME, SearchOption.AllDirectories);
+            }
+            else
+            {
+                modJsons = Directory.GetDirectories(FilePaths.ModsDirectory)
+                    .Select(d => Path.Combine(d, FilePaths.MOD_JSON_NAME))
+                    .Where(File.Exists)
+                    .ToArray();
+            }
 
             if (modJsons.Length == 0)
             {

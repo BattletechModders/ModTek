@@ -24,13 +24,16 @@ namespace ModTek.Misc
         internal bool EnableDebugLogging = true;
 
         [JsonProperty]
-        internal bool UseFileCompression = true;
+        internal bool UseFileCompression = true; // false for pre v2.0 behavior
+
+        [JsonProperty]
+        internal bool SearchModsInSubDirectories = true; // false for pre v2.0 behavior
 
         [JsonProperty]
         internal bool ImplicitManifestShouldMergeJSON = true;
 
         [JsonProperty]
-        internal bool ImplicitManifestShouldAppendText = true;
+        internal bool ImplicitManifestShouldAppendText = true; // false for pre v2.0 behavior
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
