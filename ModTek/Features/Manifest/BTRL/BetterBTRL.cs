@@ -48,6 +48,20 @@ namespace ModTek.Features.Manifest.BTRL
                 .AsTextList()
             );
 
+            {
+                // check asset bundle references
+                var assetBundles = currentManifest
+                    .AllEntriesOfResource(BattleTechResourceType.AssetBundle, true)
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                foreach (var entry in currentManifest.AllEntries(true))
+                {
+                    LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && !assetBundles.Contains(entry.AssetBundleName),
+                        $"Cannot find asset bundle {entry.AssetBundleName} referenced by {entry.Id} ({entry.Type}), check lower/upper casing and dlc requirements.");
+                }
+            }
+
             ModsManifest.VerifyCaches();
         }
 
