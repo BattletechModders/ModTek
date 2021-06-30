@@ -1,40 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{8D955C2C-D75B-453C-99D1-B337BBF82CCA}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ModTek</RootNamespace>
-    <AssemblyName>ModTek</AssemblyName>
     <TargetFramework>net472</TargetFramework>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>preview</LangVersion>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>$(BattleTechGameDir)\Mods\ModTek\</OutputPath>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>embedded</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(BattleTechGameDir)\Mods\ModTek\</OutputPath>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblySearchPaths>
       $(AssemblySearchPaths);
       $(ReferencePath);
     </AssemblySearchPaths>
   </PropertyGroup>
+  <ItemGroup>
+    <OutDirFiles Include="$(OutDir)**"/>
+  </ItemGroup>
+  <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild">
+    <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
+  </Target>
   <ItemGroup>
     <Reference Include="0Harmony">
       <Private>False</Private>
