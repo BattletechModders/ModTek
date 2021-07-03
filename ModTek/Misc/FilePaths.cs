@@ -10,8 +10,9 @@ namespace ModTek.Misc
         internal const string MOD_JSON_NAME = "mod.json";
         internal static string ModdedContentPackDirectoryName { get; set; } = "ContentPackAssets";
 
-        private const string MODS_DIRECTORY_NAME = "Mods";
-        private const string MODTEK_DIRECTORY_NAME = "ModTek";
+        internal const string MODS_DIRECTORY_NAME = "Mods";
+        internal const string MODTEK_DIRECTORY_NAME = "ModTek";
+
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
         private const string CACHE_DIRECTORY_NAME = "Cache";
         private const string LOG_NAME = "ModTek.log";
