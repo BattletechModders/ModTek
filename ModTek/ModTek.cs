@@ -9,7 +9,6 @@ using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
-using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Features.SoundBanks;
 using ModTek.Misc;
@@ -51,13 +50,8 @@ namespace ModTek
                 return;
             }
 
-            FilePaths.SetupPaths();
-            LoggingFeature.InitMTLogger();
-            LoggingFeature.InitRTLogger();
             try
             {
-                Log($"ModTek v{VersionTools.LongVersion}");
-                Log($"Started logging at {DateTime.Now}");
                 Start();
             }
             catch (Exception e)
@@ -68,6 +62,10 @@ namespace ModTek
 
         private static void Start() {
             stopwatch.Start();
+
+            FilePaths.SetupPaths();
+            Config = Configuration.FromDefaultFile();
+            LoggingFeature.Init();
 
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {
@@ -108,10 +106,6 @@ namespace ModTek
                 Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
                 FinishAndCleanup();
             }
-
-            // read config
-            Config = Configuration.FromDefaultFile();
-            LoggingFeature.InitBTLogger();
 
             if (File.Exists(FilePaths.ChangedFlagPath))
             {
@@ -159,7 +153,7 @@ namespace ModTek
         private static IEnumerator<ProgressReport> FinishInitialLoadingLoop()
         {
             yield return new ProgressReport(1, "Finishing Up", "", true);
-            Log("\nFinishing Up");
+            Log("Finishing Up");
 
             CustomStreamingAssetsFeature.LoadDebugSettings();
             ModDefsDatabase.FinishedLoadingMods();
@@ -172,8 +166,7 @@ namespace ModTek
             HasLoaded = true;
 
             stopwatch.Stop();
-            Log("");
-            LogWithDate($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds\n");
+            Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
             stopwatch = null;
         }
     }

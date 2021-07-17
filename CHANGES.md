@@ -13,12 +13,14 @@ For modders:
 - Dropped support for BTRL removals and CustomResources merging.
 - StreamingAssets resources are now better supported, only need to use the correct filename to merge. No need to mirror the path in StreamingAssets or supply a type for merges outside.
 - CSVs are now merged by default when under StreamingAssets (before it was replacing and not appending). Behavior can be changed with ImplicitManifestShouldAppendText in ModTek config.
+- Integrated the FYLS mod into ModTek, central log found in `.modtek/battletech_log.txt`. Improved HBS logging format in general.
 
 More details found below.
 
 ## 2.0.next
 
 - Renamed ContentPackMerges/ to ContentPackAssets/ , support same behavior as StreamingAssets just that you still have to provide a Type and the related content is only loaded when the dlc content is owned.
+- Improved HBS logging format.
 
 ## 2.0.3
 

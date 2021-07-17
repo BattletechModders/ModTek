@@ -7,7 +7,7 @@ using static ModTek.Features.Logging.MTLogger;
 namespace ModTek.Features.Logging.Patches
 {
     [HarmonyPatch]
-    internal static class LogAtLevelAttacher
+    internal static class LogImpl_LogAtLevel_Patch
     {
         public static bool Prepare()
         {
@@ -17,7 +17,7 @@ namespace ModTek.Features.Logging.Patches
 
         public static MethodInfo TargetMethod()
         {
-            var logImpl = AccessTools.Inner(typeof(HBS.Logging.Logger), "LogImpl");
+            var logImpl = AccessTools.Inner(typeof(Logger), "LogImpl");
             var original = AccessTools.Method(logImpl, "LogAtLevel", new[]
             {
                 typeof(LogLevel),
@@ -29,33 +29,27 @@ namespace ModTek.Features.Logging.Patches
             return original;
         }
 
-        private static readonly FormatHelper FormatHelper = new();
+        [HarmonyPriority(Priority.High)]
         public static bool Prefix(string ___name, LogLevel level, object message, Exception exception, IStackTrace location)
         {
             try
             {
-                var logString = FormatHelper.FormatMessage(
+                LoggingFeature.LogAtLevel(
                     ___name,
                     level,
                     message,
                     exception,
-                    location
+                    location,
+                    out var skipOriginal
                 );
-                if (LoggingFeature.Settings.preserveFullLog)
+                if (skipOriginal)
                 {
-                    BTLogger.Full(logString);
+                    return false;
                 }
-
-                if (!LoggingFeature.LogPrefixesMatcher.IsMatch(logString))
-                {
-                    BTLogger.Clean(logString);
-                }
-
-                return !LoggingFeature.Settings.skipOriginalLoggers;
             }
             catch (Exception e)
             {
-                Log("can't write to BTLogger",  e);
+                Log("Couldn't rewrite LogAtLevel call",  e);
             }
             return true;
         }

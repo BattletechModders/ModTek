@@ -74,7 +74,7 @@ namespace ModTek.UI
                         }
                         catch (Exception e)
                         {
-                            Log("\nUncaught ModTek exception!", e);
+                            Log("Uncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";

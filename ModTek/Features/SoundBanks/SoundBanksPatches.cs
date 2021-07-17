@@ -9,8 +9,8 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using ModTek.Features.Logging;
 using UnityEngine;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.SoundBanks
 {
@@ -28,7 +28,7 @@ namespace ModTek.Features.SoundBanks
             bank.loaded = true;
             foreach (var ev in bank.events)
             {
-                RLog.M.WL(2, "sound event:" + ev.Key + ":" + ev.Value);
+                Log("\t\tsound event:" + ev.Key + ":" + ev.Value);
                 if (SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().ContainsKey(ev.Key) == false)
                 {
                     SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().Add(ev.Key, ev.Value);
@@ -57,11 +57,11 @@ namespace ModTek.Features.SoundBanks
             volume += bank.volumeShift;
             volume = Mathf.Min(100f, volume);
             volume = Mathf.Max(0f, volume);
-            RLog.M.TWL(0, "SoundBankDef.setVolume " + bank.name);
+            Log("SoundBankDef.setVolume " + bank.name);
             foreach (var id in bank.volumeRTPCIds)
             {
                 var res = AkSoundEngine.SetRTPCValue(id, volume);
-                RLog.M.WL(1, "SetRTPCValue " + id + " " + volume + " result:" + res);
+                Log("\tSetRTPCValue " + id + " " + volume + " result:" + res);
             }
         }
     }
@@ -83,7 +83,7 @@ namespace ModTek.Features.SoundBanks
 
         public static void Postfix()
         {
-            RLog.M.TWL(0, "AudioEventManager.LoadAudioSettings");
+            Log("AudioEventManager.LoadAudioSettings");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
@@ -113,7 +113,7 @@ namespace ModTek.Features.SoundBanks
 
         public static void Postfix(AudioSettingsModule __instance)
         {
-            RLog.M.TWL(0, "AudioSettingsModule.SaveSettings");
+            Log("AudioSettingsModule.SaveSettings");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
@@ -143,7 +143,7 @@ namespace ModTek.Features.SoundBanks
 
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
-            RLog.M.TWL(0, "WwiseManager.LoadCombatBanks");
+            Log("WwiseManager.LoadCombatBanks");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
@@ -156,7 +156,7 @@ namespace ModTek.Features.SoundBanks
                     continue;
                 }
 
-                RLog.M.WL(1, "Loading:" + soundBank.Key);
+                Log("\tLoading:" + soundBank.Key);
                 ___loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true));
             }
         }
@@ -179,7 +179,7 @@ namespace ModTek.Features.SoundBanks
 
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
-            RLog.M.TWL(0, "WwiseManager.UnloadCombatBanks");
+            Log("WwiseManager.UnloadCombatBanks");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
@@ -195,7 +195,7 @@ namespace ModTek.Features.SoundBanks
                 var loadedAudioBank = ___loadedBanks.Find(x => x.name == soundBank.Value.name);
                 if (loadedAudioBank != null)
                 {
-                    RLog.M.WL(1, "Unloading:" + soundBank.Key);
+                    Log("\tUnloading:" + soundBank.Key);
                     loadedAudioBank.UnloadBank();
                     ___loadedBanks.Remove(loadedAudioBank);
                 }
@@ -220,7 +220,7 @@ namespace ModTek.Features.SoundBanks
 
         public static void Postfix(LoadedAudioBank __instance)
         {
-            RLog.M.TWL(0, "LoadedAudioBank.UnloadBank " + __instance.name);
+            Log("LoadedAudioBank.UnloadBank " + __instance.name);
             if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name))
             {
                 SoundBanksFeature.soundBanks[__instance.name].loaded = false;
@@ -246,27 +246,27 @@ namespace ModTek.Features.SoundBanks
         [Obsolete]
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
         {
-            RLog.M.TWL(0, "LoadedAudioBank.LoadBankExternal " + __instance.name);
+            Log("LoadedAudioBank.LoadBankExternal " + __instance.name);
             if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name) == false)
             {
                 return false;
             }
 
             var uri = new Uri(SoundBanksFeature.soundBanks[__instance.name].filename).AbsoluteUri;
-            RLog.M.WL(1, uri);
+            Log("\t" + uri);
             var www = new WWW(uri);
             while (!www.isDone)
             {
                 Thread.Sleep(25);
             }
 
-            RLog.M.WL(1, "'" + uri + "' loaded");
+            Log("\t'" + uri + "' loaded");
             var pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
             GCHandle? handle = null;
             var dataLength = (uint) www.bytes.Length;
             if (pparams != null)
             {
-                RLog.M.WL(1, "found post-process parameters " + pparams.param1 + " " + pparams.param2);
+                Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
                 var aes = Aes.Create();
                 aes.Mode = CipherMode.CBC;
                 aes.KeySize = 256;
@@ -319,7 +319,7 @@ namespace ModTek.Features.SoundBanks
                 __result = AKRESULT.AK_Fail;
             }
 
-            RLog.M.WL(1, "Result:" + __result + " id:" + ___id + " length:" + dataLength);
+            Log("\tResult:" + __result + " id:" + ___id + " length:" + dataLength);
             return false;
         }
     }

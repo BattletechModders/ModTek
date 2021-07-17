@@ -8,10 +8,10 @@ using BattleTech.ModSupport;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Misc;
 using UnityEngine;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.ModLoaderSupport.Patches
 {
@@ -225,36 +225,31 @@ namespace ModTek.Features.ModLoaderSupport.Patches
 
         public static bool Prefix(Dictionary<string, ModStatusItem> tempLoadedMods)
         {
-            RLog.M.TWL(0, "SaveModStatusToFile");
+            Log("SaveModStatusToFile");
             var changed = false;
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
-                RLog.M.W(1, mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log("\t" + mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     changed = true;
-                    var moddefpath = Path.Combine(mod.Value.Directory, FilePaths.MOD_JSON_NAME);
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
                         mod.Value.SaveState();
-                        RLog.M.W(" save state:" + mod.Value.Enabled);
+                        Log("\t\tsave state:" + mod.Value.Enabled);
                     }
                     catch (Exception e)
                     {
-                        RLog.M.TWL(0, e.ToString());
+                        Log("Can't save mod state", e);
                     }
                 }
-
-                RLog.M.WL("");
             }
 
             if (changed)
             {
                 File.WriteAllText(FilePaths.ChangedFlagPath, "changed");
             }
-
-            RLog.M.flush();
             return false;
         }
     }
@@ -587,7 +582,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
             }
 
             ;
-            RLog.M.TWL(0, "InitializeList");
+            Log("InitializeList");
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 mod.Value.PendingEnable = mod.Value.Enabled;
@@ -596,7 +591,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                     ___modsList.Add(mod.Value.ToVanilla());
                 }
 
-                RLog.M.WL(1, mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log("\t" + mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
             }
 
             __result = true;

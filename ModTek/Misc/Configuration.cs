@@ -21,9 +21,6 @@ namespace ModTek.Misc
         internal string[] ErrorWhitelist = { "Data.DataManager [ERROR] ManifestEntry is null" };
 
         [JsonProperty]
-        internal bool EnableDebugLogging = true;
-
-        [JsonProperty]
         internal bool UseFileCompression = true; // false for pre v2.0 behavior
 
         [JsonProperty]

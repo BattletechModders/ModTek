@@ -27,7 +27,7 @@ namespace ModTek.Features.Manifest
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
             var mods = ModDefsDatabase.ModsInLoadOrder();
-            LogIf(mods.Count > 0, "\nAdding Mod Content...");
+            LogIf(mods.Count > 0, "Adding Mod Content...");
 
             foreach (var (modDef, index) in mods.WithIndex())
             {

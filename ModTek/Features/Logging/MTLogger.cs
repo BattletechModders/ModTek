@@ -5,23 +5,15 @@ using ModTek.Misc;
 
 namespace ModTek.Features.Logging
 {
-    // TODO integrate all Loggers: BTLogger, MTLogger and RTLog!
+    // TODO introduce log levels
+    // MTLogger.Info.Log(message)
+    // if debug is optional: MTLogger.Debug?.Log(message)
     internal static class MTLogger
     {
-        private static readonly object lockObject = new();
-
-        private static StreamWriter stream;
-        internal static void LogInit()
+        internal static void Log(string message = null, Exception e = null)
         {
-            lock (lockObject)
-            {
-                if (stream == null)
-                {
-                    Directory.CreateDirectory(FilePaths.TempModTekDirectory);
-                    stream = File.CreateText(FilePaths.LogPath);
-                    stream.AutoFlush = true;
-                }
-            }
+            message ??= "Method " + GetFullMethodName() + " called";
+            LoggingFeature.Log(message, e);
         }
 
         internal static void LogIf(bool condition, string message)
@@ -29,14 +21,6 @@ namespace ModTek.Features.Logging
             if (condition)
             {
                 Log(message);
-            }
-        }
-
-        internal static void LogIf(bool condition, object obj)
-        {
-            if (condition)
-            {
-                Log($"Method {GetFullMethodName()} called with {obj}");
             }
         }
 
@@ -48,7 +32,7 @@ namespace ModTek.Features.Logging
             }
 
             id ??= "Method " + GetFullMethodName();
-            LogWithDate($"{id} took {sw.Elapsed}");
+            Log($"{id} took {sw.Elapsed}");
 
             if (resetIfLogged)
             {
@@ -64,24 +48,6 @@ namespace ModTek.Features.Logging
             var className = method.ReflectedType?.FullName;
             var fullMethodName = className + "." + methodName;
             return fullMethodName;
-        }
-
-        internal static void LogWithDate(string message)
-        {
-            Log(DateTime.Now.ToLongTimeString() + " - " + message);
-        }
-
-        internal static void Log(string message = null, Exception e = null)
-        {
-            lock (lockObject)
-            {
-                message ??= "Method " + GetFullMethodName() + " called";
-                stream.WriteLine(message);
-                if (e != null)
-                {
-                    stream.WriteLine(e.ToString());
-                }
-            }
         }
     }
 }

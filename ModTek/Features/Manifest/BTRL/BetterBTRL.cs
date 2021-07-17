@@ -57,6 +57,10 @@ namespace ModTek.Features.Manifest.BTRL
 
                 foreach (var entry in currentManifest.AllEntries(true))
                 {
+                    if (entry.GetRawPath().StartsWith("Assets/Resources/UnlockedAssets"))
+                    {
+                        continue;
+                    }
                     LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && !assetBundles.Contains(entry.AssetBundleName),
                         $"Cannot find asset bundle {entry.AssetBundleName} referenced by {entry.Id} ({entry.Type}), check lower/upper casing and dlc requirements.");
                 }

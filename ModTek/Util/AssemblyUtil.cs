@@ -65,7 +65,7 @@ namespace ModTek.Util
             }
             catch (Exception e)
             {
-                Log("\t", e);
+                Log($"Can't find method(s) with name {methodName} in assembly {assembly.FullName}", e);
                 return null;
             }
         }

@@ -2,8 +2,8 @@
 
 namespace ModTek.Features.Logging.Patches
 {
-    [HarmonyPatch(typeof(HBS.Logging.Logger), "HandleUnityLog", MethodType.Normal)]
-    internal static class LogAttacher
+    [HarmonyPatch(typeof(HBS.Logging.Logger), nameof(HBS.Logging.Logger.HandleUnityLog), MethodType.Normal)]
+    internal static class Logger_HandleUnityLog_Patch
     {
         public static bool Prepare()
         {

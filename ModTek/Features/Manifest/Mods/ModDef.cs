@@ -4,11 +4,11 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static ModTek.Features.Logging.MTLogger;
 
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -114,7 +114,7 @@ namespace ModTek.Features.Manifest.Mods
             var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
             var state = new ModState();
             state.Enabled = Enabled;
-            RLog.M.WL(2, "writing to FS:" + Name + "->" + state.Enabled);
+            Log("\t\twriting to FS:" + Name + "->" + state.Enabled);
             state.SaveToPath(modStatePath);
         }
 

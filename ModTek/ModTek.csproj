@@ -13,7 +13,7 @@
     </AssemblySearchPaths>
   </PropertyGroup>
   <ItemGroup>
-    <OutDirFiles Include="$(OutDir)**"/>
+    <OutDirFiles Include="$(OutDir)**" />
   </ItemGroup>
   <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild">
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />

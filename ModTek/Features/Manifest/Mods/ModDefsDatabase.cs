@@ -282,7 +282,7 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             {
-                Log("\nCalling FinishedLoading:");
+                Log("Calling FinishedLoading:");
                 foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
                 {
                     ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);

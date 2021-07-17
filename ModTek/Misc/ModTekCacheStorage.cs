@@ -5,8 +5,8 @@ using System.IO.Compression;
 using System.Reflection;
 using Harmony;
 using HBS.Util;
-using ModTek.Features.Logging;
 using Newtonsoft.Json;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Misc
 {
@@ -27,7 +27,7 @@ namespace ModTek.Misc
             foreach (var file in baseDir.EnumerateFiles())
             {
                 file.IsReadOnly = false;
-                RLog.M.TWL(0, "delete file " + file.FullName);
+                Log("delete file " + file.FullName);
                 try
                 {
                     file.Delete();
@@ -38,7 +38,7 @@ namespace ModTek.Misc
                 }
             }
 
-            RLog.M.TWL(0, "delete directory " + baseDir.FullName);
+            Log("delete directory " + baseDir.FullName);
             try
             {
                 baseDir.Delete();
