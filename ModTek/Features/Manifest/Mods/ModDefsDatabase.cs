@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BattleTech;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -281,15 +282,27 @@ namespace ModTek.Features.Manifest.Mods
                 return;
             }
 
+            Log("Calling FinishedLoading:");
+            foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
             {
-                Log("Calling FinishedLoading:");
-                foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
-                {
-                    ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
-                }
+                ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
             }
             HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
             LoadOrder.ToFile(ModLoadOrder, FilePaths.LoadOrderPath);
+        }
+
+        internal static void ManifestLoaded(Dictionary<string, Dictionary<string, VersionManifestEntry>> manifest)
+        {
+            if (ModLoadOrder == null || ModLoadOrder.Count <= 0)
+            {
+                return;
+            }
+
+            Log("Calling ManifestLoaded:");
+            foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
+            {
+                ModDefExLoading.ManifestLoaded(modDef, manifest);
+            }
         }
     }
 }

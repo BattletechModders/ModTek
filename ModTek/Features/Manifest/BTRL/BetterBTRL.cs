@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.CustomResources;
+using ModTek.Features.Manifest.Mods;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -35,6 +35,8 @@ namespace ModTek.Features.Manifest.BTRL
 
         private void ContentPackManifestsLoaded()
         {
+            ModDefsDatabase.ManifestLoaded(currentManifest.RawManifest);
+
             currentManifest.DumpToDisk();
 
             var contentPacks = packIndex?.GetOwnedContentPacks();
