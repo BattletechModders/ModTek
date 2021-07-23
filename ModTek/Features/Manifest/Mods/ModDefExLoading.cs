@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BattleTech;
 using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Util;
@@ -20,6 +21,7 @@ namespace ModTek.Features.Manifest.Mods
             CustomResourcesFeature.ProcessModDef(modDef);
 
             // load the mod assembly
+            // HERE
             if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))
             {
                 reason = "Fail to call init method";
@@ -143,6 +145,33 @@ namespace ModTek.Features.Manifest.Mods
                 var customResources = CustomResourcesFeature.GetResourceDictionariesForTypes(modDef.CustomResourceTypes);
                 paramsDictionary.Add("customResources", customResources);
             }
+
+            foreach (var method in methods)
+            {
+                try
+                {
+                    if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
+                    {
+                        Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+                }
+            }
+        }
+
+        internal static void ManifestLoaded(ModDefEx modDef, Dictionary<string, Dictionary<string, VersionManifestEntry>> manifest)
+        {
+            var methods = AssemblyUtil.FindMethods(modDef.Assembly, "ManifestLoaded");
+
+            if (methods == null || methods.Length == 0)
+            {
+                return;
+            }
+
+            var paramsDictionary = new Dictionary<string, object> { { "manifest", manifest } };
 
             foreach (var method in methods)
             {
