@@ -114,7 +114,7 @@ namespace ModTek.Features.Manifest
                 }
                 else
                 {
-                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{"*"+FileUtils.JSON_TYPE} : null;
+                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{FileUtils.JSON_TYPE} : null;
                     foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                     {
                         var copy = entry.copy();

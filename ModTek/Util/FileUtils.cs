@@ -53,10 +53,13 @@ namespace ModTek.Util
 
         internal static List<string> FindFiles(string basePath, params string[] suffixes)
         {
-            return Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)
-                .Where(path => !FileIsOnDenyList(path))
-                .Where(path => suffixes == null || suffixes.Any(p => path.EndsWith(p, StringComparison.InvariantCultureIgnoreCase)))
-                .ToList();
+            var query = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)
+                .Where(path => !FileIsOnDenyList(path));
+            if (suffixes != null && suffixes.Length > 0)
+            {
+                query = query.Where(path => suffixes.Any(p => path.EndsWith(p, StringComparison.InvariantCultureIgnoreCase)));
+            }
+            return query.ToList();
         }
 
         internal const string JSON_TYPE = ".json";
