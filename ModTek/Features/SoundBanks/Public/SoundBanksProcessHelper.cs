@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using ModTek.Features.SoundBanks;
 
+// ReSharper disable once CheckNamespace
 namespace ModTek
 {
     public static class SoundBanksProcessHelper

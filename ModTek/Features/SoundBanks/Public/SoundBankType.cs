@@ -1,4 +1,5 @@
-﻿namespace ModTek
+﻿// ReSharper disable once CheckNamespace
+namespace ModTek
 {
     public enum SoundBankType
     {

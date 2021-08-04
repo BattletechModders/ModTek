@@ -2,6 +2,7 @@
 using ModTek.Features.SoundBanks;
 using Newtonsoft.Json;
 
+// ReSharper disable once CheckNamespace
 namespace ModTek
 {
     public class SoundBankDef
