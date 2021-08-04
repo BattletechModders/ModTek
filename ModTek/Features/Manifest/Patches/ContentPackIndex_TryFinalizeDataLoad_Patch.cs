@@ -14,6 +14,7 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
+        [HarmonyPriority(Priority.High)]
         public static void Postfix(ContentPackIndex __instance)
         {
             try
