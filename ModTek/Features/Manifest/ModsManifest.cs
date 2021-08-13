@@ -324,37 +324,35 @@ namespace ModTek.Features.Manifest
             sw.Stop();
             LogIfSlow(sw, "MDDB Cache Cleanup");
 
-            if (rebuildMDDB || preloadResources.Count > 0)
+            SaveCaches();
+
+            if (!ModTek.Config.PreloadResourcesForCache)
             {
-                PreloadResourcesAfterManifestComplete(rebuildMDDB, preloadResources); //flagForRebuild, requestLoad
+                Log("Skipping preload, disabled in config.");
+            }
+            else if (rebuildMDDB || preloadResources.Count > 0)
+            {
+                PreloadResources(rebuildMDDB, preloadResources);
             }
             else
             {
-                Log("Skipping preload, no changes in MDDB data detected.");
-                SaveCaches();
+                Log("Skipping preload, no changes detected.");
             }
         }
 
         private static readonly Stopwatch preloadSW = new();
-        private static void PreloadResourcesAfterManifestComplete(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
+        private static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
-            if (!ModTek.Config.PreloadResourcesForCache)
-            {
-                Log("Skipped preloading resources");
-                SaveCaches();
-                return;
-            }
             preloadSW.Start();
 
-            // TODO not even sure if we need this phase, but vanilla has all data preloaded in their MDDB
-            Log("Preloading MDDB related data.");
+            Log("Preloading resources.");
 
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
             if (rebuildMDDB)
             {
                 foreach (var type in BTConstants.MDDBTypes)
                 {
-                    loadRequest.AddAllOfTypeBlindLoadRequest(type); // force build everything MDD related
+                    loadRequest.AddAllOfTypeBlindLoadRequest(type);
                 }
             }
             else
@@ -368,6 +366,7 @@ namespace ModTek.Features.Manifest
                 }
             }
             loadRequest.ProcessRequests();
+            // TODO find a way to show a loading bar as preloading can even go on during the main menu
         }
 
         private static void PreloadFinished()
