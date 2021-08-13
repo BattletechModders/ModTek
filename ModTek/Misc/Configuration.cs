@@ -33,6 +33,9 @@ namespace ModTek.Misc
         internal bool ImplicitManifestShouldAppendText = false; // false for pre v2.0 behavior
 
         [JsonProperty]
+        internal bool PreloadResourcesForCache = false; // preloading happens as soon as dlc manifest is fully loaded
+
+        [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
 
         [JsonProperty]

@@ -326,7 +326,7 @@ namespace ModTek.Features.Manifest
 
             if (rebuildMDDB || preloadResources.Count > 0)
             {
-                PreloadMergesAfterManifestComplete(rebuildMDDB, preloadResources); //flagForRebuild, requestLoad
+                PreloadResourcesAfterManifestComplete(rebuildMDDB, preloadResources); //flagForRebuild, requestLoad
             }
             else
             {
@@ -336,8 +336,14 @@ namespace ModTek.Features.Manifest
         }
 
         private static readonly Stopwatch preloadSW = new();
-        private static void PreloadMergesAfterManifestComplete(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
+        private static void PreloadResourcesAfterManifestComplete(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
+            if (!ModTek.Config.PreloadResourcesForCache)
+            {
+                Log("Skipped preloading resources");
+                SaveCaches();
+                return;
+            }
             preloadSW.Start();
 
             // TODO not even sure if we need this phase, but vanilla has all data preloaded in their MDDB
