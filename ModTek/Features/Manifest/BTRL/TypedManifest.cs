@@ -18,7 +18,7 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new();
 
         private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
-        private static readonly VersionManifestEntry[] emptyArray = new VersionManifestEntry[0];
+        private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();
 
         private bool? AllContentPacksOwned;
         private ContentPackIndex contentPackIndex;
