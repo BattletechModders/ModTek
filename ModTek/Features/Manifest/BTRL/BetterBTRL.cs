@@ -18,7 +18,7 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly TypedManifest currentManifest = new();
 
         private readonly VersionManifest defaultManifest;
-        private readonly List<VersionManifestAddendum> hbsAddendums = new();
+        private readonly List<VersionManifestAddendum> addendums = new();
         private readonly List<ModAddendumManifest> orderedModAddendumManifests = new();
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
@@ -105,7 +105,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         private void RemoveAddendumForMemoryStore(VersionManifestAddendum addendum)
         {
-            hbsAddendums.RemoveAll(x => addendum.Name.Equals(x.Name));
+            addendums.RemoveAll(x => addendum.Name.Equals(x.Name));
             HasChanges = true;
             RefreshTypedEntries();
         }
@@ -125,14 +125,14 @@ namespace ModTek.Features.Manifest.BTRL
             {
                 return;
             }
-            hbsAddendums.Add(addendum);
+            addendums.Add(addendum);
             HasChanges = true;
             RefreshTypedEntries();
         }
 
         private bool ContainsAddendum(string name)
         {
-            return hbsAddendums.Any(x => name.Equals(x.Name));
+            return addendums.Any(x => name.Equals(x.Name));
         }
 
         public void AddModAddendum(ModAddendumManifest modManifest)
@@ -143,14 +143,16 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
-            // only used internally by BTRL
-            // we dont support removal, since we cannot remove base types from MDDB anyway
-            throw new NotImplementedException();
+            if (addendums.RemoveAll(a => a.Name == addendum.Name) > 0)
+            {
+                HasChanges = true;
+                RefreshTypedEntries();
+            }
         }
 
         public VersionManifestAddendum GetAddendumByName(string name)
         {
-            return hbsAddendums.FirstOrDefault(x => x.Name == name);
+            return addendums.FirstOrDefault(x => x.Name == name);
         }
 
         #region memory stores
@@ -297,7 +299,7 @@ namespace ModTek.Features.Manifest.BTRL
             currentManifest.Reset(defaultManifest.Entries, packIndex);
             var ownedContentPacks = packIndex?.GetOwnedContentPacks() ?? new List<string>();
 
-            foreach (var addendum in hbsAddendums)
+            foreach (var addendum in addendums)
             {
                 currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
