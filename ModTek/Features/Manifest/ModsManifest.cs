@@ -297,10 +297,10 @@ namespace ModTek.Features.Manifest
             switch (entriesById.Count)
             {
                 case 0:
-                    Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually.");
+                    Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually: {entry}");
                     return false;
                 case > 1:
-                    Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually.");
+                    Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually: {entry}");
                     return false;
                 default:
                     entry.Type = entriesById[0].Type;
