@@ -121,7 +121,14 @@ namespace ModTek.Features.Manifest.MDD
             }
 
             sw.Start();
-            MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
+            try
+            {
+                MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
+            }
+            catch (Exception e)
+            {
+                Log($"Can't add entry to MDDB: {entry}", e);
+            }
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");
             if (!entry.IsInDefaultMDDB())
