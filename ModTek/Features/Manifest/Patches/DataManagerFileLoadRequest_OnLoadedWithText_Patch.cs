@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using BattleTech;
 using BattleTech.Data;
@@ -17,22 +16,15 @@ namespace ModTek.Features.Manifest.Patches
 
         public static IEnumerable<MethodBase> GetOnLoadedWithTextMethods()
         {
-            var parent = typeof(DataManager.FileLoadRequest);
-            foreach (var subclass in parent.Assembly.GetTypes().Where(type => type.IsSubclassOf(parent)))
-            {
-                if (subclass.IsAbstract)
-                {
-                    continue;
-                }
+            // using same hook as CAC/CustomLocalization to avoid being ignored
+            yield return AccessTools.Method(typeof(DataManager.StringDataLoadRequest<WeaponDef>), "OnLoadedWithText");
+            yield return AccessTools.Method(typeof(DataManager.CSVDataLoadRequest<CSVReader>), "OnLoadedWithText");
+        }
 
-                var method = AccessTools.DeclaredMethod(subclass, "OnLoadedWithText");
-                if (method == null)
-                {
-                    continue;
-                }
-
-                yield return method;
-            }
+        public static IEnumerable<MethodBase> GetLoadMethods()
+        {
+            yield return AccessTools.Method(typeof(DataManager.StringDataLoadRequest<WeaponDef>), "Load");
+            yield return AccessTools.Method(typeof(DataManager.CSVDataLoadRequest<CSVReader>), "Load");
         }
 
         public static IEnumerable<MethodBase> TargetMethods()

@@ -69,9 +69,7 @@ namespace ModTek.Features.Manifest.Patches
                 nameof(LoadResource)
             );
 
-            return DataManagerFileLoadRequest_OnLoadedWithText_Patch
-                .GetOnLoadedWithTextMethods()
-                .Select(x => AccessTools.DeclaredMethod(x.DeclaringType, "Load"));
+            return DataManagerFileLoadRequest_OnLoadedWithText_Patch.GetLoadMethods();
         }
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
