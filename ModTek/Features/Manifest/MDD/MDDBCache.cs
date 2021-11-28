@@ -22,7 +22,7 @@ namespace ModTek.Features.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<CacheKey> ignored = new();
+        private readonly HashSet<CacheKey> toBeIndexed = new();
 
         private CacheDB Entries { get; }
         internal static bool HasChanges;
@@ -100,7 +100,7 @@ namespace ModTek.Features.Manifest.MDD
             }
 
             var key = new CacheKey(entry);
-            if (ignored.Contains(key))
+            if (!toBeIndexed.Contains(key) && !entry.IsInDefaultMDDB())
             {
                 return;
             }
@@ -130,7 +130,7 @@ namespace ModTek.Features.Manifest.MDD
                 Log($"Can't add entry to MDDB: {entry.ToShortString()}", e);
             }
             sw.Stop();
-            LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");
+            LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000, true); // every 10s log total and reset
             if (!entry.IsInDefaultMDDB())
             {
                 Entries.Add(key, FileVersionTuple.From(entry));
@@ -138,10 +138,10 @@ namespace ModTek.Features.Manifest.MDD
             HasChanges = true;
         }
 
-        internal void Ignore(ModEntry entry)
+        internal void AddToBeIndexed(ModEntry entry)
         {
             var key = new CacheKey(entry);
-            ignored.Add(key);
+            toBeIndexed.Add(key);
         }
 
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)

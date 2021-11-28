@@ -219,10 +219,13 @@ namespace ModTek.Features.Manifest
                     SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
-                if (!entry.AddToDB)
+                if (entry.AddToDB)
+                {
+                    mddbCache.AddToBeIndexed(entry);
+                }
+                else
                 {
                     Log($"\tAddToDB=false: {entry}");
-                    mddbCache.Ignore(entry);
                 }
 
                 if (entry.AddToAddendum != null)
