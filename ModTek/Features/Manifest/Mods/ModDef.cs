@@ -150,6 +150,8 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             modDef.PendingEnable = modDef.Enabled;
+            modDef.DependsOn.ExceptWith(ModTek.Config.IgnoreMissingMods);
+            modDef.OptionallyDependsOn.ExceptWith(ModTek.Config.IgnoreMissingMods);
             return modDef;
         }
 

@@ -39,6 +39,9 @@ namespace ModTek.Misc
         internal string[] BlockedMods = { "FYLS" };
 
         [JsonProperty]
+        internal string[] IgnoreMissingMods = { "FYLS" };
+
+        [JsonProperty]
         internal LoggingSettings Logging = new();
 
 
