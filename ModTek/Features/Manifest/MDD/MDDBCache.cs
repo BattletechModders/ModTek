@@ -127,7 +127,7 @@ namespace ModTek.Features.Manifest.MDD
             }
             catch (Exception e)
             {
-                Log($"Can't add entry to MDDB: {entry}", e);
+                Log($"Can't add entry to MDDB: {entry.ToShortString()}", e);
             }
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB");

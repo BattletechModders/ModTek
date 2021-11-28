@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.CustomResources;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -62,7 +62,7 @@ namespace ModTek.Features.Manifest.BTRL
                         continue;
                     }
                     LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && !assetBundles.Contains(entry.AssetBundleName),
-                        $"Cannot find asset bundle {entry.AssetBundleName} referenced by {entry.Id} ({entry.Type}), check lower/upper casing and dlc requirements.");
+                        $"Cannot find asset bundle {entry.AssetBundleName} referenced by {entry.ToShortString()}, check lower/upper casing and dlc requirements.");
                 }
             }
 

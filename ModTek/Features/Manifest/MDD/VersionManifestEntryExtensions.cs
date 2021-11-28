@@ -19,5 +19,10 @@ namespace ModTek.Features.Manifest.MDD
         {
             return entry.IsAssetBundled && BTConstants.HBSContentNames.Contains(entry.AssetBundleName);
         }
+
+        internal static string ToShortString(this VersionManifestEntry entry)
+        {
+            return $"{entry.Id} ({entry.Type})";
+        }
     }
 }
