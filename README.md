@@ -39,7 +39,7 @@ On game startup, ModTek decorates the version number found in the bottom left co
 
 ## Developing ModTek
 
-Information on how to build and release ModTek is documented in [DEVELOPING.md](DEVELOPING.md).
+Information on how to build and release ModTek is documented in [DEVELOPER.md](DEVELOPER.md).
 
 ## Enabling or Disabling
 
