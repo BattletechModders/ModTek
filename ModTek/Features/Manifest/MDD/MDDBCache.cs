@@ -123,14 +123,15 @@ namespace ModTek.Features.Manifest.MDD
             sw.Start();
             try
             {
+                Log($"MDDB Cache: Indexing {entry.ToShortString()}");
                 MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
             }
             catch (Exception e)
             {
-                Log($"Can't add entry to MDDB: {entry.ToShortString()}", e);
+                Log($"MDDB Cache: Exception when indexing {entry.ToShortString()}", e);
             }
             sw.Stop();
-            LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000, true); // every 10s log total and reset
+            LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000); // every 10s log total and reset
             if (!entry.IsInDefaultMDDB())
             {
                 Entries.Add(key, FileVersionTuple.From(entry));

@@ -134,6 +134,7 @@ namespace ModTek.Features.Manifest.Merges
 
             try
             {
+                Log($"Merge Cache: Merging {entry.ToShortString()}");
                 content = temp.Merge(content);
             }
             catch (Exception e)
