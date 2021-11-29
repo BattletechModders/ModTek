@@ -10,51 +10,62 @@ namespace ModTek.Misc
     {
         [JsonProperty]
         internal bool ShowLoadingScreenErrors = true;
-        internal string ShowLoadingScreenErrors_Description => "TODO";
+        [JsonProperty]
+        internal const string ShowLoadingScreenErrors_Description = "TODO";
 
         [JsonProperty]
         internal bool ShowErrorPopup = true;
-        internal string ShowErrorPopup_Description => "TODO";
+        [JsonProperty]
+        internal const string ShowErrorPopup_Description = "TODO";
 
         [JsonProperty]
         internal bool UseErrorWhiteList = true;
-        internal string UseErrorWhiteList_Description => "TODO";
+        [JsonProperty]
+        internal const string UseErrorWhiteList_Description = "TODO";
 
         [JsonProperty]
         internal string[] ErrorWhitelist = { "Data.DataManager [ERROR] ManifestEntry is null" };
 
         [JsonProperty]
-        internal bool UseFileCompression = false; // false for pre v2.0 behavior
-        internal string UseFileCompression_Description => "Manifest, database and cache files are compressed using gzip.";
+        internal bool UseFileCompression;
+        [JsonProperty]
+        internal const string UseFileCompression_Description = "Manifest, database and cache files are compressed using gzip.";
 
         [JsonProperty]
-        internal bool SearchModsInSubDirectories = true; // false for pre v2.0 behavior
-        internal string SearchModsInSubDirectories_Description => "Searches recursively all directories for mod.json instead of just the ones under Mods.";
+        internal bool SearchModsInSubDirectories = true;
+        [JsonProperty]
+        internal const string SearchModsInSubDirectories_Description = "Searches recursively all directories for mod.json instead only for directories directly found under Mods. Set to false for pre v2.0 behavior.";
 
         [JsonProperty]
         internal bool ImplicitManifestShouldMergeJSON = true;
-        internal string ImplicitManifestShouldMergeJSON_Description => "How JSONs in a mods implicit manifest (StreamingAssets) are being treated.";
+        [JsonProperty]
+        internal const string ImplicitManifestShouldMergeJSON_Description = "How JSONs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
-        internal bool ImplicitManifestShouldAppendText = false; // false for pre v2.0 behavior
-        internal string ImplicitManifestShouldAppendText_Description => "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
+        internal bool ImplicitManifestShouldAppendText;
+        [JsonProperty]
+        internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
-        internal bool PreloadResourcesForCache = false; // preloading happens as soon as dlc manifest is fully loaded
-        internal string PreloadResourcesForCache_Description => "Instead of waiting for the game to requests resources naturally and then merge when loading" +
-            ", pre-request all mergeable and indexable resources during the game startup. Not all mods can work with this, therefore disable by default.";
+        internal bool PreloadResourcesForCache;
+        [JsonProperty]
+        internal const string PreloadResourcesForCache_Description = "Instead of waiting for the game to request resources naturally and then merge when loading" +
+            ", pre-request all mergeable and indexable resources during the game startup. Not all mods are compatible with pre-loading, therefore disabled by default.";
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
-        internal string BlockedMods_Description => "Mods that should not be allowed to load, useful in case those interfere with the current version of ModTek.";
+        [JsonProperty]
+        internal const string BlockedMods_Description = "Mods that should not be allowed to load. Useful in cases where those mods would (newly) interfere with ModTek.";
 
         [JsonProperty]
         internal string[] IgnoreMissingMods = { "FYLS" };
-        internal string IgnoreMissingMods_Description => "Ignore the dependency requirement of mods that depend on ignored mods. Useful if ModTek takes over the same functionality of the ignored mod.";
+        [JsonProperty]
+        internal const string IgnoreMissingMods_Description = "Ignore the dependency requirement of mods that depend on the listed mods. Useful if e.g. ModTek provides the same functionality as the ignored mods.";
 
         [JsonProperty]
         internal string[] AssembliesToPreload = { };
-        internal string AssembliesToPreload_Description => "A list of assemblies to pre-load before ModTek starts harmony patching." +
+        [JsonProperty]
+        internal const string AssembliesToPreload_Description = "A list of assemblies to pre-load before ModTek starts harmony patching." +
             " Useful for mods that modify the assembly directly and introduce dependencies not found in the default assembly search path of the game." +
             " Path is relative to the Mods/ directory";
 

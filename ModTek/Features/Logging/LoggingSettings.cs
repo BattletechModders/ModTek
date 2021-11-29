@@ -5,27 +5,37 @@ namespace ModTek.Features.Logging
     internal class LoggingSettings
     {
         [JsonProperty]
-        public string[] PrefixesToIgnore = {};
+        internal string[] PrefixesToIgnore = {};
+        [JsonProperty]
+        internal const string PrefixesToIgnore_Description = "Ignore any lines starting with any of the listed prefixes.";
 
         [JsonProperty]
-        public bool PreserveFullLog;
+        internal bool PreserveFullLog;
+        [JsonProperty]
+        internal const string PreserveFullLog_Description = "Preserve a complete log where prefixes are not ignored.";
 
         [JsonProperty]
-        public bool IgnoreLoggerLogLevel;
+        internal bool IgnoreLoggerLogLevel;
+        [JsonProperty]
+        internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored.";
 
         [JsonProperty]
-        public bool SkipOriginalLoggers;
+        internal bool SkipOriginalLoggers;
+        [JsonProperty]
+        internal const string SkipOriginalLoggers_Description = "If true, the original (HBS based) loggers and therefore their appenders and log files will be skipped.";
 
         [JsonProperty]
-        public string[] IgnoreSkipForLoggers = {"ModTek"};
+        internal string[] IgnoreSkipForLoggers = {"ModTek"};
+        [JsonProperty]
+        internal const string IgnoreSkipForLoggers_Description = "Loggers defined here will never be skipped, meaning their log files will still be separately available.";
 
         [JsonProperty]
-        public FormatterSettings ModTekLogFormatting = new()
+        internal FormatterSettings ModTekLogFormatting = new()
         {
             FormatLine = "{2}{3}" // log level is always LOG and we know its ModTek
         };
 
         [JsonProperty]
-        public FormatterSettings BattleTechLogFormatting = new();
+        internal FormatterSettings BattleTechLogFormatting = new();
     }
 }
