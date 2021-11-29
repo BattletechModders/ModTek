@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Harmony;
 using ModTek.Features.CustomResources;
@@ -115,10 +116,31 @@ namespace ModTek
                 Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
             }
 
+            LogIf(Config.AssembliesToPreload.Length > 0, "Pre-loading assemblies");
+            foreach (var assemblyToPreload in ModTek.Config.AssembliesToPreload)
+            {
+                Log($"\tLoading {assemblyToPreload}");
+                var assemblyPath = Path.Combine(FilePaths.ModsDirectory, assemblyToPreload);
+                if (!File.Exists(assemblyPath))
+                {
+                    Log($"\t\tWarning: Can't find assembly at {assemblyPath}, aborting load.");
+                    continue;
+                }
+
+                try
+                {
+                    AssemblyUtil.LoadDLL(assemblyPath);
+                }
+                catch (Exception e)
+                {
+                    Log($"\t\tError: Failed to pre-load the assembly.", e);
+                }
+            }
+
             try
             {
                 var instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
-                instance.PatchAll(Assembly.GetExecutingAssembly());
+                PatchAll(instance, Assembly.GetExecutingAssembly());
                 //BattleTechResourceLoader.Refresh();
                 SVGAssetLoadRequest_Load.Patch(instance);
             }
@@ -140,6 +162,23 @@ namespace ModTek
 
             LoadUsingProgressPanel();
         }
+
+        private static void PatchAll(HarmonyInstance instance, Assembly assembly) => assembly.GetTypes().Do(type =>
+        {
+            try
+            {
+                var harmonyMethods = type.GetHarmonyMethods();
+                if (harmonyMethods == null || !harmonyMethods.Any())
+                    return;
+                var attributes = HarmonyMethod.Merge(harmonyMethods);
+                new PatchProcessor(instance, type, attributes).Patch();
+            }
+            catch (Exception)
+            {
+                Log($"Applying patch {type} failed");
+                throw;
+            }
+        });
 
         private static void LoadUsingProgressPanel()
         {
