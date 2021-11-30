@@ -1,7 +1,11 @@
-﻿using BattleTech;
+﻿using System;
+using System.IO;
+using BattleTech;
 using BattleTech.Assetbundles;
 using Harmony;
 using ModTek.Features.Manifest.BTRL;
+using ModTek.Misc;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -13,15 +17,29 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
-        public static void Postfix(string assetBundleName, ref string __result)
+        public static bool Prefix(string assetBundleName, ref string __result)
+        {
+            try
+            {
+                var filePath = AssetBundleNameToFilepath(assetBundleName);
+                __result = filePath;
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
+            return true;
+        }
+
+        internal static string AssetBundleNameToFilepath(string assetBundleName)
         {
             var entry = BetterBTRL.Instance.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
             if (entry == null)
             {
-                return;
+                return Path.Combine(FilePaths.AssetBundlesDirectory, assetBundleName);
             }
-
-            __result = entry.FilePath;
+            return Path.Combine(FilePaths.StreamingAssetsDirectory, entry.FilePath);
         }
     }
 }

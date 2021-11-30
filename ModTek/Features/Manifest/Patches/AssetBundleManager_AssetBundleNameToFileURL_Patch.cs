@@ -1,10 +1,7 @@
-using BattleTech;
+using System;
 using BattleTech.Assetbundles;
 using Harmony;
-using ModTek.Features.Manifest.BTRL;
-
-// ReSharper disable InconsistentNaming
-// ReSharper disable UnusedMember.Global
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -16,15 +13,19 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
-        public static void Postfix(string assetBundleName, ref string __result)
+        public static bool Prefix(string assetBundleName, ref string __result)
         {
-            var entry = BetterBTRL.Instance.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
-            if (entry == null)
+            try
             {
-                return;
+                var filePath = AssetBundleManager_AssetBundleNameToFilepath_Patch.AssetBundleNameToFilepath(assetBundleName);
+                __result = $"file://{filePath}";
+                return false;
             }
-
-            __result = $"file://{entry.FilePath}";
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
+            return true;
         }
     }
 }

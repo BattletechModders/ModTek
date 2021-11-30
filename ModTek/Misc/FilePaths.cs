@@ -35,6 +35,7 @@ namespace ModTek.Misc
         internal static string ModsDirectory { get; private set; }
         internal static string StreamingAssetsDirectory { get; private set; }
         internal static string StreamingAssetsDirectoryName { get; private set; }
+        internal static string AssetBundlesDirectory { get; private set; }
         internal static string ChangedFlagPath { get; private set; }
         internal static string LogPath { get; set; }
 
@@ -57,6 +58,7 @@ namespace ModTek.Misc
 
             StreamingAssetsDirectory = Application.streamingAssetsPath;
             StreamingAssetsDirectoryName = Path.GetFileName(StreamingAssetsDirectory);
+            AssetBundlesDirectory = Path.Combine(StreamingAssetsDirectory, "data/assetbundles");
             GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
             MDDBPath = Path.Combine(Path.Combine(StreamingAssetsDirectory, "MDD"), MDD_FILE_NAME);
 
