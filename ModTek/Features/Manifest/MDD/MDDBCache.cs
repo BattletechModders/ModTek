@@ -161,7 +161,7 @@ namespace ModTek.Features.Manifest.MDD
                         }
                         else
                         {
-                            Log($"MDDBCache: {key} missing in cache.");
+                            Log($"MDDB Cache: {key} missing in cache.");
                             preloadResources.Add(key);
                         }
                     }
@@ -172,7 +172,7 @@ namespace ModTek.Features.Manifest.MDD
                 {
                     if (!kv.Value.CacheHit)
                     {
-                        Log($"MDDBCache: {kv.Key} left over in cache.");
+                        Log($"MDDB Cache: {kv.Key} left over in cache.");
                         flagForRebuild = true;
                     }
                 }
@@ -180,7 +180,7 @@ namespace ModTek.Features.Manifest.MDD
 
             if (flagForRebuild)
             {
-                Log($"MDDBCache: Rebuilding.");
+                Log($"MDDB Cache: Rebuilding.");
                 preloadResources.Clear();
                 Reset();
             }
