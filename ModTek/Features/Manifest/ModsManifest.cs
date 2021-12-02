@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.UI;
+using HBS;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.CustomTags;
-using ModTek.Features.LoadingCurtainEx;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Merges;
@@ -18,6 +17,7 @@ using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace ModTek.Features.Manifest
 {
@@ -313,9 +313,43 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        internal static void VerifyCaches()
+        internal static void ContentPackManifestsLoaded()
         {
-            Log();
+            // required to make sure IntroCinematicLauncher is initialized
+            // so the HoldForIntroVideo + OnCinematicEnd pattern can be used later
+            if (LazySingletonBehavior<UIManager>.Instance.GetFirstModule<MainMenu>() == null)
+            {
+                UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
+                    MessageCenterMessageType.OnEnterMainMenu,
+                    _ =>
+                    {
+                        ContentPackManifestsLoaded();
+                        return true;
+                    }
+                );
+                return;
+            }
+
+            // if cinematic launcher is playing or wants to play video, let's wait
+            if (IntroCinematicLauncher.HoldForIntroVideo)
+            {
+                UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
+                    MessageCenterMessageType.OnCinematicEnd,
+                    _ =>
+                    {
+                        ContentPackManifestsLoaded();
+                        return true;
+                    }
+                );
+                return;
+            }
+
+            VerifyCaches();
+        }
+
+        private static void VerifyCaches()
+        {
+            Log("Verify Caches");
             var preloadResources = new HashSet<CacheKey>();
 
             var rebuildMDDB = false;

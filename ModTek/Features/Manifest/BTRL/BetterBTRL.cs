@@ -66,7 +66,7 @@ namespace ModTek.Features.Manifest.BTRL
                 }
             }
 
-            ModsManifest.VerifyCaches();
+            ModsManifest.ContentPackManifestsLoaded();
         }
 
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
