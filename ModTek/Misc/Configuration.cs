@@ -53,6 +53,11 @@ namespace ModTek.Misc
             ", pre-request all mergeable and indexable resources during the game startup. If not pre-loading, SimGame will be missing pilots and lances.";
 
         [JsonProperty]
+        internal bool ShowPreloadResourcesProgress;
+        [JsonProperty]
+        internal const string ShowPreloadResourcesProgress_Description = "If in main menu and the loading curtain is shown, try to update the shown text to the current processed item. Does NOT fix the frozen indicator, therefore disabled by default.";
+
+        [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
         [JsonProperty]
         internal const string BlockedMods_Description = "Mods that should not be allowed to load. Useful in cases where those mods would (newly) interfere with ModTek.";

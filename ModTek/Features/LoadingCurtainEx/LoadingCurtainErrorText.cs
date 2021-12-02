@@ -4,7 +4,7 @@ using ModTek.Util;
 using TMPro;
 using UnityEngine;
 
-namespace ModTek.UI
+namespace ModTek.Features.LoadingCurtainEx
 {
     internal static class LoadingCurtainErrorText
     {
@@ -41,8 +41,9 @@ namespace ModTek.UI
             }
         }
 
-        public static void Setup(GameObject parent)
+        public static void SetupActive()
         {
+            var parent = LoadingCurtainUtils.GetActive().gameObject;
             if (parent == null || parentLoadingCurtain == parent)
             {
                 return;

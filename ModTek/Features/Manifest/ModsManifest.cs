@@ -337,7 +337,7 @@ namespace ModTek.Features.Manifest
             }
             else if (rebuildMDDB || preloadResources.Count > 0)
             {
-                PreloadResources(rebuildMDDB, preloadResources);
+                ModsManifestPreloader.PreloadResources(rebuildMDDB, preloadResources);
             }
             else
             {
@@ -345,55 +345,9 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        internal static void ShowLoadingCurtainIfStillPreloading()
+        internal static void PreloaderFinished()
         {
-            if (!isPreloading)
-            {
-                return;
-            }
-            Log("Showing LoadingCurtain in MainMenu since still pre-loading.");
-            LoadingCurtain.ShowPopupUntil(
-                () => !isPreloading,
-                "Pre-loading mod data, might take a while"
-            );
-        }
-
-        private static readonly Stopwatch preloadSW = new();
-        private static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
-        {
-            isPreloading = true;
-            preloadSW.Start();
-
-            Log("Preloading resources.");
-
-            var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
-            if (rebuildMDDB)
-            {
-                foreach (var type in BTConstants.MDDBTypes)
-                {
-                    loadRequest.AddAllOfTypeBlindLoadRequest(type);
-                }
-            }
-            else
-            {
-                foreach (var resource in preloadResources)
-                {
-                    if (BTConstants.ResourceType(resource.Type, out var resourceType))
-                    {
-                        loadRequest.AddBlindLoadRequest(resourceType, resource.Id);
-                    }
-                }
-            }
-            loadRequest.ProcessRequests();
-            // TODO find a way to show a loading bar as preloading can even go on during the main menu
-        }
-
-        private static bool isPreloading;
-        private static void PreloadFinished()
-        {
-            isPreloading = false;
-            preloadSW.Stop();
-            LogIfSlow(preloadSW, "Preloading");
+            Log("Pre-loader finished");
             SaveCaches();
         }
 
@@ -441,7 +395,7 @@ namespace ModTek.Features.Manifest
                 mddbCache.Add(entry, content, true);
             }
 
-            LoadingCurtainUtils.SetActivePopupText($"Loaded {entry.ToShortString()}");
+            ModsManifestPreloader.UpdateLoadingCurtainTextForProcessedEntry(entry);
         }
     }
 }

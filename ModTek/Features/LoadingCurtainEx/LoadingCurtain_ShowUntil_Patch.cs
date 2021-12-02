@@ -17,8 +17,7 @@ namespace ModTek.Features.LoadingCurtainEx
 
         public static void Postfix()
         {
-            var activeInstance = Traverse.Create(typeof(LoadingCurtain)).Field("activeInstance").GetValue<LoadingCurtain>();
-            LoadingCurtainErrorText.Setup(activeInstance.gameObject);
+            LoadingCurtainErrorText.SetupActive();
         }
     }
 }

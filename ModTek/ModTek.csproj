@@ -67,6 +67,9 @@
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.VideoModule">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="5.6.10">

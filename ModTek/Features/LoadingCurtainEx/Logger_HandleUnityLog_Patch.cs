@@ -23,8 +23,10 @@ namespace ModTek.Features.LoadingCurtainEx
 
         public static void Postfix(string logString, string stackTrace, LogType type)
         {
-            if (!ModTek.HasLoaded || type != LogType.Error && type != LogType.Exception || ModTek.Config.UseErrorWhiteList && !ModTek.Config.ErrorWhitelist.Any(logString.StartsWith))
-            {
+            if (!ModTek.HasLoaded
+                || type != LogType.Error && type != LogType.Exception
+                || ModTek.Config.UseErrorWhiteList && !ModTek.Config.ErrorWhitelist.Any(logString.StartsWith)
+            ) {
                 return;
             }
 
