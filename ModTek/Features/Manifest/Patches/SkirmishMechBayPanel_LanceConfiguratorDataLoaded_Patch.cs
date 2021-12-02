@@ -9,7 +9,7 @@ namespace ModTek.Features.Manifest.Patches
     {
         public static void Prefix()
         {
-            ModsManifest.SimGameOrSkirmishLoaded();
+            ModsManifest.SaveCaches();
         }
     }
 }

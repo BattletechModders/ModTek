@@ -43,11 +43,11 @@ namespace ModTek.Features.Manifest
 
         private static void PreloadFinished()
         {
+            ModsManifest.SaveCaches();
+
             isPreloading = false;
             preloadSW.Stop();
             LogIfSlow(preloadSW, "Preloading");
-
-            ModsManifest.PreloaderFinished();
         }
 
         internal static void ShowLoadingCurtainIfStillPreloading(VideoPlayer videoPlayer)

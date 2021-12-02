@@ -345,20 +345,9 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        internal static void PreloaderFinished()
+        internal static void SaveCaches()
         {
-            Log("Pre-loader finished");
-            SaveCaches();
-        }
-
-        internal static void SimGameOrSkirmishLoaded()
-        {
-            Log("Skirmish or SimGame loaded");
-            SaveCaches();
-        }
-
-        private static void SaveCaches()
-        {
+            Log("Saving caches");
             mergeCache.Save();
             mddbCache.Save();
         }
