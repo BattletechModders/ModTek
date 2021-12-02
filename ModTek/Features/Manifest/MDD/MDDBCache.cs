@@ -99,8 +99,7 @@ namespace ModTek.Features.Manifest.MDD
                 return;
             }
 
-            var key = new CacheKey(entry);
-            if (!toBeIndexed.Contains(key) && !entry.IsInDefaultMDDB())
+            if (!ShouldIndex(entry, out var key))
             {
                 return;
             }
@@ -145,6 +144,12 @@ namespace ModTek.Features.Manifest.MDD
             toBeIndexed.Add(key);
         }
 
+        internal bool ShouldIndex(VersionManifestEntry entry, out CacheKey key)
+        {
+            key = new CacheKey(entry);
+            return toBeIndexed.Contains(key) || entry.IsInDefaultMDDB();
+        }
+
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
         {
             if (!flagForRebuild)
@@ -154,7 +159,11 @@ namespace ModTek.Features.Manifest.MDD
                 {
                     foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type, true).Where(x => !x.IsInDefaultMDDB()))
                     {
-                        var key = new CacheKey(manifestEntry);
+                        if (!ShouldIndex(manifestEntry, out var key))
+                        {
+                            continue;
+                        }
+
                         if (Entries.TryGetValue(key, out var entry) && entry.Equals(manifestEntry))
                         {
                             entry.CacheHit = true;
