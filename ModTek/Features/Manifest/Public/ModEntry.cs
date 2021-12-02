@@ -4,15 +4,16 @@ using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
-using ModTek.Features.Manifest.Mods;
-using ModTek.Features.SoundBanks;
+using ModTek.Features.Manifest;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Manifest
+// ReSharper disable once CheckNamespace
+namespace ModTek
 {
-    internal class ModEntry
+    // TODO probably exposing too much as public, go through usages in RT
+    public class ModEntry
     {
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }

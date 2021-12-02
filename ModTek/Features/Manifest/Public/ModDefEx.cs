@@ -4,24 +4,26 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Features.Manifest.Mods;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static ModTek.Features.Logging.MTLogger;
 
+// ReSharper disable once CheckNamespace
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-
-namespace ModTek.Features.Manifest.Mods
+namespace ModTek
 {
-    internal class ModDefEx
+    // TODO probably exposing too much as public, go through usages in RT
+    public class ModDefEx
     {
         // this path will be set at runtime by ModTek
         [JsonIgnore]
         public string Directory { get; set; }
 
-        public string GetFullPath(string subPath)
+        internal string GetFullPath(string subPath)
         {
             return Path.GetFullPath(Path.Combine(Directory, subPath));
         }
@@ -109,7 +111,7 @@ namespace ModTek.Features.Manifest.Mods
         [JsonIgnore]
         public string FailReason { get; set; }
 
-        public void SaveState()
+        internal void SaveState()
         {
             var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
             var state = new ModState();
@@ -121,7 +123,7 @@ namespace ModTek.Features.Manifest.Mods
         /// <summary>
         /// Creates a ModDef from a path to a mod.json
         /// </summary>
-        public static ModDefEx CreateFromPath(string path)
+        internal static ModDefEx CreateFromPath(string path)
         {
             var modDef = JsonConvert.DeserializeObject<ModDefEx>(File.ReadAllText(path));
             modDef.Directory = Path.GetDirectoryName(path);
@@ -158,7 +160,7 @@ namespace ModTek.Features.Manifest.Mods
         /// <summary>
         /// Checks if all dependencies are present in param loaded
         /// </summary>
-        public bool AreDependenciesResolved(IEnumerable<string> loaded)
+        internal bool AreDependenciesResolved(IEnumerable<string> loaded)
         {
             return DependsOn.Count == 0 || DependsOn.Intersect(loaded).Count() == DependsOn.Count;
         }
@@ -166,7 +168,7 @@ namespace ModTek.Features.Manifest.Mods
         /// <summary>
         /// Checks against provided list of mods to see if any of them conflict
         /// </summary>
-        public bool HasConflicts(IEnumerable<string> otherMods)
+        internal bool HasConflicts(IEnumerable<string> otherMods)
         {
             return ConflictsWith.Intersect(otherMods).Any();
         }
@@ -174,7 +176,7 @@ namespace ModTek.Features.Manifest.Mods
         /// <summary>
         /// Checks to see if this ModDef should load, providing a reason if shouldn't load
         /// </summary>
-        public bool ShouldTryLoad(List<string> alreadyTryLoadMods, out string reason, out bool shouldAddToList)
+        internal bool ShouldTryLoad(List<string> alreadyTryLoadMods, out string reason, out bool shouldAddToList)
         {
             if (!Enabled)
             {

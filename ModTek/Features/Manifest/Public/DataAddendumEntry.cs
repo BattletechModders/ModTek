@@ -1,9 +1,10 @@
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Manifest.Mods
+// ReSharper disable once CheckNamespace
+namespace ModTek
 {
     [JsonObject]
-    internal class DataAddendumEntry
+    public class DataAddendumEntry
     {
         [JsonProperty("name")]
         public string Name { get; set; }
