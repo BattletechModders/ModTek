@@ -206,7 +206,7 @@ namespace ModTek.Features.Manifest.Merges
                         if (manifestEntry == null)
                         {
                             // can happen if the type was specified explicitly for merge, but the actual base resource never was supplied by any mod
-                            Log($"MergeCache: Warning: Resource {kv.Key}/{resourceType} is missing, can't preload.");
+                            Log($"MergeCache: Warning: Resource {kv.Key} is missing, can't preload.");
                             continue;
                         }
                         kv.Value.SetCachedPathAndUpdatedOn(manifestEntry);
