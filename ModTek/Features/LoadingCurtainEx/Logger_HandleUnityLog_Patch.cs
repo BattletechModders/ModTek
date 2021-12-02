@@ -8,7 +8,7 @@ using Logger = HBS.Logging.Logger;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Features.LoadingCurtain
+namespace ModTek.Features.LoadingCurtainEx
 {
     /// <summary>
     /// Patch the logger to spit out errors to the loading screen curtain
@@ -28,11 +28,11 @@ namespace ModTek.Features.LoadingCurtain
                 return;
             }
 
-            if (BattleTech.UI.LoadingCurtain.IsVisible && ModTek.Config.ShowLoadingScreenErrors)
+            if (LoadingCurtain.IsVisible && ModTek.Config.ShowLoadingScreenErrors)
             {
                 LoadingCurtainErrorText.AddMessage(logString);
             }
-            else if (!BattleTech.UI.LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
+            else if (!LoadingCurtain.IsVisible && ModTek.Config.ShowErrorPopup)
             {
                 GenericPopupBuilder.Create("ModTek Detected Error", logString)
                     .AddButton("Continue")

@@ -3,10 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using BattleTech.UI;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.CustomTags;
+using ModTek.Features.LoadingCurtainEx;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Merges;
@@ -343,9 +345,23 @@ namespace ModTek.Features.Manifest
             }
         }
 
+        internal static void ShowLoadingCurtainIfStillPreloading()
+        {
+            if (!isPreloading)
+            {
+                return;
+            }
+            Log("Showing LoadingCurtain in MainMenu since still pre-loading.");
+            LoadingCurtain.ShowPopupUntil(
+                () => !isPreloading,
+                "Pre-loading mod data, might take a while"
+            );
+        }
+
         private static readonly Stopwatch preloadSW = new();
         private static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
+            isPreloading = true;
             preloadSW.Start();
 
             Log("Preloading resources.");
@@ -372,8 +388,10 @@ namespace ModTek.Features.Manifest
             // TODO find a way to show a loading bar as preloading can even go on during the main menu
         }
 
+        private static bool isPreloading;
         private static void PreloadFinished()
         {
+            isPreloading = false;
             preloadSW.Stop();
             LogIfSlow(preloadSW, "Preloading");
             SaveCaches();
@@ -422,6 +440,8 @@ namespace ModTek.Features.Manifest
             {
                 mddbCache.Add(entry, content, true);
             }
+
+            LoadingCurtainUtils.SetActivePopupText($"Loaded {entry.ToShortString()}");
         }
     }
 }
