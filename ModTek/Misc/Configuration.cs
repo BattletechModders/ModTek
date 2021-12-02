@@ -47,10 +47,10 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
-        internal bool PreloadResourcesForCache;
+        internal bool PreloadResourcesForCache = true;
         [JsonProperty]
         internal const string PreloadResourcesForCache_Description = "Instead of waiting for the game to request resources naturally and then merge when loading" +
-            ", pre-request all mergeable and indexable resources during the game startup. Not all mods are compatible with pre-loading, therefore disabled by default.";
+            ", pre-request all mergeable and indexable resources during the game startup. If not pre-loading, SimGame will be missing pilots and lances.";
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
