@@ -47,7 +47,7 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
-        internal bool PreloadResourcesForCache = true;
+        internal bool PreloadResourcesForCache = true; // false is not supported
         [JsonProperty]
         internal const string PreloadResourcesForCache_Description = "Instead of waiting for the game to request resources naturally and then merge when loading" +
             ", pre-request all mergeable and indexable resources during the game startup. If not pre-loading, SimGame will be missing pilots and lances.";
@@ -56,6 +56,11 @@ namespace ModTek.Misc
         internal bool ShowPreloadResourcesProgress;
         [JsonProperty]
         internal const string ShowPreloadResourcesProgress_Description = "If in main menu and the loading curtain is shown, try to update the shown text to the current processed item. Does NOT fix the frozen indicator, therefore disabled by default.";
+
+        [JsonProperty]
+        internal bool DelayPrewarmUntilPreload;
+        [JsonProperty]
+        internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed. Not yet working (for RT).";
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };

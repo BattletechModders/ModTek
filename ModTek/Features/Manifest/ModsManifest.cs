@@ -16,6 +16,7 @@ using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
+using UnityEngine.SceneManagement;
 using static ModTek.Features.Logging.MTLogger;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
@@ -319,6 +320,7 @@ namespace ModTek.Features.Manifest
             // so the HoldForIntroVideo + OnCinematicEnd pattern can be used later
             if (LazySingletonBehavior<UIManager>.Instance.GetFirstModule<MainMenu>() == null)
             {
+                Log("MainMenu module not yet loaded, delaying VerifyCaches");
                 UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
                     MessageCenterMessageType.OnEnterMainMenu,
                     _ =>
@@ -333,6 +335,7 @@ namespace ModTek.Features.Manifest
             // if cinematic launcher is playing or wants to play video, let's wait
             if (IntroCinematicLauncher.HoldForIntroVideo)
             {
+                Log("HoldForIntroVideo, delaying VerifyCaches");
                 UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
                     MessageCenterMessageType.OnCinematicEnd,
                     _ =>
@@ -343,6 +346,24 @@ namespace ModTek.Features.Manifest
                 );
                 return;
             }
+
+            // TODO really bad, need another way to know that the main menu is loaded
+            // too early: !SceneManager.GetSceneByName("MainMenu").isLoaded
+            // too specific, doesn't work 100%: SceneManager.GetActiveScene().name != "MainMenu"
+            // main menu loading seems slow too
+            // if (SceneManager.GetActiveScene().name != "MainMenu")
+            // {
+            //     Log("MainMenu level not yet loaded, delaying VerifyCaches");
+            //     UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
+            //         MessageCenterMessageType.LevelLoadComplete,
+            //         _ =>
+            //         {
+            //             ContentPackManifestsLoaded();
+            //             return true;
+            //         }
+            //     );
+            //     return;
+            // }
 
             VerifyCaches();
         }
@@ -365,18 +386,7 @@ namespace ModTek.Features.Manifest
 
             SaveCaches();
 
-            if (!ModTek.Config.PreloadResourcesForCache)
-            {
-                Log("Skipping preload, disabled in config.");
-            }
-            else if (rebuildMDDB || preloadResources.Count > 0)
-            {
-                ModsManifestPreloader.PreloadResources(rebuildMDDB, preloadResources);
-            }
-            else
-            {
-                Log("Skipping preload, no changes detected.");
-            }
+            ModsManifestPreloader.PreloadResources(rebuildMDDB, preloadResources);
         }
 
         internal static void SaveCaches()
