@@ -18,11 +18,6 @@ namespace ModTek.Features.Manifest
         internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             preloadSW.Start();
-            isPreloading = true;
-
-            ShowLoadingCurtainForMainMenuPreloading();
-
-            Log("Preloading resources.");
 
             var loadRequest = UnityGameInstance.BattleTechGame.DataManager.CreateLoadRequest(_ => PreloadFinished());
             if (rebuildMDDB)
@@ -42,6 +37,10 @@ namespace ModTek.Features.Manifest
                     }
                 }
             }
+
+            Log("Preloading resources.");
+            isPreloading = true;
+            ShowLoadingCurtainForMainMenuPreloading();
             loadRequest.ProcessRequests();
         }
 
@@ -84,7 +83,7 @@ namespace ModTek.Features.Manifest
                         return true;
                     }
                 },
-                "Pre-loading mod data, might take a while"
+                "Initial indexing of modded data, might take a while."
             );
         }
 

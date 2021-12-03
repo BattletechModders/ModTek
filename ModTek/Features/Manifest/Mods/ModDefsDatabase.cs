@@ -72,13 +72,13 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                Log($"\t{mod.Name} fail {mod.FailReason}");
+                Log($"\t{mod.QuotedName} fail {mod.FailReason}");
                 foreach (var dmod in mod.AffectingOnline)
                 {
                     var state = dmod.Key.Enabled && dmod.Key.LoadFail == false;
                     if (state != dmod.Value)
                     {
-                        Log($"\t\tdepends on {dmod.Key.Name} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                        Log($"\t\tdepends on {dmod.Key.QuotedName} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
                     }
                 }
 
@@ -145,7 +145,7 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.Name} {modDef.Version}", true);
+                yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.QuotedName} {modDef.Version}", true);
 
                 // expand the manifest (parses all JSON as well)
                 if (!CheckManifest(modDef))
@@ -172,7 +172,7 @@ namespace ModTek.Features.Manifest.Mods
         {
             if (modDef.Manifest.Any(entry => string.IsNullOrEmpty(entry.Path)))
             {
-                Log($"\tError: {modDef.Name} has a manifest entry that is missing its path! Aborting load.");
+                Log($"\tError: {modDef.QuotedName} has a manifest entry that is missing its path! Aborting load.");
                 return false;
             }
 
@@ -242,14 +242,36 @@ namespace ModTek.Features.Manifest.Mods
         {
             // get a load order and remove mods that won't be loaded
             ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
-            foreach (var modName in notLoaded)
+            foreach (var mod in notLoaded)
             {
-                OnModLoadFailure(modName, $"Warning: Will not load {modName} because it's lacking a dependency or has a conflict.");
+                var reason = "Warning: Will not load " + mod.QuotedName;
+
+                var conflicts = mod.CalcConflicts(ModLoadOrder);
+                if (conflicts.Count > 0)
+                {
+                    reason += "; conflicts: " + string.Join(", ", conflicts.Select(x => '"' + x + '"'));
+                }
+
+                var missingDependsOn = mod.CalcMissingDependsOn(ModLoadOrder);
+                if (missingDependsOn.Count > 0)
+                {
+                    reason += "; missing dependencies: " + string.Join(", ", missingDependsOn.Select(x => '"' + x + '"'));
+                }
+                OnModLoadFailure(mod.Name, reason);
             }
         }
 
         private static void OnModLoadFailure(string modName, string reason, Exception e = null, bool canIgnoreFailure = true)
         {
+            if (e != null)
+            {
+                Log(reason, e);
+            }
+            else
+            {
+                Log(reason);
+            }
+
             ModDefs.Remove(modName);
 
             if (allModDefs.TryGetValue(modName, out var modDef))
@@ -263,15 +285,6 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             FailedToLoadMods.Add(modName);
-
-            if (e != null)
-            {
-                Log(reason, e);
-            }
-            else
-            {
-                Log(reason);
-            }
         }
 
         internal static void FinishedLoadingMods()

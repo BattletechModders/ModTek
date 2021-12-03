@@ -10,23 +10,23 @@ namespace ModTek.Util
 {
     internal static class LoadOrder
     {
-        public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> modDefs, out List<string> unloaded, List<string> cachedOrder)
+        public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> modDefs, out List<ModDefEx> notLoaded, List<string> cachedOrder)
         {
             var modDefsCopy = new Dictionary<string, ModDefEx>(modDefs);
             var loadOrder = new List<string>();
 
             // remove all mods that have a conflict
             var tryToLoad = modDefs.Keys.ToList();
-            var hasConflicts = new List<string>();
+            var hasConflicts = new List<ModDefEx>();
             foreach (var modDef in modDefs.Values)
             {
-                if (!modDef.HasConflicts(tryToLoad))
+                var conflicts = modDef.CalcConflicts(tryToLoad);
+                if (conflicts.Count == 0)
                 {
                     continue;
                 }
-
                 modDefsCopy.Remove(modDef.Name);
-                hasConflicts.Add(modDef.Name);
+                hasConflicts.Add(modDef);
             }
 
             FillInOptionalDependencies(modDefsCopy);
@@ -34,7 +34,7 @@ namespace ModTek.Util
             // load the order specified in the file
             foreach (var modName in cachedOrder)
             {
-                if (!modDefsCopy.ContainsKey(modName) || !modDefsCopy[modName].AreDependenciesResolved(loadOrder))
+                if (!modDefsCopy.ContainsKey(modName) || modDefsCopy[modName].CalcMissingDependsOn(loadOrder).Count > 0)
                 {
                     continue;
                 }
@@ -44,13 +44,13 @@ namespace ModTek.Util
             }
 
             // everything that is left in the copy hasn't been loaded before
-            unloaded = new List<string>();
-            unloaded.AddRange(modDefsCopy.Keys.OrderByDescending(x => x).ToList());
+            notLoaded = new List<ModDefEx>();
+            notLoaded.AddRange(modDefsCopy.Values.OrderByDescending(x => x.Name).ToList());
 
             // there is nothing left to load
             if (modDefsCopy.Count == 0)
             {
-                unloaded.AddRange(hasConflicts);
+                notLoaded.AddRange(hasConflicts);
                 return loadOrder;
             }
 
@@ -60,23 +60,23 @@ namespace ModTek.Util
             {
                 removedThisPass = 0;
 
-                for (var i = unloaded.Count - 1; i >= 0; i--)
+                for (var i = notLoaded.Count - 1; i >= 0; i--)
                 {
-                    var modDef = modDefs[unloaded[i]];
+                    var modDef = modDefs[notLoaded[i].Name];
 
-                    if (!modDef.AreDependenciesResolved(loadOrder))
+                    if (modDef.CalcMissingDependsOn(loadOrder).Count > 0)
                     {
                         continue;
                     }
 
-                    unloaded.RemoveAt(i);
+                    notLoaded.RemoveAt(i);
                     loadOrder.Add(modDef.Name);
                     removedThisPass++;
                 }
             }
-            while (removedThisPass > 0 && unloaded.Count > 0);
+            while (removedThisPass > 0 && notLoaded.Count > 0);
 
-            unloaded.AddRange(hasConflicts);
+            notLoaded.AddRange(hasConflicts);
             return loadOrder;
         }
 

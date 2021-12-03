@@ -229,7 +229,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
             var changed = false;
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
-                Log("\t" + mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     changed = true;
@@ -368,7 +368,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                         var listdeps = deps.ToList();
                         for (var t = 0; t < Mathf.Min(7, deps.Count); ++t)
                         {
-                            text.AppendLine(listdeps[t].Key.Name + "->" + (listdeps[t].Value ? "Enable" : "Disable"));
+                            text.AppendLine(listdeps[t].Key.QuotedName + "->" + (listdeps[t].Value ? "Enable" : "Disable"));
                         }
 
                         if (deps.Count > 7)
@@ -428,7 +428,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                         var listconflicts = conflicts.ToList();
                         for (var t = 0; t < Mathf.Min(7, listconflicts.Count); ++t)
                         {
-                            text.AppendLine(listconflicts[t].Key.Name + "->" + (listconflicts[t].Value ? "Enable" : "Disable"));
+                            text.AppendLine(listconflicts[t].Key.QuotedName + "->" + (listconflicts[t].Value ? "Enable" : "Disable"));
                         }
 
                         if (conflicts.Count > 7)
@@ -503,12 +503,12 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                 if (mod.LoadFail)
                 {
                     ___modNameText.color = Color.red;
-                    ___modNameText.SetText("!" + mod.Name);
+                    ___modNameText.SetText("!" + mod.QuotedName);
                 }
                 else
                 {
                     ___modNameText.color = Color.white;
-                    ___modNameText.SetText(mod.Name);
+                    ___modNameText.SetText(mod.QuotedName);
                 }
             }
         }
@@ -591,7 +591,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                     ___modsList.Add(mod.Value.ToVanilla());
                 }
 
-                Log("\t" + mod.Value.Name + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
             }
 
             __result = true;

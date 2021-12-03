@@ -14,7 +14,7 @@ namespace ModTek.Features.Manifest.Mods
     {
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
-            Log($"{modDef.Name} {modDef.Version}");
+            Log($"{modDef.QuotedName} {modDef.Version}");
 
             // although manifest related, CR listings are mostly relevant for the FinishedLoading call
             CustomResourcesFeature.ProcessModDef(modDef);
@@ -150,12 +150,12 @@ namespace ModTek.Features.Manifest.Mods
                 {
                     if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                     {
-                        Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                        Log($"\tError: {modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                     }
                 }
                 catch (Exception e)
                 {
-                    Log($"\tError: {modDef.Name}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+                    Log($"\tError: {modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
                 }
             }
         }

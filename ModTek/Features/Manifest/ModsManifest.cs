@@ -33,11 +33,11 @@ namespace ModTek.Features.Manifest
 
             foreach (var (modDef, index) in mods.WithIndex())
             {
-                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modDef.Name}", "", true);
+                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modDef.QuotedName}", "", true);
 
                 AddImplicitManifest(modDef);
 
-                LogIf(modDef.Manifest.Count> 0, $"{modDef.Name} Manifest:");
+                LogIf(modDef.Manifest.Count> 0, $"{modDef.QuotedName} Manifest:");
                 var packager = new ModAddendumPackager(modDef.Name);
                 foreach (var modEntry in modDef.Manifest)
                 {
@@ -45,7 +45,7 @@ namespace ModTek.Features.Manifest
                 }
                 packager.SaveToBTRL();
 
-                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.Name} DataAddendum:");
+                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.QuotedName} DataAddendum:");
                 foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
                 {
                     if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, modDef.Directory))

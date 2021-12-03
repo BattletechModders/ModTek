@@ -40,7 +40,7 @@ namespace ModTek.Features.CustomResources
             {
                 if (BTConstants.PREDEFINED_TYPES.Contains(customResourceType))
                 {
-                    Log($"\tWarning: {modDef.Name} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    Log($"\tWarning: {modDef.QuotedName} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
                     continue;
                 }
 
