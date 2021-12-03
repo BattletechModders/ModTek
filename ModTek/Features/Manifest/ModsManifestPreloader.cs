@@ -14,7 +14,7 @@ namespace ModTek.Features.Manifest
     internal static class ModsManifestPreloader
     {
         private static readonly Stopwatch preloadSW = new();
-        private static bool isPreloading;
+        internal static bool isPreloading;
         internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             preloadSW.Start();
