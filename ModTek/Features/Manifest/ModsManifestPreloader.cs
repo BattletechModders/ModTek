@@ -17,6 +17,7 @@ namespace ModTek.Features.Manifest
         private static readonly Stopwatch preloadSW = new();
         internal static bool isPreloading;
         internal static bool isPrewarmRequestedForNextPreload;
+        internal static int finishedChecksAndPreloadsCounter;
         internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             preloadSW.Start();
@@ -45,6 +46,7 @@ namespace ModTek.Features.Manifest
             if (loadRequest.GetRequestCount() == 0)
             {
                 Log("Nothing to pre-warm or pre-load.");
+                FinalizePreloadStats();
                 return;
             }
 
@@ -192,8 +194,13 @@ namespace ModTek.Features.Manifest
         private static void PreloadFinished()
         {
             ModsManifest.SaveCaches();
-
             isPreloading = false;
+            FinalizePreloadStats();
+        }
+
+        private static void FinalizePreloadStats()
+        {
+            finishedChecksAndPreloadsCounter++;
             preloadSW.Stop();
             LogIfSlow(preloadSW, "Preloading");
         }
