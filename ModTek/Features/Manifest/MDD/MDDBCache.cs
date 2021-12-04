@@ -164,9 +164,14 @@ namespace ModTek.Features.Manifest.MDD
                             continue;
                         }
 
-                        if (Entries.TryGetValue(key, out var entry) && entry.Equals(manifestEntry))
+                        if (Entries.TryGetValue(key, out var cachedEntry))
                         {
-                            entry.CacheHit = true;
+                            cachedEntry.CacheHit = true;
+                            if (!cachedEntry.Equals(manifestEntry))
+                            {
+                                Log($"MDDBCache: {key} outdated in cache.");
+                                preloadResources.Add(key);
+                            }
                         }
                         else
                         {

@@ -213,9 +213,14 @@ namespace ModTek.Features.Manifest.Merges
                     }
                 }
 
-                if (persistentSets.TryGetValue(kv.Key, out var value) && value.Equals(kv.Value))
+                if (persistentSets.TryGetValue(kv.Key, out var cachedEntry))
                 {
-                    value.CacheHit = true;
+                    cachedEntry.CacheHit = true;
+                    if (!cachedEntry.Equals(kv.Value))
+                    {
+                        Log($"MergeCache: {kv.Key} outdated in cache.");
+                        preloadResources.Add(kv.Key);
+                    }
                 }
                 else
                 {
