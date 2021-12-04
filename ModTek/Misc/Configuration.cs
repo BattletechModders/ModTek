@@ -58,6 +58,11 @@ namespace ModTek.Misc
         internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
 
         [JsonProperty]
+        internal float DataManagerEverSpinnyDetectionTimespan = 120f;
+        [JsonProperty]
+        internal readonly string DataManagerEverSpinnyDetectionTimespan_Description = $"How long data is not being further processed until it is assumed to be stuck for good. Upon detection it dumps lots of data into the log, but nothing more.";
+
+        [JsonProperty]
         internal bool SaveCachesBeforePreloading;
         [JsonProperty]
         internal const string SaveCachesBeforePreloading_Description = "Helps with debugging preload data by dumping cache information before preloading, but has some issues with MDDB save not working.";

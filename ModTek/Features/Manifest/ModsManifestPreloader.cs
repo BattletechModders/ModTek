@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.Features.LoadingCurtainEx;
+using ModTek.Features.Manifest.MDD;
+using UnityEngine;
 using UnityEngine.Video;
 using static ModTek.Features.Logging.MTLogger;
 using Stopwatch = System.Diagnostics.Stopwatch;
@@ -204,37 +208,44 @@ namespace ModTek.Features.Manifest
         private static void ShowLoadingCurtainForMainMenuPreloading()
         {
             Log("Showing LoadingCurtain for Preloading.");
-            LoadingCurtain.ShowPopupUntil(
-                () =>
-                {
-                    RefreshIndexingMessage();
-                    var videoPlayer = GetMainMenuBGVideoPlayer();
-                    if (videoPlayer == null)
-                    {
-                        return !isPreloading;
-                    }
+            LoadingCurtain.ShowPopupUntil(PopupClosureConditionalCheck, GetIndexingMessage());
+        }
 
-                    if (isPreloading)
+        private static bool PopupClosureConditionalCheck()
+        {
+            try
+            {
+                RefreshIndexingMessage();
+                var videoPlayer = GetMainMenuBGVideoPlayer();
+                if (videoPlayer == null)
+                {
+                    return !isPreloading;
+                }
+
+                if (isPreloading)
+                {
+                    if (videoPlayer.isPlaying)
                     {
-                        if (videoPlayer.isPlaying)
-                        {
-                            Log("Pausing MainMenu background video.");
-                            videoPlayer.Pause();
-                        }
-                        return false;
+                        Log("Pausing MainMenu background video.");
+                        videoPlayer.Pause();
                     }
-                    else
+                    return false;
+                }
+                else
+                {
+                    if (videoPlayer.isPaused)
                     {
-                        if (videoPlayer.isPaused)
-                        {
-                            Log("Resuming MainMenu background video.");
-                            videoPlayer.Play();
-                        }
-                        return true;
+                        Log("Resuming MainMenu background video.");
+                        videoPlayer.Play();
                     }
-                },
-                GetIndexingMessage()
-            );
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Log("Can't properly check if popup can be closed", e);
+            }
+            return false;
         }
 
         private static VideoPlayer GetMainMenuBGVideoPlayer()
@@ -277,6 +288,8 @@ namespace ModTek.Features.Manifest
         }
 
         private static string LoadRequestProgress = "\n";
+        private static LoadStats LastStats = new();
+        private static bool LastChangeDumped;
         private static void RefreshLoadRequestProgress()
         {
             if (loadRequest == null)
@@ -284,12 +297,188 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            var pending = Traverse.Create(loadRequest).Method("GetPendingRequestCount").GetValue<int>();
-            var failed = loadRequest.FailedRequests.Count;
-            LoadRequestProgress = $"\nPending: {pending}";
-            if (failed > 0)
+            var traverse = new LoadRequestTraverse(loadRequest);
+            var stats = new LoadStats(traverse);
+
+            LoadRequestProgress = "";
+            LoadRequestProgress += $"\nPending: {stats.pending}";
+            LoadRequestProgress += $"\nProcessing: {stats.active}";
+            LoadRequestProgress += $"\nCompleted: {stats.completed}";
+            if (stats.failed > 0)
             {
-                LoadRequestProgress += $"\nFailed: {failed}";
+                LoadRequestProgress += $"\nFailed: {stats.failed}";
+            }
+
+            if (!stats.Equals(LastStats))
+            {
+                LastStats = stats;
+                LastChangeDumped = false;
+            }
+            else if (stats.HasStats())
+            {
+                if (LastChangeDumped)
+                {
+                    LoadRequestProgress += $"\nEverspinny detected, dumped processing to log.";
+                }
+                else
+                {
+                    if (Time.realtimeSinceStartup - LastStats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
+                    {
+                        DumpProcessing(stats);
+                        //UnityGameInstance.Instance.ShutdownGame();
+                        LastChangeDumped = true;
+                    }
+                }
+            }
+        }
+
+        private static void DumpProcessing(LoadStats stats)
+        {
+            Log($"Detected stuck DataManager, dumping stats: {stats}");
+            DumpTrackers(loadRequest, "\t");
+        }
+
+        private static void DumpTrackers(LoadRequest loadRequest, string level)
+        {
+            DumpTrackers(loadRequest, level, "Pending", "pendingRequests");
+            DumpTrackers(loadRequest, level, "LinkedPending", "linkedPendingRequests");
+            DumpTrackers(loadRequest, level, "Processing", "processingRequests");
+        }
+        private static void DumpTrackers(LoadRequest loadRequest, string level, string prefix, string field)
+        {
+            var trackers = Traverse.Create(loadRequest).Field(field).GetValue<ICollection>();
+            if (trackers != null)
+            {
+                DumpTrackers(trackers, level, prefix);
+            }
+        }
+        private static void DumpTrackers(ICollection trackers, string level, string prefix)
+        {
+            foreach (var tracker in trackers)
+            {
+                var message = level + prefix;
+
+                var resource = Traverse.Create(tracker).Field<VersionManifestEntry>("resourceManifestEntry").Value;
+                if (resource != null)
+                {
+                    message += " entry=" + resource.ToShortString();
+                }
+
+                var backing = Traverse.Create(tracker).Field<DataManager.FileLoadRequest>("backingRequest").Value;
+                if (backing != null)
+                {
+                    message += " state=" + backing.State;
+                }
+                Log(message);
+
+                var newLevel = level + "\t";
+                var dependency = Traverse.Create(tracker).Field<DataManager.DependencyLoadRequest>("dependencyLoader").Value;
+                if (dependency != null)
+                {
+                    var dependencyLoads = Traverse.Create(dependency).Field("loadRequests").GetValue<List<LoadRequest>>();
+                    if (dependencyLoads != null)
+                    {
+                        foreach (var dependencyLoad in dependencyLoads)
+                        {
+                            DumpTrackers(dependencyLoad, newLevel);
+                        }
+                    }
+                }
+            }
+        }
+
+        private class LoadRequestTraverse
+        {
+            internal readonly LoadRequest instance;
+            private readonly Traverse traverse;
+
+            internal LoadRequestTraverse(LoadRequest instance)
+            {
+                this.instance = instance;
+                traverse = Traverse.Create(instance);
+            }
+
+            internal int GetActiveRequestCount() => traverse.Method("GetActiveRequestCount").GetValue<int>();
+            internal int GetPendingRequestCount() => traverse.Method("GetPendingRequestCount").GetValue<int>();
+            internal int GetCompletedRequestCount() => traverse.Method("GetCompletedRequestCount").GetValue<int>();
+        }
+
+        private class LoadStats: IEquatable<LoadStats>
+        {
+            internal readonly int active;
+            internal readonly int pending;
+            internal readonly int completed;
+            internal readonly int failed;
+            internal readonly float time = Time.realtimeSinceStartup;
+
+            internal LoadStats()
+            {
+            }
+
+            internal LoadStats(LoadRequestTraverse lrt)
+            {
+                active = lrt.GetActiveRequestCount();
+                pending = lrt.GetPendingRequestCount();
+                completed = lrt.GetCompletedRequestCount();
+                failed = lrt.instance.FailedRequests.Count;
+            }
+
+            internal bool HasStats()
+            {
+                return active > 0 || pending > 0 || completed > 0 || failed > 0;
+            }
+
+            public override string ToString()
+            {
+                return $"active={active} pending={pending} completed={completed} failed={failed}";
+            }
+
+            // below methods generated by Rider
+            public bool Equals(LoadStats other)
+            {
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
+                return active == other.active && pending == other.pending && completed == other.completed && failed == other.failed;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != this.GetType())
+                {
+                    return false;
+                }
+
+                return Equals((LoadStats)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = active;
+                    hashCode = (hashCode * 397) ^ pending;
+                    hashCode = (hashCode * 397) ^ completed;
+                    hashCode = (hashCode * 397) ^ failed;
+                    return hashCode;
+                }
             }
         }
     }
