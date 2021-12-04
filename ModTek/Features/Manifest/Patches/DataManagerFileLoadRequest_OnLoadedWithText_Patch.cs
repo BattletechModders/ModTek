@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -35,7 +37,14 @@ namespace ModTek.Features.Manifest.Patches
         [HarmonyPriority(Priority.High)]
         public static void Prefix(VersionManifestEntry ___manifestEntry, ref string text)
         {
-            ModsManifest.MergeContentIfApplicable(___manifestEntry, ref text);
+            try
+            {
+                ModsManifest.MergeContentIfApplicable(___manifestEntry, ref text);
+            }
+            catch (Exception e)
+            {
+                Log("Error merging content if applicable", e);
+            }
         }
     }
 }

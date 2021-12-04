@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using BattleTech;
 using BattleTech.Assetbundles;
@@ -90,27 +89,48 @@ namespace ModTek.Features.Manifest.Patches
 
         public static void LoadResource(DataLoader instance, string path, Action<string> handler)
         {
-            if (FinishWithMergedContent(handler.Target))
+            try
             {
-                return;
-            }
+                if (FinishWithMergedContent(handler.Target))
+                {
+                    return;
+                }
 
-            instance.LoadResource(path, handler);
+                instance.LoadResource(path, handler);
+            }
+            catch (Exception e)
+            {
+                Log("Error during LoadResource", e);
+            }
         }
 
         public static void RequestResourcesLoad(DataManager instance, string path, Action<TextAsset> onComplete)
         {
-            throw new InvalidOperationException(); // TODO implement (how to test?)
+            try
+            {
+                throw new InvalidOperationException(); // TODO implement (how to test?)
+            }
+            catch (Exception e)
+            {
+                Log("Error during RequestResourcesLoad", e);
+            }
         }
 
         public static void RequestAsset(AssetBundleManager instance, BattleTechResourceType type, string id, Action<TextAsset> loadedCallback)
         {
-            if (FinishWithMergedContent(loadedCallback.Target))
+            try
             {
-                return;
-            }
+                if (FinishWithMergedContent(loadedCallback.Target))
+                {
+                    return;
+                }
 
-            instance.RequestAsset(type, id, loadedCallback);
+                instance.RequestAsset(type, id, loadedCallback);
+            }
+            catch (Exception e)
+            {
+                Log("Error during RequestAsset", e);
+            }
         }
 
         private static bool FinishWithMergedContent(object actionTarget)

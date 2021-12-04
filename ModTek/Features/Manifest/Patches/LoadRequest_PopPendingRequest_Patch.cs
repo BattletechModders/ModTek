@@ -1,6 +1,8 @@
-﻿using BattleTech.Data;
+﻿using System;
+using BattleTech.Data;
 using Harmony;
 using UnityEngine;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -18,14 +20,21 @@ namespace ModTek.Features.Manifest.Patches
         // which gets worse with modded content and hooks
         public static bool Prefix(LoadRequest __instance, ref DataManager.FileLoadRequest __result)
         {
-            var deltaInSecondsMax = ModTek.Config.DataManagerUnfreezeDelta;
-            var deltaInSecondsCurrent = Time.realtimeSinceStartup - lastNull;
+            try
+            {
+                var deltaInSecondsMax = ModTek.Config.DataManagerUnfreezeDelta;
+                var deltaInSecondsCurrent = Time.realtimeSinceStartup - lastNull;
 
-            if (deltaInSecondsCurrent >= deltaInSecondsMax) {
-                // logging just takes space and time
-                // MTLogger.Log($"LoadRequest unfreeze delta {deltaInSecondsCurrent:0.##}/{deltaInSecondsMax:0.##}");
-                __result = null;
-                return false;
+                if (deltaInSecondsCurrent >= deltaInSecondsMax) {
+                    // logging just takes space and time
+                    // MTLogger.Log($"LoadRequest unfreeze delta {deltaInSecondsCurrent:0.##}/{deltaInSecondsMax:0.##}");
+                    __result = null;
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
             }
 
             return true;

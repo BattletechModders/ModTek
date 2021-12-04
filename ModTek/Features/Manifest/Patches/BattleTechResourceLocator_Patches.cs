@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Manifest.BTRL;
+using static ModTek.Features.Logging.MTLogger;
 
 // ReSharper disable RedundantAssignment
 
@@ -50,7 +52,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(ContentPackIndex contentPackIndex)
         {
-            BetterBTRL.Instance.SetContentPackIndex(contentPackIndex);
+            try
+            {
+                BetterBTRL.Instance.SetContentPackIndex(contentPackIndex);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -65,7 +74,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(VersionManifestAddendum addendum)
         {
-            BetterBTRL.Instance.ApplyAddendum(addendum);
+            try
+            {
+                BetterBTRL.Instance.ApplyAddendum(addendum);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -80,7 +96,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(VersionManifestAddendum addendum)
         {
-            BetterBTRL.Instance.RemoveAddendum(addendum);
+            try
+            {
+                BetterBTRL.Instance.RemoveAddendum(addendum);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -95,7 +118,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(string name, ref VersionManifestAddendum __result)
         {
-            __result = BetterBTRL.Instance.GetAddendumByName(name);
+            try
+            {
+                __result = BetterBTRL.Instance.GetAddendumByName(name);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -110,7 +140,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(VersionManifestMemoryStore memoryStore)
         {
-            BetterBTRL.Instance.ApplyMemoryStore(memoryStore);
+            try
+            {
+                BetterBTRL.Instance.ApplyMemoryStore(memoryStore);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -125,7 +162,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(VersionManifestMemoryStore memoryStore)
         {
-            BetterBTRL.Instance.RemoveMemoryStore(memoryStore);
+            try
+            {
+                BetterBTRL.Instance.RemoveMemoryStore(memoryStore);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -140,7 +184,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(BattleTechResourceType resourceType, string id, ref List<VersionManifestMemoryStore> __result)
         {
-            __result = BetterBTRL.Instance.GetMemoryStoresContainingEntry(resourceType, id);
+            try
+            {
+                __result = BetterBTRL.Instance.GetMemoryStoresContainingEntry(resourceType, id);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -155,7 +206,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(string name, ref VersionManifestMemoryStore __result)
         {
-            __result = BetterBTRL.Instance.GetMemoryStoreByName(name);
+            try
+            {
+                __result = BetterBTRL.Instance.GetMemoryStoreByName(name);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -170,7 +228,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(ref VersionManifestEntry[] __result)
         {
-            __result = BetterBTRL.Instance.AllEntries();
+            try
+            {
+                __result = BetterBTRL.Instance.AllEntries();
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -185,7 +250,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry[] __result)
         {
-            __result = BetterBTRL.Instance.AllEntriesOfResource(type, filterByOwnership);
+            try
+            {
+                __result = BetterBTRL.Instance.AllEntriesOfResource(type, filterByOwnership);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -200,7 +272,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership, ref VersionManifestEntry[] __result)
         {
-            __result = BetterBTRL.Instance.AllEntriesOfResourceFromAddendum(type, addendum, filterByOwnership);
+            try
+            {
+                __result = BetterBTRL.Instance.AllEntriesOfResourceFromAddendum(type, addendum, filterByOwnership);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -215,7 +294,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(string id, BattleTechResourceType type, bool filterByOwnership, ref VersionManifestEntry __result)
         {
-            __result = BetterBTRL.Instance.EntryByID(id, type, filterByOwnership);
+            try
+            {
+                __result = BetterBTRL.Instance.EntryByID(id, type, filterByOwnership);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }
@@ -230,7 +316,14 @@ namespace ModTek.Features.Manifest.Patches
 
         public static bool Prefix(VersionManifestEntry entry)
         {
-            BetterBTRL.Instance.RemoveEntry(entry);
+            try
+            {
+                BetterBTRL.Instance.RemoveEntry(entry);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             return false;
         }
     }

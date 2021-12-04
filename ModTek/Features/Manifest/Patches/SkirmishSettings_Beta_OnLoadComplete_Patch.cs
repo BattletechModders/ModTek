@@ -1,5 +1,7 @@
-﻿using BattleTech.UI;
+﻿using System;
+using BattleTech.UI;
 using Harmony;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
 {
@@ -9,7 +11,14 @@ namespace ModTek.Features.Manifest.Patches
     {
         public static void Prefix()
         {
-            ModsManifest.SaveCaches();
+            try
+            {
+                ModsManifest.SaveCaches();
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
         }
     }
 }
