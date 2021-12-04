@@ -5,7 +5,6 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.Features.LoadingCurtainEx;
-using ModTek.Features.Manifest.MDD;
 using UnityEngine.Video;
 using static ModTek.Features.Logging.MTLogger;
 using Stopwatch = System.Diagnostics.Stopwatch;
@@ -18,25 +17,29 @@ namespace ModTek.Features.Manifest
         internal static bool isPreloading;
         internal static bool isPrewarmRequestedForNextPreload;
         internal static int finishedChecksAndPreloadsCounter;
+        private static DataManager dataManager;
+        private static LoadRequest loadRequest;
         internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
+            if (loadRequest != null)
+            {
+                Log("ERROR: Can't start preloading, preload load request exists already");
+                return;
+            }
             preloadSW.Start();
 
-            var dataManager = UnityGameInstance.BattleTechGame.DataManager;
-            var loadRequest = dataManager.CreateLoadRequest(_ => PreloadFinished());
+            dataManager = UnityGameInstance.BattleTechGame.DataManager;
+            loadRequest = dataManager.CreateLoadRequest(_ => PreloadFinished());
 
             var loadingTypes = new HashSet<BattleTechResourceType>();
             var loadingResources = new HashSet<CacheKey>();
 
             PreparePrewarmRequests(
-                loadRequest,
                 loadingTypes,
                 loadingResources
             );
 
             PreparePreloadRequests(
-                loadRequest,
-                dataManager,
                 rebuildMDDB,
                 preloadResources,
                 loadingTypes,
@@ -46,7 +49,7 @@ namespace ModTek.Features.Manifest
             if (loadRequest.GetRequestCount() == 0)
             {
                 Log("Nothing to pre-warm or pre-load.");
-                FinalizePreloadStats();
+                FinalizePreload();
                 return;
             }
 
@@ -56,7 +59,7 @@ namespace ModTek.Features.Manifest
             ShowLoadingCurtainForMainMenuPreloading();
         }
 
-        private static void PreparePrewarmRequests(LoadRequest loadRequest, HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
+        private static void PreparePrewarmRequests(HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
         {
             var prewarmRequests = UnityGameInstance.BattleTechGame.ApplicationConstants.PrewarmRequests;
 
@@ -76,7 +79,7 @@ namespace ModTek.Features.Manifest
 
                 if (loadingTypes.Add(prewarm.ResourceType))
                 {
-                    AddPrewarmRequest(loadRequest, prewarm);
+                    AddPrewarmRequest(prewarm);
                 }
             }
 
@@ -95,14 +98,14 @@ namespace ModTek.Features.Manifest
                 var cacheKey = new CacheKey(prewarm.ResourceType.ToString(), prewarm.ResourceID);
                 if (loadingResources.Add(cacheKey))
                 {
-                    AddPrewarmRequest(loadRequest, prewarm);
+                    AddPrewarmRequest(prewarm);
                 }
             }
 
             isPrewarmRequestedForNextPreload = false;
         }
 
-        private static void AddPrewarmRequest(LoadRequest loadRequest, PrewarmRequest prewarm)
+        private static void AddPrewarmRequest(PrewarmRequest prewarm)
         {
             // does double instantiation, not sure if a good idea (potential CC issues) but is vanilla behavior
             //loadRequest.AddPrewarmRequest(prewarmRequest);
@@ -118,7 +121,7 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static void PreparePreloadRequests(LoadRequest loadRequest, DataManager dataManager, bool rebuildMDDB, HashSet<CacheKey> preloadResources, HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
+        private static void PreparePreloadRequests(bool rebuildMDDB, HashSet<CacheKey> preloadResources, HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
         {
             if (!ModTek.Config.PreloadResourcesForCache)
             {
@@ -151,7 +154,7 @@ namespace ModTek.Features.Manifest
 
                         if (loadingResources.Add(new CacheKey(entry)))
                         {
-                            AddPreloadRequest(loadRequest, type, entry.Id);
+                            AddPreloadRequest(type, entry.Id);
                         }
                     }
                 }
@@ -172,13 +175,13 @@ namespace ModTek.Features.Manifest
 
                     if (loadingResources.Add(resource))
                     {
-                        AddPreloadRequest(loadRequest, resourceType, resource.Id);
+                        AddPreloadRequest(resourceType, resource.Id);
                     }
                 }
             }
         }
 
-        private static void AddPreloadRequest(LoadRequest loadRequest, BattleTechResourceType resourceType, string resourceId)
+        private static void AddPreloadRequest(BattleTechResourceType resourceType, string resourceId)
         {
             loadRequest.AddBlindLoadRequest(resourceType, resourceId, true);
         }
@@ -187,11 +190,12 @@ namespace ModTek.Features.Manifest
         {
             ModsManifest.SaveCaches();
             isPreloading = false;
-            FinalizePreloadStats();
+            FinalizePreload();
         }
 
-        private static void FinalizePreloadStats()
+        private static void FinalizePreload()
         {
+            loadRequest = null;
             finishedChecksAndPreloadsCounter++;
             preloadSW.Stop();
             LogIfSlow(preloadSW, "Preloading");
@@ -203,6 +207,7 @@ namespace ModTek.Features.Manifest
             LoadingCurtain.ShowPopupUntil(
                 () =>
                 {
+                    RefreshIndexingMessage();
                     var videoPlayer = GetMainMenuBGVideoPlayer();
                     if (videoPlayer == null)
                     {
@@ -228,7 +233,7 @@ namespace ModTek.Features.Manifest
                         return true;
                     }
                 },
-                indexingMessage
+                GetIndexingMessage()
             );
         }
 
@@ -242,12 +247,49 @@ namespace ModTek.Features.Manifest
             return Traverse.Create(mainMenu).Field("bgVideoPlayer").GetValue<VideoPlayer>();
         }
 
-        private const string indexingMessage = "Indexing modded data, might take a while.\nGame can temporarely freeze.";
-        internal static void UpdateLoadingCurtainTextForProcessedEntry(VersionManifestEntry entry)
+        private static void RefreshIndexingMessage()
         {
-            if (ModTek.Config.ShowPreloadResourcesProgress)
+            LoadingCurtainUtils.SetActivePopupText(GetIndexingMessage());
+        }
+
+        private const string IndexingMessageTitle = "Indexing modded data, might take a while.\nGame can temporarely freeze.";
+        private static string GetIndexingMessage()
+        {
+            RefreshLoadRequestProgress();
+            return $"{IndexingMessageTitle}{LoadRequestProgress}{ManifestProgress}";
+        }
+
+        private static string ManifestProgress = "";
+        internal static void RefreshManifestProgress(VersionManifestEntry entry)
+        {
+            if (!ModTek.Config.ShowPreloadResourcesProgress)
             {
-                LoadingCurtainUtils.SetActivePopupText($"{indexingMessage}\n\n{entry.ToShortString()}");
+                return;
+            }
+
+            if (!isPreloading)
+            {
+                return;
+            }
+
+            ManifestProgress = "\n\n{entry.ToShortString()}";
+            RefreshIndexingMessage();
+        }
+
+        private static string LoadRequestProgress = "\n";
+        private static void RefreshLoadRequestProgress()
+        {
+            if (loadRequest == null)
+            {
+                return;
+            }
+
+            var pending = Traverse.Create(loadRequest).Method("GetPendingRequestCount").GetValue<int>();
+            var failed = loadRequest.FailedRequests.Count;
+            LoadRequestProgress = $"\nPending: {pending}";
+            if (failed > 0)
+            {
+                LoadRequestProgress += $"\nFailed: {failed}";
             }
         }
     }

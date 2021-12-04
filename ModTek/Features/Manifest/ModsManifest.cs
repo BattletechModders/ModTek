@@ -16,7 +16,6 @@ using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
-using UnityEngine.SceneManagement;
 using static ModTek.Features.Logging.MTLogger;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
@@ -347,10 +346,10 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            ShowModsFailedPopup();
+            ShowModsFailedPopupOrContinue();
         }
 
-        private static void ShowModsFailedPopup()
+        private static void ShowModsFailedPopupOrContinue()
         {
             if (ModDefsDatabase.FailedToLoadMods.Count == 0)
             {
@@ -360,7 +359,9 @@ namespace ModTek.Features.Manifest
 
             GenericPopupBuilder.Create(
                     "Some Mods Didn't Load",
-                    $"Continuing might break your game. Check \"{FilePaths.LogPathRelativeToGameDirectory}\" for more info\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
+                    "Continuing might break your game." +
+                    $"\nCheck \"{FilePaths.LogPathRelativeToGameDirectory}\" for more info" +
+                    "\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
                 )
                 .AddButton("Risk Continuing", VerifyCaches)
                 .AddButton("Quit Game", UnityGameInstance.Instance.ShutdownGame, false)
@@ -384,7 +385,10 @@ namespace ModTek.Features.Manifest
             sw.Stop();
             LogIfSlow(sw, "MDDB Cache Cleanup");
 
-            SaveCaches();
+            if (ModTek.Config.SaveCachesBeforePreloading)
+            {
+                SaveCaches();
+            }
 
             ModsManifestPreloader.PreloadResources(rebuildMDDB, preloadResources);
         }
@@ -428,7 +432,7 @@ namespace ModTek.Features.Manifest
                 mddbCache.Add(entry, content, true);
             }
 
-            ModsManifestPreloader.UpdateLoadingCurtainTextForProcessedEntry(entry);
+            ModsManifestPreloader.RefreshManifestProgress(entry);
         }
     }
 }

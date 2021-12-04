@@ -53,6 +53,16 @@ namespace ModTek.Misc
             ", pre-request all mergeable and indexable resources during the game startup. If not pre-loading, SimGame will be missing pilots and lances.";
 
         [JsonProperty]
+        internal float DataManagerUnfreezeDelta = 2f;
+        [JsonProperty]
+        internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
+
+        [JsonProperty]
+        internal bool SaveCachesBeforePreloading;
+        [JsonProperty]
+        internal const string SaveCachesBeforePreloading_Description = "Helps with debugging preload data by dumping cache information before preloading, but has some issues with MDDB save not working.";
+
+        [JsonProperty]
         internal bool ShowPreloadResourcesProgress;
         [JsonProperty]
         internal const string ShowPreloadResourcesProgress_Description = "If in main menu and the loading curtain is shown, try to update the shown text to the current processed item. Does NOT fix the frozen indicator, therefore disabled by default.";
