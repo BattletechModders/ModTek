@@ -50,18 +50,10 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            // GenericPopupBuilder
-            //     .Create("Pre-load required", "")
-            //     .AddButton(
-            //         "Continue",
-            //         () =>
-            //         {
             Log("Pre-warming and/or pre-loading resources.");
             isPreloading = true;
             LoadingCurtain.ExecuteWhenVisible(() => loadRequest.ProcessRequests());
             ShowLoadingCurtainForMainMenuPreloading();
-            //     })
-            // .Render();
         }
 
         private static void PreparePrewarmRequests(LoadRequest loadRequest, HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
@@ -205,7 +197,6 @@ namespace ModTek.Features.Manifest
             LogIfSlow(preloadSW, "Preloading");
         }
 
-        // TODO video pause + resume would be nice for all use cases
         private static void ShowLoadingCurtainForMainMenuPreloading()
         {
             Log("Showing LoadingCurtain for Preloading.");
@@ -222,6 +213,7 @@ namespace ModTek.Features.Manifest
                     {
                         if (videoPlayer.isPlaying)
                         {
+                            Log("Pausing MainMenu background video.");
                             videoPlayer.Pause();
                         }
                         return false;
@@ -230,12 +222,13 @@ namespace ModTek.Features.Manifest
                     {
                         if (videoPlayer.isPaused)
                         {
+                            Log("Resuming MainMenu background video.");
                             videoPlayer.Play();
                         }
                         return true;
                     }
                 },
-                "Indexing modded data, might take a while."
+                indexingMessage
             );
         }
 
@@ -249,11 +242,12 @@ namespace ModTek.Features.Manifest
             return Traverse.Create(mainMenu).Field("bgVideoPlayer").GetValue<VideoPlayer>();
         }
 
+        private const string indexingMessage = "Indexing modded data, might take a while.\nGame can temporarely freeze.";
         internal static void UpdateLoadingCurtainTextForProcessedEntry(VersionManifestEntry entry)
         {
             if (ModTek.Config.ShowPreloadResourcesProgress)
             {
-                LoadingCurtainUtils.SetActivePopupText($"Loaded {entry.ToShortString()}");
+                LoadingCurtainUtils.SetActivePopupText($"{indexingMessage}\n\n{entry.ToShortString()}");
             }
         }
     }

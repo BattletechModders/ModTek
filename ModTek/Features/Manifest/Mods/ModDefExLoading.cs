@@ -148,6 +148,7 @@ namespace ModTek.Features.Manifest.Mods
             {
                 try
                 {
+                    Log($"\tFinishedLoading {modDef.QuotedName}");
                     if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                     {
                         Log($"\tError: {modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");

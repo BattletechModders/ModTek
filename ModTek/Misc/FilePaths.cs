@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using BattleTech;
+using ModTek.Util;
 using UnityEngine;
 
 namespace ModTek.Misc
@@ -38,6 +39,7 @@ namespace ModTek.Misc
         internal static string AssetBundlesDirectory { get; private set; }
         internal static string ChangedFlagPath { get; private set; }
         internal static string LogPath { get; set; }
+        internal static string LogPathRelativeToGameDirectory => FileUtils.GetRelativePath(GameDirectory, LogPath);
 
         internal static void SetupPaths()
         {

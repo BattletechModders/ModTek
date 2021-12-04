@@ -347,25 +347,25 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            // TODO really bad, need another way to know that the main menu is loaded
-            // too early: !SceneManager.GetSceneByName("MainMenu").isLoaded
-            // too specific, doesn't work 100%: SceneManager.GetActiveScene().name != "MainMenu"
-            // main menu loading seems slow too
-            // if (SceneManager.GetActiveScene().name != "MainMenu")
-            // {
-            //     Log("MainMenu level not yet loaded, delaying VerifyCaches");
-            //     UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
-            //         MessageCenterMessageType.LevelLoadComplete,
-            //         _ =>
-            //         {
-            //             ContentPackManifestsLoaded();
-            //             return true;
-            //         }
-            //     );
-            //     return;
-            // }
+            ShowModsFailedPopup();
+        }
 
-            VerifyCaches();
+        private static void ShowModsFailedPopup()
+        {
+            if (ModDefsDatabase.FailedToLoadMods.Count == 0)
+            {
+                VerifyCaches();
+                return;
+            }
+
+            GenericPopupBuilder.Create(
+                    "Some Mods Didn't Load",
+                    $"Continuing might break your game. Check \"{FilePaths.LogPathRelativeToGameDirectory}\" for more info\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
+                )
+                .AddButton("Risk Continuing", VerifyCaches)
+                .AddButton("Quit Game", UnityGameInstance.Instance.ShutdownGame, false)
+                .Render();
+            ModDefsDatabase.FailedToLoadMods.Clear();
         }
 
         private static void VerifyCaches()
