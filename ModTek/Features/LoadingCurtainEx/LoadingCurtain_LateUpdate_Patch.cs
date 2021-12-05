@@ -28,6 +28,12 @@ namespace ModTek.Features.LoadingCurtainEx
                 if (DataManagerLoadingCurtain.GetDataManagerStats(out var stats))
                 {
                 }
+
+                if (stats == null)
+                {
+                    return;
+                }
+
                 var statsText = stats.GetStatsTextForCurtain();
                 if (___popupLoadingText.IsActive())
                 {
@@ -37,7 +43,10 @@ namespace ModTek.Features.LoadingCurtainEx
                 if (___spinnerAndTipWidget.isActiveAndEnabled)
                 {
                     var tipText = Traverse.Create(___spinnerAndTipWidget).Field("tipText").GetValue<LocalizableText>();
-                    tipText.SetText(statsText);
+                    if (tipText != null)
+                    {
+                        tipText.SetText(statsText);
+                    }
                 }
             }
             catch (Exception e)
