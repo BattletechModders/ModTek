@@ -195,7 +195,6 @@ namespace ModTek.Features.Manifest.MDD
             if (flagForRebuild)
             {
                 Log($"MDDBCache: Rebuilding.");
-                preloadResources.Clear();
                 Reset();
             }
         }
