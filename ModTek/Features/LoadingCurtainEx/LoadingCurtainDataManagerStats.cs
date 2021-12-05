@@ -19,7 +19,7 @@ namespace ModTek.Features.LoadingCurtainEx
                 .Field("activeLoadBatches")
                 .GetValue<List<LoadRequest>>();
 
-            if (activeLoadBatches == null || activeLoadBatches.Count == 0)
+            if (activeLoadBatches == null)
             {
                 stats = null;
                 return false;
@@ -92,7 +92,7 @@ namespace ModTek.Features.LoadingCurtainEx
 
             internal bool HasStats()
             {
-                return active > 0 || pending > 0 || completed > 0 || failed > 0;
+                return batches > 0 || active > 0 || pending > 0 || completed > 0 || failed > 0;
             }
 
             public override string ToString()

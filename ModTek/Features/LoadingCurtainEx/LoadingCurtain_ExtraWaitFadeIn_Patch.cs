@@ -10,7 +10,7 @@ namespace ModTek.Features.LoadingCurtainEx
     /// <summary>
     /// Clear the LoadingCurtainErrorText when loading curtain hides using ExtraWaitFadeIn
     /// </summary>
-    [HarmonyPatch(typeof(LoadingCurtain), "ExtraWaitFadeIn")]
+    // [HarmonyPatch(typeof(LoadingCurtain), "ExtraWaitFadeIn")]
     internal static class LoadingCurtain_ExtraWaitFadeIn_Patch
     {
         public static bool Prepare()

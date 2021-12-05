@@ -7,7 +7,7 @@ namespace ModTek.Features.LoadingCurtainEx
     /// <summary>
     /// Patch the LoadingCurtain to add error text.
     /// </summary>
-    [HarmonyPatch(typeof(LoadingCurtain), "ShowUntil")]
+    // [HarmonyPatch(typeof(LoadingCurtain), "ShowUntil")]
     internal static class LoadingCurtain_ShowUntil_Patch
     {
         public static bool Prepare()

@@ -68,7 +68,7 @@ namespace ModTek.Misc
         internal const string SaveCachesBeforePreloading_Description = "Helps with debugging preload data by dumping cache information before preloading, but has some issues with MDDB save not working.";
 
         [JsonProperty]
-        internal bool DelayPrewarmUntilPreload;
+        internal bool DelayPrewarmUntilPreload = true;
         [JsonProperty]
         internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed, avoids duplicates.";
 

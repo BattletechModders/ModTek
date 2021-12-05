@@ -82,19 +82,19 @@ namespace ModTek.Features.Manifest
 
         private void StartLoading()
         {
-            loadRequest = dataManager.CreateLoadRequest(_ => PreloadFinished());
-
-            PreparePrewarmRequests();
-            PreparePreloadRequests();
-
-            if (loadRequest.GetRequestCount() == 0)
+            try
             {
-                Log("Nothing to prewarm or preload.");
-                FinalizePreloadResources();
-                return;
-            }
+                loadRequest = dataManager.CreateLoadRequest(_ => PreloadFinished());
 
-            loadRequest.ProcessRequests();
+                PreparePrewarmRequests();
+                PreparePreloadRequests();
+
+                loadRequest.ProcessRequests();
+            }
+            catch (Exception e)
+            {
+                Log("ERROR: Couldn't start loading via preload", e);
+            }
         }
 
         private void PreparePrewarmRequests()
@@ -231,12 +231,21 @@ namespace ModTek.Features.Manifest
 
         private void PreloadFinished()
         {
-            if (ModTek.Config.DelayPrewarmUntilPreload)
+            try
             {
-                Traverse.Create(dataManager).Method("PrewarmComplete").GetValue(loadRequest);
+                Log("Preloader finished");
+                if (ModTek.Config.DelayPrewarmUntilPreload)
+                {
+                    Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
+                }
+
+                ModsManifest.SaveCaches();
+                FinalizePreloadResources();
             }
-            ModsManifest.SaveCaches();
-            FinalizePreloadResources();
+            catch (Exception e)
+            {
+                Log("ERROR can't fully finish preload", e);
+            }
         }
 
         private static void ShowLoadingCurtainForMainMenuPreloading()
@@ -248,18 +257,19 @@ namespace ModTek.Features.Manifest
             );
         }
 
-        private static bool PopupClosureCondition => !(isPreloading || UnityGameInstance.BattleTechGame.DataManager.IsLoading);
         private static bool PopupClosureConditionalCheck()
         {
             try
             {
+                var condition = !isPreloading && !UnityGameInstance.BattleTechGame.DataManager.IsLoading;
+
                 var videoPlayer = GetMainMenuBGVideoPlayer();
                 if (videoPlayer == null)
                 {
-                    return PopupClosureCondition;
+                    return condition;
                 }
 
-                if (PopupClosureCondition)
+                if (condition)
                 {
                     if (videoPlayer.isPaused)
                     {
