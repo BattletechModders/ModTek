@@ -8,6 +8,7 @@ using Harmony;
 using HBS;
 using ModTek.Features.LoadingCurtainEx;
 using ModTek.Features.Manifest.MDD;
+using ModTek.Features.Manifest.Patches;
 using UnityEngine;
 using UnityEngine.Video;
 using static ModTek.Features.Logging.MTLogger;
@@ -19,7 +20,6 @@ namespace ModTek.Features.Manifest
     {
         private static readonly Stopwatch preloadSW = new();
         internal static bool isPreloading;
-        internal static bool isPrewarmRequestedForNextPreload;
         internal static int finishedChecksAndPreloadsCounter;
         private static DataManager dataManager;
         private static LoadRequest loadRequest;
@@ -65,13 +65,13 @@ namespace ModTek.Features.Manifest
 
         private static void PreparePrewarmRequests(HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
         {
-            var prewarmRequests = UnityGameInstance.BattleTechGame.ApplicationConstants.PrewarmRequests;
-
-            if (!isPrewarmRequestedForNextPreload || prewarmRequests == null || prewarmRequests.Length <= 0)
+            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.PrewarmRequests;
+            if (prewarmRequests.Count == 0)
             {
                 Log("Skipping prewarm during preload.");
                 return;
             }
+            DataManager_ProcessPrewarmRequests_Patch.PrewarmRequests.Clear();
 
             Log("Pre-warming resources during preload.");
             foreach (var prewarm in prewarmRequests)
@@ -105,8 +105,6 @@ namespace ModTek.Features.Manifest
                     AddPrewarmRequest(prewarm);
                 }
             }
-
-            isPrewarmRequestedForNextPreload = false;
         }
 
         private static void AddPrewarmRequest(PrewarmRequest prewarm)

@@ -73,9 +73,9 @@ namespace ModTek.Misc
         internal const string ShowPreloadResourcesProgress_Description = "If in main menu and the loading curtain is shown, try to update the shown text to the current processed item. Does NOT fix the frozen indicator, therefore disabled by default.";
 
         [JsonProperty]
-        internal bool DelayPrewarmUntilPreload;
+        internal bool DelayPrewarmUntilPreload = true;
         [JsonProperty]
-        internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed. Not yet working (for RT).";
+        internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed, avoids duplicates.";
 
         [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
