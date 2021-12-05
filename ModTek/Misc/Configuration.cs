@@ -73,6 +73,11 @@ namespace ModTek.Misc
         internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed, avoids duplicates.";
 
         [JsonProperty]
+        internal bool ShowDataManagerStatsInLoadingCurtain = true; // TODO before release, put this to false or find a way to not override existing messages
+        [JsonProperty]
+        internal const string ShowDataManagerStatsInLoadingCurtain_Description = "Instead of showing the message or the gametip, DataManager stats are shown.";
+
+        [JsonProperty]
         internal string[] BlockedMods = { "FYLS" };
         [JsonProperty]
         internal const string BlockedMods_Description = "Mods that should not be allowed to load. Useful in cases where those mods would (newly) interfere with ModTek.";

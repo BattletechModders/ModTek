@@ -11,7 +11,7 @@ namespace ModTek.Features.LoadingCurtainEx
     {
         public static bool Prepare()
         {
-            return ModTek.Enabled;
+            return ModTek.Enabled && ModTek.Config.ShowDataManagerStatsInLoadingCurtain;
         }
 
         public static void Postfix(
