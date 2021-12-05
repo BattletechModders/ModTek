@@ -6,6 +6,7 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using Harmony;
 using HBS.Data;
+using ModTek.Util;
 using UnityEngine;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -91,6 +92,7 @@ namespace ModTek.Features.Manifest.Patches
         {
             try
             {
+                MTUnityUtils.EnsureRunningOnMainThread();
                 if (FinishWithMergedContent(handler.Target))
                 {
                     return;
@@ -108,6 +110,7 @@ namespace ModTek.Features.Manifest.Patches
         {
             try
             {
+                MTUnityUtils.EnsureRunningOnMainThread();
                 throw new InvalidOperationException(); // TODO implement (how to test?)
             }
             catch (Exception e)
@@ -120,6 +123,7 @@ namespace ModTek.Features.Manifest.Patches
         {
             try
             {
+                MTUnityUtils.EnsureRunningOnMainThread();
                 if (FinishWithMergedContent(loadedCallback.Target))
                 {
                     return;

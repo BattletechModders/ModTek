@@ -4,6 +4,7 @@ using System.Reflection;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
+using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Patches
@@ -39,6 +40,7 @@ namespace ModTek.Features.Manifest.Patches
         {
             try
             {
+                MTUnityUtils.EnsureRunningOnMainThread();
                 ModsManifest.MergeContentIfApplicable(___manifestEntry, ref text);
             }
             catch (Exception e)
