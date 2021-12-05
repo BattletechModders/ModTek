@@ -431,8 +431,6 @@ namespace ModTek.Features.Manifest
             {
                 mddbCache.Add(entry, content, false);
             }
-
-            ModsManifestPreloader.RefreshManifestProgress(entry);
         }
     }
 }

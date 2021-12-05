@@ -58,7 +58,7 @@ namespace ModTek.Misc
         internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
 
         [JsonProperty]
-        internal float DataManagerEverSpinnyDetectionTimespan = 120f;
+        internal float DataManagerEverSpinnyDetectionTimespan = 30f;
         [JsonProperty]
         internal readonly string DataManagerEverSpinnyDetectionTimespan_Description = $"How long data is not being further processed until it is assumed to be stuck for good. Upon detection it dumps lots of data into the log, but nothing more.";
 
@@ -68,12 +68,7 @@ namespace ModTek.Misc
         internal const string SaveCachesBeforePreloading_Description = "Helps with debugging preload data by dumping cache information before preloading, but has some issues with MDDB save not working.";
 
         [JsonProperty]
-        internal bool ShowPreloadResourcesProgress;
-        [JsonProperty]
-        internal const string ShowPreloadResourcesProgress_Description = "If in main menu and the loading curtain is shown, try to update the shown text to the current processed item. Does NOT fix the frozen indicator, therefore disabled by default.";
-
-        [JsonProperty]
-        internal bool DelayPrewarmUntilPreload = true;
+        internal bool DelayPrewarmUntilPreload;
         [JsonProperty]
         internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed, avoids duplicates.";
 
