@@ -50,7 +50,7 @@ namespace ModTek.Misc
         internal bool PreloadResourcesForCache = true; // false is not supported
         [JsonProperty]
         internal const string PreloadResourcesForCache_Description = "Instead of waiting for the game to request resources naturally and then merge when loading" +
-            ", pre-request all mergeable and indexable resources during the game startup. If not pre-loading, SimGame will be missing pilots and lances.";
+            ", pre-request all mergeable and indexable resources during the game startup. If not preloading, SimGame will be missing pilots and lances.";
 
         [JsonProperty]
         internal float DataManagerUnfreezeDelta = 2f;
@@ -90,7 +90,7 @@ namespace ModTek.Misc
         [JsonProperty]
         internal string[] AssembliesToPreload = { };
         [JsonProperty]
-        internal const string AssembliesToPreload_Description = "A list of assemblies to pre-load before ModTek starts harmony patching." +
+        internal const string AssembliesToPreload_Description = "A list of assemblies to preload before ModTek starts harmony patching." +
             " Useful for mods that modify the assembly directly and introduce dependencies not found in the default assembly search path of the game." +
             " Path is relative to the Mods/ directory";
 

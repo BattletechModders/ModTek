@@ -22,9 +22,9 @@ namespace ModTek.Features.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<CacheKey> toBeIndexed = new();
+        private readonly HashSet<CacheKey> QueuedItems = new();
 
-        private CacheDB Entries { get; }
+        private CacheDB CachedItems { get; }
         internal static bool HasChanges;
 
         internal MDDBCache()
@@ -35,7 +35,7 @@ namespace ModTek.Features.Manifest.MDD
             {
                 try
                 {
-                    Entries = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
+                    CachedItems = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
                         .ToDictionary(kv => kv.Key, kv => kv.Value);
                     MetadataDatabase.ReloadFromDisk();
                     Log("MDDBCache: Loaded.");
@@ -47,7 +47,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
             }
 
-            Entries = new CacheDB();
+            CachedItems = new CacheDB();
             Reset();
         }
 
@@ -59,7 +59,7 @@ namespace ModTek.Features.Manifest.MDD
 
             // create a new one if it doesn't exist or couldn't be added
             Log("MDDBCache: Copying over DB and rebuilding cache.");
-            Entries.Clear();
+            CachedItems.Clear();
             MetadataDatabase.ReloadFromDisk();
         }
 
@@ -76,7 +76,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
                 MetadataDatabase.SaveMDDToPath();
 
-                ModTekCacheStorage.CompressedWriteTo(Entries.ToList(), PersistentFilePath);
+                ModTekCacheStorage.CompressedWriteTo(CachedItems.ToList(), PersistentFilePath);
                 Log($"MDDBCache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -92,29 +92,33 @@ namespace ModTek.Features.Manifest.MDD
         }
 
         private readonly Stopwatch sw = new();
-        internal void Add(VersionManifestEntry entry, string content, bool updateOnlyIfCacheOutdated)
+        internal void Add(VersionManifestEntry loadedEntry, string content, bool forceUpdate)
         {
-            if (!BTConstants.ResourceType(entry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))
+            if (!BTConstants.ResourceType(loadedEntry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))
             {
                 return;
             }
 
-            if (!ShouldIndex(entry, out var key))
+            if (!ShouldIndex(loadedEntry, out var key))
             {
                 return;
             }
 
-            if (updateOnlyIfCacheOutdated)
+            if (!forceUpdate)
             {
-                if (Entries.TryGetValue(key, out var existingEntry))
+                if (CachedItems.TryGetValue(key, out var cachedItem))
                 {
-                    if (existingEntry.UpdatedOn == entry.UpdatedOn)
+                    if (cachedItem.Equals(loadedEntry))
                     {
                         return;
                     }
                 }
-                else if (entry.IsInDefaultMDDB())
+                else if (loadedEntry.IsInDefaultMDDB())
                 {
+                    // if from HBS we assume no updates -> TODO how to detect changes in the future?
+                    // if we have merges then we force update
+                    // if we have replacement its not a default MDDB anymore
+                    // TODO does not detect changed by mods -> e.g. MissionControl
                     return;
                 }
             }
@@ -122,18 +126,18 @@ namespace ModTek.Features.Manifest.MDD
             sw.Start();
             try
             {
-                Log($"MDDBCache: Indexing {entry.ToShortString()}");
-                MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, entry.Id, content);
+                Log($"MDDBCache: Indexing {loadedEntry.ToShortString()}");
+                MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, loadedEntry.Id, content);
             }
             catch (Exception e)
             {
-                Log($"MDDBCache: Exception when indexing {entry.ToShortString()}", e);
+                Log($"MDDBCache: Exception when indexing {loadedEntry.ToShortString()}", e);
             }
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000); // every 10s log total and reset
-            if (!entry.IsInDefaultMDDB())
+            if (!loadedEntry.IsInDefaultMDDB())
             {
-                Entries.Add(key, FileVersionTuple.From(entry));
+                CachedItems[key] = FileVersionTuple.From(loadedEntry);
             }
             HasChanges = true;
         }
@@ -141,13 +145,13 @@ namespace ModTek.Features.Manifest.MDD
         internal void AddToBeIndexed(ModEntry entry)
         {
             var key = new CacheKey(entry);
-            toBeIndexed.Add(key);
+            QueuedItems.Add(key);
         }
 
         internal bool ShouldIndex(VersionManifestEntry entry, out CacheKey key)
         {
             key = new CacheKey(entry);
-            return toBeIndexed.Contains(key) || entry.IsInDefaultMDDB();
+            return QueuedItems.Contains(key) || entry.IsInDefaultMDDB();
         }
 
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
@@ -164,7 +168,7 @@ namespace ModTek.Features.Manifest.MDD
                             continue;
                         }
 
-                        if (Entries.TryGetValue(key, out var cachedEntry))
+                        if (CachedItems.TryGetValue(key, out var cachedEntry))
                         {
                             cachedEntry.CacheHit = true;
                             if (!cachedEntry.Equals(manifestEntry))
@@ -182,7 +186,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
 
                 // find entries that shouldn't be in cache (anymore)
-                foreach (var kv in Entries)
+                foreach (var kv in CachedItems)
                 {
                     if (!kv.Value.CacheHit)
                     {

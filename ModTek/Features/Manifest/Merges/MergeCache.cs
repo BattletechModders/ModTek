@@ -19,9 +19,8 @@ namespace ModTek.Features.Manifest.Merges
         private static string PersistentDirPath => FilePaths.MergeCacheDirectory;
         private readonly string PersistentFilePath;
 
-        private readonly CacheDB persistentSets; // stuff in here was merged
-        private readonly CacheDB tempSets = new(); // stuff in here has merges queued
-
+        private readonly CacheDB CachedMerges; // stuff in here was merged
+        private readonly CacheDB QueuedMerges = new(); // stuff in here has merges queued
 
         private static bool HasChanges;
 
@@ -33,8 +32,8 @@ namespace ModTek.Features.Manifest.Merges
             {
                 try
                 {
-                    persistentSets = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
-                        .ToDictionary(kv => kv.Key, kv => kv.Value);;
+                    CachedMerges = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
+                        .ToDictionary(kv => kv.Key, kv => kv.Value);
                     return;
                 }
                 catch (Exception e)
@@ -47,7 +46,7 @@ namespace ModTek.Features.Manifest.Merges
 
             // create a new one if it doesn't exist or couldn't be added'
             Log("MergeCache: Rebuilding cache.");
-            persistentSets = new CacheDB();
+            CachedMerges = new CacheDB();
         }
 
         private readonly Stopwatch saveSW = new();
@@ -62,7 +61,7 @@ namespace ModTek.Features.Manifest.Merges
                     return;
                 }
 
-                ModTekCacheStorage.CompressedWriteTo(persistentSets.ToList(), PersistentFilePath);
+                ModTekCacheStorage.CompressedWriteTo(CachedMerges.ToList(), PersistentFilePath);
                 Log($"MergeCache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -77,23 +76,23 @@ namespace ModTek.Features.Manifest.Merges
             }
         }
 
-        internal bool HasMergedContentCached(VersionManifestEntry entry, bool fetchContent, out string cachedContent)
+        internal bool HasMergedContentCached(VersionManifestEntry loadingEntry, bool fetchContent, out string cachedContent)
         {
             cachedContent = null;
 
-            var key = new CacheKey(entry);
-            if (!tempSets.TryGetValue(key, out var temp))
+            var key = new CacheKey(loadingEntry);
+            if (!QueuedMerges.TryGetValue(key, out var queuedMerge))
             {
                 return false;
             }
-            temp.SetCachedPathAndUpdatedOn(entry);
+            queuedMerge.SetCachedPathAndUpdatedOn(loadingEntry);
 
-            if (!persistentSets.TryGetValue(key, out var persist))
+            if (!CachedMerges.TryGetValue(key, out var cachedMerge))
             {
                 return false;
             }
 
-            if (!temp.Equals(persist))
+            if (!queuedMerge.Equals(cachedMerge))
             {
                 return false;
             }
@@ -102,63 +101,63 @@ namespace ModTek.Features.Manifest.Merges
             {
                 if (fetchContent)
                 {
-                    cachedContent = ModTekCacheStorage.CompressedStringReadFrom(temp.CachedAbsolutePath);
+                    cachedContent = ModTekCacheStorage.CompressedStringReadFrom(queuedMerge.CachedAbsolutePath);
                 }
-                else if (!ModTekCacheStorage.CompressedExists(temp.CachedAbsolutePath))
+                else if (!ModTekCacheStorage.CompressedExists(queuedMerge.CachedAbsolutePath))
                 {
                     return false;
                 }
             }
             catch
             {
-                Log($"MergeCache: Couldn't read cached merge result at {temp.CachedAbsolutePath}");
+                Log($"MergeCache: Couldn't read cached merge result at {queuedMerge.CachedAbsolutePath}");
                 return false;
             }
 
             return true;
         }
 
-        internal void MergeAndCacheContent(VersionManifestEntry entry, ref string content)
+        internal void MergeAndCacheContent(VersionManifestEntry loadedEntry, ref string content)
         {
             if (content == null)
             {
                 return;
             }
 
-            var key = new CacheKey(entry);
-            if (!tempSets.TryGetValue(key, out var temp))
+            var key = new CacheKey(loadedEntry);
+            if (!QueuedMerges.TryGetValue(key, out var queuedMerge))
             {
                 return;
             }
 
             try
             {
-                Log($"MergeCache: Merging {entry.ToShortString()}");
-                content = temp.Merge(content);
+                Log($"MergeCache: Merging {loadedEntry.ToShortString()}");
+                content = queuedMerge.Merge(content);
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Couldn't merge {temp.CachedAbsolutePath}", e);
+                Log($"MergeCache: Couldn't merge {queuedMerge.CachedAbsolutePath}", e);
                 return;
             }
 
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(temp.CachedAbsolutePath) ?? throw new InvalidOperationException());
-                ModTekCacheStorage.CompressedStringWriteTo(temp.CachedAbsolutePath, content);
-                persistentSets[key] = temp;
+                Directory.CreateDirectory(Path.GetDirectoryName(queuedMerge.CachedAbsolutePath) ?? throw new InvalidOperationException());
+                ModTekCacheStorage.CompressedStringWriteTo(queuedMerge.CachedAbsolutePath, content);
+                CachedMerges[key] = queuedMerge;
                 HasChanges = true;
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Couldn't write cached merge result to {temp.CachedAbsolutePath}", e);
+                Log($"MergeCache: Couldn't write cached merge result to {queuedMerge.CachedAbsolutePath}", e);
             }
         }
 
         internal bool HasMerges(VersionManifestEntry entry)
         {
             var key = new CacheKey(entry);
-            return tempSets.ContainsKey(key);
+            return QueuedMerges.ContainsKey(key);
         }
 
         internal bool AddModEntry(ModEntry entry)
@@ -188,7 +187,7 @@ namespace ModTek.Features.Manifest.Merges
             }
 
             var key = new CacheKey(entry);
-            var temp = tempSets.GetOrCreate(key);
+            var temp = QueuedMerges.GetOrCreate(key);
             temp.SetCachedPath(entry);
             temp.Add(entry);
         }
@@ -196,7 +195,7 @@ namespace ModTek.Features.Manifest.Merges
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
         {
             // find entries missing in cache
-            foreach (var kv in tempSets.ToList())
+            foreach (var kv in QueuedMerges.ToList())
             {
                 if (kv.Value.OriginalUpdatedOn == null)
                 {
@@ -213,7 +212,7 @@ namespace ModTek.Features.Manifest.Merges
                     }
                 }
 
-                if (persistentSets.TryGetValue(kv.Key, out var cachedEntry))
+                if (CachedMerges.TryGetValue(kv.Key, out var cachedEntry))
                 {
                     cachedEntry.CacheHit = true;
                     if (!cachedEntry.Equals(kv.Value))
@@ -230,7 +229,7 @@ namespace ModTek.Features.Manifest.Merges
             }
 
             // find entries that shouldn't be in cache (anymore)
-            foreach (var kv in persistentSets.ToList())
+            foreach (var kv in CachedMerges.ToList())
             {
                 if (kv.Value.CacheHit)
                 {
@@ -239,7 +238,7 @@ namespace ModTek.Features.Manifest.Merges
 
                 Log($"MergeCache: {kv.Key} left over in cache.");
 
-                persistentSets.Remove(kv.Key);
+                CachedMerges.Remove(kv.Key);
                 try
                 {
                     if (File.Exists(kv.Value.CachedAbsolutePath))

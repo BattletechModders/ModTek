@@ -116,7 +116,7 @@ namespace ModTek
                 Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
             }
 
-            LogIf(Config.AssembliesToPreload.Length > 0, "Pre-loading assemblies");
+            LogIf(Config.AssembliesToPreload.Length > 0, "Preloading assemblies");
             foreach (var assemblyToPreload in ModTek.Config.AssembliesToPreload)
             {
                 Log($"\tLoading {assemblyToPreload}");
@@ -133,7 +133,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"\t\tError: Failed to pre-load the assembly.", e);
+                    Log($"\t\tError: Failed to preload the assembly.", e);
                 }
             }
 

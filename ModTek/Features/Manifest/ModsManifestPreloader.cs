@@ -52,12 +52,12 @@ namespace ModTek.Features.Manifest
 
             if (loadRequest.GetRequestCount() == 0)
             {
-                Log("Nothing to pre-warm or pre-load.");
+                Log("Nothing to prewarm or preload.");
                 FinalizePreload();
                 return;
             }
 
-            Log("Pre-warming and/or pre-loading resources.");
+            Log("Prewarming and/or preloading resources.");
             isPreloading = true;
             LoadingCurtain.ExecuteWhenVisible(() => loadRequest.ProcessRequests());
             ShowLoadingCurtainForMainMenuPreloading();
@@ -65,15 +65,14 @@ namespace ModTek.Features.Manifest
 
         private static void PreparePrewarmRequests(HashSet<BattleTechResourceType> loadingTypes, HashSet<CacheKey> loadingResources)
         {
-            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.PrewarmRequests;
+            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
             if (prewarmRequests.Count == 0)
             {
                 Log("Skipping prewarm during preload.");
                 return;
             }
-            DataManager_ProcessPrewarmRequests_Patch.PrewarmRequests.Clear();
 
-            Log("Pre-warming resources during preload.");
+            Log("Prewarming resources during preload.");
             foreach (var prewarm in prewarmRequests)
             {
                 if (!prewarm.PrewarmAllOfType)
@@ -83,6 +82,7 @@ namespace ModTek.Features.Manifest
 
                 if (loadingTypes.Add(prewarm.ResourceType))
                 {
+                    Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
                     AddPrewarmRequest(prewarm);
                 }
             }
@@ -102,6 +102,7 @@ namespace ModTek.Features.Manifest
                 var cacheKey = new CacheKey(prewarm.ResourceType.ToString(), prewarm.ResourceID);
                 if (loadingResources.Add(cacheKey))
                 {
+                    Log($"\tPrewarming resource {cacheKey}.");
                     AddPrewarmRequest(prewarm);
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using BattleTech.Data;
 using Harmony;
 
@@ -12,7 +13,13 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled && ModTek.Config.DelayPrewarmUntilPreload;
         }
 
-        internal static List<PrewarmRequest> PrewarmRequests = new();
+        public static List<PrewarmRequest> GetAndClearPrewarmRequests()
+        {
+            var copy = PrewarmRequests.ToList();
+            PrewarmRequests.Clear();
+            return copy;
+        }
+        private static List<PrewarmRequest> PrewarmRequests = new();
         public static bool Prefix(IEnumerable<PrewarmRequest> toPrewarm)
         {
             if (toPrewarm != null)

@@ -424,12 +424,12 @@ namespace ModTek.Features.Manifest
                 {
                     mergeCache.MergeAndCacheContent(entry, ref content);
                     // merges dont modify the UpdateOn timestamp, force update MDDB here!
-                    mddbCache.Add(entry, content, false);
+                    mddbCache.Add(entry, content, true);
                 }
             }
             else
             {
-                mddbCache.Add(entry, content, true);
+                mddbCache.Add(entry, content, false);
             }
 
             ModsManifestPreloader.RefreshManifestProgress(entry);

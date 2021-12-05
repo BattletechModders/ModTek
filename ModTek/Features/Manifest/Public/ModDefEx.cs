@@ -96,7 +96,7 @@ namespace ModTek
         public List<ModEntry> Manifest { get; set; } = new();
 
         // remove these entries by ID from the game
-        [Obsolete] // MDD is pre-loaded, you can't remove them!
+        [Obsolete] // MDD is preloaded, you can't remove them!
         public List<string> RemoveManifestEntries { get; set; } = new();
 
         // a settings file to be nice to our users and have a known place for settings
