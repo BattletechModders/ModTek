@@ -19,7 +19,7 @@ namespace ModTek.Features.Manifest.Patches
             PrewarmRequests.Clear();
             return copy;
         }
-        private static List<PrewarmRequest> PrewarmRequests = new();
+        private static List<PrewarmRequest> PrewarmRequests = new List<PrewarmRequest>();
         public static bool Prefix(IEnumerable<PrewarmRequest> toPrewarm)
         {
             if (toPrewarm != null)

@@ -46,35 +46,35 @@ namespace ModTek.Features.CustomStreamingAssets
 
         internal static readonly VersionManifestEntry[] DefaultCustomStreamingAssets =
         {
-            new(
+            new VersionManifestEntry(
                 "settings",
                 Path.Combine(Path.Combine("data", "debug"), "settings.json"),
                 CSAType.DebugSettings.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
-            new(
+            new VersionManifestEntry(
                 "general",
                 Path.Combine("GameTips", "general.txt"),
                 CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
-            new(
+            new VersionManifestEntry(
                 "combat",
                 Path.Combine("GameTips", "combat.txt"),
                 CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
-            new(
+            new VersionManifestEntry(
                 "lore",
                 Path.Combine("GameTips", "lore.txt"),
                 CSAType.GameTip.ToString(),
                 DateTime.MinValue,
                 "1"
             ),
-            new(
+            new VersionManifestEntry(
                 "sim",
                 Path.Combine("GameTips", "sim.txt"),
                 CSAType.GameTip.ToString(),

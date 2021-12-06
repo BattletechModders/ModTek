@@ -16,7 +16,7 @@ namespace ModTek.Features.Manifest
     internal class ModsManifestPreloader
     {
         internal static int finishedChecksAndPreloadsCounter;
-        private static readonly Stopwatch preloadSW = new();
+        private static readonly Stopwatch preloadSW = new Stopwatch();
         internal static bool isPreloading => preloader != null;
         private static ModsManifestPreloader preloader;
 
@@ -44,8 +44,8 @@ namespace ModTek.Features.Manifest
         }
 
         private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
-        private readonly HashSet<BattleTechResourceType> loadingTypes = new();
-        private readonly HashSet<CacheKey> loadingResources = new();
+        private readonly HashSet<BattleTechResourceType> loadingTypes = new HashSet<BattleTechResourceType>();
+        private readonly HashSet<CacheKey> loadingResources = new HashSet<CacheKey>();
 
         private readonly bool rebuildMDDB;
         private readonly HashSet<CacheKey> preloadResources;

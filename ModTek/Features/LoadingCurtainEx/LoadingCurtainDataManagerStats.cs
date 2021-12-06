@@ -9,7 +9,7 @@ namespace ModTek.Features.LoadingCurtainEx
 {
     internal class DataManagerLoadingCurtain
     {
-        private static LoadStats LastStats = new();
+        private static LoadStats LastStats = new LoadStats();
         // returns true if new stats, false if nothing changed and then returns old stats
         internal static bool GetDataManagerStats(out LoadStats stats)
         {

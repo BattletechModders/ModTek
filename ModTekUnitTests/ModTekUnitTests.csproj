@@ -4,6 +4,7 @@
     <ProjectGuid>{0924FD5F-434E-4278-A326-0F43697F4355}</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
     <DebugType>none</DebugType>

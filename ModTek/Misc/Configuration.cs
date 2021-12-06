@@ -95,7 +95,7 @@ namespace ModTek.Misc
             " Path is relative to the Mods/ directory";
 
         [JsonProperty]
-        internal LoggingSettings Logging = new();
+        internal LoggingSettings Logging = new LoggingSettings();
 
         private static string ConfigPath => Path.Combine(FilePaths.ModTekDirectory, "config.json");
         private static string ConfigDefaultsPath => Path.Combine(FilePaths.ModTekDirectory, "config.defaults.json");

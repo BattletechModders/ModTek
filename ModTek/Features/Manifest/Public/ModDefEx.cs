@@ -56,18 +56,18 @@ namespace ModTek
         public bool Locked { get; set; } = false;
 
         // load order and requirements
-        public HashSet<string> DependsOn { get; set; } = new();
-        public HashSet<string> ConflictsWith { get; set; } = new();
-        public HashSet<string> OptionallyDependsOn { get; set; } = new();
+        public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
+        public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
+        public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
 
         [JsonIgnore]
-        public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new();
+        public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new Dictionary<ModDefEx, bool>();
 
         [JsonIgnore]
-        public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new();
+        public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new Dictionary<ModDefEx, bool>();
 
         [JsonIgnore]
-        public HashSet<ModDefEx> DependsOnMe { get; set; } = new();
+        public HashSet<ModDefEx> DependsOnMe { get; set; } = new HashSet<ModDefEx>();
 
         [DefaultValue(false)]
         public bool IgnoreLoadFailure { get; set; }
@@ -87,21 +87,21 @@ namespace ModTek
         public bool LoadImplicitManifest { get; set; } = true;
 
         // custom resources types that will be passed into FinishedLoading method
-        public HashSet<string> CustomResourceTypes { get; set; } = new();
+        public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
 
         // palce for add enum files
-        public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new();
+        public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new List<DataAddendumEntry>();
 
         // manifest, for including any kind of things to add to the game's manifest
-        public List<ModEntry> Manifest { get; set; } = new();
+        public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
 
         // remove these entries by ID from the game
         [Obsolete] // MDD is preloaded, you can't remove them!
-        public List<string> RemoveManifestEntries { get; set; } = new();
+        public List<string> RemoveManifestEntries { get; set; } = new List<string>();
 
         // a settings file to be nice to our users and have a known place for settings
         // these will be different depending on the mod obviously
-        public JObject Settings { get; set; } = new();
+        public JObject Settings { get; set; } = new JObject();
 
         [JsonIgnore]
         public bool LoadFail { get; set; }

@@ -24,7 +24,8 @@ namespace ModTek.Features.Logging
             log.LogAtLevel(levelMapping[logType], string.Format(format, args), context);
         }
 
-        private static readonly Dictionary<LogType, LogLevel> levelMapping = new() {
+        private static readonly Dictionary<LogType, LogLevel> levelMapping = new Dictionary<LogType, LogLevel>
+        {
             {LogType.Log, LogLevel.Log},
             {LogType.Assert, LogLevel.Log},
             {LogType.Warning, LogLevel.Warning},

@@ -36,7 +36,7 @@ namespace ModTek
 
         public string Type { get; set; }
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
-        internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : null;
+        internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : (BattleTechResourceType?)null;
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
         internal bool IsTypeCustomStreamingAsset => CustomStreamingAssetsFeature.IsCustomStreamingAssetsType(Type);
         internal bool IsTypeCustomResource => CustomResourcesFeature.IsCustomResourceType(Type);
@@ -90,7 +90,7 @@ namespace ModTek
         private VersionManifestEntry customResourceEntry;
         internal VersionManifestEntry CreateVersionManifestEntry()
         {
-            return customResourceEntry ??= new VersionManifestEntry(
+            return customResourceEntry = customResourceEntry ?? new VersionManifestEntry(
                 Id,
                 AbsolutePath,
                 Type,

@@ -30,12 +30,12 @@ namespace ModTek.Features.Logging
         internal const string IgnoreSkipForLoggers_Description = "Loggers defined here will never be skipped, meaning their log files will still be separately available.";
 
         [JsonProperty]
-        internal FormatterSettings ModTekLogFormatting = new()
+        internal FormatterSettings ModTekLogFormatting = new FormatterSettings
         {
             FormatLine = "{2}{3}" // log level is always LOG and we know its ModTek
         };
 
         [JsonProperty]
-        internal FormatterSettings BattleTechLogFormatting = new();
+        internal FormatterSettings BattleTechLogFormatting = new FormatterSettings();
     }
 }

@@ -89,59 +89,95 @@ namespace ModTek.Misc
                 }
             }
 
-            using var c = new CSVWriter(path);
-            if (compress)
+            using(var c = new CSVWriter(path))
             {
-                using var f = new FileStream(CompressedPath(path), FileMode.Create);
-                using var g = CompressedWriteStream(f);
-                using var s = new StreamWriter(g);
-                s.NewLine = "\n";
-                c.Close();
-                File.Delete(path);
-                Traverse.Create(c).Field<TextWriter>("writer").Value = s;
-                process(c);
-            }
-            else
-            {
-                process(c);
+                if (compress)
+                {
+                    using (var f = new FileStream(CompressedPath(path), FileMode.Create))
+                    {
+                        using (var g = CompressedWriteStream(f))
+                        {
+                            using(var s = new StreamWriter(g))
+                            {
+                                s.NewLine = "\n";
+                                c.Close();
+                                File.Delete(path);
+                                Traverse.Create(c).Field<TextWriter>("writer").Value = s;
+                                process(c);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    process(c);
+                }
             }
         }
 
         public static void CompressedStringWriteTo(string path, string content)
         {
-            using var f = new FileStream(CompressedPath(path), FileMode.Create);
-            using var g = CompressedWriteStream(f);
-            using var s = new StreamWriter(g);
-            s.Write(content);
+            using (var f = new FileStream(CompressedPath(path), FileMode.Create))
+            {
+                using (var g = CompressedWriteStream(f))
+                {
+                    using (var s = new StreamWriter(g))
+                    {
+                        s.Write(content);
+                    }
+                }
+            }
         }
 
         public static string CompressedStringReadFrom(string path)
         {
-            using var f = new FileStream(CompressedPath(path), FileMode.Open);
-            using var g = CompressedReadStream(f);
-            using var s = new StreamReader(g);
-            return s.ReadToEnd();
+            using (var f = new FileStream(CompressedPath(path), FileMode.Open))
+            {
+                using (var g = CompressedReadStream(f))
+                {
+                    using (var s = new StreamReader(g))
+                    {
+                        return s.ReadToEnd();
+                    }
+                }
+            }
         }
 
         internal static void CompressedWriteTo(object obj, string path)
         {
-            using var f = new FileStream(CompressedPath(path), FileMode.Create);
-            using var g = CompressedWriteStream(f);
-            using var s = new StreamWriter(g);
-            using var j = new JsonTextWriter(s);
-            var ser = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-            ser.Serialize(j, obj);
-            j.Flush();
+            using (var f = new FileStream(CompressedPath(path), FileMode.Create))
+            {
+                using (var g = CompressedWriteStream(f))
+                {
+                    using (var s = new StreamWriter(g))
+                    {
+                        using (var j = new JsonTextWriter(s))
+                        {
+                            var ser = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+                            ser.Serialize(j, obj);
+                            j.Flush();
+                        }
+                    }
+                }
+            }
         }
 
         internal static T CompressedReadFrom<T>(string path)
         {
-            using var f = new FileStream(CompressedPath(path), FileMode.Open);
-            using var g = CompressedReadStream(f);
-            using var s = new StreamReader(g);
-            using var j = new JsonTextReader(s);
-            var ser = new JsonSerializer();
-            return ser.Deserialize<T>(j);
+            using (var f = new FileStream(CompressedPath(path), FileMode.Open))
+            {
+                using (var g = CompressedReadStream(f))
+                {
+                    using (var s = new StreamReader(g))
+                    {
+                        using (var j = new JsonTextReader(s))
+                        {
+                            var ser = new JsonSerializer();
+                            return ser.Deserialize<T>(j);
+                        }
+                    }
+                }
+            }
         }
     }
 }

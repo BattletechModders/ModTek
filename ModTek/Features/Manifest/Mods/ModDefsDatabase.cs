@@ -12,9 +12,9 @@ namespace ModTek.Features.Manifest.Mods
     internal static class ModDefsDatabase
     {
         private static List<string> ModLoadOrder;
-        private static readonly Dictionary<string, ModDefEx> ModDefs = new();
-        internal static readonly Dictionary<string, ModDefEx> allModDefs = new();
-        internal static HashSet<string> FailedToLoadMods { get; } = new();
+        private static readonly Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
+        internal static readonly Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
+        internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
 
         // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()

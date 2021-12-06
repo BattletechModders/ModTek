@@ -195,7 +195,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
 
     internal static class SVGAssetLoadRequest_Load
     {
-        private static HashSet<string> UILookAndColorConstantsIcons = new();
+        private static HashSet<string> UILookAndColorConstantsIcons = new HashSet<string>();
 
         public static bool isBuildinIcon(this AmmoCategoryValue ammoCat)
         {

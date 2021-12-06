@@ -4,6 +4,7 @@
     <ProjectGuid>{FA4943DD-9F22-48CA-9648-414FAB7307DD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <AssemblySearchPaths>

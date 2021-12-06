@@ -23,8 +23,8 @@ namespace ModTek.Features.Manifest
 {
     internal static class ModsManifest
     {
-        private static readonly MergeCache mergeCache = new();
-        private static readonly MDDBCache mddbCache = new();
+        private static readonly MergeCache mergeCache = new MergeCache();
+        private static readonly MDDBCache mddbCache = new MDDBCache();
 
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
@@ -299,18 +299,18 @@ namespace ModTek.Features.Manifest
                 .Where(x => ext.Equals(x.GetRawPath().GetExtension()))
                 .ToList();
 
-            switch (entriesById.Count)
+            if (entriesById.Count == 0)
             {
-                case 0:
-                    Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually: {entry}");
-                    return false;
-                case > 1:
-                    Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually: {entry}");
-                    return false;
-                default:
-                    entry.Type = entriesById[0].Type;
-                    return true;
+                Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually: {entry}");
+                return false;
             }
+            if (entriesById.Count > 1)
+            {
+                Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually: {entry}");
+                return false;
+            }
+            entry.Type = entriesById[0].Type;
+            return true;
         }
 
         internal static void ContentPackManifestsLoaded()

@@ -161,7 +161,7 @@ namespace ModTek.Features.Manifest.Mods
             }
         }
 
-        private static Dictionary<string, Assembly> TryResolveAssemblies = new();
+        private static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();
 
         internal static void Setup()
         {

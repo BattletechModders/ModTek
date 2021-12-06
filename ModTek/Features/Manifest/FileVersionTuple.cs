@@ -25,13 +25,13 @@ namespace ModTek.Features.Manifest
         internal static FileVersionTuple From(ModEntry entry)
         {
             // path for MergeCache is actually the relative path to the ModsDirectory
-            return new() { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.LastWriteTimeUtc };
+            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.LastWriteTimeUtc };
         }
 
         internal static FileVersionTuple From(VersionManifestEntry entry)
         {
             // path for MDDBCache is just part of a unique identifier
-            return new() { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
+            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
         }
 
         public override string ToString()

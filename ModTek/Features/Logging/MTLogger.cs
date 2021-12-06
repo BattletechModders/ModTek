@@ -12,7 +12,7 @@ namespace ModTek.Features.Logging
     {
         internal static void Log(string message = null, Exception e = null)
         {
-            message ??= "Method " + GetFullMethodName() + " called";
+            message = message ?? "Method " + GetFullMethodName() + " called";
             LoggingFeature.Log(message, e);
         }
 
@@ -31,7 +31,7 @@ namespace ModTek.Features.Logging
                 return;
             }
 
-            id ??= "Method " + GetFullMethodName();
+            id = id ?? "Method " + GetFullMethodName();
             Log($"{id} took {sw.Elapsed}");
 
             if (resetIfLogged)

@@ -12,15 +12,15 @@ namespace ModTek.Features.Manifest.BTRL
 {
     internal class BetterBTRL
     {
-        public static readonly BetterBTRL Instance = new();
+        public static readonly BetterBTRL Instance = new BetterBTRL();
 
         private ContentPackIndex packIndex;
-        private readonly TypedManifest currentManifest = new();
+        private readonly TypedManifest currentManifest = new TypedManifest();
 
         private readonly VersionManifest defaultManifest;
-        private readonly List<VersionManifestAddendum> addendums = new();
-        private readonly List<ModAddendumManifest> orderedModAddendumManifests = new();
-        private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
+        private readonly List<VersionManifestAddendum> addendums = new List<VersionManifestAddendum>();
+        private readonly List<ModAddendumManifest> orderedModAddendumManifests = new List<ModAddendumManifest>();
+        private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new Dictionary<string, List<VersionManifestEntry>>();
 
         private bool HasChanges;
 
@@ -159,8 +159,8 @@ namespace ModTek.Features.Manifest.BTRL
 
         // this region is copy pasted from original and kept same except for some calls to Manifest and BTRL itself
 
-        private Dictionary<string, VersionManifestMemoryStore> memoryStores = new();
-        private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new();
+        private Dictionary<string, VersionManifestMemoryStore> memoryStores = new Dictionary<string, VersionManifestMemoryStore>();
+        private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>>();
 
         public void ApplyMemoryStore(VersionManifestMemoryStore memoryStore)
         {
@@ -287,7 +287,7 @@ namespace ModTek.Features.Manifest.BTRL
             SetContentPackIndex(UnityGameInstance.BattleTechGame?.DataManager?.ContentPackIndex);
         }
 
-        private Stopwatch sw = new();
+        private Stopwatch sw = new Stopwatch();
         internal void RefreshTypedEntries() // this is called way too often in vanilla cases, but not sure what depends on this
         {
             if (!HasChanges) // it changes all the time anyway

@@ -20,7 +20,7 @@ namespace ModTek.Features.Manifest.Merges
         private readonly string PersistentFilePath;
 
         private readonly CacheDB CachedMerges; // stuff in here was merged
-        private readonly CacheDB QueuedMerges = new(); // stuff in here has merges queued
+        private readonly CacheDB QueuedMerges = new CacheDB(); // stuff in here has merges queued
 
         private static bool HasChanges;
 
@@ -49,7 +49,7 @@ namespace ModTek.Features.Manifest.Merges
             CachedMerges = new CacheDB();
         }
 
-        private readonly Stopwatch saveSW = new();
+        private readonly Stopwatch saveSW = new Stopwatch();
         internal void Save()
         {
             try

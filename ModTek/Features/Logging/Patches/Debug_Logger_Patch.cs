@@ -18,7 +18,7 @@ namespace ModTek.Features.Logging.Patches
         {
             try
             {
-                DebugLog ??= new Logger(new UnityLogHandlerAdapter(HBS.Logging.Logger.GetLogger("UnityEngine.Debug")));
+                DebugLog = DebugLog ?? new Logger(new UnityLogHandlerAdapter(HBS.Logging.Logger.GetLogger("UnityEngine.Debug")));
                 __result = DebugLog;
             }
             catch (Exception e)

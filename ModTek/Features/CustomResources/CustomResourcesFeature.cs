@@ -13,7 +13,7 @@ namespace ModTek.Features.CustomResources
 {
     internal static class CustomResourcesFeature
     {
-        private static readonly HashSet<string> CustomResources = new();
+        private static readonly HashSet<string> CustomResources = new HashSet<string>();
 
         private enum CRType
         {

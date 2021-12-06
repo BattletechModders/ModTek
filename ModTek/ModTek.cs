@@ -36,7 +36,7 @@ namespace ModTek
         internal const string MODTEK_DEF_NAME = "ModTek";
         internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
-        private static Stopwatch stopwatch = new();
+        private static Stopwatch stopwatch = new Stopwatch();
 
         // INITIALIZATION (called by injected code)
         public static void Init()

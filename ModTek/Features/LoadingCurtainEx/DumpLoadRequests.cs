@@ -21,19 +21,19 @@ namespace ModTek.Features.LoadingCurtainEx
             dumper.LogSummary();
         }
 
-        private HashSet<CacheKey> waiting = new();
+        private HashSet<CacheKey> waiting = new HashSet<CacheKey>();
         private void AddWaiting(CacheKey key)
         {
             waiting.Add(key);
         }
 
-        private HashSet<CacheKey> processing = new();
+        private HashSet<CacheKey> processing = new HashSet<CacheKey>();
         private void AddProcessing(CacheKey key)
         {
             processing.Add(key);
         }
 
-        private Dictionary<CacheKey, int> incoming = new();
+        private Dictionary<CacheKey, int> incoming = new Dictionary<CacheKey, int>();
         private void AddIncoming(CacheKey key)
         {
             if (!incoming.TryGetValue(key, out var counter))

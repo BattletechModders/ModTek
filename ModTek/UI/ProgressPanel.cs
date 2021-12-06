@@ -45,7 +45,7 @@ namespace ModTek.UI
             public Slider Slider { get; set; }
             public Action FinishAction { get; set; }
 
-            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new();
+            private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
 
             private void Start()
             {

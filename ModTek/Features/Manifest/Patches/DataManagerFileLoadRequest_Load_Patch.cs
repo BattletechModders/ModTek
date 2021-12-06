@@ -139,7 +139,7 @@ namespace ModTek.Features.Manifest.Patches
 
         private static bool FinishWithMergedContent(object actionTarget)
         {
-            if (actionTarget is not DataManager.FileLoadRequest request)
+            if (!(actionTarget is DataManager.FileLoadRequest request))
             {
                 Log("Internal Error: request can't be not FileLoadRequest");
                 return false;

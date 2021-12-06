@@ -11,8 +11,8 @@ namespace ModTek.Features.CustomTags
 {
     internal static class CustomTagFeature
     {
-        private static HashSet<ModEntry> CustomTags = new();
-        private static HashSet<ModEntry> CustomTagSets = new();
+        private static HashSet<ModEntry> CustomTags = new HashSet<ModEntry>();
+        private static HashSet<ModEntry> CustomTagSets = new HashSet<ModEntry>();
 
         internal static bool Add(ModEntry entry)
         {

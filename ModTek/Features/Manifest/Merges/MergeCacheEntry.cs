@@ -19,7 +19,7 @@ namespace ModTek.Features.Manifest.Merges
         public DateTime? OriginalUpdatedOn { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
-        public List<FileVersionTuple> Merges { get; private set; } = new();
+        public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
 
         [JsonIgnore]
         public bool CacheHit { get; set; } // used during cleanup

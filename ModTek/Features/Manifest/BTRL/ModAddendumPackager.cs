@@ -6,7 +6,7 @@ namespace ModTek.Features.Manifest.BTRL
 {
     internal class ModAddendumPackager
     {
-        private readonly List<ModAddendumManifest> addendums = new();
+        private readonly List<ModAddendumManifest> addendums = new List<ModAddendumManifest>();
         private readonly string ModName;
         private int Index;
         private ModAddendumManifest manifest;

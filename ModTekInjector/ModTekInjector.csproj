@@ -4,6 +4,7 @@
     <ProjectGuid>{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>

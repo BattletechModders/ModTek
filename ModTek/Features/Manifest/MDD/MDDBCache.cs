@@ -22,7 +22,7 @@ namespace ModTek.Features.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<CacheKey> QueuedItems = new();
+        private readonly HashSet<CacheKey> QueuedItems = new HashSet<CacheKey>();
 
         private CacheDB CachedItems { get; }
         internal static bool HasChanges;
@@ -63,7 +63,7 @@ namespace ModTek.Features.Manifest.MDD
             MetadataDatabase.ReloadFromDisk();
         }
 
-        private readonly Stopwatch saveSW = new();
+        private readonly Stopwatch saveSW = new Stopwatch();
         internal void Save()
         {
             try
@@ -91,7 +91,7 @@ namespace ModTek.Features.Manifest.MDD
             }
         }
 
-        private readonly Stopwatch sw = new();
+        private readonly Stopwatch sw = new Stopwatch();
         internal void Add(VersionManifestEntry loadedEntry, string content, bool forceUpdate)
         {
             if (!BTConstants.ResourceType(loadedEntry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))

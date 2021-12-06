@@ -28,7 +28,7 @@ namespace ModTek.Features.CustomTags
 
         public Tag_MDD ToTagMDD()
         {
-            return new(
+            return new Tag_MDD(
                 Name, Important, PlayerVisible,
                 FriendlyName, Description
             );
