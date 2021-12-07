@@ -97,7 +97,7 @@ namespace ModTek.Features.Manifest.MDD
                 return;
             }
 
-            if (loadedEntry.IsInDefaultMDDB())
+            if (loadedEntry.IsInDefaultMDDB()) // TODO maybe we want to overwrite something that was modded before, so we should allow this if a cached item was found
             {
                 return;
             }
