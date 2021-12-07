@@ -1,7 +1,10 @@
-﻿using BattleTech;
+using BattleTech;
 using BattleTech.Data;
 using BattleTech.Framework;
 using ModTek.Features.CustomResources;
+using ModTek.Features.EncounterLayers;
+using Newtonsoft.Json;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.MDD
 {
@@ -25,7 +28,8 @@ namespace ModTek.Features.Manifest.MDD
             var mddb = MetadataDatabase.Instance;
             if (type == InternalCustomResourceType.EncounterLayer)
             {
-                // TODO here
+                var encounterLayer = JsonConvert.DeserializeObject<EncounterLayer>(json);
+                mddb.InsertOrUpdateEncounterLayer(encounterLayer);
             }
         }
 
