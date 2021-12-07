@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-
+using ModTek.Features.Manifest.BTRL;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Patches;
 using UnityEngine.Video;
 using static ModTek.Features.Logging.MTLogger;
@@ -44,13 +46,10 @@ namespace ModTek.Features.Manifest
         }
 
         private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
-        private readonly HashSet<BattleTechResourceType> loadingTypes = new HashSet<BattleTechResourceType>();
-        private readonly HashSet<CacheKey> loadingResources = new HashSet<CacheKey>();
 
         private readonly bool rebuildMDDB;
         private readonly HashSet<CacheKey> preloadResources;
 
-        private LoadRequest loadRequest;
         private ModsManifestPreloader(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
         {
             this.rebuildMDDB = rebuildMDDB;
@@ -84,12 +83,27 @@ namespace ModTek.Features.Manifest
         {
             try
             {
-                loadRequest = dataManager.CreateLoadRequest(_ => PreloadFinished());
+                AddPrewarmRequestsToQueue();
+                AddPreloadResourcesToQueue();
 
-                PreparePrewarmRequests();
-                PreparePreloadRequests();
+                {
+                    var customResourcesQueue = loadingResourcesQueue
+                        .Where(e => BTConstants.ICResourceType(e.Type, out _))
+                        .ToList();
+                    ModsManifest.IndexCustomResources(customResourcesQueue);
+                }
 
-                loadRequest.ProcessRequests();
+                {
+                    var loadRequest = dataManager.CreateLoadRequest(PreloadFinished);
+                    foreach (var entry in loadingResourcesQueue)
+                    {
+                        if (BTConstants.BTResourceType(entry.Type, out var resourceType))
+                        {
+                            loadRequest.AddBlindLoadRequest(resourceType, entry.Id, true);
+                        }
+                    }
+                    loadRequest.ProcessRequests();
+                }
             }
             catch (Exception e)
             {
@@ -97,7 +111,7 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private void PreparePrewarmRequests()
+        private void AddPrewarmRequestsToQueue()
         {
             if (!ModTek.Config.DelayPrewarmUntilPreload)
             {
@@ -115,56 +129,27 @@ namespace ModTek.Features.Manifest
             Log("Prewarming resources during preload.");
             foreach (var prewarm in prewarmRequests)
             {
-                if (!prewarm.PrewarmAllOfType)
-                {
-                    continue;
-                }
-
-                if (loadingTypes.Add(prewarm.ResourceType))
-                {
-                    Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
-                    AddPrewarmRequest(prewarm);
-                }
-            }
-
-            foreach (var prewarm in prewarmRequests)
-            {
                 if (prewarm.PrewarmAllOfType)
                 {
-                    continue;
+                    Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
+                    foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(prewarm.ResourceType, true))
+                    {
+                        QueueLoadingResource(entry);
+                    }
                 }
-
-                if (loadingTypes.Contains(prewarm.ResourceType))
+                else
                 {
-                    continue;
-                }
-
-                var cacheKey = new CacheKey(prewarm.ResourceType.ToString(), prewarm.ResourceID);
-                if (loadingResources.Add(cacheKey))
-                {
-                    Log($"\tPrewarming resource {cacheKey}.");
-                    AddPrewarmRequest(prewarm);
+                    var entry = BetterBTRL.Instance.EntryByID(prewarm.ResourceID, prewarm.ResourceType, true);
+                    if (entry != null)
+                    {
+                        Log($"\tPrewarming resource {entry.ToShortString()}.");
+                        QueueLoadingResource(entry);
+                    }
                 }
             }
         }
 
-        private void AddPrewarmRequest(PrewarmRequest prewarm)
-        {
-            // does double instantiation, not sure if a good idea (potential CC issues) but is vanilla behavior
-            //loadRequest.AddPrewarmRequest(prewarmRequest);
-
-            // has no double instantiation, not vanilla
-            if (prewarm.PrewarmAllOfType)
-            {
-                loadRequest.AddAllOfTypeBlindLoadRequest(prewarm.ResourceType, true);
-            }
-            else
-            {
-                loadRequest.AddBlindLoadRequest(prewarm.ResourceType, prewarm.ResourceID, true);
-            }
-        }
-
-        private void PreparePreloadRequests()
+        private void AddPreloadResourcesToQueue()
         {
             if (!ModTek.Config.PreloadResourcesForCache)
             {
@@ -181,62 +166,55 @@ namespace ModTek.Features.Manifest
             Log("Preloading resources.");
             if (rebuildMDDB)
             {
-                foreach (var type in BTConstants.MDDBTypes.ToHashSet())
+                foreach (var type in BTConstants.VanillaMDDBTypes)
                 {
-                    if (!loadingTypes.Add(type))
+                    foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(type, true))
                     {
-                        continue;
-                    }
-
-                    foreach (var entry in dataManager.ResourceLocator.AllEntriesOfResource(type))
-                    {
-                        if (entry.IsTemplate)
-                        {
-                            continue;
-                        }
-
-                        if (loadingResources.Add(new CacheKey(entry)))
-                        {
-                            AddPreloadRequest(type, entry.Id);
-                        }
+                        QueueLoadingResource(entry);
                     }
                 }
             }
-            else
+            foreach (var resource in preloadResources)
             {
-                foreach (var resource in preloadResources)
+                var entry = BetterBTRL.Instance.EntryByIDAndType(resource.Id, resource.Type, true);
+                if (entry != null)
                 {
-                    if (!BTConstants.ResourceType(resource.Type, out var resourceType))
-                    {
-                        continue;
-                    }
-
-                    if (loadingTypes.Contains(resourceType))
-                    {
-                        continue;
-                    }
-
-                    if (loadingResources.Add(resource))
-                    {
-                        AddPreloadRequest(resourceType, resource.Id);
-                    }
+                    QueueLoadingResource(entry);
                 }
             }
         }
 
-        private void AddPreloadRequest(BattleTechResourceType resourceType, string resourceId)
+        private readonly HashSet<CacheKey> loadingResourcesIndex = new HashSet<CacheKey>();
+        private readonly List<VersionManifestEntry> loadingResourcesQueue = new List<VersionManifestEntry>();
+        private void QueueLoadingResource(VersionManifestEntry entry)
         {
-            loadRequest.AddBlindLoadRequest(resourceType, resourceId, true);
+            if (entry.IsTemplate)
+            {
+                return;
+            }
+
+            var key = new CacheKey(entry);
+            if (loadingResourcesIndex.Add(key))
+            {
+                loadingResourcesQueue.Add(entry);
+            }
         }
 
-        private void PreloadFinished()
+        private void PreloadFinished(LoadRequest loadRequest)
         {
             try
             {
                 Log("Preloader finished");
                 if (ModTek.Config.DelayPrewarmUntilPreload)
                 {
-                    Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
+                    try
+                    {
+                        Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
+                    }
+                    catch (Exception e)
+                    {
+                        Log("ERROR execute PrewarmComplete", e);
+                    }
                 }
 
                 ModsManifest.SaveCaches();

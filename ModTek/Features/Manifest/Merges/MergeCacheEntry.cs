@@ -22,8 +22,9 @@ namespace ModTek.Features.Manifest.Merges
         public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
 
         [JsonIgnore]
-        public bool CacheHit { get; set; } // used during cleanup
+        public bool CacheHit { get; set; } // used during cleanup, can also indicate an outdated hit
 
+        private string CachedUpdatedOn => ModTekCacheStorage.CompressedLastWriteTimeUtcAsUpdatedOn(CachedAbsolutePath);
         internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
 
@@ -32,15 +33,30 @@ namespace ModTek.Features.Manifest.Merges
             SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
         }
 
-        internal void SetCachedPathAndUpdatedOn(VersionManifestEntry entry)
+        internal void SetCachedPathAndOriginalUpdatedOn(VersionManifestEntry entry)
         {
             SetCachedPath(entry.Type, entry.Id, Path.GetExtension(entry.GetRawPath()));
-            OriginalUpdatedOn = entry.UpdatedOn;
+            if (OriginalUpdatedOn == null)
+            {
+                OriginalUpdatedOn = entry.UpdatedOn;
+            }
         }
 
         private void SetCachedPath(string type, string id, string extension)
         {
             CachedPath = Path.Combine(type, id + extension);
+        }
+
+        // dirty hack to allow MDDB to have a correct UpdatedOn
+        internal void SetVersionManifestUpdatedOn(VersionManifestEntry manifestEntry)
+        {
+            if (OriginalUpdatedOn == null)
+            {
+                // we can't overwrite the entries UpdatedOn unless we have already cached the value
+                // and we want to keep SetCachedPathAndOriginalUpdatedOn and SetVersionManifestUpdatedOn separate
+                throw new InvalidOperationException();
+            }
+            manifestEntry.Update(CachedUpdatedOn, "1");
         }
 
         internal void Add(ModEntry modEntry)

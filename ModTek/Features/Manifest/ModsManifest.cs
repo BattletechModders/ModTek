@@ -98,7 +98,7 @@ namespace ModTek.Features.Manifest
             }
             else if (entry.IsFile)
             {
-                if (entry.Type == BTConstants.CustomType_AdvancedJSONMerge)
+                if (BTConstants.CType(entry.Type, out var customType) && customType == CustomType.AdvancedJSONMerge)
                 {
                     ExpandAdvancedMerges(entry, packager);
                 }
@@ -178,7 +178,7 @@ namespace ModTek.Features.Manifest
                 foreach (var typesPath in Directory.GetDirectories(packPath))
                 {
                     var typeName = Path.GetFileName(typesPath);
-                    if (!BTConstants.ResourceType(typeName, out _))
+                    if (!BTConstants.BTResourceType(typeName, out _))
                     {
                         Log($"Unknown resource type {typeName} in {packPath}");
                         continue;
@@ -223,7 +223,7 @@ namespace ModTek.Features.Manifest
 
                 if (entry.AddToDB)
                 {
-                    mddbCache.AddToBeIndexed(entry);
+                    mddbCache.AddToQueueIfIndexable(entry);
                 }
                 else
                 {
@@ -256,6 +256,14 @@ namespace ModTek.Features.Manifest
                 {
                     Log($"\t\tError: Custom resources don't support RequiredContentPacks.");
                     return;
+                }
+                if (entry.AddToDB)
+                {
+                    mddbCache.AddToQueueIfIndexable(entry);
+                }
+                else
+                {
+                    Log($"\tAddToDB=false: {entry}");
                 }
                 packager.AddEntry(entry);
                 return;
@@ -400,6 +408,11 @@ namespace ModTek.Features.Manifest
             mddbCache.Save();
         }
 
+        internal static void IndexCustomResources(List<VersionManifestEntry> queuedResources)
+        {
+            mddbCache.IndexCustomResources(queuedResources);
+        }
+
         internal static string GetMergedContentOrReadAllTextAndMerge(VersionManifestEntry entry)
         {
             var content = GetMergedContent(entry);
@@ -423,13 +436,12 @@ namespace ModTek.Features.Manifest
                 if (!mergeCache.HasMergedContentCached(entry, false, out _))
                 {
                     mergeCache.MergeAndCacheContent(entry, ref content);
-                    // merges dont modify the UpdateOn timestamp, force update MDDB here!
-                    mddbCache.Add(entry, content, true);
+                    mddbCache.Add(entry, content);
                 }
             }
             else
             {
-                mddbCache.Add(entry, content, false);
+                mddbCache.Add(entry, content);
             }
         }
     }

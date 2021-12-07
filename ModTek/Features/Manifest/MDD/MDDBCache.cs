@@ -22,8 +22,6 @@ namespace ModTek.Features.Manifest.MDD
         private static string MDDBPath => FilePaths.MDDBPath;
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
-        private readonly HashSet<CacheKey> QueuedItems = new HashSet<CacheKey>();
-
         private CacheDB CachedItems { get; }
         internal static bool HasChanges;
 
@@ -92,33 +90,27 @@ namespace ModTek.Features.Manifest.MDD
         }
 
         private readonly Stopwatch sw = new Stopwatch();
-        internal void Add(VersionManifestEntry loadedEntry, string content, bool forceUpdate)
+        internal void Add(VersionManifestEntry loadedEntry, string content)
         {
-            if (!BTConstants.ResourceType(loadedEntry.Type, out var type) || !BTConstants.MDDBTypes.Contains(type))
+            if (!BTConstants.MDDBTypes.Contains(loadedEntry.Type))
             {
                 return;
             }
 
-            if (!ShouldIndex(loadedEntry, out var key))
+            if (loadedEntry.IsInDefaultMDDB())
             {
                 return;
             }
 
-            if (!forceUpdate)
+            if (!IsQueued(loadedEntry, out var key))
             {
-                if (CachedItems.TryGetValue(key, out var cachedItem))
+                return;
+            }
+
+            if (CachedItems.TryGetValue(key, out var cachedItem))
+            {
+                if (cachedItem.Contains(loadedEntry))
                 {
-                    if (cachedItem.Equals(loadedEntry))
-                    {
-                        return;
-                    }
-                }
-                else if (loadedEntry.IsInDefaultMDDB())
-                {
-                    // if from HBS we assume no updates -> TODO how to detect changes in the future?
-                    // if we have merges then we force update
-                    // if we have replacement its not a default MDDB anymore
-                    // TODO does not detect changed by mods -> e.g. MissionControl
                     return;
                 }
             }
@@ -127,7 +119,7 @@ namespace ModTek.Features.Manifest.MDD
             try
             {
                 Log($"MDDBCache: Indexing {loadedEntry.ToShortString()}");
-                MetadataDatabase.Instance.InstantiateResourceAndUpdateMDDB(type, loadedEntry.Id, content);
+                MDDBIndexer.InstantiateResourceAndUpdateMDDB(loadedEntry, content);
             }
             catch (Exception e)
             {
@@ -142,16 +134,45 @@ namespace ModTek.Features.Manifest.MDD
             HasChanges = true;
         }
 
-        internal void AddToBeIndexed(ModEntry entry)
+        private readonly HashSet<CacheKey> QueuedItems = new HashSet<CacheKey>();
+
+        internal void IndexCustomResources(List<VersionManifestEntry> queuedResources)
         {
+            // TODO get rid of blocking loop with a ReadAllText
+            foreach (var entry in queuedResources)
+            {
+                if (!IsQueued(entry, out _))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var json = File.ReadAllText(entry.FilePath);
+                    Add(entry, json);
+                }
+                catch (Exception e)
+                {
+                    Log($"ERROR: Couldn't process custom resource {entry.ToShortString()}", e);
+                }
+            }
+        }
+
+        internal void AddToQueueIfIndexable(ModEntry entry)
+        {
+            if (!BTConstants.MDDBTypes.Contains(entry.Type))
+            {
+                return;
+            }
+
             var key = new CacheKey(entry);
             QueuedItems.Add(key);
         }
 
-        internal bool ShouldIndex(VersionManifestEntry entry, out CacheKey key)
+        private bool IsQueued(VersionManifestEntry entry, out CacheKey key)
         {
             key = new CacheKey(entry);
-            return QueuedItems.Contains(key) || entry.IsInDefaultMDDB();
+            return QueuedItems.Contains(key);
         }
 
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
@@ -161,17 +182,24 @@ namespace ModTek.Features.Manifest.MDD
                 // find entries missing in cache
                 foreach (var type in BTConstants.MDDBTypes)
                 {
-                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfResource(type, true).Where(x => !x.IsInDefaultMDDB()))
+                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfType(type, true))
                     {
-                        if (!ShouldIndex(manifestEntry, out var key))
+                        // these can never be missing
+                        if (manifestEntry.IsInDefaultMDDB())
                         {
                             continue;
                         }
 
+                        if (!IsQueued(manifestEntry, out var key))
+                        {
+                            continue;
+                        }
+
+                        // see if it is already cached
                         if (CachedItems.TryGetValue(key, out var cachedEntry))
                         {
                             cachedEntry.CacheHit = true;
-                            if (!cachedEntry.Equals(manifestEntry))
+                            if (!cachedEntry.Contains(manifestEntry))
                             {
                                 Log($"MDDBCache: {key} outdated in cache.");
                                 preloadResources.Add(key);

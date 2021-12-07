@@ -39,7 +39,7 @@ namespace ModTek.Features.Manifest
             return Path;
         }
 
-        public bool Equals(VersionManifestEntry entry)
+        public bool Contains(VersionManifestEntry entry)
         {
             if (AssetBundleName != entry.AssetBundleName)
             {

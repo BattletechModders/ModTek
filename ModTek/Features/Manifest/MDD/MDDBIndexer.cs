@@ -1,14 +1,39 @@
 ﻿using BattleTech;
 using BattleTech.Data;
 using BattleTech.Framework;
+using ModTek.Features.CustomResources;
 
 namespace ModTek.Features.Manifest.MDD
 {
-    internal static class MDDBExtensions
+    internal static class MDDBIndexer
     {
-        // Copied from VersionManifestHotReload.InstantiateResourceAndUpdateMDDB
-        public static void InstantiateResourceAndUpdateMDDB(this MetadataDatabase mddb, BattleTechResourceType resourceType, string id, string json)
+        public static void InstantiateResourceAndUpdateMDDB(VersionManifestEntry entry, string json)
         {
+            if (BTConstants.ICResourceType(entry.Type, out var cResourceType))
+            {
+                InstantiateResourceAndUpdateMDDB(cResourceType, entry.Id, json);
+            }
+
+            if (BTConstants.BTResourceType(entry.Type, out var btResourceType))
+            {
+                InstantiateResourceAndUpdateMDDB(btResourceType, entry.Id, json);
+            }
+        }
+
+        private static void InstantiateResourceAndUpdateMDDB(InternalCustomResourceType type, string id, string json)
+        {
+            var mddb = MetadataDatabase.Instance;
+            if (type == InternalCustomResourceType.EncounterLayer)
+            {
+                // TODO here
+            }
+        }
+
+        // Copied from VersionManifestHotReload.InstantiateResourceAndUpdateMDDB
+        // modified to work with proper ids
+        private static void InstantiateResourceAndUpdateMDDB(BattleTechResourceType resourceType, string id, string json)
+        {
+            var mddb = MetadataDatabase.Instance;
             switch (resourceType)
             {
                 case BattleTechResourceType.ContractOverride:

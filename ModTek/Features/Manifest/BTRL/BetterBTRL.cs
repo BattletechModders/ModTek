@@ -93,13 +93,21 @@ namespace ModTek.Features.Manifest.BTRL
             return currentManifest.EntriesByID(id);
         }
 
-        internal VersionManifestEntry[] AllEntriesOfType(string type)
+        internal VersionManifestEntry[] AllEntriesOfType(string type, bool filterByOwnership = false)
         {
+            if (BTConstants.BTResourceType(type, out var resourceType))
+            {
+                return currentManifest.AllEntriesOfResource(resourceType, filterByOwnership);
+            }
             return currentManifest.AllEntriesOfType(type);
         }
 
-        internal VersionManifestEntry EntryByIDAndType(string id, string type)
+        internal VersionManifestEntry EntryByIDAndType(string id, string type, bool filterByOwnership = false)
         {
+            if (BTConstants.BTResourceType(type, out var resourceType))
+            {
+                return currentManifest.EntryByID(id, resourceType, filterByOwnership);
+            }
             return currentManifest.EntryByIDAndType(id, type);
         }
 

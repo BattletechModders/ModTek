@@ -16,13 +16,18 @@ namespace ModTek.Features.CustomTags
 
         internal static bool Add(ModEntry entry)
         {
-            if (entry.Type == BTConstants.CustomType_Tag)
+            if (!BTConstants.CType(entry.Type, out var type))
+            {
+                return false;
+            }
+
+            if (type == CustomType.CustomTag)
             {
                 CustomTags.Add(entry);
                 return true;
             }
 
-            if (entry.Type == BTConstants.CustomType_TagSet)
+            if (type == CustomType.CustomTagSet)
             {
                 CustomTagSets.Add(entry);
                 return true;

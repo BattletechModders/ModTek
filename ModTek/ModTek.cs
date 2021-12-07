@@ -158,7 +158,6 @@ namespace ModTek
             }
 
             ModDefExLoading.Setup();
-            CustomResourcesFeature.Setup();
 
             LoadUsingProgressPanel();
         }

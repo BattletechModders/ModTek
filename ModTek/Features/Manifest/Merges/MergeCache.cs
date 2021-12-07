@@ -85,7 +85,7 @@ namespace ModTek.Features.Manifest.Merges
             {
                 return false;
             }
-            queuedMerge.SetCachedPathAndUpdatedOn(loadingEntry);
+            queuedMerge.SetCachedPathAndOriginalUpdatedOn(loadingEntry);
 
             if (!CachedMerges.TryGetValue(key, out var cachedMerge))
             {
@@ -145,6 +145,7 @@ namespace ModTek.Features.Manifest.Merges
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(queuedMerge.CachedAbsolutePath) ?? throw new InvalidOperationException());
                 ModTekCacheStorage.CompressedStringWriteTo(queuedMerge.CachedAbsolutePath, content);
+                queuedMerge.SetVersionManifestUpdatedOn(loadedEntry);
                 CachedMerges[key] = queuedMerge;
                 HasChanges = true;
             }
@@ -195,55 +196,58 @@ namespace ModTek.Features.Manifest.Merges
         internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
         {
             // find entries missing in cache
-            foreach (var kv in QueuedMerges.ToList())
+            foreach (var kv in QueuedMerges)
             {
-                if (kv.Value.OriginalUpdatedOn == null)
-                {
-                    if (BTConstants.ResourceType(kv.Key.Type, out var resourceType))
-                    {
-                        var manifestEntry = BetterBTRL.Instance.EntryByID(kv.Key.Id, resourceType);
-                        if (manifestEntry == null)
-                        {
-                            // can happen if the type was specified explicitly for merge, but the actual base resource never was supplied by any mod
-                            Log($"MergeCache: Warning: Resource {kv.Key} is missing, can't preload.");
-                            continue;
-                        }
-                        kv.Value.SetCachedPathAndUpdatedOn(manifestEntry);
-                    }
-                }
-
-                if (CachedMerges.TryGetValue(kv.Key, out var cachedEntry))
+                var key = kv.Key;
+                var queuedEntry = kv.Value;
+                if (CachedMerges.TryGetValue(key, out var cachedEntry))
                 {
                     cachedEntry.CacheHit = true;
-                    if (!cachedEntry.Equals(kv.Value))
+
+                    var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(key.Id, key.Type);
+                    if (manifestEntry == null)
                     {
-                        Log($"MergeCache: {kv.Key} outdated in cache.");
-                        preloadResources.Add(kv.Key);
+                        // can happen if the type was specified explicitly for merge, but the actual base resource never was supplied by any mod
+                        Log($"MergeCache: Warning: Resource {key} is missing, can't preload.");
+                        continue;
+                    }
+                    if (queuedEntry.OriginalUpdatedOn == null)
+                    {
+                        queuedEntry.SetCachedPathAndOriginalUpdatedOn(manifestEntry);
+                        queuedEntry.SetVersionManifestUpdatedOn(manifestEntry);
+                    }
+
+                    if (!cachedEntry.Equals(queuedEntry))
+                    {
+                        Log($"MergeCache: {key} outdated in cache.");
+                        preloadResources.Add(key);
                     }
                 }
                 else
                 {
-                    Log($"MergeCache: {kv.Key} missing in cache.");
-                    preloadResources.Add(kv.Key);
+                    Log($"MergeCache: {key} missing in cache.");
+                    preloadResources.Add(key);
                 }
             }
 
             // find entries that shouldn't be in cache (anymore)
             foreach (var kv in CachedMerges.ToList())
             {
-                if (kv.Value.CacheHit)
+                var key = kv.Key;
+                var entry = kv.Value;
+                if (entry.CacheHit)
                 {
                     continue;
                 }
 
-                Log($"MergeCache: {kv.Key} left over in cache.");
+                Log($"MergeCache: {key} left over in cache.");
 
-                CachedMerges.Remove(kv.Key);
+                CachedMerges.Remove(key);
                 try
                 {
-                    if (File.Exists(kv.Value.CachedAbsolutePath))
+                    if (File.Exists(entry.CachedAbsolutePath))
                     {
-                        File.Delete(kv.Value.CachedAbsolutePath);
+                        File.Delete(entry.CachedAbsolutePath);
                     }
                 }
                 catch (Exception e)
@@ -251,14 +255,21 @@ namespace ModTek.Features.Manifest.Merges
                     Log($"MergeCache: Error when deleting cached file for {kv.Key}", e);
                 }
 
-                if (!BTConstants.ResourceType(kv.Key.Type, out var resourceType)
-                    || BTConstants.MDDBTypes.All(x => x != resourceType))
+                // check for changes in MDDB
+                if (BTConstants.MDDBTypes.Contains(key.Type))
                 {
-                    continue;
+                    // original still exists, lets preload it, hopefully overwriting old changes
+                    if (BetterBTRL.Instance.EntryByIDAndType(key.Id, key.Type) != null)
+                    {
+                        preloadResources.Add(key);
+                    }
+                    else
+                    {
+                        // original was also removed, since we can't (reliably) remove data from the mddb, we have to rebuild from scratch
+                        flagForRebuild = true;
+                        break;
+                    }
                 }
-
-                flagForRebuild = true;
-                break;
             }
         }
     }

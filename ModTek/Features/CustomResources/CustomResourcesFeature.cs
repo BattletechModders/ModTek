@@ -5,7 +5,6 @@ using System.Linq;
 using BattleTech;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
-using ModTek.Features.Manifest.Mods;
 using static ModTek.Features.Logging.MTLogger;
 using CustomResourcesDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
@@ -13,25 +12,11 @@ namespace ModTek.Features.CustomResources
 {
     internal static class CustomResourcesFeature
     {
-        private static readonly HashSet<string> CustomResources = new HashSet<string>();
-
-        private enum CRType
-        {
-            Video,
-            SoundBank
-        }
-        internal static readonly string[] CRTypeNames = Enum.GetNames(typeof(CRType));
-
-        internal static void Setup()
-        {
-            // setup custom resources for ModTek types
-            CustomResources.Add(CRType.Video.ToString());
-            CustomResources.Add(CRType.SoundBank.ToString());
-        }
+        private static readonly HashSet<string> CustomResources = Enum.GetNames(typeof(InternalCustomResourceType)).ToHashSet();
 
         internal static bool IsCustomResourceType(string type)
         {
-            return type != null && CustomResources.Contains(type);
+            return CustomResources.Contains(type);
         }
 
         internal static void ProcessModDef(ModDefEx modDef)
@@ -40,13 +25,13 @@ namespace ModTek.Features.CustomResources
             {
                 if (BTConstants.PREDEFINED_TYPES.Contains(customResourceType))
                 {
-                    Log($"\tWarning: {modDef.QuotedName} has a custom resource type that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    Log($"\tWarning: {modDef.QuotedName} has custom resource type '{customResourceType}' that has the same name as a vanilla/modtek resource type. Ignoring this type.");
                     continue;
                 }
 
-                if (!CustomResources.Contains(customResourceType))
+                if (CustomResources.Add(customResourceType))
                 {
-                    CustomResources.Add(customResourceType);
+                    Log($"\tAdded mod custom resource type '{customResourceType}'.");
                 }
             }
         }
@@ -62,13 +47,13 @@ namespace ModTek.Features.CustomResources
 
         internal static VersionManifestEntry GetVideo(string videoName)
         {
-            return BetterBTRL.Instance.AllEntriesOfType(CRType.Video.ToString())
+            return BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.Video.ToString())
                 .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
         }
 
         internal static VersionManifestEntry GetSoundBank(string id)
         {
-            return BetterBTRL.Instance.EntryByIDAndType(CRType.SoundBank.ToString(), id);
+            return BetterBTRL.Instance.EntryByIDAndType(InternalCustomResourceType.SoundBank.ToString(), id);
         }
     }
 }

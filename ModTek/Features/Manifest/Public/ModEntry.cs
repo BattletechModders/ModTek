@@ -36,9 +36,9 @@ namespace ModTek
 
         public string Type { get; set; }
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
-        internal BattleTechResourceType? ResourceType => BTConstants.ResourceType(Type, out var type) ? type : (BattleTechResourceType?)null;
+        internal BattleTechResourceType? ResourceType => BTConstants.BTResourceType(Type, out var type) ? type : (BattleTechResourceType?)null;
         internal bool IsTypeBattleTechResourceType => ResourceType != null;
-        internal bool IsTypeCustomStreamingAsset => CustomStreamingAssetsFeature.IsCustomStreamingAssetsType(Type);
+        internal bool IsTypeCustomStreamingAsset => BTConstants.CSAssetsType(Type, out _);
         internal bool IsTypeCustomResource => CustomResourcesFeature.IsCustomResourceType(Type);
 
         public string Id { get; set; }

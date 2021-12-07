@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
-using BattleTech.ModSupport.Utils;
 using ModTek.Features.CustomResources;
 using ModTek.Features.CustomStreamingAssets;
-using ModTek.Features.CustomTags;
-using ModTek.Features.SoundBanks;
 
 namespace ModTek.Features.Manifest
 {
@@ -20,34 +18,14 @@ namespace ModTek.Features.Manifest
             "heavymetal"
         };
 
-        internal const string CustomType_AdvancedJSONMerge = nameof(AdvancedJSONMerge);
-        internal const string CustomType_SoundBankDef = nameof(SoundBankDef);
-        internal const string CustomType_Tag = nameof(CustomTag);
-        internal const string CustomType_TagSet = nameof(CustomTagSet);
-
-        internal static readonly string[] PREDEFINED_TYPES = new []
-        {
-            CustomType_AdvancedJSONMerge,
-            CustomType_SoundBankDef,
-            CustomType_Tag,
-            CustomType_TagSet
-        }
-            .Concat(Enum.GetNames(typeof(BattleTechResourceType)))
-            .Concat(CustomStreamingAssetsFeature.CSATypeNames)
-            .Concat(CustomResourcesFeature.CRTypeNames)
+        internal static readonly string[] PREDEFINED_TYPES =
+            Enum.GetNames(typeof(BattleTechResourceType))
+            .Concat(Enum.GetNames(typeof(InternalCustomResourceType)))
+            .Concat(Enum.GetNames(typeof(CustomStreamingAssetsType)))
+            .Concat(Enum.GetNames(typeof(CustomType)))
             .ToArray();
 
-        internal static bool ResourceType(string Type, out BattleTechResourceType type)
-        {
-            if (Type == null)
-            {
-                type = BattleTechResourceType.AbilityDef;
-                return false;
-            }
-            return Enum.TryParse(Type, out type);
-        }
-
-        internal static readonly BattleTechResourceType[] MDDBTypes =
+        internal static readonly BattleTechResourceType[] VanillaMDDBTypes =
         {
             BattleTechResourceType.ContractOverride,
             BattleTechResourceType.LanceDef,
@@ -60,69 +38,32 @@ namespace ModTek.Features.Manifest
             BattleTechResourceType.UpgradeDef
         };
 
-        internal static readonly BattleTechResourceType[] StringOneTimeTypes =
-        {
-            BattleTechResourceType.ApplicationConstants,
-            BattleTechResourceType.AudioConstants,
-            BattleTechResourceType.BehaviorVariableScope,
-            BattleTechResourceType.CombatGameConstants,
-            BattleTechResourceType.MechStatisticsConstants,
-            BattleTechResourceType.SimGameConstants,
-        };
+        internal static readonly HashSet<string> MDDBTypes =
+            VanillaMDDBTypes.Select(x => x.ToString())
+                .Union(new[]
+                {
+                    InternalCustomResourceType.EncounterLayer.ToString()
+                })
+                .ToHashSet();
 
-        internal static readonly BattleTechResourceType[] StringSimpleTextTypes =
+        internal static bool BTResourceType(string Type, out BattleTechResourceType type)
         {
-            BattleTechResourceType.SimpleText,
-        };
+            return Enum.TryParse(Type, out type);
+        }
 
-        internal static readonly BattleTechResourceType[] StringJsonTypes =
+        internal static bool ICResourceType(string Type, out InternalCustomResourceType type)
         {
-            BattleTechResourceType.AbilityDef,
-            BattleTechResourceType.AmmunitionBoxDef,
-            BattleTechResourceType.AmmunitionDef,
-            BattleTechResourceType.AudioEventDef,
-            BattleTechResourceType.BackgroundDef,
-            BattleTechResourceType.BackgroundQuestionDef,
-            BattleTechResourceType.BaseDescriptionDef,
-            BattleTechResourceType.BuildingDef,
-            BattleTechResourceType.CastDef,
-            BattleTechResourceType.ChassisDef,
-            BattleTechResourceType.ContentPackDef,
-            BattleTechResourceType.ContractOverride,
-            BattleTechResourceType.ConversationContent,
-            BattleTechResourceType.DesignMaskDef,
-            BattleTechResourceType.DialogBucketDef,
-            BattleTechResourceType.FactionDef,
-            BattleTechResourceType.FlashpointDef,
-            BattleTechResourceType.GenderedOptionsListDef,
-            BattleTechResourceType.HardpointDataDef,
-            BattleTechResourceType.HeatSinkDef,
-            BattleTechResourceType.HeraldryDef,
-            BattleTechResourceType.JumpJetDef,
-            BattleTechResourceType.LanceDef,
-            BattleTechResourceType.LifepathNodeDef,
-            BattleTechResourceType.MechDef,
-            BattleTechResourceType.SimGameMilestoneSet,
-            BattleTechResourceType.MovementCapabilitiesDef,
-            BattleTechResourceType.PathingCapabilitiesDef,
-            BattleTechResourceType.PilotDef,
-            BattleTechResourceType.PortraitSettings,
-            BattleTechResourceType.RegionDef,
-            BattleTechResourceType.ShipModuleUpgrade,
-            BattleTechResourceType.ShopDef,
-            BattleTechResourceType.SimGameDifficultySettingList,
-            BattleTechResourceType.SimGameEventDef,
-            BattleTechResourceType.SimGameMilestoneDef,
-            BattleTechResourceType.SimGameStatDescDef,
-            BattleTechResourceType.SimGameSubstitutionListDef,
-            BattleTechResourceType.StarSystemDef,
-            BattleTechResourceType.SystemModDef,
-            BattleTechResourceType.TurretChassisDef,
-            BattleTechResourceType.TurretDef,
-            BattleTechResourceType.UpgradeDef,
-            BattleTechResourceType.VehicleChassisDef,
-            BattleTechResourceType.VehicleDef,
-            BattleTechResourceType.WeaponDef
-        };
+            return Enum.TryParse(Type, out type);
+        }
+
+        internal static bool CSAssetsType(string Type, out CustomStreamingAssetsType type)
+        {
+            return Enum.TryParse(Type, out type);
+        }
+
+        internal static bool CType(string Type, out CustomType type)
+        {
+            return Enum.TryParse(Type, out type);
+        }
     }
 }

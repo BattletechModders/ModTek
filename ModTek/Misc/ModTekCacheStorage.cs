@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using BattleTech;
 using Harmony;
 using HBS.Util;
 using Newtonsoft.Json;
@@ -69,6 +70,16 @@ namespace ModTek.Misc
         internal static bool CompressedExists(string path)
         {
             return File.Exists(CompressedPath(path));
+        }
+
+        internal static string CompressedLastWriteTimeUtcAsUpdatedOn(string path)
+        {
+            var compressedPath = CompressedPath(path);
+            if (!File.Exists(compressedPath))
+            {
+                return null;
+            }
+            return VersionManifestUtilities.DateTimeToString(File.GetLastWriteTimeUtc(compressedPath));
         }
 
         internal static void CompressedCSVWriteTo<T>
