@@ -34,7 +34,7 @@ namespace ModTek.Features.Manifest
 
             preloadSW.Start();
             preloader = new ModsManifestPreloader(rebuildMDDB, preloadResources);
-            preloader.StartWaiting();
+            preloader.ShowCurtain();
         }
 
         private static void FinalizePreloadResources()
@@ -56,27 +56,33 @@ namespace ModTek.Features.Manifest
             this.preloadResources = preloadResources;
         }
 
+        private void ShowCurtain()
+        {
+            LoadingCurtain.ExecuteWhenVisible(StartWaiting);
+            ShowLoadingCurtainForMainMenuPreloading();
+        }
+
+        // make sure other loads are finished
+        // dataManager has issues resolving dependencies if they are loaded across different loadRequests
+        // e.g. if dependencies were already finished loading in another request, the new requests will be stuck waiting for dependencies forever
         private void StartWaiting()
         {
-            LoadingCurtain.ExecuteWhenVisible(() =>
+            if (dataManager.IsLoading)
             {
-                if (dataManager.IsLoading)
-                {
-                    UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
-                        MessageCenterMessageType.DataManagerLoadCompleteMessage,
-                        _ =>
-                        {
-                            StartLoading();
-                            return true;
-                        }
-                    );
-                }
-                else
-                {
-                    StartLoading();
-                }
-            });
-            ShowLoadingCurtainForMainMenuPreloading();
+                UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
+                    MessageCenterMessageType.DataManagerLoadCompleteMessage,
+                    _ =>
+                    {
+                        // there might be new loads added by someone else during DataManagerLoadCompleteMessage, let's recheck
+                        StartWaiting();
+                        return true;
+                    }
+                );
+            }
+            else
+            {
+                StartLoading();
+            }
         }
 
         private void StartLoading()
