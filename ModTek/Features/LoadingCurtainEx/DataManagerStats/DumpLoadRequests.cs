@@ -8,12 +8,11 @@ using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.MDD;
 
-namespace ModTek.Features.LoadingCurtainEx
+namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 {
     internal class DumpLoadRequests
     {
-
-        internal static void DumpProcessing(DataManagerLoadingCurtain.LoadStats stats, List<LoadRequest> loadRequests)
+        internal static void DumpProcessing(DataManagerStats stats, List<LoadRequest> loadRequests)
         {
             MTLogger.Log($"Detected stuck DataManager, dumping stats: {stats}");
             var dumper = new DumpLoadRequests();

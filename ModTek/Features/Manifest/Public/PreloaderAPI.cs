@@ -9,7 +9,7 @@ namespace ModTek
     // TODO remove functions not needed after CustomPrewarm compatibility is established
     public static class PreloaderAPI
     {
-        public static bool IsPreloading => ModsManifestPreloader.isPreloading;
+        public static bool IsPreloading => ModsManifestPreloader.HasPreloader;
         public static int PreloadChecksFinishedCounter => ModsManifestPreloader.finishedChecksAndPreloadsCounter;
         public static bool FirstPreloadFinished => PreloadChecksFinishedCounter > 0 && !IsPreloading;
     }

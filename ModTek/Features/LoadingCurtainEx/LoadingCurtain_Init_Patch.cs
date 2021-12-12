@@ -6,8 +6,8 @@ using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.LoadingCurtainEx
 {
-    [HarmonyPatch(typeof(LoadingCurtain), nameof(LoadingCurtain.ShowUntil))]
-    internal static class LoadingCurtain_ShowUntil_Patch
+    [HarmonyPatch(typeof(LoadingCurtain), nameof(LoadingCurtain.Init))]
+    internal static class LoadingCurtain_Init_Patch
     {
         public static bool Prepare()
         {
@@ -18,7 +18,7 @@ namespace ModTek.Features.LoadingCurtainEx
         {
             try
             {
-                LoadingCurtainStatsText.ShowUntil(__instance);
+                LoadingCurtainStatsText.Init(__instance);
             }
             catch (Exception e)
             {

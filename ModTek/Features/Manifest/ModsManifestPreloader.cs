@@ -6,6 +6,7 @@ using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
+using ModTek.Features.LoadingCurtainEx;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Patches;
@@ -19,7 +20,7 @@ namespace ModTek.Features.Manifest
     {
         internal static int finishedChecksAndPreloadsCounter;
         private static readonly Stopwatch preloadSW = new Stopwatch();
-        internal static bool isPreloading => preloader != null;
+        internal static bool HasPreloader => preloader != null;
         private static ModsManifestPreloader preloader;
 
         internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
@@ -59,7 +60,7 @@ namespace ModTek.Features.Manifest
         private void ShowCurtain()
         {
             LoadingCurtain.ExecuteWhenVisible(StartWaiting);
-            ShowLoadingCurtainForMainMenuPreloading();
+            ShowLoadingCurtainOnMainMenu();
         }
 
         // make sure other loads are finished
@@ -85,12 +86,32 @@ namespace ModTek.Features.Manifest
             }
         }
 
+        private const string LoadingCurtainWaitText = "Waiting for the game to load into the main menu.\nGame can temporarily freeze.";
+        private const string LoadingCurtainPrewarmAndPreloadText = "Prewarming and indexing modded resources.\nGame can temporarily freeze.";
+        private const string LoadingCurtainPrewarmText = "Prewarming game resources.\nGame can temporarily freeze.";
+        private const string LoadingCurtainPreloadText = "Indexing modded resources, might take a while.\nGame can temporarily freeze.";
+
         private void StartLoading()
         {
             try
             {
                 AddPrewarmRequestsToQueue();
+                var prewarmingCount = loadingResourcesIndex.Count;
                 AddPreloadResourcesToQueue();
+                var preloadingCount = loadingResourcesIndex.Count - prewarmingCount;
+
+                if (prewarmingCount > 0 && preloadingCount > 0)
+                {
+                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPrewarmAndPreloadText);
+                }
+                else if (prewarmingCount > 0)
+                {
+                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPrewarmText);
+                }
+                else if (preloadingCount > 0)
+                {
+                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPreloadText);
+                }
 
                 {
                     var customResourcesQueue = loadingResourcesQueue
@@ -232,12 +253,12 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static void ShowLoadingCurtainForMainMenuPreloading()
+        private static void ShowLoadingCurtainOnMainMenu()
         {
-            Log("Showing LoadingCurtain for Preloading.");
+            Log("Showing LoadingCurtain on Main Menu.");
             LoadingCurtain.ShowPopupUntil(
                 PopupClosureConditionalCheck,
-                "Indexing modded data, might take a while.\nGame can temporarily freeze."
+                LoadingCurtainWaitText
             );
         }
 
@@ -245,7 +266,7 @@ namespace ModTek.Features.Manifest
         {
             try
             {
-                var condition = !isPreloading && !UnityGameInstance.BattleTechGame.DataManager.IsLoading;
+                var condition = !HasPreloader;
 
                 var videoPlayer = GetMainMenuBGVideoPlayer();
                 if (videoPlayer == null)
