@@ -256,12 +256,6 @@ namespace ModTek.Features.Manifest
                     SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
-                if (!entry.AddToDB)
-                {
-                    mddbCache.AddToNotIndexable(entry);
-                    Log($"\tAddToDB=false: {entry}");
-                }
-
                 if (entry.AddToAddendum != null)
                 {
                     Log($"\tAddToAddendum: {entry}");
@@ -269,7 +263,23 @@ namespace ModTek.Features.Manifest
                 }
                 else
                 {
-                    Log($"\tAdd/Replace: {entry}");
+                    if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
+                    {
+                        PaddedLog("Replace", entry);
+                        if (!entry.AddToDB)
+                        {
+                            Log($"\t\tAddToDB=false ignored due to replacement");
+                        }
+                    }
+                    else
+                    {
+                        PaddedLog("Add", entry);
+                        if (!entry.AddToDB)
+                        {
+                            mddbCache.AddToNotIndexable(entry);
+                            Log($"\t\tAddToDB=false");
+                        }
+                    }
                     packager.AddEntry(entry);
                 }
                 return;
@@ -283,17 +293,28 @@ namespace ModTek.Features.Manifest
 
             if (entry.IsTypeCustomResource)
             {
-                Log($"\tAdd/Replace: {entry}");
                 if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
                 {
                     // TODO check if hooking into ownership check works with custom resources (probably yes if type not relevant)!
-                    Log($"\t\tError: Custom resources don't support RequiredContentPacks.");
+                    Log($"\tError: Custom resources don't support RequiredContentPacks. {entry}");
                     return;
                 }
-                if (!entry.AddToDB)
+                if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
                 {
-                    Log($"\tAddToDB=false: {entry}");
-                    mddbCache.AddToNotIndexable(entry);
+                    PaddedLog("Replace", entry);
+                    if (!entry.AddToDB)
+                    {
+                        Log($"\t\tAddToDB=false ignored due to replacement");
+                    }
+                }
+                else
+                {
+                    PaddedLog("Add", entry);
+                    if (!entry.AddToDB)
+                    {
+                        Log($"\t\tAddToDB=false");
+                        mddbCache.AddToNotIndexable(entry);
+                    }
                 }
                 packager.AddEntry(entry);
                 return;
@@ -301,17 +322,22 @@ namespace ModTek.Features.Manifest
 
             if (SoundBanksFeature.Add(entry))
             {
-                Log($"\tAdd/Replace: {entry}");
+                PaddedLog("Set", entry);
                 return;
             }
 
             if (CustomTagFeature.Add(entry))
             {
-                Log($"\tAdd/Replace: {entry}");
+                PaddedLog("Set", entry);
                 return;
             }
 
             Log($"\tError: Type of entry unknown: {entry}.");
+        }
+
+        private static void PaddedLog(string action, ModEntry entry)
+        {
+            Log($"\t{action,7}: {entry}");
         }
 
         private static bool FixMissingIdAndType(ModEntry entry)
