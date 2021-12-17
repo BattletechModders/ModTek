@@ -5,7 +5,9 @@ namespace ModTek.Features.Manifest.MDD
 {
     internal static class VersionManifestEntryExtensions
     {
-        internal static bool IsInDefaultMDDB(this VersionManifestEntry entry)
+        // this is to determine if something is already in the unmodified MDDB
+        // a more proper way would be to query the default manifest and the temporarily loaded DLC in BetterBTRL
+        internal static bool IsVanillaOrDlc(this VersionManifestEntry entry)
         {
             return entry.IsMemoryAsset || entry.IsResourcesAsset || entry.IsStreamingAssetData() || entry.IsContentPackAssetBundle();
         }
@@ -17,8 +19,17 @@ namespace ModTek.Features.Manifest.MDD
 
         private static bool IsContentPackAssetBundle(this VersionManifestEntry entry)
         {
-            return entry.IsAssetBundled && BTConstants.HBSContentNames.Contains(entry.AssetBundleName);
+            return entry.IsAssetBundled && HBSContentNames.Contains(entry.AssetBundleName);
         }
+
+        // possibly not complete
+        private static readonly string[] HBSContentNames =
+        {
+            "shadowhawkdlc",
+            "flashpoint",
+            "urbanwarfare",
+            "heavymetal"
+        };
 
         internal static string ToShortString(this VersionManifestEntry entry)
         {

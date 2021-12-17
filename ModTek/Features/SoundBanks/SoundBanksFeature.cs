@@ -53,18 +53,19 @@ namespace ModTek.Features.SoundBanks
                 yield break;
             }
 
-            yield return new ProgressReport(0, "Processing sound banks", "");
+            var sliderText = "Processing sound banks";
+            yield return new ProgressReport(0, sliderText, "");
             if (soundBanks.Count == 0)
             {
                 yield break;
             }
 
             var loadedBanks = (List<LoadedAudioBank>) typeof(WwiseManager).GetField("loadedBanks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(SceneSingletonBehavior<WwiseManager>.Instance);
-            var progeress = 0;
+            var countCurrent = 0;
+            var countMax = (float)soundBanks.Count;
             foreach (var soundBank in soundBanks)
             {
-                ++progeress;
-                yield return new ProgressReport(progeress / (float) soundBanks.Count, "Processing sound bank", soundBank.Key, true);
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, soundBank.Key, true);
                 Log($"\t{soundBank.Key}:{soundBank.Value.filename}:{soundBank.Value.type}");
                 if (soundBank.Value.type != SoundBankType.Default)
                 {

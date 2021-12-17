@@ -35,7 +35,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             foreach (var addendum in addendums)
             {
-                BetterBTRL.Instance.AddModAddendum(addendum);
+                BetterBTRL.Instance.AddModAddendum(addendum, true);
             }
         }
     }

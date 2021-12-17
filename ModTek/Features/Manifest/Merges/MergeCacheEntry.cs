@@ -16,47 +16,30 @@ namespace ModTek.Features.Manifest.Merges
         public string CachedPath { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
+        public DateTime CachedUpdatedOn { get; set; } // set when cache was updated, needed by MDDB indexer
+
+        [JsonProperty(Required = Required.Always)]
         public DateTime? OriginalUpdatedOn { get; private set; }
 
         [JsonProperty(Required = Required.Always)]
         public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
 
         [JsonIgnore]
-        public bool CacheHit { get; set; } // used during cleanup, can also indicate an outdated hit
+        public bool CacheHit { get; set; } // used during cleanup
 
-        private string CachedUpdatedOn => ModTekCacheStorage.CompressedLastWriteTimeUtcAsUpdatedOn(CachedAbsolutePath);
         internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
 
-        internal void SetCachedPath(ModEntry entry)
+        // used by newtonsoft?
+        internal MergeCacheEntry()
         {
-            SetCachedPath(entry.Type, entry.Id, entry.FileExtension);
         }
 
-        internal void SetCachedPathAndOriginalUpdatedOn(VersionManifestEntry entry)
+        internal MergeCacheEntry(VersionManifestEntry entry)
         {
-            SetCachedPath(entry.Type, entry.Id, Path.GetExtension(entry.GetRawPath()));
-            if (OriginalUpdatedOn == null)
-            {
-                OriginalUpdatedOn = entry.UpdatedOn;
-            }
-        }
-
-        private void SetCachedPath(string type, string id, string extension)
-        {
-            CachedPath = Path.Combine(type, id + extension);
-        }
-
-        // dirty hack to allow MDDB to have a correct UpdatedOn
-        internal void SetVersionManifestUpdatedOn(VersionManifestEntry manifestEntry)
-        {
-            if (OriginalUpdatedOn == null)
-            {
-                // we can't overwrite the entries UpdatedOn unless we have already cached the value
-                // and we want to keep SetCachedPathAndOriginalUpdatedOn and SetVersionManifestUpdatedOn separate
-                throw new InvalidOperationException();
-            }
-            manifestEntry.Update(CachedUpdatedOn, "1");
+            var extension = Path.GetExtension(entry.FileName);
+            CachedPath = Path.Combine(entry.Type, entry.Id + extension);
+            OriginalUpdatedOn = entry.UpdatedOn;
         }
 
         internal void Add(ModEntry modEntry)

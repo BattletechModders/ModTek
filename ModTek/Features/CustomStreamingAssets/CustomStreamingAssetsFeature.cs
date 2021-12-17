@@ -21,14 +21,14 @@ namespace ModTek.Features.CustomStreamingAssets
         {
             var entry = BetterBTRL.Instance.EntryByIDAndType("settings", CustomStreamingAssetsType.DebugSettings.ToString());
             Log($"Debug settings: {entry.FilePath}");
-            return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
+            return ModsManifest.GetJson(entry);
         }
 
         internal static string GetGameTip(string path)
         {
             var id = Path.GetFileNameWithoutExtension(path);
             var entry = BetterBTRL.Instance.EntryByIDAndType(id, CustomStreamingAssetsType.GameTip.ToString());
-            return ModsManifest.GetMergedContentOrReadAllTextAndMerge(entry);
+            return ModsManifest.GetJson(entry);
         }
 
         internal static readonly VersionManifestEntry[] DefaultCustomStreamingAssets =

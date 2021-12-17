@@ -3,6 +3,7 @@ using BattleTech.UI.TMProWrapper;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 {
@@ -28,6 +29,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             var traverse = new LoadingCurtainTraverse(loadingCurtain);
             {
                 var popupContainer = traverse.popupContainer;
+                if (popupContainer == null)
+                {
+                    return;
+                }
                 if (popupContainer.activeInHierarchy)
                 {
                     SetPopupExtraText(popupContainer, text);
@@ -127,9 +132,9 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 
             {
                 var component = go.GetComponent<RectTransform>();
-                component.sizeDelta = new Vector2(100, 20);
+                component.sizeDelta = new Vector2(150, 20);
                 component.offsetMin = new Vector2(0, 0);
-                component.offsetMax = new Vector2(100, 20);
+                component.offsetMax = new Vector2(150, 20);
                 component.pivot = new Vector2(0, 1);
                 component.anchorMin = new Vector2(0, 0);
                 component.anchorMax = new Vector2(0, 0);

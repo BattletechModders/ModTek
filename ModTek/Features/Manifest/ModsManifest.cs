@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
@@ -25,39 +26,73 @@ namespace ModTek.Features.Manifest
     {
         private static readonly MergeCache mergeCache = new MergeCache();
         private static readonly MDDBCache mddbCache = new MDDBCache();
+        internal static readonly MTContentPackManager bundleManager = new MTContentPackManager();
 
         internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
         {
-            var mods = ModDefsDatabase.ModsInLoadOrder();
-            LogIf(mods.Count > 0, "Adding Mod Content...");
+            var sw = new Stopwatch();
+            sw.Restart();
+            bundleManager.LoadAllContentPacks();
+            LogIfSlow(sw, "LoadAllContentPacks");
 
-            foreach (var (modDef, index) in mods.WithIndex())
+            BetterBTRL.Instance.RefreshTypedEntries();
+
+            sw.Restart();
+            foreach (var p in BuildModdedBTRL())
             {
-                yield return new ProgressReport(index / (float) mods.Count, $"Loading {modDef.QuotedName}", "", true);
+                yield return p;
+            }
+            LogIfSlow(sw, "Build Modded Resource Locator");
+
+            BetterBTRL.Instance.RefreshTypedEntries();
+
+            sw.Restart();
+            foreach (var p in mergeCache.BuildCache())
+            {
+                yield return p;
+            }
+            LogIfSlow(sw, "Merge Cache Build and Cleanup");
+
+            BetterBTRL.Instance.RefreshTypedEntries();
+
+            sw.Restart();
+            foreach (var p in mddbCache.BuildCache())
+            {
+                yield return p;
+            }
+            LogIfSlow(sw, "MDDB Cache Build and Cleanup");
+
+            bundleManager.UnloadAll();
+
+            BetterBTRL.Instance.RefreshTypedEntries();
+        }
+
+        private static IEnumerable<ProgressReport> BuildModdedBTRL()
+        {
+            var sliderText = "Processing Manifests";
+            yield return new ProgressReport(0, sliderText, "", true);
+
+            var mods = ModDefsDatabase.ModsInLoadOrder();
+            LogIf(mods.Count > 0, "Processing Mod Manifests...");
+
+            var countCurrent = 0;
+            var countMax = (float) mods.Count;
+
+            foreach (var modDef in mods)
+            {
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, modDef.Name, true);
 
                 AddImplicitManifest(modDef);
 
-                LogIf(modDef.Manifest.Count> 0, $"{modDef.QuotedName} Manifest:");
+                LogIf(modDef.Manifest.Count > 0, $"{modDef.QuotedName} Manifest:");
                 var packager = new ModAddendumPackager(modDef.Name);
                 foreach (var modEntry in modDef.Manifest)
                 {
                     NormalizeAndExpandAndAddModEntries(modDef, modEntry, packager);
                 }
+
                 packager.SaveToBTRL();
-
-                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.QuotedName} DataAddendum:");
-                foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
-                {
-                    if (AddendumUtils.LoadDataAddendum(dataAddendumEntry, modDef.Directory))
-                    {
-                        MDDBCache.HasChanges = true;
-                    }
-                }
             }
-
-            CustomTagFeature.ProcessTags();
-
-            BetterBTRL.Instance.RefreshTypedEntries();
         }
 
         private static void AddImplicitManifest(ModDefEx modDef)
@@ -170,9 +205,10 @@ namespace ModTek.Features.Manifest
             foreach (var packPath in Directory.GetDirectories(entry.AbsolutePath))
             {
                 var contentPackName = Path.GetFileName(packPath);
-                if (!BTConstants.HBSContentNames.Contains(contentPackName))
+                if (!bundleManager.HasContentPack(contentPackName))
                 {
                     Log($"Unknown content pack {contentPackName} in {entry.AbsolutePath}");
+                    continue;
                 }
 
                 foreach (var typesPath in Directory.GetDirectories(packPath))
@@ -211,9 +247,8 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (entry.IsTypeBattleTechResourceType)
+            if (BTConstants.BTResourceType(entry.Type, out var resourceType))
             {
-                var resourceType = entry.ResourceType;
                 if (resourceType is BattleTechResourceType.SVGAsset)
                 {
 
@@ -221,12 +256,9 @@ namespace ModTek.Features.Manifest
                     SVGAssetFeature.OnAddSVGEntry(entry);
                 }
 
-                if (entry.AddToDB)
+                if (!entry.AddToDB)
                 {
-                    mddbCache.AddToQueueIfIndexable(entry);
-                }
-                else
-                {
+                    mddbCache.AddToNotIndexable(entry);
                     Log($"\tAddToDB=false: {entry}");
                 }
 
@@ -254,16 +286,14 @@ namespace ModTek.Features.Manifest
                 Log($"\tAdd/Replace: {entry}");
                 if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
                 {
+                    // TODO check if hooking into ownership check works with custom resources (probably yes if type not relevant)!
                     Log($"\t\tError: Custom resources don't support RequiredContentPacks.");
                     return;
                 }
-                if (entry.AddToDB)
-                {
-                    mddbCache.AddToQueueIfIndexable(entry);
-                }
-                else
+                if (!entry.AddToDB)
                 {
                     Log($"\tAddToDB=false: {entry}");
+                    mddbCache.AddToNotIndexable(entry);
                 }
                 packager.AddEntry(entry);
                 return;
@@ -309,7 +339,7 @@ namespace ModTek.Features.Manifest
 
             if (entriesById.Count == 0)
             {
-                Log($"\t\tError: Can't resolve type, no types found for id and extension, please specify manually: {entry}");
+                Log($"\t\tError: Can't resolve type, no types found for id and extension, either an issue with mod order or typo (case sensitivity): {entry}");
                 return false;
             }
             if (entriesById.Count > 1)
@@ -319,6 +349,24 @@ namespace ModTek.Features.Manifest
             }
             entry.Type = entriesById[0].Type;
             return true;
+        }
+
+        internal static string GetJson(VersionManifestEntry entry)
+        {
+            if (!string.IsNullOrEmpty(entry.AssetBundleName))
+            {
+                return bundleManager.GetText(entry.AssetBundleName, entry.Id);
+            }
+
+            try
+            {
+                return File.ReadAllText(entry.FilePath);
+            }
+            catch (Exception e)
+            {
+                Log($"\t\tError: Can't read: {entry}", e);
+                return null;
+            }
         }
 
         internal static void ContentPackManifestsLoaded()
@@ -361,7 +409,7 @@ namespace ModTek.Features.Manifest
         {
             if (ModDefsDatabase.FailedToLoadMods.Count == 0)
             {
-                VerifyCaches();
+                ModsManifestPreloader.PrewarmResourcesIfEnabled();
                 return;
             }
 
@@ -371,78 +419,10 @@ namespace ModTek.Features.Manifest
                     $"\nCheck \"{FilePaths.LogPathRelativeToGameDirectory}\" for more info" +
                     "\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
                 )
-                .AddButton("Risk Continuing", VerifyCaches)
+                .AddButton("Risk Continuing", ModsManifestPreloader.PrewarmResourcesIfEnabled)
                 .AddButton("Quit Game", UnityGameInstance.Instance.ShutdownGame, false)
                 .Render();
             ModDefsDatabase.FailedToLoadMods.Clear();
-        }
-
-        private static void VerifyCaches()
-        {
-            Log("Verify Caches");
-            var preloadResources = new HashSet<CacheKey>();
-
-            var rebuildMDDB = false;
-            var sw = new Stopwatch();
-            sw.Start();
-            mergeCache.CleanCacheWithCompleteManifest(ref rebuildMDDB, preloadResources);
-            sw.Stop();
-            LogIfSlow(sw, "Merge Cache Cleanup");
-            sw.Restart();
-            mddbCache.CleanCacheWithCompleteManifest(ref rebuildMDDB, preloadResources);
-            sw.Stop();
-            LogIfSlow(sw, "MDDB Cache Cleanup");
-
-            if (ModTek.Config.SaveCachesBeforePreloading)
-            {
-                SaveCaches();
-            }
-
-            ModsManifestPreloader.PreloadResources(rebuildMDDB, preloadResources);
-        }
-
-        internal static void SaveCaches()
-        {
-            Log("Saving caches");
-            mergeCache.Save();
-            mddbCache.Save();
-        }
-
-        internal static void IndexCustomResources(List<VersionManifestEntry> queuedResources)
-        {
-            mddbCache.IndexCustomResources(queuedResources);
-        }
-
-        internal static string GetMergedContentOrReadAllTextAndMerge(VersionManifestEntry entry)
-        {
-            var content = GetMergedContent(entry);
-            if (content == null)
-            {
-                content = File.ReadAllText(entry.FilePath);
-                MergeContentIfApplicable(entry, ref content);
-            }
-            return content;
-        }
-
-        internal static string GetMergedContent(VersionManifestEntry entry)
-        {
-            return mergeCache.HasMergedContentCached(entry, true, out var content) ? content : null;
-        }
-
-        internal static void MergeContentIfApplicable(VersionManifestEntry entry, ref string content)
-        {
-            if (mergeCache.HasMerges(entry))
-            {
-                if (!mergeCache.HasMergedContentCached(entry, false, out _))
-                {
-                    mergeCache.MergeAndCacheContent(entry, ref content);
-                    mddbCache.Add(entry, content);
-                }
-            }
-            else
-            {
-                mddbCache.Add(entry, content);
-            }
         }
     }
 }

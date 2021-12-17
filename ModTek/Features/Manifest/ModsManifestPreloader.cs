@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using BattleTech.UI;
@@ -23,38 +22,48 @@ namespace ModTek.Features.Manifest
         internal static bool HasPreloader => preloader != null;
         private static ModsManifestPreloader preloader;
 
-        internal static void PreloadResources(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
+        internal static void PrewarmResourcesIfEnabled()
         {
             if (preloader != null)
             {
-                Log("ERROR: Can't start preloading, preload load request exists already");
+                Log("ERROR: Can't start prewarming, prewarm load request exists already");
                 return;
             }
 
-            Log("Prewarming and/or preloading resources.");
+            if (!ModTek.Config.DelayPrewarmToMainMenu)
+            {
+                Log("Prewarm delay disabled.");
+                return;
+            }
+
+            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
+            if (prewarmRequests.Count == 0)
+            {
+                Log("Nothing to prewarm.");
+                return;
+            }
+
+            Log("Prewarming resources.");
 
             preloadSW.Start();
-            preloader = new ModsManifestPreloader(rebuildMDDB, preloadResources);
+            preloader = new ModsManifestPreloader(prewarmRequests);
             preloader.ShowCurtain();
         }
 
-        private static void FinalizePreloadResources()
+        private static void FinalizePrewarm()
         {
             finishedChecksAndPreloadsCounter++;
             preloader = null;
             preloadSW.Stop();
-            LogIfSlow(preloadSW, "Preloading");
+            LogIfSlow(preloadSW, "Prewarming");
         }
 
         private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
+        private readonly List<PrewarmRequest> prewarmRequests;
 
-        private readonly bool rebuildMDDB;
-        private readonly HashSet<CacheKey> preloadResources;
-
-        private ModsManifestPreloader(bool rebuildMDDB, HashSet<CacheKey> preloadResources)
+        private ModsManifestPreloader(List<PrewarmRequest> prewarmRequests)
         {
-            this.rebuildMDDB = rebuildMDDB;
-            this.preloadResources = preloadResources;
+            this.prewarmRequests = prewarmRequests;
         }
 
         private void ShowCurtain()
@@ -82,46 +91,17 @@ namespace ModTek.Features.Manifest
             }
             else
             {
-                StartLoading();
+                StartPrewarm();
             }
         }
 
-        private const string LoadingCurtainWaitText = "Waiting for the game to load into the main menu.\nGame can temporarily freeze.";
-        private const string LoadingCurtainPrewarmAndPreloadText = "Prewarming and indexing modded resources.\nGame can temporarily freeze.";
-        private const string LoadingCurtainPrewarmText = "Prewarming game resources.\nGame can temporarily freeze.";
-        private const string LoadingCurtainPreloadText = "Indexing modded resources, might take a while.\nGame can temporarily freeze.";
-
-        private void StartLoading()
+        private void StartPrewarm()
         {
             try
             {
                 AddPrewarmRequestsToQueue();
-                var prewarmingCount = loadingResourcesIndex.Count;
-                AddPreloadResourcesToQueue();
-                var preloadingCount = loadingResourcesIndex.Count - prewarmingCount;
-
-                if (prewarmingCount > 0 && preloadingCount > 0)
                 {
-                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPrewarmAndPreloadText);
-                }
-                else if (prewarmingCount > 0)
-                {
-                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPrewarmText);
-                }
-                else if (preloadingCount > 0)
-                {
-                    LoadingCurtainUtils.SetActivePopupText(LoadingCurtainPreloadText);
-                }
-
-                {
-                    var customResourcesQueue = loadingResourcesQueue
-                        .Where(e => BTConstants.ICResourceType(e.Type, out _))
-                        .ToList();
-                    ModsManifest.IndexCustomResources(customResourcesQueue);
-                }
-
-                {
-                    var loadRequest = dataManager.CreateLoadRequest(PreloadFinished);
+                    var loadRequest = dataManager.CreateLoadRequest(PrewarmComplete);
                     foreach (var entry in loadingResourcesQueue)
                     {
                         if (BTConstants.BTResourceType(entry.Type, out var resourceType))
@@ -140,19 +120,6 @@ namespace ModTek.Features.Manifest
 
         private void AddPrewarmRequestsToQueue()
         {
-            if (!ModTek.Config.DelayPrewarmUntilPreload)
-            {
-                Log("Prewarming during preload disabled.");
-                return;
-            }
-
-            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
-            if (prewarmRequests.Count == 0)
-            {
-                Log("Skipping prewarm during preload.");
-                return;
-            }
-
             Log("Prewarming resources during preload.");
             foreach (var prewarm in prewarmRequests)
             {
@@ -176,41 +143,6 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private void AddPreloadResourcesToQueue()
-        {
-            if (!ModTek.Config.PreloadResourcesForCache)
-            {
-                Log("Skipping preload, disabled in config.");
-                return;
-            }
-
-            if (!rebuildMDDB && preloadResources.Count == 0)
-            {
-                Log("Skipping preload, no changes detected.");
-                return;
-            }
-
-            Log("Preloading resources.");
-            if (rebuildMDDB)
-            {
-                foreach (var type in BTConstants.VanillaMDDBTypes)
-                {
-                    foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(type, true))
-                    {
-                        QueueLoadingResource(entry);
-                    }
-                }
-            }
-            foreach (var resource in preloadResources)
-            {
-                var entry = BetterBTRL.Instance.EntryByIDAndType(resource.Id, resource.Type, true);
-                if (entry != null)
-                {
-                    QueueLoadingResource(entry);
-                }
-            }
-        }
-
         private readonly HashSet<CacheKey> loadingResourcesIndex = new HashSet<CacheKey>();
         private readonly List<VersionManifestEntry> loadingResourcesQueue = new List<VersionManifestEntry>();
         private void QueueLoadingResource(VersionManifestEntry entry)
@@ -227,25 +159,20 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private void PreloadFinished(LoadRequest loadRequest)
+        private void PrewarmComplete(LoadRequest loadRequest)
         {
             try
             {
-                Log("Preloader finished");
-                if (ModTek.Config.DelayPrewarmUntilPreload)
+                try
                 {
-                    try
-                    {
-                        Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
-                    }
-                    catch (Exception e)
-                    {
-                        Log("ERROR execute PrewarmComplete", e);
-                    }
+                    Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
+                }
+                catch (Exception e)
+                {
+                    Log("ERROR execute PrewarmComplete", e);
                 }
 
-                ModsManifest.SaveCaches();
-                FinalizePreloadResources();
+                FinalizePrewarm();
             }
             catch (Exception e)
             {
@@ -258,7 +185,7 @@ namespace ModTek.Features.Manifest
             Log("Showing LoadingCurtain on Main Menu.");
             LoadingCurtain.ShowPopupUntil(
                 PopupClosureConditionalCheck,
-                LoadingCurtainWaitText
+                "Prewarming game resources.\nGame can temporarily freeze."
             );
         }
 

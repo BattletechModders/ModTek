@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
-using ModTek.Features.CustomStreamingAssets;
 using ModTek.Features.Manifest;
 using ModTek.Misc;
 using ModTek.Util;
@@ -26,7 +25,6 @@ namespace ModTek
         // file based methods
         public bool IsFile => File.Exists(AbsolutePath);
         internal DateTime LastWriteTimeUtc => File.GetLastWriteTimeUtc(AbsolutePath);
-        public string FileExtension => System.IO.Path.GetExtension(Path);
         public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
         internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, AbsolutePath);
 
@@ -36,8 +34,6 @@ namespace ModTek
 
         public string Type { get; set; }
         internal bool IsTypeSoundBankDef => Type == nameof(SoundBankDef);
-        internal BattleTechResourceType? ResourceType => BTConstants.BTResourceType(Type, out var type) ? type : (BattleTechResourceType?)null;
-        internal bool IsTypeBattleTechResourceType => ResourceType != null;
         internal bool IsTypeCustomStreamingAsset => BTConstants.CSAssetsType(Type, out _);
         internal bool IsTypeCustomResource => CustomResourcesFeature.IsCustomResourceType(Type);
 

@@ -10,7 +10,7 @@ namespace ModTek.Features.Manifest.Patches
     {
         public static bool Prepare()
         {
-            return ModTek.Enabled && ModTek.Config.DelayPrewarmUntilPreload;
+            return ModTek.Enabled && ModTek.Config.DelayPrewarmToMainMenu;
         }
 
         public static List<PrewarmRequest> GetAndClearPrewarmRequests()

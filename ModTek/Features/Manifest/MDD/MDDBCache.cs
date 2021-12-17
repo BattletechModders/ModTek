@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.CustomTags;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
+using ModTek.UI;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
@@ -29,11 +31,11 @@ namespace ModTek.Features.Manifest.MDD
         {
             PersistentFilePath = Path.Combine(PersistentDirPath, "database_cache.json");
 
-            if (ModTekCacheStorage.CompressedExists(PersistentFilePath) && File.Exists(ModMDDBPath))
+            if (File.Exists(PersistentFilePath) && File.Exists(ModMDDBPath))
             {
                 try
                 {
-                    CachedItems = ModTekCacheStorage.CompressedReadFrom<List<CacheKeyValue>>(PersistentFilePath)
+                    CachedItems = ModTekCacheStorage.ReadFrom<List<CacheKeyValue>>(PersistentFilePath)
                         .ToDictionary(kv => kv.Key, kv => kv.Value);
                     MetadataDatabase.ReloadFromDisk();
                     Log("MDDBCache: Loaded.");
@@ -74,7 +76,7 @@ namespace ModTek.Features.Manifest.MDD
                 }
                 MetadataDatabase.SaveMDDToPath();
 
-                ModTekCacheStorage.CompressedWriteTo(CachedItems.ToList(), PersistentFilePath);
+                ModTekCacheStorage.WriteTo(CachedItems.ToList(), PersistentFilePath);
                 Log($"MDDBCache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
@@ -90,75 +92,42 @@ namespace ModTek.Features.Manifest.MDD
         }
 
         private readonly Stopwatch sw = new Stopwatch();
-        internal void Add(VersionManifestEntry loadedEntry, string content)
+        internal void CacheUpdate(VersionManifestEntry entry)
         {
-            if (!BTConstants.MDDBTypes.Contains(loadedEntry.Type))
+            if (IsIgnored(entry, out var key))
             {
                 return;
             }
 
-            if (loadedEntry.IsInDefaultMDDB()) // TODO maybe we want to overwrite something that was modded before, so we should allow this if a cached item was found
+            var json = ModsManifest.GetJson(entry);
+            if (json == null)
             {
+                Log($"MDDBCache: Error trying to get json for {entry.ToShortString()}");
                 return;
-            }
-
-            if (!IsQueued(loadedEntry, out var key))
-            {
-                return;
-            }
-
-            if (CachedItems.TryGetValue(key, out var cachedItem))
-            {
-                if (cachedItem.Contains(loadedEntry))
-                {
-                    return;
-                }
             }
 
             sw.Start();
             try
             {
-                Log($"MDDBCache: Indexing {loadedEntry.ToShortString()}");
-                MDDBIndexer.InstantiateResourceAndUpdateMDDB(loadedEntry, content);
+                Log($"MDDBCache: Indexing {entry.ToShortString()}");
+                MDDBIndexer.InstantiateResourceAndUpdateMDDB(entry, json);
             }
             catch (Exception e)
             {
-                Log($"MDDBCache: Exception when indexing {loadedEntry.ToShortString()}", e);
+                Log($"MDDBCache: Exception when indexing {entry.ToShortString()}", e);
             }
             sw.Stop();
             LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000); // every 10s log total and reset
-            if (!loadedEntry.IsInDefaultMDDB())
+            if (!entry.IsVanillaOrDlc())
             {
-                CachedItems[key] = FileVersionTuple.From(loadedEntry);
+                CachedItems[key] = FileVersionTuple.From(entry);
             }
             HasChanges = true;
         }
 
-        private readonly HashSet<CacheKey> QueuedItems = new HashSet<CacheKey>();
+        private readonly HashSet<CacheKey> IgnoredItems = new HashSet<CacheKey>();
 
-        internal void IndexCustomResources(List<VersionManifestEntry> queuedResources)
-        {
-            // TODO get rid of blocking loop with a ReadAllText
-            foreach (var entry in queuedResources)
-            {
-                if (!IsQueued(entry, out _))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var json = File.ReadAllText(entry.FilePath);
-                    Add(entry, json);
-                }
-                catch (Exception e)
-                {
-                    Log($"ERROR: Couldn't process custom resource {entry.ToShortString()}", e);
-                }
-            }
-        }
-
-        internal void AddToQueueIfIndexable(ModEntry entry)
+        internal void AddToNotIndexable(ModEntry entry)
         {
             if (!BTConstants.MDDBTypes.Contains(entry.Type))
             {
@@ -166,69 +135,94 @@ namespace ModTek.Features.Manifest.MDD
             }
 
             var key = new CacheKey(entry);
-            QueuedItems.Add(key);
+            IgnoredItems.Add(key);
         }
 
-        private bool IsQueued(VersionManifestEntry entry, out CacheKey key)
+        private bool IsIgnored(VersionManifestEntry entry, out CacheKey key)
         {
             key = new CacheKey(entry);
-            return QueuedItems.Contains(key);
+            return IgnoredItems.Contains(key);
         }
 
-        internal void CleanCacheWithCompleteManifest(ref bool flagForRebuild, HashSet<CacheKey> preloadResources)
+        internal IEnumerable<ProgressReport> BuildCache()
         {
-            if (!flagForRebuild)
+            var sliderText = "Building MDDB Cache";
+            yield return new ProgressReport(0, sliderText, "", true);
+
+            bool rebuildIndex = false;
+            var reindexResources = new HashSet<CacheKey>();
+
+            // find entries missing in cache
+            foreach (var type in BTConstants.MDDBTypes)
             {
-                // find entries missing in cache
-                foreach (var type in BTConstants.MDDBTypes)
+                foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfType(type))
                 {
-                    foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfType(type, true))
+                    if (IsIgnored(manifestEntry, out var key))
                     {
-                        // these can never be missing
-                        if (manifestEntry.IsInDefaultMDDB())
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        if (!IsQueued(manifestEntry, out var key))
-                        {
-                            continue;
-                        }
+                    // see if it is already cached
+                    if (CachedItems.TryGetValue(key, out var cachedEntry))
+                    {
+                        cachedEntry.CacheHit = true;
 
-                        // see if it is already cached
-                        if (CachedItems.TryGetValue(key, out var cachedEntry))
+                        if (!cachedEntry.Contains(manifestEntry))
                         {
-                            cachedEntry.CacheHit = true;
-                            if (!cachedEntry.Contains(manifestEntry))
-                            {
-                                Log($"MDDBCache: {key} outdated in cache.");
-                                preloadResources.Add(key);
-                            }
-                        }
-                        else
-                        {
-                            Log($"MDDBCache: {key} missing in cache.");
-                            preloadResources.Add(key);
+                            Log($"MDDBCache: {key} outdated in cache.");
+                            CachedItems.Remove(key);
+                            reindexResources.Add(key);
                         }
                     }
-                }
-
-                // find entries that shouldn't be in cache (anymore)
-                foreach (var kv in CachedItems)
-                {
-                    if (!kv.Value.CacheHit)
+                    else if (!manifestEntry.IsVanillaOrDlc())
                     {
-                        Log($"MDDBCache: {kv.Key} left over in cache.");
-                        flagForRebuild = true;
+                        Log($"MDDBCache: {key} missing in cache.");
+                        reindexResources.Add(key);
                     }
                 }
             }
 
-            if (flagForRebuild)
+            // find entries that shouldn't be in cache (anymore)
+            foreach (var kv in CachedItems)
+            {
+                if (!kv.Value.CacheHit)
+                {
+                    Log($"MDDBCache: {kv.Key} left over in cache.");
+                    rebuildIndex = true;
+                }
+            }
+
+            if (rebuildIndex)
             {
                 Log($"MDDBCache: Rebuilding.");
                 Reset();
+                reindexResources.Clear();
+                foreach (var type in BTConstants.MDDBTypes)
+                {
+                    foreach (var entry in BetterBTRL.Instance.AllEntriesOfType(type))
+                    {
+                        if (!entry.IsVanillaOrDlc())
+                        {
+                            reindexResources.Add(new CacheKey(entry));
+                        }
+                    }
+                }
             }
+
+            CustomTagFeature.ProcessTags(); // TODO add change detection
+            AddendumUtils.ProcessDataAddendums(); // TODO add change detection
+
+            var countCurrent = 0;
+            var countMax = (float)reindexResources.Count;
+            foreach (var key in reindexResources)
+            {
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{key.Type}\n{key.Id}");
+                var entry = BetterBTRL.Instance.EntryByIDAndType(key.Id, key.Type);
+                CacheUpdate(entry);
+            }
+
+            yield return new ProgressReport(1, sliderText, $"Saving cache index", true);
+            Save();
         }
     }
 }

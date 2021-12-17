@@ -129,7 +129,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             try
             {
-                ModTekCacheStorage.CompressedCSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
+                ModTekCacheStorage.CSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
                 Log($"Manifest: Saved to {ManifestDumpPath}.");
             }
             catch (Exception e)

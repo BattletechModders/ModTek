@@ -20,6 +20,7 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> addendums = new List<VersionManifestAddendum>();
         private readonly List<ModAddendumManifest> orderedModAddendumManifests = new List<ModAddendumManifest>();
+        private readonly VersionManifestAddendum mergeAddendum = new VersionManifestAddendum("ModTekMergeCacheAddendum");
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new Dictionary<string, List<VersionManifestEntry>>();
 
         private bool HasChanges;
@@ -67,6 +68,12 @@ namespace ModTek.Features.Manifest.BTRL
             }
 
             ModsManifest.ContentPackManifestsLoaded();
+        }
+
+        internal void AddMergeManifestEntry(VersionManifestEntry entry)
+        {
+            mergeAddendum.Add(entry);
+            HasChanges = true;
         }
 
         internal void AddAddendumOverrideEntry(string addendumName, VersionManifestEntry manifestEntry)
@@ -143,15 +150,25 @@ namespace ModTek.Features.Manifest.BTRL
             return addendums.Any(x => name.Equals(x.Name));
         }
 
-        public void AddModAddendum(ModAddendumManifest modManifest)
+        public void AddModAddendum(ModAddendumManifest modManifest, bool forceApply)
         {
             orderedModAddendumManifests.Add(modManifest);
             HasChanges = true;
+            // avoid to do a full refresh just so modded content can merge into other modded content
+            if (forceApply)
+            {
+                currentManifest.AddAddendum(modManifest.Addendum);
+            }
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
         {
-            if (addendums.RemoveAll(a => a.Name == addendum.Name) > 0)
+            RemoveAddendum(addendum.Name);
+        }
+
+        internal void RemoveAddendum(string addendumName)
+        {
+            if (addendums.RemoveAll(a => a.Name == addendumName) > 0)
             {
                 HasChanges = true;
                 RefreshTypedEntries();
@@ -320,6 +337,19 @@ namespace ModTek.Features.Manifest.BTRL
                 }
 
                 currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum));
+            }
+
+            {
+                // merge cache could include not yet loaded DLC
+                var addendum = new VersionManifestAddendum(mergeAddendum.Name);
+                foreach (var entry in mergeAddendum.Entries)
+                {
+                    if (currentManifest.EntryByIDAndType(entry.Id, entry.Type) != null)
+                    {
+                        addendum.Add(entry);
+                    }
+                }
+                currentManifest.AddAddendum(addendum);
             }
             sw.Stop();
             LogIfSlow(sw);

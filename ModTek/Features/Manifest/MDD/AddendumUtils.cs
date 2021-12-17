@@ -13,6 +13,21 @@ namespace ModTek.Features.Manifest.MDD
 {
     internal static class AddendumUtils
     {
+        public static void ProcessDataAddendums()
+        {
+            foreach (var modDef in ModDefsDatabase.ModsInLoadOrder())
+            {
+                LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.QuotedName} DataAddendum:");
+                foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
+                {
+                    if (LoadDataAddendum(dataAddendumEntry, modDef.Directory))
+                    {
+                        MDDBCache.HasChanges = true;
+                    }
+                }
+            }
+        }
+
         public static bool LoadDataAddendum(DataAddendumEntry dataAddendumEntry, string modDefDirectory)
         {
             try

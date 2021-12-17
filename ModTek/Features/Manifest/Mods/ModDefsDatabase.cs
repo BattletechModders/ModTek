@@ -19,7 +19,8 @@ namespace ModTek.Features.Manifest.Mods
         // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
-            yield return new ProgressReport(0, "Gathering dependencies trees", "");
+            var sliderText = "Gathering dependencies trees";
+            yield return new ProgressReport(0, sliderText, "");
             if (allModDefs.Count == 0)
             {
                 yield break;
@@ -41,7 +42,7 @@ namespace ModTek.Features.Manifest.Mods
                 }
             }
 
-            yield return new ProgressReport(1 / 3f, "Gather depends on me", string.Empty, true);
+            yield return new ProgressReport(1 / 3f, sliderText, "Gather depends on me", true);
             progress = 0;
             foreach (var mod in allModDefs)
             {
@@ -49,7 +50,7 @@ namespace ModTek.Features.Manifest.Mods
                 mod.Value.GatherAffectingOfflineRec();
             }
 
-            yield return new ProgressReport(2 / 3f, "Gather disable influence tree", string.Empty, true);
+            yield return new ProgressReport(2 / 3f, sliderText, "Gather disable influence tree", true);
             progress = 0;
             foreach (var mod in allModDefs)
             {
@@ -57,7 +58,7 @@ namespace ModTek.Features.Manifest.Mods
                 mod.Value.GatherAffectingOnline();
             }
 
-            yield return new ProgressReport(1, "Gather enable influence tree", string.Empty, true);
+            yield return new ProgressReport(1, sliderText, "Gather enable influence tree", true);
             Log("FAIL LIST:");
             foreach (var mod in allModDefs.Values)
             {
@@ -102,7 +103,8 @@ namespace ModTek.Features.Manifest.Mods
 
         internal static IEnumerator<ProgressReport> InitModsLoop()
         {
-            yield return new ProgressReport(1, "Initializing Mods", "");
+            var sliderText = "Initializing Mods";
+            yield return new ProgressReport(1, sliderText, "");
 
             string[] modJsons;
             if (ModTek.Config.SearchModsInSubDirectories)
@@ -127,7 +129,8 @@ namespace ModTek.Features.Manifest.Mods
             SetupModLoadOrderAndRemoveUnloadableMods();
 
             // try loading each mod
-            var numModsLoaded = 0;
+            var countCurrent = 0;
+            var countMax = (float) ModLoadOrder.Count;
             Log("");
             foreach (var modName in ModLoadOrder)
             {
@@ -145,7 +148,7 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                yield return new ProgressReport(numModsLoaded++ / (float) ModLoadOrder.Count, "Initializing Mods", $"{modDef.QuotedName} {modDef.Version}", true);
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{modDef.QuotedName} {modDef.Version}", true);
 
                 // expand the manifest (parses all JSON as well)
                 if (!CheckManifest(modDef))

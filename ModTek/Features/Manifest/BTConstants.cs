@@ -9,15 +9,6 @@ namespace ModTek.Features.Manifest
 {
     internal static class BTConstants
     {
-        // possibly not complete
-        internal static readonly string[] HBSContentNames =
-        {
-            "shadowhawkdlc",
-            "flashpoint",
-            "urbanwarfare",
-            "heavymetal"
-        };
-
         internal static readonly string[] PREDEFINED_TYPES =
             Enum.GetNames(typeof(BattleTechResourceType))
             .Concat(Enum.GetNames(typeof(InternalCustomResourceType)))

@@ -27,11 +27,6 @@ namespace ModTek.Misc
         internal string[] ErrorWhitelist = { "Data.DataManager [ERROR] ManifestEntry is null" };
 
         [JsonProperty]
-        internal bool UseFileCompression;
-        [JsonProperty]
-        internal const string UseFileCompression_Description = "Manifest, database and cache files are compressed using gzip.";
-
-        [JsonProperty]
         internal bool SearchModsInSubDirectories = true;
         [JsonProperty]
         internal const string SearchModsInSubDirectories_Description = "Searches recursively all directories for mod.json instead only for directories directly found under Mods. Set to false for pre v2.0 behavior.";
@@ -47,12 +42,6 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
-        internal bool PreloadResourcesForCache = true; // false is not supported
-        [JsonProperty]
-        internal const string PreloadResourcesForCache_Description = "Instead of waiting for the game to request resources naturally and then merge when loading" +
-            ", pre-request all mergeable and indexable resources during the game startup. If not preloading, SimGame will be missing pilots and lances.";
-
-        [JsonProperty]
         internal float DataManagerUnfreezeDelta = 2f;
         [JsonProperty]
         internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
@@ -63,14 +52,9 @@ namespace ModTek.Misc
         internal readonly string DataManagerEverSpinnyDetectionTimespan_Description = $"How long data is not being further processed until it is assumed to be stuck for good. Upon detection it dumps lots of data into the log, but nothing more.";
 
         [JsonProperty]
-        internal bool SaveCachesBeforePreloading;
+        internal bool DelayPrewarmToMainMenu = true;
         [JsonProperty]
-        internal const string SaveCachesBeforePreloading_Description = "Helps with debugging preload data by dumping cache information before preloading, but has some issues with MDDB save not working.";
-
-        [JsonProperty]
-        internal bool DelayPrewarmUntilPreload = true;
-        [JsonProperty]
-        internal const string DelayPrewarmUntilPreload_Description = "Delays executing prewarm requests until a preload is executed, avoids duplicates.";
+        internal const string DelayPrewarmToMainMenu_Description = "Delays executing prewarm requests until entering the main menu and dlc packs are loaded. Prevents choppy intro video and makes sure to include dlc items during prewarm.";
 
         [JsonProperty]
         internal bool ShowDataManagerStatsInLoadingCurtain = true;

@@ -50,39 +50,7 @@ namespace ModTek.Misc
             }
         }
 
-        // ReSharper disable once ConvertToConstant.Local
-        // wanted to do compression mainly to force all normal cache data through here
-        // we need zipfile support to allow zipped mods
-        private static bool compress => ModTek.Config.UseFileCompression;
-        private static string CompressedPath(string path)
-        {
-            return compress ? path + ".gz" : path;
-        }
-        private static Stream CompressedWriteStream(Stream stream)
-        {
-            return compress ? new GZipStream(stream, CompressionLevel.Fastest) : stream;
-        }
-        private static Stream CompressedReadStream(Stream stream)
-        {
-            return compress ? new GZipStream(stream, CompressionMode.Decompress) : stream;
-        }
-
-        internal static bool CompressedExists(string path)
-        {
-            return File.Exists(CompressedPath(path));
-        }
-
-        internal static string CompressedLastWriteTimeUtcAsUpdatedOn(string path)
-        {
-            var compressedPath = CompressedPath(path);
-            if (!File.Exists(compressedPath))
-            {
-                return null;
-            }
-            return VersionManifestUtilities.DateTimeToString(File.GetLastWriteTimeUtc(compressedPath));
-        }
-
-        internal static void CompressedCSVWriteTo<T>
+        internal static void CSVWriteTo<T>
         (
             string path,
             IEnumerable<T> enumerable,
@@ -102,51 +70,14 @@ namespace ModTek.Misc
 
             using(var c = new CSVWriter(path))
             {
-                if (compress)
-                {
-                    using (var f = new FileStream(CompressedPath(path), FileMode.Create))
-                    using (var g = CompressedWriteStream(f))
-                    using (var s = new StreamWriter(g))
-                    {
-                        s.NewLine = "\n";
-                        c.Close();
-                        File.Delete(path);
-                        Traverse.Create(c).Field<TextWriter>("writer").Value = s;
-                        process(c);
-                    }
-                }
-                else
-                {
-                    process(c);
-                }
+                process(c);
             }
         }
 
-        public static void CompressedStringWriteTo(string path, string content)
+        internal static void WriteTo(object obj, string path)
         {
-            using (var f = new FileStream(CompressedPath(path), FileMode.Create))
-            using (var g = CompressedWriteStream(f))
-            using (var s = new StreamWriter(g))
-            {
-                s.Write(content);
-            }
-        }
-
-        public static string CompressedStringReadFrom(string path)
-        {
-            using (var f = new FileStream(CompressedPath(path), FileMode.Open))
-            using (var g = CompressedReadStream(f))
-            using (var s = new StreamReader(g))
-            {
-                return s.ReadToEnd();
-            }
-        }
-
-        internal static void CompressedWriteTo(object obj, string path)
-        {
-            using (var f = new FileStream(CompressedPath(path), FileMode.Create))
-            using (var g = CompressedWriteStream(f))
-            using (var s = new StreamWriter(g))
+            using (var f = new FileStream(path, FileMode.Create))
+            using (var s = new StreamWriter(f))
             using (var j = new JsonTextWriter(s))
             {
                 var ser = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
@@ -155,11 +86,10 @@ namespace ModTek.Misc
             }
         }
 
-        internal static T CompressedReadFrom<T>(string path)
+        internal static T ReadFrom<T>(string path)
         {
-            using (var f = new FileStream(CompressedPath(path), FileMode.Open))
-            using (var g = CompressedReadStream(f))
-            using (var s = new StreamReader(g))
+            using (var f = new FileStream(path, FileMode.Open))
+            using (var s = new StreamReader(f))
             using (var j = new JsonTextReader(s))
             {
                 var ser = new JsonSerializer();
