@@ -7,8 +7,7 @@ using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomStreamingAssets
 {
-    // custom streaming assets don't require the specification of a type
-    // custom resources do require a type
+    // custom streaming assets add existing resources to BTRL
     internal static class CustomStreamingAssetsFeature
     {
         internal static void LoadDebugSettings()

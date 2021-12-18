@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using Harmony;
 using HBS;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
+using ModTek.Features.Manifest.MDD;
 using ModTek.UI;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
@@ -25,14 +24,14 @@ namespace ModTek.Features.SoundBanks
                 yield break;
             }
 
-            Log($"Processing sound banks defs ({entries.Length}):");
+            Log($"Processing sound banks defs");
             if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
             {
                 Log("\tWWise manager not inited");
                 yield break;
             }
 
-            var sliderText = "Loading sound banks defs";
+            var sliderText = "Processing sound banks defs";
             yield return new ProgressReport(0, sliderText, "", true);
 
             var loadedBanks = Traverse.Create(SceneSingletonBehavior<WwiseManager>.Instance).Field<List<LoadedAudioBank>>("loadedBanks").Value;
@@ -41,46 +40,36 @@ namespace ModTek.Features.SoundBanks
             foreach (var entry in entries)
             {
                 yield return new ProgressReport(countCurrent++/countMax, sliderText, entry.Id);
-                Log($"\tProcessing {entry}");
+                Log($"\tProcessing {entry.ToShortString()}");
                 try
                 {
                     var def = LoadDef(entry.FilePath);
-                    Log($"\t\t{def.name}:{def.filename}:{def.type}");
-                    if (soundBanks.ContainsKey(def.name))
+                    Log($"\t\tDef: {def.name} ({def.type}): {def.filename}");
+                    if (string.IsNullOrEmpty(def.name))
                     {
-                        Log("\t\tWarning replacing existing SoundBankDef");
+                        def.name = entry.Id;
+                    }
+                    else if (def.name != entry.Id)
+                    {
+                        Log("\t\tError: Name inside def is defined but not equal to the manifest entry id, skipping processing and load.");
+                        continue;
                     }
                     soundBanks[def.name] = def;
+                    if (def.type != SoundBankType.Default)
+                    {
+                        continue;
+                    }
+                    if (def.loaded)
+                    {
+                        continue;
+                    }
+
+                    loadedBanks.Add(new LoadedAudioBank(def.name, true));
                 }
                 catch (Exception e)
                 {
                     Log("\t\tError" + e);
                 }
-            }
-
-            sliderText = "Loading sound banks";
-            yield return new ProgressReport(0, sliderText, "", true);
-
-            // need to loop twice since entry.Id is not the actual id, but def.name is
-            countCurrent = 0;
-            countMax = soundBanks.Count;
-            foreach (var kv in soundBanks)
-            {
-                var name = kv.Key;
-                var def = kv.Value;
-
-                yield return new ProgressReport(countCurrent++/countMax, sliderText, name);
-                Log($"\tLoading {def.name}:{def.filename}:{def.type}");
-                if (def.type != SoundBankType.Default)
-                {
-                    continue;
-                }
-                if (def.loaded)
-                {
-                    continue;
-                }
-
-                loadedBanks.Add(new LoadedAudioBank(def.name, true));
             }
         }
 
