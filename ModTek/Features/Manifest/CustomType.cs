@@ -3,7 +3,5 @@
     internal enum CustomType
     {
         AdvancedJSONMerge,
-        CustomTag,
-        CustomTagSet
     }
 }

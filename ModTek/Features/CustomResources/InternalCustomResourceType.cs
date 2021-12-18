@@ -2,6 +2,8 @@
 {
     internal enum InternalCustomResourceType
     {
+        CustomTag,
+        CustomTagSet,
         Video,
         SoundBank,
         SoundBankDef,

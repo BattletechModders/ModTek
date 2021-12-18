@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using BattleTech.Data;
 using HBS.Collections;
-using ModTek.Features.Manifest;
+using ModTek.Features.CustomResources;
+using ModTek.Features.Manifest.BTRL;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -11,47 +11,21 @@ namespace ModTek.Features.CustomTags
 {
     internal static class CustomTagFeature
     {
-        private static HashSet<ModEntry> CustomTags = new HashSet<ModEntry>();
-        private static HashSet<ModEntry> CustomTagSets = new HashSet<ModEntry>();
-
-        internal static bool Add(ModEntry entry)
-        {
-            if (!BTConstants.CType(entry.Type, out var type))
-            {
-                return false;
-            }
-
-            if (type == CustomType.CustomTag)
-            {
-                CustomTags.Add(entry);
-                return true;
-            }
-
-            if (type == CustomType.CustomTagSet)
-            {
-                CustomTagSets.Add(entry);
-                return true;
-            }
-
-            return false;
-        }
-
         internal static void ProcessTags()
         {
-            LogIf(CustomTags.Count > 0, "Processing CustomTags:");
-            foreach (var modEntry in CustomTags)
+            var customTags = BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.CustomTag.ToString());
+            LogIf(customTags.Length > 0, "Processing CustomTags:");
+            foreach (var entry in customTags)
             {
-                AddOrUpdateTag(modEntry.AbsolutePath);
+                AddOrUpdateTag(entry.FilePath);
             }
 
-            LogIf(CustomTagSets.Count > 0, "Processing CustomTagSets:");
-            foreach (var modEntry in CustomTagSets)
+            var customTagSets = BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.CustomTagSet.ToString());
+            LogIf(customTagSets.Length > 0, "Processing CustomTagSets:");
+            foreach (var entry in customTagSets)
             {
-                AddOrUpdateTagSet(modEntry.AbsolutePath);
+                AddOrUpdateTagSet(entry.FilePath);
             }
-
-            CustomTags = null;
-            CustomTagSets = null;
         }
 
         private static void AddOrUpdateTag(string pathToFile)

@@ -264,12 +264,6 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (CustomTagFeature.Add(entry))
-            {
-                LogModEntryAction("Set", entry);
-                return;
-            }
-
             Log($"\tError: Type of entry unknown: {entry}.");
         }
 
