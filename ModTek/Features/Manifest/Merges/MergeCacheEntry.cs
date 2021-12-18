@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using ModTek.Features.AdvJSONMerge;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -39,7 +40,7 @@ namespace ModTek.Features.Manifest.Merges
         {
             var extension = Path.GetExtension(entry.FileName);
             CachedPath = Path.Combine(entry.Type, entry.Id + extension);
-            OriginalUpdatedOn = entry.UpdatedOn;
+            OriginalUpdatedOn = entry.GetUpdatedOnForTracking();
         }
 
         internal void Add(ModEntry modEntry)

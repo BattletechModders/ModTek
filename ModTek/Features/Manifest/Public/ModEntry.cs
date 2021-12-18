@@ -4,6 +4,7 @@ using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.Manifest;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -24,7 +25,15 @@ namespace ModTek
 
         // file based methods
         public bool IsFile => File.Exists(AbsolutePath);
-        internal DateTime LastWriteTimeUtc => File.GetLastWriteTimeUtc(AbsolutePath);
+        private DateTime UpdatedOn = VersionManifestEntryExtensions.UpdatedOnLazyTracking;
+        internal DateTime GetUpdatedOnForTracking()
+        {
+            if (UpdatedOn == VersionManifestEntryExtensions.UpdatedOnLazyTracking)
+            {
+                UpdatedOn = File.GetLastWriteTimeUtc(AbsolutePath);
+            }
+            return UpdatedOn;
+        }
         public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
         internal string RelativePathToMods => FileUtils.GetRelativePath(FilePaths.ModsDirectory, AbsolutePath);
 
@@ -66,7 +75,8 @@ namespace ModTek
 
         public override string ToString()
         {
-            var extra = "";
+            var extra = $"{Type}";
+
             if (AddToAddendum != null)
             {
                 extra += $" AddToAddendum={AddToAddendum}";
@@ -75,11 +85,8 @@ namespace ModTek
             {
                 extra += $" AssetBundleName={AssetBundleName}";
             }
-            if (Type != null)
-            {
-                extra += $" Type={Type}";
-            }
-            return $"{Id} ({extra} ): {RelativePathToMods}";
+
+            return $"{Id} ({extra}): {RelativePathToMods}";
         }
 
         [JsonIgnore]
@@ -90,7 +97,7 @@ namespace ModTek
                 Id,
                 AbsolutePath,
                 Type,
-                LastWriteTimeUtc,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1",
                 AssetBundleName,
                 AssetBundlePersistent

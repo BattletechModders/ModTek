@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.IO;
+using System.Linq;
 using BattleTech;
 
 namespace ModTek.Features.Manifest.MDD
@@ -34,6 +36,19 @@ namespace ModTek.Features.Manifest.MDD
         internal static string ToShortString(this VersionManifestEntry entry)
         {
             return $"{entry.Id} ({entry.Type})";
+        }
+
+        // lazily call GetLastWriteTimeUtc, as a proper UpdatedOn is only required when merging or indexing
+        internal static readonly DateTime UpdatedOnLazyTracking = DateTime.MinValue;
+        internal static DateTime GetUpdatedOnForTracking(this VersionManifestEntry entry)
+        {
+            var value = entry.UpdatedOn;
+            if (value == UpdatedOnLazyTracking)
+            {
+                value = File.GetLastWriteTimeUtc(entry.FilePath);
+                entry.Update(VersionManifestUtilities.DateTimeToString(value), "1");
+            }
+            return value;
         }
     }
 }

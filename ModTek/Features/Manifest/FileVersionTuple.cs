@@ -1,5 +1,6 @@
 ﻿using System;
 using BattleTech;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;
 using Newtonsoft.Json;
 
@@ -25,13 +26,13 @@ namespace ModTek.Features.Manifest
         internal static FileVersionTuple From(ModEntry entry)
         {
             // path for MergeCache is actually the relative path to the ModsDirectory
-            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.LastWriteTimeUtc };
+            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.RelativePathToMods, UpdatedOn = entry.GetUpdatedOnForTracking() };
         }
 
         internal static FileVersionTuple From(VersionManifestEntry entry)
         {
             // path for MDDBCache is just part of a unique identifier
-            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.UpdatedOn };
+            return new FileVersionTuple { AssetBundleName = entry.AssetBundleName, Path = entry.GetRawPath(), UpdatedOn = entry.GetUpdatedOnForTracking() };
         }
 
         public override string ToString()
@@ -46,7 +47,7 @@ namespace ModTek.Features.Manifest
                 return false;
             }
 
-            if (UpdatedOn != entry.UpdatedOn)
+            if (UpdatedOn != entry.GetUpdatedOnForTracking())
             {
                 return false;
             }

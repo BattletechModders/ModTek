@@ -76,26 +76,8 @@ namespace ModTek.Features.Manifest.Merges
             }
         }
 
-        internal bool AddModEntry(ModEntry entry)
+        internal void AddModEntry(ModEntry entry)
         {
-            if (entry.ShouldMergeJSON && entry.IsJson)
-            {
-                AddTemp(entry);
-                return true;
-            }
-
-            if (entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
-            {
-                AddTemp(entry);
-                return true;
-            }
-
-            return false;
-        }
-
-        private void AddTemp(ModEntry entry)
-        {
-            Log($"\tMerge: {entry}");
             var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type);
             if (manifestEntry == null)
             {

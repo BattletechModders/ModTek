@@ -1,9 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using BattleTech;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
+using ModTek.Features.Manifest.MDD;
 using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomStreamingAssets
@@ -37,35 +36,35 @@ namespace ModTek.Features.CustomStreamingAssets
                 "settings",
                 Path.Combine(Path.Combine("data", "debug"), "settings.json"),
                 CustomStreamingAssetsType.DebugSettings.ToString(),
-                DateTime.MinValue,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1"
             ),
             new VersionManifestEntry(
                 "general",
                 Path.Combine("GameTips", "general.txt"),
                 CustomStreamingAssetsType.GameTip.ToString(),
-                DateTime.MinValue,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1"
             ),
             new VersionManifestEntry(
                 "combat",
                 Path.Combine("GameTips", "combat.txt"),
                 CustomStreamingAssetsType.GameTip.ToString(),
-                DateTime.MinValue,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1"
             ),
             new VersionManifestEntry(
                 "lore",
                 Path.Combine("GameTips", "lore.txt"),
                 CustomStreamingAssetsType.GameTip.ToString(),
-                DateTime.MinValue,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1"
             ),
             new VersionManifestEntry(
                 "sim",
                 Path.Combine("GameTips", "sim.txt"),
                 CustomStreamingAssetsType.GameTip.ToString(),
-                DateTime.MinValue,
+                VersionManifestEntryExtensions.UpdatedOnLazyTracking,
                 "1"
             )
         };

@@ -242,102 +242,41 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (mergeCache.AddModEntry(entry))
+            if (AddModEntryAsMerge(entry))
             {
                 return;
             }
 
-            if (BTConstants.BTResourceType(entry.Type, out var resourceType))
+            if (AddModEntryAsBTR(entry, packager))
             {
-                if (resourceType is BattleTechResourceType.SVGAsset)
-                {
-
-                    Log($"\tSVGAsset: {entry}");
-                    SVGAssetFeature.OnAddSVGEntry(entry);
-                }
-
-                if (entry.AddToAddendum != null)
-                {
-                    Log($"\tAddToAddendum: {entry}");
-                    BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
-                }
-                else
-                {
-                    if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
-                    {
-                        PaddedLog("Replace", entry);
-                        if (!entry.AddToDB)
-                        {
-                            Log($"\t\tAddToDB=false ignored due to replacement");
-                        }
-                    }
-                    else
-                    {
-                        PaddedLog("Add", entry);
-                        if (!entry.AddToDB)
-                        {
-                            mddbCache.AddToNotIndexable(entry);
-                            Log($"\t\tAddToDB=false");
-                        }
-                    }
-                    packager.AddEntry(entry);
-                }
                 return;
             }
 
             if (entry.IsTypeCustomStreamingAsset)
             {
+                LogModEntryAction("Replace", entry);
                 packager.AddEntry(entry);
                 return;
             }
 
-            if (entry.IsTypeCustomResource)
+            if (AddModEntryAsCR(entry, packager))
             {
-                if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
-                {
-                    // TODO check if hooking into ownership check works with custom resources (probably yes if type not relevant)!
-                    Log($"\tError: Custom resources don't support RequiredContentPacks. {entry}");
-                    return;
-                }
-                if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
-                {
-                    PaddedLog("Replace", entry);
-                    if (!entry.AddToDB)
-                    {
-                        Log($"\t\tAddToDB=false ignored due to replacement");
-                    }
-                }
-                else
-                {
-                    PaddedLog("Add", entry);
-                    if (!entry.AddToDB)
-                    {
-                        Log($"\t\tAddToDB=false");
-                        mddbCache.AddToNotIndexable(entry);
-                    }
-                }
-                packager.AddEntry(entry);
                 return;
             }
 
             if (SoundBanksFeature.Add(entry))
             {
-                PaddedLog("Set", entry);
+                LogModEntryAction("Set", entry);
                 return;
             }
 
             if (CustomTagFeature.Add(entry))
             {
-                PaddedLog("Set", entry);
+                LogModEntryAction("Set", entry);
                 return;
             }
 
             Log($"\tError: Type of entry unknown: {entry}.");
-        }
-
-        private static void PaddedLog(string action, ModEntry entry)
-        {
-            Log($"\t{action,7}: {entry}");
         }
 
         private static bool FixMissingIdAndType(ModEntry entry)
@@ -375,6 +314,110 @@ namespace ModTek.Features.Manifest
             }
             entry.Type = entriesById[0].Type;
             return true;
+        }
+
+        private static bool AddModEntryAsMerge(ModEntry entry)
+        {
+            if (entry.ShouldMergeJSON && entry.IsJson)
+            {
+                LogModEntryAction("Merge", entry);
+                mergeCache.AddModEntry(entry);
+                return true;
+            }
+
+            if (entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
+            {
+                LogModEntryAction("Append", entry);
+                mergeCache.AddModEntry(entry);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool AddModEntryAsBTR(ModEntry entry, ModAddendumPackager packager)
+        {
+            if (!BTConstants.BTResourceType(entry.Type, out var resourceType))
+            {
+                return false;
+            }
+
+            if (resourceType is BattleTechResourceType.SVGAsset)
+            {
+                LogModEntryAction("SVGAsset", entry);
+                SVGAssetFeature.OnAddSVGEntry(entry);
+            }
+
+            if (entry.AddToAddendum != null)
+            {
+                LogModEntryAction("AddToAddendum", entry);
+                BetterBTRL.Instance.AddAddendumOverrideEntry(entry.AddToAddendum, entry.CreateVersionManifestEntry());
+            }
+            else
+            {
+                if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
+                {
+                    LogModEntryAction("Replace", entry);
+                    if (!entry.AddToDB)
+                    {
+                        Log($"\t\tAddToDB=false ignored due to replacement");
+                    }
+                }
+                else
+                {
+                    LogModEntryAction("Add", entry);
+                    if (!entry.AddToDB)
+                    {
+                        mddbCache.AddToNotIndexable(entry);
+                        Log($"\t\tAddToDB=false");
+                    }
+                }
+
+                packager.AddEntry(entry);
+            }
+
+            return true;
+        }
+
+        private static bool AddModEntryAsCR(ModEntry entry, ModAddendumPackager packager)
+        {
+            if (!entry.IsTypeCustomResource)
+            {
+                return false;
+            }
+
+            if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
+            {
+                // TODO check if hooking into ownership check works with custom resources (probably yes if type not relevant)!
+                Log($"\tError: Custom resources don't support RequiredContentPacks. {entry}");
+                return true;
+            }
+
+            if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
+            {
+                LogModEntryAction("Replace", entry);
+                if (!entry.AddToDB)
+                {
+                    Log($"\t\tAddToDB=false ignored due to replacement");
+                }
+            }
+            else
+            {
+                LogModEntryAction("Add", entry);
+                if (!entry.AddToDB)
+                {
+                    Log($"\t\tAddToDB=false");
+                    mddbCache.AddToNotIndexable(entry);
+                }
+            }
+
+            packager.AddEntry(entry);
+            return true;
+        }
+
+        private static void LogModEntryAction(string action, ModEntry entry)
+        {
+            Log($"\t{action}: {entry}");
         }
 
         internal static string GetJson(VersionManifestEntry entry)
