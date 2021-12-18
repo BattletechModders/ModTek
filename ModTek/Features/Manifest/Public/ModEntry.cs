@@ -87,6 +87,11 @@ namespace ModTek
             return $"{Id} ({extra}): {RelativePathToMods}";
         }
 
+        public string ToShortString()
+        {
+            return $"{Id} ({Type})";
+        }
+
         [JsonIgnore]
         private VersionManifestEntry customResourceEntry;
         internal VersionManifestEntry CreateVersionManifestEntry()

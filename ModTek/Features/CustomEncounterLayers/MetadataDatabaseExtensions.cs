@@ -5,21 +5,21 @@ namespace ModTek.Features.CustomEncounterLayers
 {
     internal static class MetadataDatabaseExtensions
     {
-        public static EncounterLayer_MDD InsertOrUpdateEncounterLayer(this MetadataDatabase mdd, EncounterLayer encounterLayer)
+        public static EncounterLayer_MDD UpdateEncounterLayer(this MetadataDatabase mdd, EncounterLayer encounterLayer)
         {
             mdd.Execute("INSERT OR REPLACE INTO EncounterLayer (EncounterLayerID, MapID, Name, FriendlyName, Description, BattleValue, ContractTypeID, EncounterLayerGUID, TagSetID, IncludeInBuild) values(@EncounterLayerID, @MapID, @Name, @FriendlyName, @Description, @BattleValue, @ContractTypeID, @EncounterLayerGUID, @TagSetID, @IncludeInBuild)", new
             {
-                EncounterLayerID = encounterLayer.EncounterLayerID,
-                MapID = encounterLayer.MapID,
-                Name = encounterLayer.Name,
-                FriendlyName = encounterLayer.FriendlyName,
-                Description = encounterLayer.Description,
-                BattleValue = encounterLayer.BattleValue,
-                ContractTypeID = encounterLayer.ContractTypeID,
-                EncounterLayerGUID = encounterLayer.EncounterLayerGUID,
-                TagSetID = encounterLayer.TagSetID,
-                IncludeInBuild = encounterLayer.IncludeInBuild
-            }, null, null, null);
+                encounterLayer.EncounterLayerID,
+                encounterLayer.MapID,
+                encounterLayer.Name,
+                encounterLayer.FriendlyName,
+                encounterLayer.Description,
+                encounterLayer.BattleValue,
+                encounterLayer.ContractTypeID,
+                encounterLayer.EncounterLayerGUID,
+                encounterLayer.TagSetID,
+                encounterLayer.IncludeInBuild
+            });
             return mdd.SelectEncounterLayerByID(encounterLayer.EncounterLayerID);
         }
 
@@ -28,7 +28,7 @@ namespace ModTek.Features.CustomEncounterLayers
             return mdd.Query<EncounterLayer_MDD>("SELECT * FROM EncounterLayer WHERE EncounterLayerID=@encounterLayerId", new
             {
                 EncounterLayerID = encounterLayerId
-            }, null, true, null, null).FirstOrDefault<EncounterLayer_MDD>();
+            }).FirstOrDefault();
         }
     }
 }

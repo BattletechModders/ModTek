@@ -81,7 +81,7 @@ namespace ModTek.Features.Manifest.Merges
             var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type);
             if (manifestEntry == null)
             {
-                Log($"\t\tError: Can't find referenced resource: {entry}");
+                Log($"\t\tError: Can't find referenced resource: {entry.ToShortString()}");
                 return;
             }
 

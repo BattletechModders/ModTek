@@ -35,6 +35,11 @@ namespace ModTek.Features.CustomEncounterLayers
         [JsonProperty("IncludeInBuild")]
         public string IncludeInBuild { get; set; }
 
+        public static EncounterLayer FromJSON(string json)
+        {
+            return JsonConvert.DeserializeObject<EncounterLayer>(json);
+        }
+
         public override string ToString()
         {
             return $"EncounterLayer => encounterLayerID: {EncounterLayerID}  mapID: {MapID}  friendlyName: {FriendlyName}  description: {Description}  battleValue: {BattleValue} contractTypeID: {ContractTypeID} encounterLayerGUID: {EncounterLayerGUID} tagSetID {TagSetID} includeInBuild: {IncludeInBuild}";
