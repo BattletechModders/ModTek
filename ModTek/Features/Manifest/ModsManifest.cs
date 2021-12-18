@@ -264,12 +264,6 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (SoundBanksFeature.Add(entry))
-            {
-                LogModEntryAction("Set", entry);
-                return;
-            }
-
             if (CustomTagFeature.Add(entry))
             {
                 LogModEntryAction("Set", entry);

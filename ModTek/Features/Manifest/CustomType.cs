@@ -3,7 +3,6 @@
     internal enum CustomType
     {
         AdvancedJSONMerge,
-        SoundBankDef,
         CustomTag,
         CustomTagSet
     }

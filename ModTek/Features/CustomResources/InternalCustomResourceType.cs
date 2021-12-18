@@ -4,6 +4,7 @@
     {
         Video,
         SoundBank,
+        SoundBankDef,
         EncounterLayer
     }
 }
