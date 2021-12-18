@@ -1,4 +1,4 @@
-﻿namespace ModTek.Features.SoundBanks
+﻿namespace ModTek.Features.CustomSoundBankDefs
 {
     internal class ProcessParameters
     {

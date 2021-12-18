@@ -4,7 +4,7 @@ using Harmony;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Features.CustomResources.Patches
+namespace ModTek.Features.CustomSoundBanks.Patches
 {
     /// <summary>
     /// Patch LoadedAudioBank to use modded replacement SoundBank instead by changing the base path of the AkSoundEngine.
@@ -19,7 +19,7 @@ namespace ModTek.Features.CustomResources.Patches
 
         public static void Prefix(string ___name)
         {
-            var entry = CustomResourcesFeature.GetSoundBank(___name);
+            var entry = SoundBanksFeature.GetSoundBank(___name);
             if (entry == null)
             {
                 return;
@@ -33,7 +33,7 @@ namespace ModTek.Features.CustomResources.Patches
         //System.IO.Compression.ZipFile.CreateFromDirectory("","",CompressionLevel.Fastest,true);
         public static void Postfix(string ___name)
         {
-            if (CustomResourcesFeature.GetSoundBank(___name) == null)
+            if (SoundBanksFeature.GetSoundBank(___name) == null)
             {
                 return;
             }

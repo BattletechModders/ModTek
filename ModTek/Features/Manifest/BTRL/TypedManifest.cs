@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.CustomStreamingAssets;
+using ModTek.Features.CustomDebugSettings;
+using ModTek.Features.CustomGameTips;
+using ModTek.Features.CustomResources;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
@@ -29,7 +31,8 @@ namespace ModTek.Features.Manifest.BTRL
             manifest.Clear();
             idToTypes.Clear();
             SetEntries(defaultEntries);
-            SetEntries(CustomStreamingAssetsFeature.DefaultCustomStreamingAssets);
+            SetEntries(DebugSettingsFeature.DefaulManifestEntries);
+            SetEntries(GameTipsFeature.DefaulManifestEntries);
         }
 
         private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable, bool filterByOwnership)

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using ModTek.Features.SoundBanks;
 using Newtonsoft.Json;
 
 // ReSharper disable once CheckNamespace

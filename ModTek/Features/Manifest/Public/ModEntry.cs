@@ -42,7 +42,6 @@ namespace ModTek
         internal bool IsCsv => FileUtils.IsCsv(Path);
 
         public string Type { get; set; }
-        internal bool IsTypeCustomStreamingAsset => BTConstants.CSAssetsType(Type, out _);
         internal bool IsTypeCustomResource => CustomResourcesFeature.IsCustomResourceType(Type);
 
         public string Id { get; set; }

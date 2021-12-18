@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using ModTek.Features.SoundBanks;
+using ModTek.Features.CustomSoundBankDefs;
 
 // ReSharper disable once CheckNamespace
 namespace ModTek

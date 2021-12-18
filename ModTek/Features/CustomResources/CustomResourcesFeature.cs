@@ -44,16 +44,5 @@ namespace ModTek.Features.CustomResources
                     resourceType => BetterBTRL.Instance.AllEntriesOfType(resourceType).ToDictionary(e => e.Id)
                     );
         }
-
-        internal static VersionManifestEntry GetVideo(string videoName)
-        {
-            return BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.Video.ToString())
-                .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
-        }
-
-        internal static VersionManifestEntry GetSoundBank(string id)
-        {
-            return BetterBTRL.Instance.EntryByIDAndType(InternalCustomResourceType.SoundBank.ToString(), id);
-        }
     }
 }

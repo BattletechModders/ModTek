@@ -6,14 +6,14 @@ using BattleTech;
 using BattleTech.UI;
 using HBS;
 using ModTek.Features.AdvJSONMerge;
-using ModTek.Features.CustomStreamingAssets;
+using ModTek.Features.CustomDebugSettings;
+using ModTek.Features.CustomGameTips;
+using ModTek.Features.CustomResources;
 using ModTek.Features.CustomSVGAssets;
-using ModTek.Features.CustomTags;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Merges;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -252,13 +252,6 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (entry.IsTypeCustomStreamingAsset)
-            {
-                LogModEntryAction("Replace", entry);
-                packager.AddEntry(entry);
-                return;
-            }
-
             if (AddModEntryAsCR(entry, packager))
             {
                 return;
@@ -280,7 +273,11 @@ namespace ModTek.Features.Manifest
                 return true;
             }
 
-            if (CustomStreamingAssetsFeature.FindAndSetMatchingCustomStreamingAssetsType(entry))
+            if (DebugSettingsFeature.FindAndSetMatchingType(entry))
+            {
+                return true;
+            }
+            if (GameTipsFeature.FindAndSetMatchingType(entry))
             {
                 return true;
             }

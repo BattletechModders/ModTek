@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ModTek.Features.EncounterLayers
+namespace ModTek.Features.CustomEncounterLayers
 {
     [JsonObject]
     internal class EncounterLayer

@@ -12,7 +12,7 @@ using HBS;
 using UnityEngine;
 using static ModTek.Features.Logging.MTLogger;
 
-namespace ModTek.Features.SoundBanks
+namespace ModTek.Features.CustomSoundBankDefs
 {
     internal static class CustomSoundHelper
     {

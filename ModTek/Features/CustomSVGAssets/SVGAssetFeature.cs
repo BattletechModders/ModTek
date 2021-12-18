@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using BattleTech.UI;
-using ModTek.Features.Manifest;
 
 namespace ModTek.Features.CustomSVGAssets
 {

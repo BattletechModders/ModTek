@@ -10,7 +10,7 @@ using ModTek.UI;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
 
-namespace ModTek.Features.SoundBanks
+namespace ModTek.Features.CustomSoundBankDefs
 {
     internal static class SoundBanksFeature
     {

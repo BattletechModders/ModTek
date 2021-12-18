@@ -1,8 +1,8 @@
 using BattleTech;
 using BattleTech.Data;
 using BattleTech.Framework;
+using ModTek.Features.CustomEncounterLayers;
 using ModTek.Features.CustomResources;
-using ModTek.Features.EncounterLayers;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
 

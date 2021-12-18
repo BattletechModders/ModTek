@@ -4,9 +4,11 @@
     {
         CustomTag,
         CustomTagSet,
-        Video,
+        DebugSettings,
+        EncounterLayer,
+        GameTip,
         SoundBank,
         SoundBankDef,
-        EncounterLayer
+        Video,
     }
 }

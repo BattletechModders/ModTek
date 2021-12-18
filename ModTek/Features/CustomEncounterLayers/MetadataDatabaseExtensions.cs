@@ -1,7 +1,7 @@
 using System.Linq;
 using BattleTech.Data;
 
-namespace ModTek.Features.EncounterLayers
+namespace ModTek.Features.CustomEncounterLayers
 {
     internal static class MetadataDatabaseExtensions
     {

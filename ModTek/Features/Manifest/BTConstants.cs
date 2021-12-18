@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
-using ModTek.Features.CustomStreamingAssets;
 
 namespace ModTek.Features.Manifest
 {
@@ -12,7 +11,6 @@ namespace ModTek.Features.Manifest
         internal static readonly string[] PREDEFINED_TYPES =
             Enum.GetNames(typeof(BattleTechResourceType))
             .Concat(Enum.GetNames(typeof(InternalCustomResourceType)))
-            .Concat(Enum.GetNames(typeof(CustomStreamingAssetsType)))
             .Concat(Enum.GetNames(typeof(CustomType)))
             .ToArray();
 
@@ -43,11 +41,6 @@ namespace ModTek.Features.Manifest
         }
 
         internal static bool ICResourceType(string Type, out InternalCustomResourceType type)
-        {
-            return Enum.TryParse(Type, out type);
-        }
-
-        internal static bool CSAssetsType(string Type, out CustomStreamingAssetsType type)
         {
             return Enum.TryParse(Type, out type);
         }

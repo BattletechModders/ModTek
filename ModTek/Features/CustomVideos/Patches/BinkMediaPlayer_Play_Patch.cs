@@ -7,7 +7,7 @@ using UnityEngine;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace ModTek.Features.CustomResources.Patches
+namespace ModTek.Features.CustomVideos.Patches
 {
     /// <summary>
     /// Patch Play to allow for videos from mods to be played
@@ -22,7 +22,7 @@ namespace ModTek.Features.CustomResources.Patches
 
         public static bool Prefix(BinkMediaPlayer __instance, string videoName)
         {
-            var videoEntry = CustomResourcesFeature.GetVideo(videoName);
+            var videoEntry = VideosFeature.GetVideo(videoName);
             if (videoEntry == null)
             {
                 return true;

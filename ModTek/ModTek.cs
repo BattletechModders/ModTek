@@ -5,13 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Harmony;
-using ModTek.Features.CustomResources;
-using ModTek.Features.CustomStreamingAssets;
+using ModTek.Features.CustomDebugSettings;
+using ModTek.Features.CustomSoundBankDefs;
 using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Features.SoundBanks;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -193,7 +192,7 @@ namespace ModTek
             yield return new ProgressReport(1, "Finishing Up", "", true);
             Log("Finishing Up");
 
-            CustomStreamingAssetsFeature.LoadDebugSettings();
+            DebugSettingsFeature.LoadDebugSettings();
             ModDefsDatabase.FinishedLoadingMods();
 
             FinishAndCleanup();
