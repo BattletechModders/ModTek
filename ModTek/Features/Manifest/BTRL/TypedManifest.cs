@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
-using BattleTech.Data;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
-using ModTek.Features.CustomResources;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
@@ -18,16 +16,18 @@ namespace ModTek.Features.Manifest.BTRL
     {
         private readonly TypedDict manifest = new TypedDict();
         private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new Dictionary<string, HashSet<BattleTechResourceType>>();
+        private readonly BetterCPI packIndex;
 
         private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
         private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();
 
-        private bool? AllContentPacksOwned;
-        private ContentPackIndex contentPackIndex;
-        public void Reset(IEnumerable<VersionManifestEntry> defaultEntries, ContentPackIndex packIndex)
+        public TypedManifest(BetterCPI packIndex)
         {
-            contentPackIndex = packIndex;
-            AllContentPacksOwned = contentPackIndex?.AreContactPacksOwned(contentPackIndex.GetAllLoadedContentPackIds());
+            this.packIndex = packIndex;
+        }
+
+        public void Reset(IEnumerable<VersionManifestEntry> defaultEntries)
+        {
             manifest.Clear();
             idToTypes.Clear();
             SetEntries(defaultEntries);
@@ -37,8 +37,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable, bool filterByOwnership)
         {
-            if (!filterByOwnership ||
-                AllContentPacksOwned.HasValue && AllContentPacksOwned.Value)
+            if (!filterByOwnership || packIndex.AllContentPacksOwned)
             {
                 return iterable;
             }
@@ -47,7 +46,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable)
         {
-            return iterable.Where(entry => contentPackIndex.IsResourceOwned(entry.Id));
+            return iterable.Where(entry => packIndex.IsResourceOwned(entry.Id));
         }
 
         public void AddAddendum(VersionManifestAddendum addendum)
@@ -94,8 +93,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             if (manifest.TryGetValue(type.ToString(), out var dict) && dict.TryGetValue(id, out var entry))
             {
-                if (!filterByOwnership ||
-                    (contentPackIndex?.IsResourceOwned(entry.Id) ?? true))
+                if (!filterByOwnership || packIndex.IsResourceOwned(entry.Id))
                 {
                     return entry;
                 }

@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;
 using ModTek.Util;
@@ -71,15 +70,19 @@ namespace ModTek
 
         public override string ToString()
         {
-            var extra = $"{Type}";
+            var extra = Type;
 
             if (AddToAddendum != null)
             {
-                extra += $" AddToAddendum={AddToAddendum}";
+                extra += " AddToAddendum=" + AddToAddendum;
             }
             if (AssetBundleName != null)
             {
-                extra += $" AssetBundleName={AssetBundleName}";
+                extra += " AssetBundleName=" + AssetBundleName;
+            }
+            if (RequiredContentPacks != null)
+            {
+                extra += " RequiredContentPacks=[" + string.Join(",", RequiredContentPacks) +"]";
             }
 
             return $"{Id} ({extra}): {RelativePathToMods}";

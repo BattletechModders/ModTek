@@ -34,6 +34,8 @@ namespace ModTek.Features.Manifest
             sw.Restart();
             bundleManager.LoadAllContentPacks();
             LogIfSlow(sw, "LoadAllContentPacks");
+            // lets assume we own everything during merging and indexing
+            BetterBTRL.Instance.PackIndex.AllContentPacksOwned = true;
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -42,7 +44,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            LogIfSlow(sw, "Build Modded Resource Locator");
+            LogIfSlow(sw, "BuildModdedBTRL");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -51,7 +53,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            LogIfSlow(sw, "Merge Cache Build and Cleanup");
+            LogIfSlow(sw, "BuildMergeCache");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -60,8 +62,9 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            LogIfSlow(sw, "MDDB Cache Build and Cleanup");
+            LogIfSlow(sw, "BuildMDDBCache");
 
+            BetterBTRL.Instance.PackIndex.AllContentPacksOwned = false;
             bundleManager.UnloadAll();
 
             BetterBTRL.Instance.RefreshTypedEntries();
@@ -306,6 +309,9 @@ namespace ModTek.Features.Manifest
                     }
                 }
 
+                LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && BetterBTRL.Instance.EntryByID(entry.AssetBundleName, BattleTechResourceType.AssetBundle) == null,
+                    $"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName}, check lower/upper casing.");
+
                 packager.AddEntry(entry);
             }
 
@@ -321,7 +327,8 @@ namespace ModTek.Features.Manifest
 
             if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
             {
-                // TODO check if hooking into ownership check works with custom resources (probably yes if type not relevant)!
+                // IsResourceOwned is only based on the id and not type, CRs might clash if we suddenly enable CP support
+                // also dll mods would need to check IsResourceOwned, which none do, not even ModTek CR processing code does it
                 Log($"\tError: Custom resources don't support RequiredContentPacks. {entry}");
                 return true;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Manifest.BTRL;
@@ -14,16 +15,32 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
+        [HarmonyPriority(Priority.High)]
+        public static void Prefix(ContentPackIndex __instance, Dictionary<string, string> ___resourceMap)
+        {
+            try
+            {
+                BetterBTRL.Instance.PackIndex.TryFinalizeDataLoad(__instance, ___resourceMap);
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
+        }
+
         [HarmonyPriority(Priority.Low)]
         public static void Postfix(ContentPackIndex __instance)
         {
             try
             {
-                BetterBTRL.Instance.TryFinalizeDataLoad(__instance);
+                if (__instance.AllContentPacksLoaded())
+                {
+                    BetterBTRL.Instance.ContentPackManifestsLoaded();
+                }
             }
             catch (Exception e)
             {
-                Log("Error finalizing content pack index loading", e);
+                Log("Error running prefix", e);
             }
         }
     }

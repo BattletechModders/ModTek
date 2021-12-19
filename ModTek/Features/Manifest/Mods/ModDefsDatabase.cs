@@ -16,7 +16,6 @@ namespace ModTek.Features.Manifest.Mods
         internal static readonly Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
 
-        // TODO is this needed?
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             var sliderText = "Gathering dependencies trees";

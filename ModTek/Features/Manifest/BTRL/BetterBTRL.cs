@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.Manifest.MDD;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -14,8 +13,8 @@ namespace ModTek.Features.Manifest.BTRL
     {
         public static readonly BetterBTRL Instance = new BetterBTRL();
 
-        private ContentPackIndex packIndex;
-        private readonly TypedManifest currentManifest = new TypedManifest();
+        internal readonly BetterCPI PackIndex;
+        private readonly TypedManifest currentManifest;
 
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> addendums = new List<VersionManifestAddendum>();
@@ -25,48 +24,9 @@ namespace ModTek.Features.Manifest.BTRL
 
         private bool HasChanges;
 
-        internal void TryFinalizeDataLoad(ContentPackIndex contentPackIndex)
-        {
-            SetContentPackIndex(contentPackIndex);
-            if (contentPackIndex.AllContentPacksLoaded())
-            {
-                ContentPackManifestsLoaded();
-            }
-        }
-
-        private void ContentPackManifestsLoaded()
+        internal void ContentPackManifestsLoaded()
         {
             currentManifest.DumpToDisk();
-
-            var contentPacks = packIndex?.GetOwnedContentPacks();
-            LogIf(contentPacks != null && contentPacks.Count > 0, "Owned content packs: " + contentPacks.AsTextList());
-
-            var modsWithRequirements = orderedModAddendumManifests
-                .Where(x => x.RequiredContentPacks != null && x.RequiredContentPacks.Length > 0)
-                .ToList();
-            LogIf(modsWithRequirements.Count > 0, "Mod addendums requiring content packs:" + modsWithRequirements
-                .Select(x => $"{x.Addendum.Name} requires: {string.Join(",", x.RequiredContentPacks)}")
-                .AsTextList()
-            );
-
-            {
-                // check asset bundle references
-                var assetBundles = currentManifest
-                    .AllEntriesOfResource(BattleTechResourceType.AssetBundle, true)
-                    .Select(x => x.Id)
-                    .ToHashSet();
-
-                foreach (var entry in currentManifest.AllEntries(true))
-                {
-                    if (entry.GetRawPath().StartsWith("Assets/Resources/UnlockedAssets"))
-                    {
-                        continue;
-                    }
-                    LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && !assetBundles.Contains(entry.AssetBundleName),
-                        $"Cannot find asset bundle {entry.AssetBundleName} referenced by {entry.ToShortString()}, check lower/upper casing and dlc requirements.");
-                }
-            }
-
             ModsManifest.ContentPackManifestsLoaded();
         }
 
@@ -129,9 +89,6 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void SetContentPackIndex(ContentPackIndex contentPackIndex)
         {
-            packIndex = contentPackIndex;
-            HasChanges = true;
-            RefreshTypedEntries();
         }
 
         public void ApplyAddendum(VersionManifestAddendum addendum)
@@ -289,6 +246,9 @@ namespace ModTek.Features.Manifest.BTRL
 
         private BetterBTRL()
         {
+            PackIndex = new BetterCPI();
+            currentManifest = new TypedManifest(PackIndex);
+
             defaultManifest = VersionManifestUtilities.ManifestFromCSV(VersionManifestUtilities.MANIFEST_FILEPATH);
 
             // move auto-detected addendums from inside the default manifest to BetterBTRL
@@ -309,7 +269,6 @@ namespace ModTek.Features.Manifest.BTRL
                 var addendum = VersionManifestUtilities.AddendumFromCSV(entry.FilePath);
                 ApplyAddendum(addendum);
             }
-            SetContentPackIndex(UnityGameInstance.BattleTechGame?.DataManager?.ContentPackIndex);
         }
 
         private Stopwatch sw = new Stopwatch();
@@ -321,26 +280,22 @@ namespace ModTek.Features.Manifest.BTRL
             }
 
             sw.Start();
-            currentManifest.Reset(defaultManifest.Entries, packIndex);
-            var ownedContentPacks = packIndex?.GetOwnedContentPacks() ?? new List<string>();
+            currentManifest.Reset(defaultManifest.Entries);
 
             foreach (var addendum in addendums)
             {
                 currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
 
+            PackIndex.ClearTrackedModAddendumManifests();
             foreach (var modAddendum in orderedModAddendumManifests)
             {
-                if (modAddendum.RequiredContentPacks != null && modAddendum.RequiredContentPacks.Except(ownedContentPacks).Any())
-                {
-                    continue;
-                }
-
+                PackIndex.TrackModAddendumManifest(modAddendum);
                 currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum));
             }
 
+            // add merge cache, make sure to only overwrite resources already in the locator
             {
-                // merge cache could include not yet loaded DLC
                 var addendum = new VersionManifestAddendum(mergeAddendum.Name);
                 foreach (var entry in mergeAddendum.Entries)
                 {
@@ -367,7 +322,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         public VersionManifestEntry[] AllEntriesOfResourceFromAddendum(BattleTechResourceType type, VersionManifestAddendum addendum, bool filterByOwnership = false)
         {
-            return addendum.Entries.Where(x => x.Type == type.ToString() && (!filterByOwnership || packIndex.IsResourceOwned(x.Id))).ToArray();
+            return addendum.Entries.Where(x => x.Type == type.ToString() && (!filterByOwnership || PackIndex.IsResourceOwned(x.Id))).ToArray();
         }
 
         public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership = false)
