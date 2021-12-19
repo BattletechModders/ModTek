@@ -9,7 +9,6 @@ namespace ModTek.Misc
     internal static class FilePaths
     {
         internal const string MOD_JSON_NAME = "mod.json";
-        internal static string ModdedContentPackDirectoryName { get; set; } = "ContentPackAssets";
 
         internal const string MODS_DIRECTORY_NAME = "Mods";
         internal const string MODTEK_DIRECTORY_NAME = "ModTek";

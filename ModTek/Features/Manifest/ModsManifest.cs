@@ -111,16 +111,6 @@ namespace ModTek.Features.Manifest
                     ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
                 });
             }
-
-            if (Directory.Exists(modDef.GetFullPath(FilePaths.ModdedContentPackDirectoryName)))
-            {
-                modDef.Manifest.Add(new ModEntry
-                {
-                    Path = FilePaths.ModdedContentPackDirectoryName,
-                    ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
-                    ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
-                });
-            }
         }
 
         private static void NormalizeAndExpandAndAddModEntries(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
@@ -145,19 +135,12 @@ namespace ModTek.Features.Manifest
             }
             else if (entry.IsDirectory)
             {
-                if (entry.IsModdedContentPackBasePath)
+                var patterns = entry.Type == nameof(SoundBankDef) ? new []{FileUtils.JSON_TYPE} : null;
+                foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                 {
-                    ExpandModdedContentPack(modDef, entry, packager);
-                }
-                else
-                {
-                    var patterns = entry.Type == nameof(SoundBankDef) ? new []{FileUtils.JSON_TYPE} : null;
-                    foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
-                    {
-                        var copy = entry.copy();
-                        copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                        NormalizeAndExpandAndAddModEntries(modDef, copy, packager); // could lead to adv json merges that again expand
-                    }
+                    var copy = entry.copy();
+                    copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
+                    NormalizeAndExpandAndAddModEntries(modDef, copy, packager); // could lead to adv json merges that again expand
                 }
             }
             else
@@ -197,41 +180,6 @@ namespace ModTek.Features.Manifest
                 copy.Type = advMerge.TargetType;
                 copy.ShouldMergeJSON = true;
                 AddModEntry(copy, packager);
-            }
-        }
-
-        private static void ExpandModdedContentPack(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
-        {
-            foreach (var packPath in Directory.GetDirectories(entry.AbsolutePath))
-            {
-                var contentPackName = Path.GetFileName(packPath);
-                if (!bundleManager.HasContentPack(contentPackName))
-                {
-                    Log($"Unknown content pack {contentPackName} in {entry.AbsolutePath}");
-                    continue;
-                }
-
-                foreach (var typesPath in Directory.GetDirectories(packPath))
-                {
-                    var typeName = Path.GetFileName(typesPath);
-                    if (!BTConstants.BTResourceType(typeName, out _))
-                    {
-                        Log($"Unknown resource type {typeName} in {packPath}");
-                        continue;
-                    }
-
-                    foreach (var file in FileUtils.FindFiles(typesPath))
-                    {
-                        var copy = entry.copy();
-                        copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                        copy.Type = typeName;
-                        copy.RequiredContentPacks = new[]
-                        {
-                            contentPackName
-                        };
-                        AddModEntry(copy, packager);
-                    }
-                }
             }
         }
 

@@ -18,8 +18,6 @@ namespace ModTek
         [JsonProperty(Required = Required.Always)]
         public string Path { get; set; }
 
-        public bool IsModdedContentPackBasePath => Path.Equals(FilePaths.ModdedContentPackDirectoryName);
-
         // directory based methods, used during normalization
         public bool IsDirectory => Directory.Exists(AbsolutePath);
 
