@@ -8,7 +8,6 @@ using HBS;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
-using ModTek.Features.CustomResources;
 using ModTek.Features.CustomSVGAssets;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
@@ -308,9 +307,6 @@ namespace ModTek.Features.Manifest
                         Log($"\t\tAddToDB=false");
                     }
                 }
-
-                LogIf(!string.IsNullOrEmpty(entry.AssetBundleName) && BetterBTRL.Instance.EntryByID(entry.AssetBundleName, BattleTechResourceType.AssetBundle) == null,
-                    $"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName}, check lower/upper casing.");
 
                 packager.AddEntry(entry);
             }

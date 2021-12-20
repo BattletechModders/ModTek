@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.Manifest.MDD;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -27,6 +28,17 @@ namespace ModTek.Features.Manifest.BTRL
         internal void ContentPackManifestsLoaded()
         {
             currentManifest.DumpToDisk();
+
+            foreach (var entry in currentManifest.AllEntries(true))
+            {
+                if (!string.IsNullOrEmpty(entry.AssetBundleName)
+                    && EntryByID(entry.AssetBundleName, BattleTechResourceType.AssetBundle) == null
+                    && !entry.GetRawPath().StartsWith("Assets/Resources/UnlockedAssets"))
+                {
+                    Log($"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName} by {entry.ToShortString()}.");
+                }
+            }
+
             ModsManifest.ContentPackManifestsLoaded();
         }
 
