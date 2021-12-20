@@ -256,6 +256,8 @@ namespace ModTek.Features.Manifest
             if (entry.ShouldMergeJSON && entry.IsJson)
             {
                 LogModEntryAction("Merge", entry);
+                UnsupportedFeatureAddToDb(entry);
+                UnsupportedFeatureContentPackRequirements(entry);
                 mergeCache.AddModEntry(entry);
                 return true;
             }
@@ -263,6 +265,8 @@ namespace ModTek.Features.Manifest
             if (entry.ShouldAppendText && (entry.IsTxt || entry.IsCsv))
             {
                 LogModEntryAction("Append", entry);
+                UnsupportedFeatureAddToDb(entry);
+                UnsupportedFeatureContentPackRequirements(entry);
                 mergeCache.AddModEntry(entry);
                 return true;
             }
@@ -293,22 +297,16 @@ namespace ModTek.Features.Manifest
                 if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
                 {
                     LogModEntryAction("Replace", entry);
-                    if (!entry.AddToDB)
-                    {
-                        Log($"\t\tAddToDB=false ignored due to replacement");
-                    }
+                    UnsupportedFeatureAddToDb(entry);
+                    UnsupportedFeatureContentPackRequirements(entry);
+                    packager.AddEntry(entry);
                 }
                 else
                 {
                     LogModEntryAction("Add", entry);
-                    if (!entry.AddToDB)
-                    {
-                        mddbCache.AddToNotIndexable(entry);
-                        Log($"\t\tAddToDB=false");
-                    }
+                    AddToDbIfApplicable(entry);
+                    packager.AddEntry(entry);
                 }
-
-                packager.AddEntry(entry);
             }
 
             return true;
@@ -321,39 +319,52 @@ namespace ModTek.Features.Manifest
                 return false;
             }
 
-            if (entry.RequiredContentPacks != null && entry.RequiredContentPacks.Length > 0)
-            {
-                // IsResourceOwned is only based on the id and not type, CRs might clash if we suddenly enable CP support
-                // also dll mods would need to check IsResourceOwned, which none do, not even ModTek CR processing code does it
-                Log($"\tError: Custom resources don't support RequiredContentPacks. {entry}");
-                return true;
-            }
-
             if (BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type) != null)
             {
                 LogModEntryAction("Replace", entry);
-                if (!entry.AddToDB)
-                {
-                    Log($"\t\tAddToDB=false ignored due to replacement");
-                }
+                UnsupportedFeatureAddToDb(entry);
+                UnsupportedFeatureContentPackRequirements(entry);
+                packager.AddEntry(entry);
             }
             else
             {
                 LogModEntryAction("Add", entry);
-                if (!entry.AddToDB)
-                {
-                    Log($"\t\tAddToDB=false");
-                    mddbCache.AddToNotIndexable(entry);
-                }
+                AddToDbIfApplicable(entry);
+                UnsupportedFeatureContentPackRequirements(entry);
+                packager.AddEntry(entry);
             }
-
-            packager.AddEntry(entry);
             return true;
         }
 
         private static void LogModEntryAction(string action, ModEntry entry)
         {
             Log($"\t{action}: {entry}");
+        }
+
+        private static void AddToDbIfApplicable(ModEntry entry)
+        {
+            if (!entry.AddToDB)
+            {
+                mddbCache.AddToNotIndexable(entry);
+                Log($"\t\tNot indexing to MDDB.");
+            }
+        }
+
+        private static void UnsupportedFeatureContentPackRequirements(ModEntry entry)
+        {
+            if (entry.RequiredContentPacks != null)
+            {
+                Log($"\t\tWarning: Specified {nameof(entry.RequiredContentPacks)} is being ignored.");
+                entry.RequiredContentPacks = null;
+            }
+        }
+
+        private static void UnsupportedFeatureAddToDb(ModEntry entry)
+        {
+            if (!entry.AddToDB)
+            {
+                Log($"\t\tWarning: {nameof(entry.AddToDB)}={entry.AddToDB} is being ignored");
+            }
         }
 
         internal static string GetJson(VersionManifestEntry entry)
