@@ -45,7 +45,7 @@ namespace ModTek.Features.Manifest.BTRL
                 {
                     if (requiredContentPack != manifest.RequiredContentPack)
                     {
-                        Log($"Warning: Detected multiple entries with same resource id but different {nameof(ModEntry.RequiredContentPack)}. This is not allowed for entries that are indexed to MDDB.");
+                        Log($"Warning: Detected multiple entries with same resource id ({entry.Id}) but different {nameof(ModEntry.RequiredContentPack)} ({requiredContentPack} vs {manifest.RequiredContentPack}).");
                     }
                     continue;
                 }
