@@ -22,7 +22,7 @@ Visit [design-data](https://github.com/caardappel-hbs/bt-dlc-designdata) to find
 
 ## Additional content
 
-To add new resources to the game if a DLC loaded, one can use the `RequiredContentPacks` field in a manifest entry.
+To add new resources to the game if a DLC loaded, one can use the `RequiredContentPack` field in a manifest entry.
 
 Example:
 ```json
@@ -30,7 +30,7 @@ Example:
     "Name": "MyModForHeavyMetal",
     "Enabled": true,
     "Manifest": [
-        { "Type": "MechDef", "Path": "MyMechDefs", "RequiredContentPacks": ["heavymetal"] }
+        { "Type": "MechDef", "Path": "MyMechDefs", "RequiredContentPack": "heavymetal" }
     ]
 }
 ```
@@ -43,9 +43,9 @@ Possible content pack names:
 - urbanwarfare
 - heavymetal
 
-Note that `RequiredContentPacks` is only supported for newly added resources.
-Merging, appending or replacing resources won't allow to change `RequiredContentPacks` of existing resources.
-Custom resources do not support `RequiredContentPacks`.
+Note that `RequiredContentPack` is only supported for newly added resources.
+Merging, appending or replacing resources won't allow to change `RequiredContentPack` of existing resources.
+Custom resources do not support `RequiredContentPack`.
 
 ## Implementional details for DLL modders
 

@@ -10,7 +10,8 @@ namespace ModTek.Features.Manifest.BTRL
     {
         private List<string> OwnedContentPacks = new List<string>();
         private Dictionary<string, string> BaseResourceMap = new Dictionary<string, string>();
-        private Dictionary<string, string[]> ModdedResourceMap = new Dictionary<string, string[]>();
+        private readonly Dictionary<string, string> ModResourceMap = new Dictionary<string, string>();
+        private readonly List<ModAddendumManifest> ModManifests = new List<ModAddendumManifest>();
         internal bool AllContentPacksOwned; // used to speed up checks and helps during merging/indexing
 
         // called on ownership changes
@@ -28,22 +29,27 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void ClearTrackedModAddendumManifests()
         {
-            ModdedResourceMap.Clear();
+            ModResourceMap.Clear();
+            ModManifests.Clear();
         }
         internal void TrackModAddendumManifest(ModAddendumManifest manifest)
         {
-            if (manifest.RequiredContentPacks == null || manifest.RequiredContentPacks.Length == 0)
+            if (string.IsNullOrEmpty(manifest.RequiredContentPack))
             {
                 return;
             }
+            ModManifests.Add(manifest);
             foreach (var entry in manifest.Addendum.Entries)
             {
-                // The first mod adding the resource is the one specifying the required content packs
-                if (ModdedResourceMap.ContainsKey(entry.Id))
+                if (ModResourceMap.TryGetValue(entry.Id, out var requiredContentPack))
                 {
+                    if (requiredContentPack != manifest.RequiredContentPack)
+                    {
+                        Log($"Warning: Detected multiple entries with same resource id but different {nameof(ModEntry.RequiredContentPack)}. This is not allowed for entries that are indexed to MDDB.");
+                    }
                     continue;
                 }
-                ModdedResourceMap[entry.Id] = manifest.RequiredContentPacks;
+                ModResourceMap[entry.Id] = manifest.RequiredContentPack;
             }
         }
 
@@ -60,23 +66,43 @@ namespace ModTek.Features.Manifest.BTRL
             }
 
             // make sure vanilla checks have precedence
-            if (BaseResourceMap.TryGetValue(resourceId, out var contentPackName))
+            if (BaseResourceMap.TryGetValue(resourceId, out var brmContentPackName))
             {
-                if (!OwnedContentPacks.Contains(contentPackName))
+                if (!OwnedContentPacks.Contains(brmContentPackName))
                 {
                     return false;
                 }
             }
-            else if (ModdedResourceMap.TryGetValue(resourceId, out var contentPackNames))
+            else if (ModResourceMap.TryGetValue(resourceId, out var mrmContentPackName))
             {
-                var anyMissingContentPacks = contentPackNames.Except(OwnedContentPacks).Any();
-                if (anyMissingContentPacks)
+                if (!OwnedContentPacks.Contains(mrmContentPackName))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        internal void PatchMDD(ContentPackIndex packIndex)
+        {
+            Log("Patching MDDB for content pack items added by mods.");
+            var loadedContentPacks = packIndex.GetAllLoadedContentPackIds();
+            foreach (var manifest in ModManifests)
+            {
+                if (!loadedContentPacks.Contains(manifest.RequiredContentPack))
+                {
+                    continue;
+                }
+                foreach (var entry in manifest.Addendum.Entries)
+                {
+                    if (!BTConstants.MDDBTypes.Contains(entry.Type))
+                    {
+                        continue;
+                    }
+                    MetadataDatabase.Instance.UpdateContentPackItem(entry.Type, entry.Id, manifest.RequiredContentPack);
+                }
+            }
         }
     }
 }

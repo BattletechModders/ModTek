@@ -44,7 +44,7 @@ namespace ModTek
         public string Id { get; set; }
 
         public string AddToAddendum { get; set; }
-        public string[] RequiredContentPacks { get; set; }
+        public string RequiredContentPack { get; set; }
         public string AssetBundleName { get; set; }
         public bool? AssetBundlePersistent { get; set; }
 
@@ -74,15 +74,15 @@ namespace ModTek
 
             if (AddToAddendum != null)
             {
-                extra += " AddToAddendum=" + AddToAddendum;
+                extra += " " + nameof(AddToAddendum) + "=" + AddToAddendum;
             }
             if (AssetBundleName != null)
             {
-                extra += " AssetBundleName=" + AssetBundleName;
+                extra += " " + nameof(AssetBundleName) + "=" + AssetBundleName;
             }
-            if (RequiredContentPacks != null)
+            if (RequiredContentPack != null)
             {
-                extra += " RequiredContentPacks=[" + string.Join(",", RequiredContentPacks) +"]";
+                extra += " " + nameof(RequiredContentPack) + "=" + RequiredContentPack;
             }
 
             return $"{Id} ({extra}): {RelativePathToMods}";

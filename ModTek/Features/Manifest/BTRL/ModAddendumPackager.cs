@@ -17,10 +17,10 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void AddEntry(ModEntry entry)
         {
-            if (manifest == null || manifest.RequiredContentPacks != entry.RequiredContentPacks)
+            if (manifest == null || manifest.RequiredContentPack != entry.RequiredContentPack)
             {
                 var addendumName = "Mod_" + ModName + (Index > 0 ? Index.ToString() : "");
-                manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredContentPacks);
+                manifest = new ModAddendumManifest(new VersionManifestAddendum(addendumName), entry.RequiredContentPack);
                 addendums.Add(manifest);
                 Index++;
             }

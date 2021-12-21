@@ -5,12 +5,12 @@ namespace ModTek.Features.Manifest.BTRL
     internal class ModAddendumManifest
     {
         internal readonly VersionManifestAddendum Addendum;
-        internal readonly string[] RequiredContentPacks;
+        internal readonly string RequiredContentPack;
 
-        public ModAddendumManifest(VersionManifestAddendum addendum, string[] requiredContentPacks)
+        public ModAddendumManifest(VersionManifestAddendum addendum, string requiredContentPack)
         {
             Addendum = addendum;
-            RequiredContentPacks = requiredContentPacks;
+            RequiredContentPack = requiredContentPack;
         }
     }
 }

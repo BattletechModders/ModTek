@@ -352,10 +352,10 @@ namespace ModTek.Features.Manifest
 
         private static void UnsupportedFeatureContentPackRequirements(ModEntry entry)
         {
-            if (entry.RequiredContentPacks != null)
+            if (entry.RequiredContentPack != null)
             {
-                Log($"\t\tWarning: Specified {nameof(entry.RequiredContentPacks)} is being ignored.");
-                entry.RequiredContentPacks = null;
+                Log($"\t\tWarning: Specified {nameof(entry.RequiredContentPack)} is being ignored.");
+                entry.RequiredContentPack = null;
             }
         }
 
