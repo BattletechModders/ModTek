@@ -161,7 +161,7 @@ namespace ModTek
             LoadUsingProgressPanel();
         }
 
-        private static void PatchAll(HarmonyInstance instance, Assembly assembly) => assembly.GetTypes().Do(type =>
+        private static void PatchAll(HarmonyInstance instance, Assembly assembly) => AssemblyUtil.GetTypesSafe(assembly).Do(type =>
         {
             try
             {

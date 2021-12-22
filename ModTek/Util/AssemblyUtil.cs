@@ -42,7 +42,7 @@ namespace ModTek.Util
                 var types = new List<Type>();
                 if (typeName == null)
                 {
-                    types.AddRange(assembly.GetTypes().Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
+                    types.AddRange(GetTypesSafe(assembly).Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
                 }
                 else
                 {
@@ -137,6 +137,26 @@ namespace ModTek.Util
             Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}({parametersString})' using parameter type");
             method.Invoke(null, parameters);
             return true;
+        }
+
+        internal static IEnumerable<Type> GetTypesSafe(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                foreach (var le in e.LoaderExceptions)
+                {
+                    if (le == null)
+                    {
+                        continue;
+                    }
+                    Log($"\tError: Couldn't get all Types from {assembly.GetName()}", le);
+                }
+                return e.Types.Where(x => x != null);
+            }
         }
     }
 }
