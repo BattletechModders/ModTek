@@ -51,6 +51,16 @@ namespace ModTek.Util
 
         internal static void PrintHarmonySummary()
         {
+            try
+            {
+                Profiler_Patching.Patch();
+            }
+            catch (Exception)
+            {
+                Log($"Applying patch {nameof(Profiler_Patching)} failed");
+                throw;
+            }
+
             var harmony = CreateInstance();
 
             var path = FilePaths.HarmonySummaryPath;

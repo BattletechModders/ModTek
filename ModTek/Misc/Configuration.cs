@@ -42,6 +42,11 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
+        internal bool ProfileGameUpdate;
+        [JsonProperty]
+        internal readonly string ProfileGameUpdate_Description = $"Adds stopwatches to all methods called Update or LateUpdate in the base game.";
+
+        [JsonProperty]
         internal float DataManagerUnfreezeDelta = 2f;
         [JsonProperty]
         internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
