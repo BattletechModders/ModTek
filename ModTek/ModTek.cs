@@ -2,12 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using Harmony;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
-using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
@@ -138,10 +134,7 @@ namespace ModTek
 
             try
             {
-                var instance = HarmonyInstance.Create("io.github.mpstark.ModTek");
-                PatchAll(instance, Assembly.GetExecutingAssembly());
-                //BattleTechResourceLoader.Refresh();
-                SVGAssetLoadRequest_Load.Patch(instance);
+                HarmonyUtils.PatchAll();
             }
             catch (Exception e)
             {
@@ -160,23 +153,6 @@ namespace ModTek
 
             LoadUsingProgressPanel();
         }
-
-        private static void PatchAll(HarmonyInstance instance, Assembly assembly) => AssemblyUtil.GetTypesSafe(assembly).Do(type =>
-        {
-            try
-            {
-                var harmonyMethods = type.GetHarmonyMethods();
-                if (harmonyMethods == null || !harmonyMethods.Any())
-                    return;
-                var attributes = HarmonyMethod.Merge(harmonyMethods);
-                new PatchProcessor(instance, type, attributes).Patch();
-            }
-            catch (Exception)
-            {
-                Log($"Applying patch {type} failed");
-                throw;
-            }
-        });
 
         private static void LoadUsingProgressPanel()
         {

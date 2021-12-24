@@ -303,7 +303,7 @@ namespace ModTek.Features.Manifest.Mods
                     ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
                 }
             }
-            HarmonyUtils.PrintHarmonySummary(FilePaths.HarmonySummaryPath);
+            HarmonyUtils.PrintHarmonySummary();
             LoadOrder.ToFile(ModLoadOrder, FilePaths.LoadOrderPath);
         }
     }

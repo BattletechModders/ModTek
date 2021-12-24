@@ -1,27 +1,65 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Harmony;
+using ModTek.Features.CustomSVGAssets.Patches;
+using ModTek.Misc;
+using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Util
 {
     internal static class HarmonyUtils
     {
-        internal static void PrintHarmonySummary(string path)
-        {
-            var harmony = HarmonyInstance.Create("io.github.mpstark.ModTek");
+        private static HarmonyInstance CreateInstance() => HarmonyInstance.Create("io.github.mpstark.ModTek");
 
-            var patchedMethods = harmony.GetPatchedMethods().ToArray();
-            if (patchedMethods.Length == 0)
+        internal static void PatchAll()
+        {
+            Log("Applying ModTek harmony patches");
+
+            var harmony = CreateInstance();
+
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
             {
-                return;
+                try
+                {
+                    var harmonyMethods = type.GetHarmonyMethods();
+                    if (harmonyMethods == null || !harmonyMethods.Any())
+                    {
+                        continue;
+                    }
+                    var attributes = HarmonyMethod.Merge(harmonyMethods);
+                    new PatchProcessor(harmony, type, attributes).Patch();
+                }
+                catch
+                {
+                    Log($"ERROR: Applying patch {type} failed");
+                    throw;
+                }
             }
 
+            try
+            {
+                SVGAssetLoadRequest_Load.Patch(harmony);
+            }
+            catch
+            {
+                Log($"ERROR: Applying patch {nameof(SVGAssetLoadRequest_Load)} failed");
+                throw;
+            }
+        }
+
+        internal static void PrintHarmonySummary()
+        {
+            var harmony = CreateInstance();
+
+            var path = FilePaths.HarmonySummaryPath;
+            Log($"Writing Harmony Summary to {path}");
             using (var writer = File.CreateText(path))
             {
                 writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
 
-                foreach (var method in patchedMethods)
+                foreach (var method in harmony.GetPatchedMethods())
                 {
                     var info = harmony.GetPatchInfo(method);
 
