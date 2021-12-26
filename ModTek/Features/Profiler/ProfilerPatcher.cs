@@ -100,19 +100,19 @@ namespace ModTek.Features.Profiler
                     ReturnType = typeof(void),
                     SubClassOf = typeof(MonoBehaviour),
                 },
-                new MethodMatchFilter
-                {
-                    Name = "Start",
-                    ParameterTypes = Type.EmptyTypes,
-                    SubClassOf = typeof(MonoBehaviour),
-                },
-                new MethodMatchFilter
-                {
-                    Name = "Awake",
-                    ParameterTypes = Type.EmptyTypes,
-                    ReturnType = typeof(void),
-                    SubClassOf = typeof(MonoBehaviour),
-                },
+                // new MethodMatchFilter
+                // {
+                //     Name = "Start",
+                //     ParameterTypes = Type.EmptyTypes,
+                //     SubClassOf = typeof(MonoBehaviour),
+                // },
+                // new MethodMatchFilter
+                // {
+                //     Name = "Awake",
+                //     ParameterTypes = Type.EmptyTypes,
+                //     ReturnType = typeof(void),
+                //     SubClassOf = typeof(MonoBehaviour),
+                // },
             });
             return FindMethodsInAssembly(assembly, matcher);
         }

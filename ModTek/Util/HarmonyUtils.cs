@@ -70,8 +70,8 @@ namespace ModTek.Util
             using (var writer = File.CreateText(path))
             {
                 writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}");
-                writer.WriteLine("Format as follows:");
                 writer.WriteLine();
+                writer.WriteLine("Format as follows:");
                 writer.WriteLine("{assembly name of patched method}");
                 writer.WriteLine("{name of patched method}");
                 writer.WriteLine("\t{Harmony patch type}");

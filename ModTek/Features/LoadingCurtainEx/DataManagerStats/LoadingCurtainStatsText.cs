@@ -1,9 +1,9 @@
-﻿using BattleTech.UI;
+﻿using System.Diagnostics;
+using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 {
@@ -14,8 +14,26 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             SetText(loadingCurtain, "");
         }
 
+        private static readonly Stopwatch sw;
+        static LoadingCurtainStatsText()
+        {
+            sw = new Stopwatch();
+            sw.Start();
+        }
+
         internal static void LateUpdate(LoadingCurtain loadingCurtain)
         {
+            if (!LoadingCurtain.IsVisible)
+            {
+                return;
+            }
+
+            if (sw.ElapsedMilliseconds < ModTek.Config.DataManagerUnfreezeDelta)
+            {
+                return;
+            }
+            sw.Restart();
+
             DataManagerStats.GetStats(out var stats);
             if (stats != null)
             {
