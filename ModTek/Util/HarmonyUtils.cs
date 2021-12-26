@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Harmony;
 using ModTek.Features.CustomSVGAssets.Patches;
+using ModTek.Features.Profiler;
 using ModTek.Misc;
 using static ModTek.Features.Logging.MTLogger;
 
@@ -53,11 +55,11 @@ namespace ModTek.Util
         {
             try
             {
-                Profiler_Patching.Patch();
+                ProfilerPatcher.Patch();
             }
             catch (Exception)
             {
-                Log($"Applying patch {nameof(Profiler_Patching)} failed");
+                Log($"Applying patch {nameof(ProfilerPatcher)} failed");
                 throw;
             }
 
@@ -67,53 +69,55 @@ namespace ModTek.Util
             Log($"Writing Harmony Summary to {path}");
             using (var writer = File.CreateText(path))
             {
-                writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}\n");
+                writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}");
+                writer.WriteLine("Format as follows:");
+                writer.WriteLine();
+                writer.WriteLine("{assembly name of patched method}");
+                writer.WriteLine("{name of patched method}");
+                writer.WriteLine("\t{Harmony patch type}");
+                writer.WriteLine("\t\t{assembly name of patch} ({Harmony id of patch}) {method name of patch}");
+                writer.WriteLine();
+                writer.WriteLine();
 
-                foreach (var method in harmony.GetPatchedMethods())
+                var methodsIter = harmony
+                    .GetPatchedMethods()
+                    .Where(m => m.DeclaringType != null)
+                    // order based on output
+                    .OrderBy(m => m.DeclaringType.Assembly.GetName().Name)
+                    .ThenBy(m => m.DeclaringType.FullName)
+                    .ThenBy(m => m.Name);
+
+                foreach (var method in methodsIter)
                 {
                     var info = harmony.GetPatchInfo(method);
 
-                    if (info == null || method.ReflectedType == null)
+                    if (info == null)
                     {
                         continue;
                     }
 
-                    writer.WriteLine($"{method.ReflectedType.FullName}.{method.Name}:");
+                    writer.WriteLine(AssemblyUtil.GetAssemblyNameFromMemberInfo(method));
+                    writer.WriteLine(AssemblyUtil.GetMethodFullName(method) + ":");
 
-                    // prefixes
-                    if (info.Prefixes.Count != 0)
+                    void WritePatches(string title, IList<Patch> patches)
                     {
-                        writer.WriteLine("\tPrefixes:");
+                        if (patches.Count != 0)
+                        {
+                            writer.WriteLine($"\t{title}:");
+                        }
+                        foreach (var patch in patches.OrderBy(x => x))
+                        {
+                            var assemblyName = AssemblyUtil.GetAssemblyNameFromMemberInfo(patch.patch);
+                            var methodName = AssemblyUtil.GetMethodFullName(patch.patch);
+                            writer.WriteLine($"\t\t{assemblyName} ({patch.owner}) {methodName}");
+                        }
                     }
 
-                    foreach (var patch in info.Prefixes)
-                    {
-                        writer.WriteLine($"\t\t{patch.owner}");
-                    }
+                    WritePatches("Prefixes", info.Prefixes);
+                    WritePatches("Transpilers", info.Transpilers);
+                    WritePatches("Postfixes", info.Postfixes);
 
-                    // transpilers
-                    if (info.Transpilers.Count != 0)
-                    {
-                        writer.WriteLine("\tTranspilers:");
-                    }
-
-                    foreach (var patch in info.Transpilers)
-                    {
-                        writer.WriteLine($"\t\t{patch.owner}");
-                    }
-
-                    // postfixes
-                    if (info.Postfixes.Count != 0)
-                    {
-                        writer.WriteLine("\tPostfixes:");
-                    }
-
-                    foreach (var patch in info.Postfixes)
-                    {
-                        writer.WriteLine($"\t\t{patch.owner}");
-                    }
-
-                    writer.WriteLine("");
+                    writer.WriteLine();
                 }
             }
         }

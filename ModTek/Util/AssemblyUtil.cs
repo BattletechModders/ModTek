@@ -77,7 +77,7 @@ namespace ModTek.Util
 
             if (methodParameters.Length == 0)
             {
-                Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}()' using parameter dictionary");
+                Log($"\tInvoking '{GetMethodFullName(method)}()' using parameter dictionary");
                 method.Invoke(null, null);
                 return true;
             }
@@ -96,7 +96,7 @@ namespace ModTek.Util
             }
 
             var parametersString = string.Join(", ", parametersStrings.ToArray());
-            Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}({parametersString})' using parameter dictionary");
+            Log($"\tInvoking '{GetMethodFullName(method)}({parametersString})' using parameter dictionary");
             method.Invoke(null, parameterList.ToArray());
             return true;
         }
@@ -112,7 +112,7 @@ namespace ModTek.Util
                     return false;
                 }
 
-                Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}()' using parameter type");
+                Log($"\tInvoking '{GetMethodFullName(method)}()' using parameter type");
                 method.Invoke(null, null);
                 return true;
             }
@@ -134,7 +134,7 @@ namespace ModTek.Util
             }
 
             var parametersString = string.Join(", ", parametersStrings.ToArray());
-            Log($"\tInvoking '{method.DeclaringType?.Name}.{method.Name}({parametersString})' using parameter type");
+            Log($"\tInvoking '{GetMethodFullName(method)}({parametersString})' using parameter type");
             method.Invoke(null, parameters);
             return true;
         }
@@ -157,6 +157,16 @@ namespace ModTek.Util
                 }
                 return e.Types.Where(x => x != null);
             }
+        }
+
+        internal static string GetAssemblyNameFromMemberInfo(MemberInfo Method)
+        {
+            return Method.DeclaringType?.Assembly.GetName().Name;
+        }
+
+        internal static string GetMethodFullName(MemberInfo Method)
+        {
+            return Method.DeclaringType?.FullName + "." + Method.Name;
         }
     }
 }
