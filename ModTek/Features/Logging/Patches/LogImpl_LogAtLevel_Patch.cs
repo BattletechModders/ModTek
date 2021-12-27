@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using Harmony;
 using HBS.Logging;
 using static ModTek.Features.Logging.MTLogger;
@@ -12,7 +14,6 @@ namespace ModTek.Features.Logging.Patches
         public static bool Prepare()
         {
             return ModTek.Enabled;
-
         }
 
         public static MethodInfo TargetMethod()
@@ -27,6 +28,23 @@ namespace ModTek.Features.Logging.Patches
                 typeof(IStackTrace)
             });
             return original;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var m = AccessTools.Field(typeof(Logger), nameof(Logger.IsUnityApplication));
+            var count = 0;
+            foreach (var i in instructions)
+            {
+                // replace second bool HBS.Logging.Logger::IsUnityApplication call
+                // avoids logging twice
+                if (i.opcode == OpCodes.Ldsfld && m.Equals(i.operand) && count++ == 1)
+                {
+                    i.opcode = OpCodes.Ldc_I4_0;
+                    i.operand = null;
+                }
+                yield return i;
+            }
         }
 
         [HarmonyPriority(Priority.High)]
