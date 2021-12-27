@@ -15,6 +15,11 @@ namespace ModTek.Features.Profiler
 
         internal static void Patch()
         {
+            if (!ModTek.Config.Profiling.Enabled)
+            {
+                return;
+            }
+
             harmony = HarmonyInstance.Create("ModTek.Profiler");
             new PatchProcessor(harmony, typeof(ProfilerPatcher), null).Patch();
             harmony = null;
@@ -22,7 +27,7 @@ namespace ModTek.Features.Profiler
 
         internal static bool Prepare()
         {
-            return ModTek.Enabled && ModTek.Config.ProfileGameUpdate;
+            return ModTek.Enabled && ModTek.Config.Profiling.Enabled;
         }
 
         internal static IEnumerable<MethodBase> TargetMethods()
@@ -57,95 +62,34 @@ namespace ModTek.Features.Profiler
             }
         }
 
-        // TODO config
         private static IEnumerable<MethodBase> MethodsToProfile()
         {
-            foreach (var p in BattleTechMethodsToProfile())
-            {
-                yield return p;
-            }
-
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (var p in UnityMethodsToProfile(a))
+                foreach (var p in FindMatchingMethodInAssembly(a))
                 {
                     yield return p;
                 }
             }
         }
 
-        // TODO config
-        private static IEnumerable<MethodBase> UnityMethodsToProfile(Assembly assembly)
+        private static IEnumerable<MethodBase> FindMatchingMethodInAssembly(Assembly assembly)
         {
-            var matcher = new MethodMatcher(new[]
-            {
-                new MethodMatchFilter
-                {
-                    Name = "FixedUpdate",
-                    ParameterTypes = Type.EmptyTypes,
-                    ReturnType = typeof(void),
-                    SubClassOf = typeof(MonoBehaviour),
-                },
-                new MethodMatchFilter
-                {
-                    Name = "Update",
-                    ParameterTypes = Type.EmptyTypes,
-                    ReturnType = typeof(void),
-                    SubClassOf = typeof(MonoBehaviour),
-                },
-                new MethodMatchFilter
-                {
-                    Name = "LateUpdate",
-                    ParameterTypes = Type.EmptyTypes,
-                    ReturnType = typeof(void),
-                    SubClassOf = typeof(MonoBehaviour),
-                },
-                // new MethodMatchFilter
-                // {
-                //     Name = "Start",
-                //     ParameterTypes = Type.EmptyTypes,
-                //     SubClassOf = typeof(MonoBehaviour),
-                // },
-                // new MethodMatchFilter
-                // {
-                //     Name = "Awake",
-                //     ParameterTypes = Type.EmptyTypes,
-                //     ReturnType = typeof(void),
-                //     SubClassOf = typeof(MonoBehaviour),
-                // },
-            });
-            return FindMethodsInAssembly(assembly, matcher);
-        }
-
-        // TODO config
-        private static IEnumerable<MethodBase> BattleTechMethodsToProfile()
-        {
-            var assembly = typeof(UnityGameInstance).Assembly;
-            var matcher = new MethodMatcher(new[]
-            {
-                // BT methods
-                new MethodMatchFilter
-                {
-                    Name = "Update",
-                    ParameterTypes = Type.EmptyTypes,
-                    ReturnType = typeof(void)
-                },
-                new MethodMatchFilter
-                {
-                    Name = "Update",
-                    ParameterTypes = new[]{typeof(float)},
-                    ReturnType = typeof(void)
-                },
-            });
+            var matcher = new MethodMatcher(ModTek.Config.Profiling.Filters);
             return FindMethodsInAssembly(assembly, matcher);
         }
 
         private static IEnumerable<MethodBase> FindMethodsInAssembly(Assembly assembly, MethodMatcher matcher)
         {
+            if (!matcher.MatchesAssembly(assembly))
+            {
+                yield break;
+            }
+
             // patch all Update methods in base game
             foreach (var type in AssemblyUtil.GetTypesSafe(assembly))
             {
-                if (!matcher.MatchesType(type))
+                if (!matcher.MatchesType(assembly, type))
                 {
                     continue;
                 }
@@ -163,7 +107,7 @@ namespace ModTek.Features.Profiler
 
                 foreach (var method in methods)
                 {
-                    if (!matcher.MatchesMethod(type, method))
+                    if (!matcher.MatchesMethod(assembly, type, method))
                     {
                         continue;
                     }
@@ -173,14 +117,25 @@ namespace ModTek.Features.Profiler
             }
         }
 
+        private static readonly Timings timings = new Timings();
+        private static readonly MethodBase MethodToCheckFrameTime = AccessTools.Method(typeof(UnityGameInstance), "Update");
+
         [HarmonyPriority(Priority.First)]
         internal static void Prefix(MethodBase __originalMethod, out long __state)
         {
+            try
+            {
+                if (MethodToCheckFrameTime.Equals(__originalMethod))
+                {
+                    timings.DumpAndResetIfSlow();
+                }
+            }
+            catch (Exception e)
+            {
+                Log("Error running prefix", e);
+            }
             __state = timings.GetRawTicks();
         }
-
-        private static Timings timings = new Timings();
-        private static MethodBase MethodToCheckFrameTime = AccessTools.Method(typeof(UnityGameInstance), "Update");
 
         [HarmonyPriority(Priority.Last)]
         internal static void Postfix(MethodBase __originalMethod, long __state)
@@ -188,7 +143,7 @@ namespace ModTek.Features.Profiler
             try
             {
                 var deltaRawTicks = timings.GetRawTicks() - __state;
-                timings.Increment(__originalMethod, deltaRawTicks, MethodToCheckFrameTime.Equals(__originalMethod));
+                timings.Increment(__originalMethod, deltaRawTicks);
             }
             catch (Exception e)
             {

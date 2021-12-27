@@ -12,14 +12,39 @@ namespace ModTek.Features.Profiler
         internal MethodMatcher(MethodMatchFilter[] signatures)
         {
             groups = signatures
-                .GroupBy(m => m.Name)
+                .Where(s => s.Enabled)
+                .Where(s => !string.IsNullOrEmpty(s.Name))
+                .GroupBy(s => s.Name)
                 .ToDictionary(
                     g => g.Key,
                     g => g.ToList()
                 );
         }
 
-        internal bool MatchesMethod(Type type, MethodInfo method)
+        internal bool MatchesAssembly(Assembly assembly)
+        {
+            return true;
+        }
+
+        internal bool MatchesType(Assembly assembly, Type type)
+        {
+            if (!type.IsClass)
+            {
+                return false;
+            }
+            if (type.IsAbstract)
+            {
+                return false;
+            }
+            // generic patching with harmony is not fool proof
+            if (type.ContainsGenericParameters)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        internal bool MatchesMethod(Assembly assembly, Type type, MethodInfo method)
         {
             if (string.IsNullOrEmpty(method.Name) || !groups.TryGetValue(method.Name, out var group))
             {
@@ -54,29 +79,15 @@ namespace ModTek.Features.Profiler
                 {
                     continue;
                 }
+                if (signature.AssemblyName != null && signature.AssemblyName != assembly.GetName().Name)
+                {
+                    continue;
+                }
 
                 return true;
             }
 
             return false;
-        }
-
-        internal bool MatchesType(Type type)
-        {
-            if (!type.IsClass)
-            {
-                return false;
-            }
-            if (type.IsAbstract)
-            {
-                return false;
-            }
-            // generic patching with harmony is not fool proof
-            if (type.ContainsGenericParameters)
-            {
-                return false;
-            }
-            return true;
         }
     }
 }

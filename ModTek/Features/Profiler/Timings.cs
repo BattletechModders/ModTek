@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading;
 using ModTek.Features.Logging;
 using ModTek.Util;
+using UnityEngine;
 
 namespace ModTek.Features.Profiler
 {
@@ -19,7 +20,7 @@ namespace ModTek.Features.Profiler
             return Stopwatch.GetTimestamp();
         }
 
-        internal void Increment(MethodBase __originalMethod, long deltaRawTicks, bool dumpCheck)
+        internal void Increment(MethodBase __originalMethod, long deltaRawTicks)
         {
             var overheadStart = GetRawTicks();
 
@@ -53,60 +54,62 @@ namespace ModTek.Features.Profiler
 
             counter.IncrementBy(deltaRawTicks);
 
-            if (dumpCheck)
+            minimumOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
+        }
+
+        internal void DumpAndResetIfSlow()
+        {
+            // we copy inside a lock in order to safely iterate
+            List<KeyValuePair<MethodBase, TickCounter>> timingsCopy;
+            timingsLock.EnterReadLock();
+            try
             {
-                // we copy inside a lock in order to safely iterate
-                List<KeyValuePair<MethodBase, TickCounter>> timingsCopy;
-                timingsLock.EnterReadLock();
-                try
-                {
-                    timingsCopy = timings.ToList();
-                }
-                finally
-                {
-                    timingsLock.ExitReadLock();
-                }
-
-                const long DumpWhenFrameTimeSlowerThanMS = 1000L / 30; // TODO config
-                if (counter.Get().TotalMilliseconds > DumpWhenFrameTimeSlowerThanMS)
-                {
-
-                    var list = timingsCopy
-                        .Select(kv => (Method: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
-                        .Where(kv => kv.Delta.TotalMilliseconds >= 1)
-                        .ToList();
-
-                    MTLogger.Log("Too slow, dumping profiler stats, delta since last frame");
-                    MTLogger.Log($"\t{minimumOverheadCounter.Get():c} Minimum Profiler Overhead");
-                    foreach (var kv in list.OrderByDescending(kv => kv.Delta))
-                    {
-                        var id = kv.Method.DeclaringType?.FullName + "." + kv.Method.Name;
-                        MTLogger.Log($"\t{kv.Delta:c} {id}");
-                    }
-
-                    const bool ShowTotalsForShownDeltaEntriesFromBefore = true;
-                    if (ShowTotalsForShownDeltaEntriesFromBefore)
-                    {
-                        MTLogger.Log("Similar profiler dump as before, but with total time");
-                        MTLogger.Log($"\t{minimumOverheadCounter.GetTotal():c} Minimum Profiler Overhead");
-                        foreach (var kv in list.OrderByDescending(kv => kv.Total))
-                        {
-                            var id = AssemblyUtil.GetMethodFullName(kv.Method);
-                            MTLogger.Log($"\t{kv.Total:c} {id}");
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var kv in timingsCopy)
-                    {
-                        kv.Value.Reset();
-                    }
-                }
-                minimumOverheadCounter.Reset();
+                timingsCopy = timings.ToList();
+            }
+            finally
+            {
+                timingsLock.ExitReadLock();
             }
 
-            minimumOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
+            if (Time.deltaTime > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
+            {
+                var list = timingsCopy
+                    .Select(kv => (Method: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
+                    .Where(kv => kv.Delta.TotalMilliseconds >= 1)
+                    .ToList();
+
+                MTLogger.Log($"dumping profiler stats, last frame was slow ({Time.deltaTime})");
+                {
+                    var dump = "\tdelta since last frame ";
+                    dump += $"\n{minimumOverheadCounter.Get():c} Profiler Overhead (minimum)";
+                    foreach (var kv in list.OrderByDescending(kv => kv.Delta))
+                    {
+                        var id = AssemblyUtil.GetMethodFullName(kv.Method);
+                        dump += $"\n{kv.Delta:c} {id}";
+                    }
+                    MTLogger.Log(dump);
+                }
+
+                {
+                    var dump = "\ttotal times of methods listed before";
+                    dump += $"\n{minimumOverheadCounter.GetTotal():c} Profiler Overhead (minimum)";
+                    foreach (var kv in list.OrderByDescending(kv => kv.Total))
+                    {
+                        var id = AssemblyUtil.GetMethodFullName(kv.Method);
+                        dump += $"\n{kv.Total:c} {id}";
+                    }
+                    MTLogger.Log(dump);
+                }
+            }
+            else
+            {
+                foreach (var kv in timingsCopy)
+                {
+                    kv.Value.Reset();
+                }
+            }
+
+            minimumOverheadCounter.Reset();
         }
     }
 }
