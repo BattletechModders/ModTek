@@ -18,6 +18,9 @@ namespace ModTek.Features.Profiler
 
         [JsonProperty]
         internal MethodMatchFilter[] Filters = {
+            // some Unity methods of interest
+            // see https://docs.unity3d.com/2018.3/Documentation/Manual/ExecutionOrder.html
+            // see https://docs.unity3d.com/2018.3/Documentation/ScriptReference/MonoBehaviour.html
             new MethodMatchFilter
             {
                 Name = "FixedUpdate",
@@ -39,17 +42,16 @@ namespace ModTek.Features.Profiler
                 ReturnType = typeof(void),
                 SubClassOf = typeof(MonoBehaviour),
             },
-            // Start or Awake produce issues
             new MethodMatchFilter
             {
-                Enabled = false,
+                Enabled = false, // Start or Awake produce issues
                 Name = "Start",
                 ParameterTypes = Type.EmptyTypes,
                 SubClassOf = typeof(MonoBehaviour),
             },
             new MethodMatchFilter
             {
-                Enabled = false,
+                Enabled = false, // Start or Awake produce issues
                 Name = "Awake",
                 ParameterTypes = Type.EmptyTypes,
                 ReturnType = typeof(void),
@@ -73,6 +75,7 @@ namespace ModTek.Features.Profiler
         };
         [JsonProperty]
         internal readonly string Filters_Description = "Only listed methods and any related harmony patches are profiled." +
-            " Not compatible with everything and skips some types of methods by default. Uses harmony itself to patch methods with pre/post methods";
+            " Not compatible with everything and skips some types of methods by default." +
+            " Uses harmony itself to patch methods with pre/post methods, see harmony summary dump.";
     }
 }
