@@ -44,14 +44,13 @@ namespace ModTek.Features.Profiler
             },
             new MethodMatchFilter
             {
-                Enabled = false, // Start or Awake produce issues
                 Name = "Start",
                 ParameterTypeNames = Array.Empty<string>(),
                 SubClassOfTypeName = typeof(MonoBehaviour).FullName,
             },
             new MethodMatchFilter
             {
-                Enabled = false, // Start or Awake produce issues
+                Enabled = false, // Awake produces issues
                 Name = "Awake",
                 ParameterTypeNames = Array.Empty<string>(),
                 ReturnTypeName = typeof(void).FullName,
