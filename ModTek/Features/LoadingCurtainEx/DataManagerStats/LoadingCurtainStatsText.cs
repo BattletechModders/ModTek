@@ -28,7 +28,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                 return;
             }
 
-            if (sw.ElapsedMilliseconds < ModTek.Config.DataManagerUnfreezeDelta)
+            if (sw.ElapsedMilliseconds < ModTek.Config.DataManagerUnfreezeDelta * 1000)
             {
                 return;
             }
