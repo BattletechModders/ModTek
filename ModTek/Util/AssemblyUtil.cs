@@ -46,6 +46,22 @@ namespace ModTek.Util
             return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == name);
         }
 
+        internal static IEnumerable<Type> GetTypesByPattern(string pattern, Assembly[] excludedAssemblies)
+        {
+            var regex = new Regex(pattern);
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !excludedAssemblies.Contains(a))
+                .SelectMany(GetTypesSafe)
+                .Where(t => t?.FullName != null && regex.IsMatch(t.FullName));
+        }
+
+        internal static Type GetTypeByName(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => a.GetType(name))
+                .FirstOrDefault(type => type != null);
+        }
+
         internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
         {
             // find types with our method on them
@@ -179,13 +195,6 @@ namespace ModTek.Util
         internal static string GetMethodFullName(MemberInfo Method)
         {
             return Method.DeclaringType?.FullName + "." + Method.Name;
-        }
-
-        internal static Type GetTypeByName(string name)
-        {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetType(name))
-                .FirstOrDefault(type => type != null);
         }
     }
 }

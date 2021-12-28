@@ -17,7 +17,7 @@ namespace ModTek.Features.Profiler
         internal readonly string DumpWhenFrameTimeDeltaLargerThan_Description = $"Dump profiler stats if a frame takes longer than the specified amount (in seconds).";
 
         [JsonProperty]
-        internal int RecursiveDepthToFindCalleesBelowFilteredMethods = 2;
+        internal int RecursiveDepthToFindCalleesBelowFilteredMethods = 3;
         [JsonProperty]
         internal readonly string RecursiveDepthToFindCalleesBelowFilteredMethods_Description = $"Methods that were found by the filter might be too generic, so we recursively find further profiling candidates. Set to 0 to disable.";
 
@@ -30,15 +30,20 @@ namespace ModTek.Features.Profiler
         [JsonProperty]
         internal readonly string BlacklistedAssemblyNames_Description = $"A pattern of assemblies to always ignore. Uses Regex. System assemblies can be profiled but the overhead is quite high.";
 
+        // type blacklisting is here due to issues with Harmony and maybe with the underlying mono of Unity
+        // probably using another way of injecting post/pre for profiling would do the job
+        // or harmony 2 might solve the issue, not sure how to integrate that though
+        //  could also try to use MonoMod.Common directly
         [JsonProperty]
-        internal string[] BlacklistedTypeNames =
-        {
-            "UnityEngine.Object", // unity is slow, but we don't need generic checks
-            "UIWidgets.ListViewBase", // IL can't be read by harmony
-            "GravityMatters.GravityMatters+Weapon_ShortRange_Patch" // harmony tries to init the static constructor and that fails
-        };
+        internal string BlacklistedTypeNamePattern = "^(" +
+            "UIWidgets\\.ListViewBase" + // IL can't be read by harmony
+            //"|UnityEngine\\.Object" + // unity is slow, but we don't need generic checks
+            "|GravityMatters\\.GravityMatters.*" + // harmony tries to init the static constructor and that fails
+            "|BattleTech\\.Save\\.SaveGameStructure\\.SaveRejectListManager" + // harmony tries to init the static constructor and that fails
+            "|MonthlyTechandMoraleAdjustment.*Patch" + // harmony tries to init the static constructor and that fails
+            ")$";
         [JsonProperty]
-        internal readonly string BlacklistedTypeNames_Description = $"A list of types to always ignore.";
+        internal readonly string BlacklistedTypeNamePattern_Description = $"A pattern of types to always ignore. Uses Regex.";
 
         [JsonProperty]
         internal MethodMatchFilter[] Filters = {

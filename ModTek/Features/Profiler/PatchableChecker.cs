@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using BattleTech;
 using Harmony;
 using Harmony.ILCopying;
 using ModTek.Features.Logging;
@@ -24,10 +23,9 @@ namespace ModTek.Features.Profiler
                     .ToArray();
             MTLogger.Log("profiler blacklisted assemblies:" + BlacklistedAssemblies.Select(x => x.FullName).AsTextList());
 
-            BlacklistedTypes = ModTek.Config.Profiling.BlacklistedTypeNames
-                .Select(AssemblyUtil.GetTypeByName)
-                .Where(a => a != null)
-                .ToArray();
+            BlacklistedTypes =
+                AssemblyUtil.GetTypesByPattern(ModTek.Config.Profiling.BlacklistedTypeNamePattern, BlacklistedAssemblies)
+                    .ToArray();
             MTLogger.Log("profiler blacklisted types:" + BlacklistedTypes.Select(x => x.FullName).AsTextList());
         }
 
@@ -204,7 +202,6 @@ namespace ModTek.Features.Profiler
         }
 
         private int counter;
-        private Assembly btAssembly = typeof(UnityGameInstance).Assembly;
         private IEnumerable<MethodBase> FindMethodsCalledByMethod(MethodBase containerMethod)
         {
             var dynamicMethod = DynamicTools.CreateDynamicMethod(containerMethod, "_Profiler" + counter++).GetILGenerator();
@@ -218,13 +215,9 @@ namespace ModTek.Features.Profiler
             {
                 if (!(callee is MethodInfo method))
                 {
-                    // all the time a constructor, maybe we should also profile those?
+                    // all the time a constructor, maybe we should also profile those? => can only do via transpilers ( so no )
                     continue;
                 }
-                // if (assembly != btAssembly)
-                // {
-                //     continue;
-                // }
                 if (!IsPatchable(method))
                 {
                     continue;

@@ -17,7 +17,6 @@ namespace ModTek.Features.Profiler.MPatches
                 .FindMethodsToProfile(ModTek.Config.Profiling.Filters, patchableChecker)
                 .ToHashSet();
 
-            // patch all prefixes and postfixes around methods being profiles
             foreach (var method in ProfilerPatcher.harmony.GetPatchedMethods())
             {
                 var info = ProfilerPatcher.harmony.GetPatchInfo(method);
@@ -30,7 +29,7 @@ namespace ModTek.Features.Profiler.MPatches
                     continue;
                 }
 
-                patchableChecker.DebugLogging = true;
+                // patchableChecker.DebugLogging = true;
                 void addPatches(IEnumerable<Patch> patches)
                 {
                     foreach (var patch in patches)
@@ -51,14 +50,15 @@ namespace ModTek.Features.Profiler.MPatches
             }
 
             methods.Add(MethodToCheckFrameTime);
+            // make sure to not patch twice
             methods.Remove(SetupCoroutine_InvokeMoveNext_Patch.TargetMethod());
-            // methods.RemoveWhere(m => m.FullDescription().Contains("GravityMatters"));
+            methods.Remove(SetupCoroutine_InvokeMember_Patch.TargetMethod());
+            methods.Remove(SetupCoroutine_InvokeStatic_Patch.TargetMethod());
             return methods;
         }
 
         private static readonly MethodBase MethodToCheckFrameTime = AccessTools.Method(typeof(UnityGameInstance), "Update");
 
-        // [HarmonyPriority(Priority.First)]
         internal static void Prefix(MethodBase __originalMethod, out long __state)
         {
             try
@@ -75,7 +75,6 @@ namespace ModTek.Features.Profiler.MPatches
             __state = ProfilerPatcher.timings.GetRawTicks();
         }
 
-        // [HarmonyPriority(Priority.Last)]
         internal static void Postfix(MethodBase __originalMethod, long __state)
         {
             try

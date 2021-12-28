@@ -89,18 +89,18 @@ namespace ModTek.Features.Profiler
 
                 MTLogger.Log($"dumping profiler stats, last frame was slow ({Time.deltaTime})");
                 {
-                    var dump = "\tdelta since last frame ";
+                    var dump = "\tdelta since last frame:";
                     foreach (var kv in selected)
                     {
                         var id = GetIdFromObject(kv.Target);
-                        var p = kv.Delta.TotalSeconds * 100 / deltaTime;
+                        var p = kv.Delta.TotalSeconds / deltaTime;
                         dump += $"\nd {kv.Delta:c} {p:P0} {id}";
                     }
                     MTLogger.Log(dump);
                 }
 
                 {
-                    var dump = "\ttotal times listed before";
+                    var dump = "\ttotal times in the order of the deltas:";
                     foreach (var kv in selected)
                     {
                         var id = GetIdFromObject(kv.Target);
@@ -112,9 +112,10 @@ namespace ModTek.Features.Profiler
                 {
                     var path = FilePaths.ProfilingSummaryPath;
                     MTLogger.Log($"Writing all totals to {path}");
+                    var top = list.Where(kv => kv.Total.TotalMilliseconds >= 100).OrderByDescending(kv => kv.Total);
                     using (var writer = File.CreateText(path))
                     {
-                        foreach (var kv in list.Where(kv => kv.Total.TotalMilliseconds >= 100).OrderByDescending(kv => kv.Total))
+                        foreach (var kv in top)
                         {
                             var id = GetIdFromObject(kv.Target);
                             writer.WriteLine($"{kv.Total:c} {id}");
