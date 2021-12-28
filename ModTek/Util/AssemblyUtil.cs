@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Util
@@ -34,9 +35,15 @@ namespace ModTek.Util
             }
         }
 
+        internal static IEnumerable<Assembly> GetAssembliesByPattern(string pattern)
+        {
+            var regex = new Regex(pattern);
+            return AppDomain.CurrentDomain.GetAssemblies().Where(a => regex.IsMatch(a.GetName().Name));
+        }
+
         internal static Assembly GetAssemblyByName(string name)
         {
-            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
+            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == name);
         }
 
         internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
@@ -172,6 +179,13 @@ namespace ModTek.Util
         internal static string GetMethodFullName(MemberInfo Method)
         {
             return Method.DeclaringType?.FullName + "." + Method.Name;
+        }
+
+        internal static Type GetTypeByName(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => a.GetType(name))
+                .FirstOrDefault(type => type != null);
         }
     }
 }

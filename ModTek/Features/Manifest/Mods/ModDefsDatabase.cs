@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTek.Features.HarmonyPatching;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;

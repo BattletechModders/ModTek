@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
+using ModTek.Features.HarmonyPatching;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;

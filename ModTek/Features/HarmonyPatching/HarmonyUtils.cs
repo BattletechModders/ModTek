@@ -7,9 +7,10 @@ using Harmony;
 using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Features.Profiler;
 using ModTek.Misc;
+using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
 
-namespace ModTek.Util
+namespace ModTek.Features.HarmonyPatching
 {
     internal static class HarmonyUtils
     {

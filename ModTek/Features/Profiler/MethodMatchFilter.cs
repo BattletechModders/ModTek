@@ -80,9 +80,12 @@ namespace ModTek.Features.Profiler
 
         private static Type TypeFromName(string name)
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetType(name))
-                .First(type => type != null);
+            var type = AssemblyUtil.GetTypeByName(name);
+            if (type == null)
+            {
+                throw new ArgumentException("Can't find loaded type named " + name);
+            }
+            return type;
         }
 
         private static Assembly AssemblyFromName(string name)

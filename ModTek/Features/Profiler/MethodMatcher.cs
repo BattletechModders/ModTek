@@ -9,16 +9,18 @@ namespace ModTek.Features.Profiler
 {
     internal class MethodMatcher
     {
-        internal static IEnumerable<MethodBase> FindMethodsToProfile(MethodMatchFilter[] signatures)
+        internal static IEnumerable<MethodBase> FindMethodsToProfile(MethodMatchFilter[] signatures, PatchableChecker patchableChecker)
         {
-            var matcher = new MethodMatcher(signatures);
+            var matcher = new MethodMatcher(signatures, patchableChecker);
             return matcher.FindMethods();
         }
 
+        private readonly PatchableChecker patchableChecker;
         private readonly Dictionary<string, List<MethodMatchFilter>> groups;
 
-        private MethodMatcher(MethodMatchFilter[] signatures)
+        private MethodMatcher(MethodMatchFilter[] signatures, PatchableChecker patchableChecker)
         {
+            this.patchableChecker = patchableChecker;
             groups = signatures
                 .Where(s => s.Enabled)
                 .Where(s => !string.IsNullOrEmpty(s.Name))
@@ -34,6 +36,11 @@ namespace ModTek.Features.Profiler
         {
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
+                if (!patchableChecker.IsAssemblyPatchable(assembly))
+                {
+                    continue;
+                }
+
                 foreach (var p in FindMethodsInAssembly(assembly))
                 {
                     yield return p;
@@ -43,15 +50,10 @@ namespace ModTek.Features.Profiler
 
         private IEnumerable<MethodBase> FindMethodsInAssembly(Assembly assembly)
         {
-            if (!MatchesAssembly(assembly))
-            {
-                yield break;
-            }
-
             // patch all Update methods in base game
             foreach (var type in AssemblyUtil.GetTypesSafe(assembly))
             {
-                if (!MatchesType(assembly, type))
+                if (!patchableChecker.IsTypePatchable(type))
                 {
                     continue;
                 }
@@ -63,70 +65,37 @@ namespace ModTek.Features.Profiler
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Log($"Can't get methods from Type {type}", e);
+                    MTLogger.Log($"Can't get methods from Type {type.FullName}", e);
                     continue;
                 }
 
                 foreach (var method in methods)
                 {
-                    if (!MatchesMethod(assembly, type, method))
+                    if (!MatchesFilter(assembly, type, method))
                     {
                         continue;
                     }
 
                     yield return method;
+
+                    foreach (var calledMethod in patchableChecker.FindPatchableMethodsCalledFromMethod(method, ModTek.Config.Profiling.RecursiveDepthToFindCalleesBelowFilteredMethods))
+                    {
+                        yield return calledMethod;
+                    }
                 }
             }
         }
 
-        private bool MatchesAssembly(Assembly assembly)
-        {
-            return true;
-        }
-
-        private bool MatchesType(Assembly assembly, Type type)
-        {
-            if (!type.IsClass)
-            {
-                return false;
-            }
-            if (type.IsAbstract)
-            {
-                return false;
-            }
-            // generic patching with harmony is not fool proof
-            if (type.ContainsGenericParameters)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private bool MatchesMethod(Assembly assembly, Type type, MethodInfo method)
+        private bool MatchesFilter(Assembly assembly, Type type, MethodInfo method)
         {
             if (string.IsNullOrEmpty(method.Name) || !groups.TryGetValue(method.Name, out var group))
             {
                 return false;
             }
-            if (method.IsConstructor)
+            if (!patchableChecker.IsMethodPatchable(method))
             {
                 return false;
             }
-            if (method.IsAbstract)
-            {
-                return false;
-            }
-            if (method.GetMethodBody() == null)
-            {
-                return false;
-            }
-
-            // generic patching with harmony is not fool proof
-            if (method.ContainsGenericParameters)
-            {
-                return false;
-            }
-
             var parameterTypes = method.GetParameters().Select(t => t.ParameterType).ToArray();
             foreach (var signature in group)
             {

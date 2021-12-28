@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using ModTek.Features.Logging;
+using ModTek.Misc;
 using ModTek.Util;
 using UnityEngine;
 
@@ -76,30 +78,48 @@ namespace ModTek.Features.Profiler
             {
                 var list = timingsCopy
                     .Select(kv => (Target: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
+                    .ToList();
+                list.Add(("Profiler Overhead (minimum)", minimumOverheadCounter.Get(), minimumOverheadCounter.GetTotal()));
+
+                var selected = list
                     .Where(kv => kv.Delta.TotalMilliseconds >= 1)
+                    .OrderByDescending(kv => kv.Delta)
+                    .Take(20)
                     .ToList();
 
                 MTLogger.Log($"dumping profiler stats, last frame was slow ({Time.deltaTime})");
                 {
                     var dump = "\tdelta since last frame ";
-                    dump += $"\n{minimumOverheadCounter.Get():c} Profiler Overhead (minimum)";
-                    foreach (var kv in list.OrderByDescending(kv => kv.Delta))
+                    foreach (var kv in selected)
                     {
                         var id = GetIdFromObject(kv.Target);
-                        dump += $"\n{kv.Delta:c} {id}";
+                        var p = kv.Delta.TotalSeconds * 100 / deltaTime;
+                        dump += $"\nd {kv.Delta:c} {p:P0} {id}";
                     }
                     MTLogger.Log(dump);
                 }
 
                 {
                     var dump = "\ttotal times listed before";
-                    dump += $"\n{minimumOverheadCounter.GetTotal():c} Profiler Overhead (minimum)";
-                    foreach (var kv in list.OrderByDescending(kv => kv.Total))
+                    foreach (var kv in selected)
                     {
                         var id = GetIdFromObject(kv.Target);
-                        dump += $"\n{kv.Total:c} {id}";
+                        dump += $"\nt {kv.Total:c} {id}";
                     }
                     MTLogger.Log(dump);
+                }
+
+                {
+                    var path = FilePaths.ProfilingSummaryPath;
+                    MTLogger.Log($"Writing all totals to {path}");
+                    using (var writer = File.CreateText(path))
+                    {
+                        foreach (var kv in list.Where(kv => kv.Total.TotalMilliseconds >= 100).OrderByDescending(kv => kv.Total))
+                        {
+                            var id = GetIdFromObject(kv.Target);
+                            writer.WriteLine($"{kv.Total:c} {id}");
+                        }
+                    }
                 }
             }
             else
