@@ -62,6 +62,7 @@ namespace ModTek
             FilePaths.SetupPaths();
             Config = Configuration.FromDefaultFile();
             LoggingFeature.Init();
+            Config.LogAnyDanglingExceptions();
 
             if (File.Exists(FilePaths.ModTekSettingsPath))
             {

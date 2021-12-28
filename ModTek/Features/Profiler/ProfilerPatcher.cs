@@ -64,19 +64,14 @@ namespace ModTek.Features.Profiler
 
         private static IEnumerable<MethodBase> MethodsToProfile()
         {
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            var matcher = new MethodMatcher(ModTek.Config.Profiling.Filters);
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (var p in FindMatchingMethodInAssembly(a))
+                foreach (var p in FindMethodsInAssembly(assembly, matcher))
                 {
                     yield return p;
                 }
             }
-        }
-
-        private static IEnumerable<MethodBase> FindMatchingMethodInAssembly(Assembly assembly)
-        {
-            var matcher = new MethodMatcher(ModTek.Config.Profiling.Filters);
-            return FindMethodsInAssembly(assembly, matcher);
         }
 
         private static IEnumerable<MethodBase> FindMethodsInAssembly(Assembly assembly, MethodMatcher matcher)

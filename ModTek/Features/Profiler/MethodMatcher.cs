@@ -14,6 +14,7 @@ namespace ModTek.Features.Profiler
             groups = signatures
                 .Where(s => s.Enabled)
                 .Where(s => !string.IsNullOrEmpty(s.Name))
+                .Where(s => s.FillTypes())
                 .GroupBy(s => s.Name)
                 .ToDictionary(
                     g => g.Key,
@@ -58,6 +59,11 @@ namespace ModTek.Features.Profiler
             {
                 return false;
             }
+            if (method.GetMethodBody() == null)
+            {
+                return false;
+            }
+
             // generic patching with harmony is not fool proof
             if (method.ContainsGenericParameters)
             {
@@ -75,11 +81,11 @@ namespace ModTek.Features.Profiler
                 {
                     continue;
                 }
-                if (signature.SubClassOf != null && !type.IsSubclassOf(signature.SubClassOf))
+                if (signature.SubClassOfType != null && !type.IsSubclassOf(signature.SubClassOfType))
                 {
                     continue;
                 }
-                if (signature.AssemblyName != null && signature.AssemblyName != assembly.GetName().Name)
+                if (signature.Assembly != null && signature.Assembly != assembly)
                 {
                     continue;
                 }

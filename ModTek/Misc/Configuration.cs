@@ -85,6 +85,9 @@ namespace ModTek.Misc
         [JsonProperty]
         internal ProfilingSettings Profiling = new ProfilingSettings();
 
+        [JsonIgnore]
+        private Exception ReadConfigurationException;
+
         private static string ConfigPath => Path.Combine(FilePaths.ModTekDirectory, "config.json");
         private static string ConfigDefaultsPath => Path.Combine(FilePaths.ModTekDirectory, "config.defaults.json");
         private static string ConfigLastPath => Path.Combine(FilePaths.ModTekDirectory, "config.last.json");
@@ -114,7 +117,7 @@ namespace ModTek.Misc
                 }
                 catch (Exception e)
                 {
-                    Log("Reading configuration failed, using defaults", e);
+                    config.ReadConfigurationException = e;
                 }
             }
             else
@@ -125,6 +128,14 @@ namespace ModTek.Misc
             config.WriteConfig(ConfigLastPath);
 
             return config;
+        }
+
+        internal void LogAnyDanglingExceptions()
+        {
+            if (ReadConfigurationException != null)
+            {
+                Log("Reading configuration failed, using defaults", ReadConfigurationException);
+            }
         }
 
         private void WriteConfig(string path)

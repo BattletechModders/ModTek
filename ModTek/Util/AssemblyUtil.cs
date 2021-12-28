@@ -11,7 +11,7 @@ namespace ModTek.Util
     {
         private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
 
-        public static Assembly LoadDLL(string path)
+        internal static Assembly LoadDLL(string path)
         {
             var fileName = Path.GetFileName(path);
 
@@ -34,7 +34,12 @@ namespace ModTek.Util
             }
         }
 
-        public static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
+        internal static Assembly GetAssemblyByName(string name)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
+        }
+
+        internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
         {
             // find types with our method on them
             try
@@ -70,7 +75,7 @@ namespace ModTek.Util
             }
         }
 
-        public static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)
+        internal static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)
         {
             var parameterList = new List<object>();
             var methodParameters = method.GetParameters();
@@ -101,7 +106,7 @@ namespace ModTek.Util
             return true;
         }
 
-        public static bool InvokeMethodByParameterTypes(MethodInfo method, object[] parameters)
+        internal static bool InvokeMethodByParameterTypes(MethodInfo method, object[] parameters)
         {
             var methodParameters = method.GetParameters();
 
