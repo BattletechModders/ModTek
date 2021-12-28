@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -12,7 +13,7 @@ namespace ModTek.Features.Profiler
     internal class Timings
     {
         private readonly ReaderWriterLockSlim timingsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private readonly Dictionary<MethodBase, TickCounter> timings = new Dictionary<MethodBase, TickCounter>();
+        private readonly Dictionary<object, TickCounter> timings = new Dictionary<object, TickCounter>();
         private readonly TickCounter minimumOverheadCounter = new TickCounter();
 
         internal long GetRawTicks()
@@ -20,7 +21,7 @@ namespace ModTek.Features.Profiler
             return Stopwatch.GetTimestamp();
         }
 
-        internal void Increment(MethodBase __originalMethod, long deltaRawTicks)
+        internal void Increment(object target, long deltaRawTicks)
         {
             var overheadStart = GetRawTicks();
 
@@ -28,17 +29,17 @@ namespace ModTek.Features.Profiler
             timingsLock.EnterUpgradeableReadLock();
             try
             {
-                if (!timings.TryGetValue(__originalMethod, out counter))
+                if (!timings.TryGetValue(target, out counter))
                 {
                     timingsLock.EnterWriteLock();
                     try
                     {
                         // since we only now have an exclusive lock
                         // we need to check if someone else added a counter before us
-                        if (!timings.TryGetValue(__originalMethod, out counter))
+                        if (!timings.TryGetValue(target, out counter))
                         {
                             counter = new TickCounter();
-                            timings[__originalMethod] = counter;
+                            timings[target] = counter;
                         }
                     }
                     finally
@@ -57,10 +58,10 @@ namespace ModTek.Features.Profiler
             minimumOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
         }
 
-        internal void DumpAndResetIfSlow()
+        internal void DumpAndResetIfSlow(float deltaTime)
         {
             // we copy inside a lock in order to safely iterate
-            List<KeyValuePair<MethodBase, TickCounter>> timingsCopy;
+            List<KeyValuePair<object, TickCounter>> timingsCopy;
             timingsLock.EnterReadLock();
             try
             {
@@ -71,10 +72,10 @@ namespace ModTek.Features.Profiler
                 timingsLock.ExitReadLock();
             }
 
-            if (Time.deltaTime > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
+            if (deltaTime > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
             {
                 var list = timingsCopy
-                    .Select(kv => (Method: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
+                    .Select(kv => (Target: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
                     .Where(kv => kv.Delta.TotalMilliseconds >= 1)
                     .ToList();
 
@@ -84,18 +85,18 @@ namespace ModTek.Features.Profiler
                     dump += $"\n{minimumOverheadCounter.Get():c} Profiler Overhead (minimum)";
                     foreach (var kv in list.OrderByDescending(kv => kv.Delta))
                     {
-                        var id = AssemblyUtil.GetMethodFullName(kv.Method);
+                        var id = GetIdFromObject(kv.Target);
                         dump += $"\n{kv.Delta:c} {id}";
                     }
                     MTLogger.Log(dump);
                 }
 
                 {
-                    var dump = "\ttotal times of methods listed before";
+                    var dump = "\ttotal times listed before";
                     dump += $"\n{minimumOverheadCounter.GetTotal():c} Profiler Overhead (minimum)";
                     foreach (var kv in list.OrderByDescending(kv => kv.Total))
                     {
-                        var id = AssemblyUtil.GetMethodFullName(kv.Method);
+                        var id = GetIdFromObject(kv.Target);
                         dump += $"\n{kv.Total:c} {id}";
                     }
                     MTLogger.Log(dump);
@@ -110,6 +111,21 @@ namespace ModTek.Features.Profiler
             }
 
             minimumOverheadCounter.Reset();
+        }
+
+        private static string GetIdFromObject(object o)
+        {
+            if (o is Type t)
+            {
+                return t.FullName;
+            }
+
+            if (o is MethodBase b)
+            {
+                return AssemblyUtil.GetMethodFullName(b);
+            }
+
+            return o.ToString();
         }
     }
 }

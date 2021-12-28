@@ -20,6 +20,7 @@ namespace ModTek.Features.Profiler
         internal MethodMatchFilter[] Filters = {
             // some Unity methods of interest
             // see https://docs.unity3d.com/2018.3/Documentation/Manual/ExecutionOrder.html
+            // Unity MonoBehavior
             // see https://docs.unity3d.com/2018.3/Documentation/ScriptReference/MonoBehaviour.html
             new MethodMatchFilter
             {

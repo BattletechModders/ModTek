@@ -30,6 +30,12 @@ namespace ModTek.Features.Profiler
         private void FillReturnType() => ReturnType = ReturnTypeName == null ? null : TypeFromName(ReturnTypeName);
 
         [JsonProperty]
+        internal string ClassTypeName;
+        [JsonIgnore]
+        internal Type ClassType;
+        private void FillClassType() => ClassType = ClassTypeName == null ? null : TypeFromName(ClassTypeName);
+
+        [JsonProperty]
         internal string SubClassOfTypeName;
         [JsonIgnore]
         internal Type SubClassOfType;
@@ -47,6 +53,7 @@ namespace ModTek.Features.Profiler
                 $"{nameof(Name)}={Name}" +
                 $"; {nameof(ParameterTypeNames)}={ParameterTypeNames?.AsTextList(",")}" +
                 $"; {nameof(ReturnTypeName)}={ReturnTypeName}" +
+                $"; {nameof(ClassTypeName)}={ClassTypeName}" +
                 $"; {nameof(SubClassOfTypeName)}={SubClassOfTypeName}" +
                 $"; {nameof(AssemblyName)}={AssemblyName}" +
                 "]";
@@ -59,6 +66,7 @@ namespace ModTek.Features.Profiler
             {
                 FillParameterTypes();
                 FillReturnType();
+                FillClassType();
                 FillSubClassOfType();
                 FillAssembly();
                 return true;
@@ -85,6 +93,42 @@ namespace ModTek.Features.Profiler
                 throw new ArgumentException("Can't find loaded assembly named " + name);
             }
             return assembly;
+        }
+
+        internal bool MatchMethod(Assembly assembly, Type type, MethodInfo method, Type[] parameterTypes)
+        {
+            // method.Name is already checked by caller earlier
+            // if (Name != method.Name)
+            // {
+            //     return false;
+            // }
+
+            if (ReturnType != null && ReturnType != method.ReturnType)
+            {
+                return false;
+            }
+
+            if (ClassType != null && ClassType != type)
+            {
+                return false;
+            }
+
+            if (SubClassOfType != null && !type.IsSubclassOf(SubClassOfType))
+            {
+                return false;
+            }
+
+            if (Assembly != null && Assembly != assembly)
+            {
+                return false;
+            }
+
+            if (ParameterTypes != null && !ParameterTypes.SequenceEqual(parameterTypes))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

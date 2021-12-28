@@ -2,14 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ModTek.Features.Logging;
+using ModTek.Util;
 
 namespace ModTek.Features.Profiler
 {
     internal class MethodMatcher
     {
+        internal static IEnumerable<MethodBase> FindMethodsToProfile(MethodMatchFilter[] signatures)
+        {
+            var matcher = new MethodMatcher(signatures);
+            return matcher.FindMethods();
+        }
+
         private readonly Dictionary<string, List<MethodMatchFilter>> groups;
 
-        internal MethodMatcher(MethodMatchFilter[] signatures)
+        private MethodMatcher(MethodMatchFilter[] signatures)
         {
             groups = signatures
                 .Where(s => s.Enabled)
@@ -22,12 +30,61 @@ namespace ModTek.Features.Profiler
                 );
         }
 
-        internal bool MatchesAssembly(Assembly assembly)
+        private IEnumerable<MethodBase> FindMethods()
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (var p in FindMethodsInAssembly(assembly))
+                {
+                    yield return p;
+                }
+            }
+        }
+
+        private IEnumerable<MethodBase> FindMethodsInAssembly(Assembly assembly)
+        {
+            if (!MatchesAssembly(assembly))
+            {
+                yield break;
+            }
+
+            // patch all Update methods in base game
+            foreach (var type in AssemblyUtil.GetTypesSafe(assembly))
+            {
+                if (!MatchesType(assembly, type))
+                {
+                    continue;
+                }
+
+                MethodInfo[] methods;
+                try
+                {
+                    methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                }
+                catch (Exception e)
+                {
+                    MTLogger.Log($"Can't get methods from Type {type}", e);
+                    continue;
+                }
+
+                foreach (var method in methods)
+                {
+                    if (!MatchesMethod(assembly, type, method))
+                    {
+                        continue;
+                    }
+
+                    yield return method;
+                }
+            }
+        }
+
+        private bool MatchesAssembly(Assembly assembly)
         {
             return true;
         }
 
-        internal bool MatchesType(Assembly assembly, Type type)
+        private bool MatchesType(Assembly assembly, Type type)
         {
             if (!type.IsClass)
             {
@@ -45,7 +102,7 @@ namespace ModTek.Features.Profiler
             return true;
         }
 
-        internal bool MatchesMethod(Assembly assembly, Type type, MethodInfo method)
+        private bool MatchesMethod(Assembly assembly, Type type, MethodInfo method)
         {
             if (string.IsNullOrEmpty(method.Name) || !groups.TryGetValue(method.Name, out var group))
             {
@@ -73,19 +130,7 @@ namespace ModTek.Features.Profiler
             var parameterTypes = method.GetParameters().Select(t => t.ParameterType).ToArray();
             foreach (var signature in group)
             {
-                if (signature.ReturnType != null && signature.ReturnType != method.ReturnType)
-                {
-                    continue;
-                }
-                if (signature.ParameterTypes != null && !signature.ParameterTypes.SequenceEqual(parameterTypes))
-                {
-                    continue;
-                }
-                if (signature.SubClassOfType != null && !type.IsSubclassOf(signature.SubClassOfType))
-                {
-                    continue;
-                }
-                if (signature.Assembly != null && signature.Assembly != assembly)
+                if (!signature.MatchMethod(assembly, type, method, parameterTypes))
                 {
                     continue;
                 }

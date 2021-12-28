@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using BattleTech;
@@ -11,38 +12,44 @@ namespace ModTek.Features.Profiler
 {
     internal static class ProfilerPatcher
     {
-        private static HarmonyInstance harmony;
+        internal static HarmonyInstance harmony;
+        internal static Timings timings;
 
         internal static void Patch()
         {
-            if (!ModTek.Config.Profiling.Enabled)
+            if (!ModTek.Enabled || !ModTek.Config.Profiling.Enabled)
             {
                 return;
             }
 
+            timings = new Timings();
             harmony = HarmonyInstance.Create("ModTek.Profiler");
-            new PatchProcessor(harmony, typeof(ProfilerPatcher), null).Patch();
+            new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeMoveNext_Patch), null).Patch();
+            new PatchProcessor(harmony, typeof(MethodMatcher_Patcher), null).Patch();
             harmony = null;
         }
+    }
 
-        internal static bool Prepare()
-        {
-            return ModTek.Enabled && ModTek.Config.Profiling.Enabled;
-        }
-
+    internal static class MethodMatcher_Patcher
+    {
         internal static IEnumerable<MethodBase> TargetMethods()
         {
-            var updateMethods = MethodsToProfile().ToHashSet();
+            var updateMethods = MethodMatcher
+                .FindMethodsToProfile(ModTek.Config.Profiling.Filters)
+                .ToHashSet();
+
             updateMethods.Add(MethodToCheckFrameTime);
+            updateMethods.Remove(SetupCoroutine_InvokeMoveNext_Patch.TargetMethod());
+
             foreach (var method in updateMethods)
             {
                 yield return method;
             }
 
             // patch all prefixes and postfixes around methods being profiles
-            foreach (var method in harmony.GetPatchedMethods())
+            foreach (var method in ProfilerPatcher.harmony.GetPatchedMethods())
             {
-                var info = harmony.GetPatchInfo(method);
+                var info = ProfilerPatcher.harmony.GetPatchInfo(method);
                 if (info == null || method.DeclaringType == null)
                 {
                     continue;
@@ -62,57 +69,6 @@ namespace ModTek.Features.Profiler
             }
         }
 
-        private static IEnumerable<MethodBase> MethodsToProfile()
-        {
-            var matcher = new MethodMatcher(ModTek.Config.Profiling.Filters);
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (var p in FindMethodsInAssembly(assembly, matcher))
-                {
-                    yield return p;
-                }
-            }
-        }
-
-        private static IEnumerable<MethodBase> FindMethodsInAssembly(Assembly assembly, MethodMatcher matcher)
-        {
-            if (!matcher.MatchesAssembly(assembly))
-            {
-                yield break;
-            }
-
-            // patch all Update methods in base game
-            foreach (var type in AssemblyUtil.GetTypesSafe(assembly))
-            {
-                if (!matcher.MatchesType(assembly, type))
-                {
-                    continue;
-                }
-
-                MethodInfo[] methods;
-                try
-                {
-                    methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                }
-                catch (Exception e)
-                {
-                    Log($"Can't get methods from Type {type}", e);
-                    continue;
-                }
-
-                foreach (var method in methods)
-                {
-                    if (!matcher.MatchesMethod(assembly, type, method))
-                    {
-                        continue;
-                    }
-
-                    yield return method;
-                }
-            }
-        }
-
-        private static readonly Timings timings = new Timings();
         private static readonly MethodBase MethodToCheckFrameTime = AccessTools.Method(typeof(UnityGameInstance), "Update");
 
         [HarmonyPriority(Priority.First)]
@@ -122,14 +78,14 @@ namespace ModTek.Features.Profiler
             {
                 if (MethodToCheckFrameTime.Equals(__originalMethod))
                 {
-                    timings.DumpAndResetIfSlow();
+                    ProfilerPatcher.timings.DumpAndResetIfSlow(Time.deltaTime);
                 }
             }
             catch (Exception e)
             {
                 Log("Error running prefix", e);
             }
-            __state = timings.GetRawTicks();
+            __state = ProfilerPatcher.timings.GetRawTicks();
         }
 
         [HarmonyPriority(Priority.Last)]
@@ -137,8 +93,36 @@ namespace ModTek.Features.Profiler
         {
             try
             {
-                var deltaRawTicks = timings.GetRawTicks() - __state;
-                timings.Increment(__originalMethod, deltaRawTicks);
+                var deltaRawTicks = ProfilerPatcher.timings.GetRawTicks() - __state;
+                ProfilerPatcher.timings.Increment(__originalMethod, deltaRawTicks);
+            }
+            catch (Exception e)
+            {
+                Log("Error running postfix", e);
+            }
+        }
+    }
+
+    internal static class SetupCoroutine_InvokeMoveNext_Patch
+    {
+        public static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("UnityEngine.SetupCoroutine:InvokeMoveNext");
+        }
+
+        [HarmonyPriority(Priority.First)]
+        public static void Prefix(out long __state)
+        {
+            __state = ProfilerPatcher.timings.GetRawTicks();
+        }
+
+        [HarmonyPriority(Priority.Last)]
+        internal static void Postfix(IEnumerator enumerator, long __state)
+        {
+            try
+            {
+                var deltaRawTicks = ProfilerPatcher.timings.GetRawTicks() - __state;
+                ProfilerPatcher.timings.Increment(enumerator.GetType(), deltaRawTicks);
             }
             catch (Exception e)
             {
