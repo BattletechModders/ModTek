@@ -101,6 +101,16 @@ namespace ModTek.Features.Profiler
                 ReturnTypeName = typeof(void).FullName,
                 AssemblyName = "Assembly-CSharp",
             },
+            new MethodMatchFilter
+            {
+                Name = "OnDayPassed",
+                AssemblyName = "Assembly-CSharp",
+            },
+            new MethodMatchFilter
+            {
+                Name = "RefreshDisplay",
+                AssemblyName = "Assembly-CSharp",
+            },
         };
         [JsonProperty]
         internal readonly string Filters_Description = "Only matching methods and any related harmony patches are profiled." +

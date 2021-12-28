@@ -8,6 +8,7 @@ using ModTek.Features.HarmonyPatching;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
+using ModTek.Features.Profiler;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -162,17 +163,29 @@ namespace ModTek
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
-            ProgressPanel.SubmitWork(FinishInitialLoadingLoop);
+            ProgressPanel.SubmitWork(FinishingLoadingMods);
+            ProgressPanel.SubmitWork(ProfilerPatcher.ProfilerSetupLoop);
+            ProgressPanel.SubmitWork(HarmonySummaryAndFinish);
         }
 
-        private static IEnumerator<ProgressReport> FinishInitialLoadingLoop()
+        private static IEnumerator<ProgressReport> FinishingLoadingMods()
         {
-            yield return new ProgressReport(1, "Finishing Up", "", true);
-            Log("Finishing Up");
-
             DebugSettingsFeature.LoadDebugSettings();
-            ModDefsDatabase.FinishedLoadingMods();
 
+            var sliderText = "Finishing Loading Mods";
+            yield return new ProgressReport(1, sliderText, "", true);
+            Log(sliderText);
+            ModDefsDatabase.FinishedLoadingMods();
+        }
+
+        internal static IEnumerator<ProgressReport> HarmonySummaryAndFinish()
+        {
+            var sliderText = "Saving Harmony Summary";
+            yield return new ProgressReport(1, sliderText, "", true);
+            Log(sliderText);
+            HarmonyUtils.PrintHarmonySummary();
+
+            yield return new ProgressReport(1, "Game now loading", "", true);
             FinishAndCleanup();
         }
 

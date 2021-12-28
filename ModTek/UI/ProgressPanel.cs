@@ -105,11 +105,6 @@ namespace ModTek.UI
                     yield return null;
                 }
 
-                Slider.value = 1.0f;
-                SliderText.text = "Game now loading";
-                LoadingText.text = "";
-                yield return null;
-
                 FinishAction.Invoke();
             }
         }

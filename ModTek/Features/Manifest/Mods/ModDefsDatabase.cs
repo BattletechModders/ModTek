@@ -148,7 +148,7 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{modDef.QuotedName} {modDef.Version}", true);
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{modDef.QuotedName}\n{modDef.Version}", true);
 
                 // expand the manifest (parses all JSON as well)
                 if (!CheckManifest(modDef))
@@ -304,7 +304,6 @@ namespace ModTek.Features.Manifest.Mods
                     ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);
                 }
             }
-            HarmonyUtils.PrintHarmonySummary();
             LoadOrder.ToFile(ModLoadOrder, FilePaths.LoadOrderPath);
         }
     }

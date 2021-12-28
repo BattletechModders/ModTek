@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using Harmony;
 using ModTek.Features.CustomSVGAssets.Patches;
-using ModTek.Features.Profiler;
 using ModTek.Misc;
 using ModTek.Util;
 using static ModTek.Features.Logging.MTLogger;
@@ -54,16 +53,6 @@ namespace ModTek.Features.HarmonyPatching
 
         internal static void PrintHarmonySummary()
         {
-            try
-            {
-                ProfilerPatcher.Patch();
-            }
-            catch (Exception)
-            {
-                Log($"Applying patch {nameof(ProfilerPatcher)} failed");
-                throw;
-            }
-
             var harmony = CreateInstance();
 
             var path = FilePaths.HarmonySummaryPath;

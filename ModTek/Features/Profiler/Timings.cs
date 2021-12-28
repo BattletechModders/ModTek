@@ -60,7 +60,7 @@ namespace ModTek.Features.Profiler
             minimumOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
         }
 
-        internal void DumpAndResetIfSlow(float deltaTime)
+        internal void DumpAndResetIfSlow(float frameDeltaSeconds)
         {
             // we copy inside a lock in order to safely iterate
             List<KeyValuePair<object, TickCounter>> timingsCopy;
@@ -74,11 +74,12 @@ namespace ModTek.Features.Profiler
                 timingsLock.ExitReadLock();
             }
 
-            if (deltaTime > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
+            if (frameDeltaSeconds > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
             {
                 var list = timingsCopy
                     .Select(kv => (Target: kv.Key, Delta: kv.Value.GetAndReset(), Total: kv.Value.GetTotal()))
                     .ToList();
+
                 list.Add(("Profiler Overhead (minimum)", minimumOverheadCounter.Get(), minimumOverheadCounter.GetTotal()));
 
                 var selected = list
@@ -87,13 +88,17 @@ namespace ModTek.Features.Profiler
                     .Take(20)
                     .ToList();
 
-                MTLogger.Log($"dumping profiler stats, last frame was slow ({Time.deltaTime})");
+                var frameDelta = TimeSpan.FromSeconds(frameDeltaSeconds);
+                selected.Add(("Last Frame Delta Time", frameDelta, frameDelta));
+
+                MTLogger.Log($"dumping profiler stats, last frame above threshold ({frameDeltaSeconds})");
+
                 {
-                    var dump = "\tdelta since last frame:";
+                    var dump = $"\tdelta since last frame:";
                     foreach (var kv in selected)
                     {
                         var id = GetIdFromObject(kv.Target);
-                        var p = kv.Delta.TotalSeconds / deltaTime;
+                        var p = kv.Delta.Ticks / frameDelta.Ticks;
                         dump += $"\nd {kv.Delta:c} {p:P0} {id}";
                     }
                     MTLogger.Log(dump);
