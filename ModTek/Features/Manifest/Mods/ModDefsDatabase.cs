@@ -148,7 +148,7 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{modDef.QuotedName}\n{modDef.Version}", true);
+                yield return new ProgressReport(countCurrent++/countMax, sliderText, $"{modDef.Name}\n{modDef.Version}", true);
 
                 // expand the manifest (parses all JSON as well)
                 if (!CheckManifest(modDef))

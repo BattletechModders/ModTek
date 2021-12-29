@@ -64,9 +64,12 @@ namespace ModTek.Features.Profiler
                 }
             }
 
-            new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeMoveNext_Patch), null).Patch();
-            new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeMember_Patch), null).Patch();
-            new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeStatic_Patch), null).Patch();
+            if (ModTek.Config.Profiling.CoverCoroutines)
+            {
+                new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeMoveNext_Patch), null).Patch();
+                new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeMember_Patch), null).Patch();
+                new PatchProcessor(harmony, typeof(SetupCoroutine_InvokeStatic_Patch), null).Patch();
+            }
 
             harmony = null;
         }

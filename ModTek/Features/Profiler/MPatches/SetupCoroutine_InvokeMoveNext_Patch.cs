@@ -25,7 +25,7 @@ namespace ModTek.Features.Profiler.MPatches
             try
             {
                 var deltaRawTicks = ProfilerPatcher.timings.GetRawTicks() - __state;
-                ProfilerPatcher.timings.Increment(enumerator.GetType(), deltaRawTicks);
+                ProfilerPatcher.timings.Increment(enumerator.GetType(), deltaRawTicks, false);
             }
             catch (Exception e)
             {

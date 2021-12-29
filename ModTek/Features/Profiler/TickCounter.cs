@@ -11,17 +11,24 @@ namespace ModTek.Features.Profiler
     {
         private long totalRawTicks;
         private long totalRawTicksSinceReset;
+        private long incrementCount;
 
         internal void IncrementBy(long deltaRawTicks)
         {
             Interlocked.Add(ref totalRawTicks, deltaRawTicks);
             Interlocked.Add(ref totalRawTicksSinceReset, deltaRawTicks);
+            Interlocked.Add(ref incrementCount, 1);
         }
 
         internal TimeSpan GetTotal()
         {
             var snapshot = Interlocked.Read(ref totalRawTicks);
             return ConvertRawTicksToTimeSpan(snapshot);
+        }
+
+        internal long GetCount()
+        {
+            return Interlocked.Read(ref incrementCount);
         }
 
         internal void Reset()
