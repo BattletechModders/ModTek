@@ -8,8 +8,9 @@ using Harmony.ILCopying;
 using ModTek.Features.Logging;
 using ModTek.Util;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
+    // checks if a method is safe for patching
     internal class PatchableChecker
     {
         internal bool DebugLogging = false;
@@ -21,12 +22,12 @@ namespace ModTek.Features.Profiler
             BlacklistedAssemblies =
                 AssemblyUtil.GetAssembliesByPattern(ModTek.Config.Profiling.BlacklistedAssemblyNamePattern)
                     .ToArray();
-            MTLogger.Log("profiler blacklisted assemblies:" + BlacklistedAssemblies.Select(x => x.FullName).AsTextList());
+            MTLogger.Log("\tblacklisted assemblies:" + BlacklistedAssemblies.Select(x => x.FullName).AsTextList());
 
             BlacklistedTypes =
                 AssemblyUtil.GetTypesByPattern(ModTek.Config.Profiling.BlacklistedTypeNamePattern, BlacklistedAssemblies)
                     .ToArray();
-            MTLogger.Log("profiler blacklisted types:" + BlacklistedTypes.Select(x => x.FullName).AsTextList());
+            MTLogger.Log("\tblacklisted types:" + BlacklistedTypes.Select(x => x.FullName).AsTextList());
         }
 
         internal bool IsAssemblyPatchable(Assembly assembly)
@@ -74,6 +75,14 @@ namespace ModTek.Features.Profiler
                 if (DebugLogging)
                 {
                     MTLogger.Log("IsTypePatchable BlacklistedTypes type=" + type.FullName);
+                }
+                return false;
+            }
+            if (type.BaseType != null && !IsTypePatchable(type.BaseType))
+            {
+                if (DebugLogging)
+                {
+                    MTLogger.Log("IsTypePatchable !IsTypePatchable(type.BaseType) type=" + type.FullName);
                 }
                 return false;
             }

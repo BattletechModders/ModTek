@@ -6,7 +6,7 @@ using ModTek.Features.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
     internal class MethodMatchFilter
     {

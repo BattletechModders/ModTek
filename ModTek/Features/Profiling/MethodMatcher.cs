@@ -5,7 +5,7 @@ using System.Reflection;
 using ModTek.Features.Logging;
 using ModTek.Util;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
     internal class MethodMatcher
     {

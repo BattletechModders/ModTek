@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using ModTek.Features.Logging;
-using ModTek.Features.Profiler;
+using ModTek.Features.Profiling;
 using Newtonsoft.Json;
 using static ModTek.Features.Logging.MTLogger;
 

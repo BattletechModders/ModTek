@@ -86,8 +86,8 @@ namespace ModTek.Features.HarmonyPatching
                         continue;
                     }
 
-                    writer.WriteLine(AssemblyUtil.GetAssemblyNameFromMemberInfo(method));
-                    writer.WriteLine(AssemblyUtil.GetMethodFullName(method) + ":");
+                    writer.WriteLine(method.GetAssemblyName());
+                    writer.WriteLine(method.GetFullName() + ":");
 
                     void WritePatches(string title, IList<Patch> patches)
                     {
@@ -97,8 +97,8 @@ namespace ModTek.Features.HarmonyPatching
                         }
                         foreach (var patch in patches.OrderBy(x => x))
                         {
-                            var assemblyName = AssemblyUtil.GetAssemblyNameFromMemberInfo(patch.patch);
-                            var methodName = AssemblyUtil.GetMethodFullName(patch.patch);
+                            var assemblyName = patch.patch.GetAssemblyName();
+                            var methodName = patch.patch.GetFullName();
                             writer.WriteLine($"\t\t{assemblyName} ({patch.owner}) {methodName}");
                         }
                     }

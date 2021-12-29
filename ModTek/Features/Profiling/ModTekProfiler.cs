@@ -9,32 +9,43 @@ using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
-    internal class Timings
+    internal class ModTekProfiler
     {
         private readonly ReaderWriterLockSlim timingsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         private readonly Dictionary<object, TickCounter> timings = new Dictionary<object, TickCounter>();
         private readonly TickCounter minimumOverheadCounter = new TickCounter();
         private readonly TickCounter stackTraceOverheadCounter = new TickCounter();
         private readonly TickCounter dumpOverheadCounter = new TickCounter();
-        private readonly bool StackTraceEnabled = ModTek.Config.Profiling.StackTraceEnabled;
-        private readonly int StackTraceMaxFrameCount = ModTek.Config.Profiling.StackTraceMaxFrameCount;
+        private readonly ModTekProfilerSettings settings = ModTek.Config.Profiling.ModTekProfiler;
 
-        internal long GetRawTicks()
+        internal void IncrementWrapper(object target, TickTracker tracker, bool allowStackTrace = true, bool trackTime = true)
         {
-            return Stopwatch.GetTimestamp();
+            try
+            {
+                Increment(target, tracker, allowStackTrace, trackTime);
+            }
+            catch (Exception e)
+            {
+                MTLogger.Log("Error running postfix", e);
+            }
         }
 
-        internal void Increment(object target, long deltaRawTicks, bool allowStackTrace = true, bool trackTime = true)
+        private void Increment(object target, TickTracker tracker, bool allowStackTrace = true, bool trackTime = true)
         {
-            var overheadStart = GetRawTicks();
-
-            if (StackTraceEnabled && allowStackTrace)
+            var overheadTracker = new TickTracker();
+            if (trackTime)
             {
-                var stackTraceOverheadStart = GetRawTicks();
+                overheadTracker.Begin();
+            }
+
+            if (settings.StackTraceEnabled && allowStackTrace)
+            {
+                var stackTraceOverheadTracker = new TickTracker();
+                stackTraceOverheadTracker.Begin();
                 var st = new StackTrace(3, false);
-                var maxFrames = StackTraceMaxFrameCount;
+                var maxFrames = settings.StackTraceMaxFrameCount;
                 for(var frameIndex=0; frameIndex<st.FrameCount; frameIndex++)
                 {
                     var sf = st.GetFrame(frameIndex);
@@ -48,13 +59,14 @@ namespace ModTek.Features.Profiler
                         continue;
                     }
 
-                    Increment(new MethodVia(m, target), deltaRawTicks, false, false);
+                    Increment(new MethodVia(m, target), tracker, false, false);
                     if (--maxFrames == 0)
                     {
                         break;
                     }
                 }
-                stackTraceOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
+                stackTraceOverheadTracker.End();
+                stackTraceOverheadCounter.IncrementBy(stackTraceOverheadTracker);
             }
 
             TickCounter counter;
@@ -85,17 +97,31 @@ namespace ModTek.Features.Profiler
                 timingsLock.ExitUpgradeableReadLock();
             }
 
-            counter.IncrementBy(deltaRawTicks);
+            counter.IncrementBy(tracker);
 
             if (trackTime)
             {
-                minimumOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
+                overheadTracker.End();
+                minimumOverheadCounter.IncrementBy(overheadTracker);
             }
         }
 
-        internal void DumpAndResetIfSlow(float frameDeltaSeconds)
+        internal void DumpAndResetIfSlowWrapper(float frameDeltaSeconds)
         {
-            var overheadStart = GetRawTicks();
+            try
+            {
+                DumpAndResetIfSlow(frameDeltaSeconds);
+            }
+            catch (Exception e)
+            {
+                MTLogger.Log("Error running prefix", e);
+            }
+        }
+
+        private void DumpAndResetIfSlow(float frameDeltaSeconds)
+        {
+            var overheadTracker = new TickTracker();
+            overheadTracker.Begin();
 
             // we copy inside a lock in order to safely iterate
             List<KeyValuePair<object, TickCounter>> timingsCopy;
@@ -109,7 +135,7 @@ namespace ModTek.Features.Profiler
                 timingsLock.ExitReadLock();
             }
 
-            if (frameDeltaSeconds > ModTek.Config.Profiling.DumpWhenFrameTimeDeltaLargerThan)
+            if (frameDeltaSeconds > ModTek.Config.Profiling.ModTekProfiler.DumpWhenFrameTimeDeltaLargerThan)
             {
                 var list = timingsCopy
                     .Select(kv => new Snapshot(kv.Key, kv.Value))
@@ -176,7 +202,8 @@ namespace ModTek.Features.Profiler
                 dumpOverheadCounter.Reset();
             }
 
-            dumpOverheadCounter.IncrementBy(GetRawTicks() - overheadStart);
+            overheadTracker.End();
+            dumpOverheadCounter.IncrementBy(overheadTracker);
         }
 
         internal class Snapshot
@@ -189,7 +216,7 @@ namespace ModTek.Features.Profiler
             internal Snapshot(object target, TickCounter counter)
             {
                 Target = target;
-                Delta = counter.GetAndReset();
+                Delta = counter.GetTotalSinceResetAndReset();
                 Total = counter.GetTotal();
                 Count = counter.GetCount();
             }
@@ -212,7 +239,7 @@ namespace ModTek.Features.Profiler
 
             if (o is MethodBase b)
             {
-                return AssemblyUtil.GetMethodFullName(b);
+                return b.GetFullName();
             }
 
             return o.ToString();

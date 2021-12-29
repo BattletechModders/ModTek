@@ -8,7 +8,7 @@ using ModTek.Features.HarmonyPatching;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Features.Profiler;
+using ModTek.Features.Profiling;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;

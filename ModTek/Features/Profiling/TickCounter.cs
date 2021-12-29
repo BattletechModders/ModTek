@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
     // simple wrapper around a long counter
     // uses Interlocked to have atomic semantics
@@ -13,8 +13,9 @@ namespace ModTek.Features.Profiler
         private long totalRawTicksSinceReset;
         private long incrementCount;
 
-        internal void IncrementBy(long deltaRawTicks)
+        internal void IncrementBy(TickTracker tracker)
         {
+            var deltaRawTicks = tracker.RawTicks;
             Interlocked.Add(ref totalRawTicks, deltaRawTicks);
             Interlocked.Add(ref totalRawTicksSinceReset, deltaRawTicks);
             Interlocked.Add(ref incrementCount, 1);
@@ -31,18 +32,33 @@ namespace ModTek.Features.Profiler
             return Interlocked.Read(ref incrementCount);
         }
 
+        internal void GetStats(out TimeSpan totalTimeSpan, out TimeSpan averageTimeSpan, out long count)
+        {
+            var total = Interlocked.Read(ref totalRawTicks);
+            count = Interlocked.Read(ref incrementCount);
+            totalTimeSpan = ConvertRawTicksToTimeSpan(total);
+            var average= total / count;
+            averageTimeSpan = ConvertRawTicksToTimeSpan(average);
+        }
+
+        public override string ToString()
+        {
+            GetStats(out var total, out var average, out var count);
+            return $"total={total} average={average} count={count}";
+        }
+
         internal void Reset()
         {
             Interlocked.Exchange(ref totalRawTicksSinceReset, 0);
         }
 
-        internal TimeSpan GetAndReset()
+        internal TimeSpan GetTotalSinceResetAndReset()
         {
             var snapshot = Interlocked.Exchange(ref totalRawTicksSinceReset, 0);
             return ConvertRawTicksToTimeSpan(snapshot);
         }
 
-        internal TimeSpan Get()
+        internal TimeSpan GetTotalSinceReset()
         {
             var snapshot = Interlocked.Read(ref totalRawTicksSinceReset);
             return ConvertRawTicksToTimeSpan(snapshot);

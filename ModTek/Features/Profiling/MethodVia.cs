@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using ModTek.Util;
 
-namespace ModTek.Features.Profiler
+namespace ModTek.Features.Profiling
 {
     internal class MethodVia
     {
@@ -27,7 +27,7 @@ namespace ModTek.Features.Profiler
         private string rawString;
         public override string ToString()
         {
-            rawString = rawString ?? Timings.GetIdFromObject(target) + " via " + AssemblyUtil.GetMethodFullName(source);
+            rawString = rawString ?? ModTekProfiler.GetIdFromObject(target) + " via " + source.GetFullName();
             return rawString;
         }
 
