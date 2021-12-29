@@ -1,4 +1,5 @@
 ﻿using Harmony;
+using UnityEngine;
 
 namespace ModTek.Features.Logging.Patches
 {
@@ -10,11 +11,14 @@ namespace ModTek.Features.Logging.Patches
             return ModTek.Enabled;
         }
 
+        private static bool IsSetup;
         public static void Cleanup()
         {
-            if (ModTek.Enabled)
+            if (ModTek.Enabled && !IsSetup)
             {
                 UnityLogHandler.Setup();
+                Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
+                IsSetup = true;
             }
         }
 

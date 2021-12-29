@@ -1,24 +1,55 @@
-﻿using HBS.Logging;
+﻿using System;
+using HBS.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.Logging
 {
-    internal static class UnityLogHandler
+    internal class UnityLogHandler : ILogHandler
     {
         internal static void Setup()
         {
-            Application.logMessageReceived -= HandleUnityLog; // setup is called several times
+            // the normal way
             Application.logMessageReceived += HandleUnityLog;
-            Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
+
+            // the proper way
+            // Debug.unityLogger.logHandler = new UnityLogHandler(Debug.unityLogger.logHandler);
         }
 
-        private const string UnityLoggerName = "Unity";
+        private readonly ILogHandler logHandler;
+        internal UnityLogHandler(ILogHandler logHandler)
+        {
+            this.logHandler = logHandler;
+        }
+        public void LogException(Exception exception, UnityEngine.Object context)
+        {
+            logHandler.LogException(exception, context);
+            LoggingFeature.LogAtLevel(
+                "Unity.Via.LogException",
+                LogLevel.Error,
+                "Unity is logging an exception", // lets output any inner exception and stack traces
+                exception,
+                null,
+                out _
+            );
+        }
+        public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
+        {
+            logHandler.LogFormat(logType, context, format, args);
+            LoggingFeature.LogAtLevel(
+                "Unity.Via.LogFormat",
+                UnityLogTypeToHBSLogLevel(logType),
+                string.Format(format, args),
+                null,
+                null,
+                out _
+            );
+        }
+
         private static void HandleUnityLog(string logString, string stackTrace, LogType type)
         {
-            var level = UnityLogTypeToHBSLogLevel(type);
             LoggingFeature.LogAtLevel(
-                UnityLoggerName,
-                level,
+                "Unity",
+                UnityLogTypeToHBSLogLevel(type),
                 logString,
                 null,
                 GetLocation(stackTrace),
