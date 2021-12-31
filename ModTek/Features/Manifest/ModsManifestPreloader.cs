@@ -5,7 +5,7 @@ using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
 using HBS;
-using ModTek.Features.LoadingCurtainEx;
+using ModTek.Features.LoadingCurtainEx.DataManagerStats;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Patches;
@@ -77,21 +77,40 @@ namespace ModTek.Features.Manifest
         // e.g. if dependencies were already finished loading in another request, the new requests will be stuck waiting for dependencies forever
         private void StartWaiting()
         {
+            RunActionWhenDataManagerIsOrBecomesIdle(
+                StartPrewarm,
+                () =>
+                {
+                    Log("Ongoing DataManager activity, waiting to finish before prewarm phase");
+                    DataManagerStats.GetStats(out var stats);
+                    stats.Dump();
+                }
+            );
+        }
+
+        private static void RunActionWhenDataManagerIsOrBecomesIdle(Action idleAction, Action stillLoadingAction = null)
+        {
+            var dataManager = UnityGameInstance.BattleTechGame.DataManager;
             if (dataManager.IsLoading)
             {
+                stillLoadingAction?.Invoke();
                 UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
                     MessageCenterMessageType.DataManagerLoadCompleteMessage,
                     _ =>
                     {
-                        // there might be new loads added by someone else during DataManagerLoadCompleteMessage, let's recheck
-                        StartWaiting();
+                        if (dataManager.IsLoading)
+                        {
+                            stillLoadingAction?.Invoke();
+                            return false;
+                        }
+                        idleAction();
                         return true;
                     }
                 );
             }
             else
             {
-                StartPrewarm();
+                idleAction();
             }
         }
 

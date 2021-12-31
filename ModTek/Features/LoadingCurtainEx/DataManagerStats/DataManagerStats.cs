@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
+using ModTek.Features.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
@@ -36,8 +37,9 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                 stats = LastStats;
                 if (!stats.dumped && Time.realtimeSinceStartup - stats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
                 {
+                    MTLogger.Log("Detected stuck DataManager.");
                     stats.dumped = true;
-                    DumpLoadRequests.DumpProcessing(stats, activeLoadBatches);
+                    stats.Dump();
                 }
                 return false;
             }
@@ -52,14 +54,15 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
         internal readonly int completed;
         internal readonly int failed;
         internal readonly float time = Time.realtimeSinceStartup;
+        internal readonly List<LoadRequest> ActiveLoadRequests;
         internal bool dumped;
 
         internal DataManagerStats()
         {
         }
-
         internal DataManagerStats(List<LoadRequest> loadRequests)
         {
+            ActiveLoadRequests = loadRequests;
             foreach (var load in loadRequests)
             {
                 var lrt = new LoadRequestTraverse(load);
@@ -69,6 +72,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                 completed += lrt.GetCompletedRequestCount();
                 failed += lrt.instance.FailedRequests.Count;
             }
+        }
+        internal void Dump()
+        {
+            DumpLoadRequests.DumpProcessing(this);
         }
 
         internal bool HasStats()

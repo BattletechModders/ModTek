@@ -12,11 +12,11 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 {
     internal class DumpLoadRequests
     {
-        internal static void DumpProcessing(DataManagerStats stats, List<LoadRequest> loadRequests)
+        internal static void DumpProcessing(DataManagerStats stats)
         {
-            MTLogger.Log($"Detected stuck DataManager, dumping stats: {stats}");
+            MTLogger.Log($"Dumping DataManager stats: {stats}");
             var dumper = new DumpLoadRequests();
-            dumper.Analyze(loadRequests);
+            dumper.Analyze(stats.ActiveLoadRequests);
             dumper.LogSummary();
         }
 
@@ -44,6 +44,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 
         private void LogSummary()
         {
+            if (incoming.Count == 0)
+            {
+                return;
+            }
             MTLogger.Log($"Which resource are blocking:");
             foreach (var kv in incoming.OrderByDescending(x => x.Value))
             {
