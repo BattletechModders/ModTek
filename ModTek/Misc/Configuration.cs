@@ -109,7 +109,6 @@ namespace ModTek.Misc
                         new JsonSerializerSettings
                         {
                             ObjectCreationHandling = ObjectCreationHandling.Replace,
-                            DefaultValueHandling = DefaultValueHandling.Ignore,
                             NullValueHandling = NullValueHandling.Ignore
                         }
                     );
