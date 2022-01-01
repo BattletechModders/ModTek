@@ -19,6 +19,37 @@ namespace ModTek.Features.Logging.Patches
         public static MethodInfo TargetMethod()
         {
             var logImpl = AccessTools.Inner(typeof(Logger), "LogImpl");
+
+            if (Settings == null)
+            {
+                Settings = ModTek.Config.Logging;
+                if (Settings.SkipOriginalLoggers)
+                {
+                    IgnoreSkipForLoggers = Settings.IgnoreSkipForLoggers.ToHashSet();
+                }
+
+                {
+                    var logImplType = AccessTools.Inner(typeof(Logger), "LogImpl");
+                    var LogImplIsEnabledForMethod = AccessTools.Method(logImplType, "IsEnabledFor");
+                    var dm = new DynamicMethod(
+                        "IsEnabledForWrapper",
+                        typeof(bool),
+                        new[]
+                        {
+                            typeof(object),
+                            typeof(LogLevel)
+                        },
+                        logImplType
+                    );
+                    var gen = dm.GetILGenerator();
+                    gen.Emit(OpCodes.Ldarg_0);
+                    gen.Emit(OpCodes.Ldarg_1);
+                    gen.Emit(OpCodes.Call, LogImplIsEnabledForMethod);
+                    gen.Emit(OpCodes.Ret);
+                    LogImplIsEnabledFor = (Func<object, LogLevel, bool>) dm.CreateDelegate(typeof(Func<object, LogLevel, bool>));
+                }
+            }
+
             var original = AccessTools.Method(logImpl, "LogAtLevel", new[]
             {
                 typeof(LogLevel),
@@ -29,6 +60,10 @@ namespace ModTek.Features.Logging.Patches
             });
             return original;
         }
+        private static LoggingSettings Settings;
+        private static HashSet<string> IgnoreSkipForLoggers;
+        private static bool SkipOriginalLoggers => IgnoreSkipForLoggers != null;
+        private static Func<object, LogLevel, bool> LogImplIsEnabledFor;
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -48,18 +83,22 @@ namespace ModTek.Features.Logging.Patches
         }
 
         [HarmonyPriority(Priority.High)]
-        public static bool Prefix(string ___name, LogLevel level, object message, Exception exception, IStackTrace location)
+        public static bool Prefix(object __instance, string ___name, LogLevel level, object message, Exception exception, IStackTrace location)
         {
             try
             {
-                LoggingFeature.LogAtLevel(
-                    ___name,
-                    level,
-                    message,
-                    exception,
-                    location,
-                    out var skipOriginal
-                );
+                if (Settings.IgnoreLoggerLogLevel || LogImplIsEnabledFor(__instance, level))
+                {
+                    LoggingFeature.LogAtLevel(
+                        ___name,
+                        level,
+                        message,
+                        exception,
+                        location
+                    );
+                }
+
+                var skipOriginal = SkipOriginalLoggers && !IgnoreSkipForLoggers.Contains(___name);
                 if (skipOriginal)
                 {
                     return false;

@@ -12,7 +12,7 @@ namespace ModTek.Features.Logging
         private static readonly ILog MainLogger = Logger.GetLogger("ModTek");
 
         private static LoggingSettings Settings => ModTek.Config.Logging;
-        private static Regex LogPrefixesMatcher;
+        private static Regex IgnorePrefixesMatcher;
         private static Formatter btLogFormatter;
 
         private static string BTCleanLogFilePath => Path.Combine(FilePaths.TempModTekDirectory, "battletech_log.txt");
@@ -35,12 +35,12 @@ namespace ModTek.Features.Logging
                 var prefixes = Settings.PrefixesToIgnore;
                 if (prefixes.Any())
                 {
-                    var ignoredPrefixesPattern = $"^(?:{string.Join("|", prefixes.Select(Regex.Escape))})";
-                    LogPrefixesMatcher = new Regex(ignoredPrefixesPattern);
+                    var ignoredPrefixesPattern = $"^(?:{string.Join("|", prefixes.OrderBy(m => m).Select(Regex.Escape))})";
+                    IgnorePrefixesMatcher = new Regex(ignoredPrefixesPattern);
                 }
                 else
                 {
-                    LogPrefixesMatcher = new Regex("^$");
+                    IgnorePrefixesMatcher = null;
                 }
             }
 
@@ -54,16 +54,10 @@ namespace ModTek.Features.Logging
             MainLogger.Log(message, e);
         }
 
+        // private static readonly TickCounter overheadPrefixMatcher = new TickCounter();
         // used for intercepting all logging attempts and to log centrally
-        internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location, out bool skipOriginal)
+        internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
         {
-            skipOriginal = Settings.SkipOriginalLoggers && !Settings.IgnoreSkipForLoggers.Contains(loggerName);
-
-            if (!Settings.IgnoreLoggerLogLevel && !HasLoggerLogLevelEnabled(loggerName, logLevel))
-            {
-                return;
-            }
-
             var logLine = btLogFormatter.GetFormattedLogLine(
                 loggerName,
                 logLevel,
@@ -74,25 +68,20 @@ namespace ModTek.Features.Logging
 
             btFullAppender?.WriteLine(logLine.Line);
 
-            if (!LogPrefixesMatcher.IsMatch(logLine.LineWithoutTime))
+            if (IgnorePrefixesMatcher != null)
             {
-                btCleanAppender.WriteLine(logLine.Line);
+                // var tracker = new TickTracker();
+                // tracker.Begin();
+                var ignore = IgnorePrefixesMatcher.IsMatch(logLine.LineWithoutTime);
+                // tracker.End();
+                // overheadPrefixMatcher.IncrementBy(tracker);
+                if (ignore)
+                {
+                    return;
+                }
             }
-        }
-
-        private static bool HasLoggerLogLevelEnabled(string name, LogLevel level)
-        {
-            var log = Logger.GetLogger(name);
-            switch (level)
-            {
-                case LogLevel.Debug when log.IsDebugEnabled:
-                case LogLevel.Log when log.IsLogEnabled:
-                case LogLevel.Warning when log.IsWarningEnabled:
-                case LogLevel.Error when log.IsErrorEnabled:
-                    return true;
-                default:
-                    return false;
-            }
+            btCleanAppender.WriteLine(logLine.Line);
+            // btCleanAppender.WriteLine("overhead prefix matcher " + overheadPrefixMatcher);
         }
     }
 }
