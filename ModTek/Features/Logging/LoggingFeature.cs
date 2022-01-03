@@ -24,6 +24,9 @@ namespace ModTek.Features.Logging
 
         internal static void Init()
         {
+            btCleanAppender = new Appender(BTCleanLogFilePath);
+            btFullAppender = Settings.PreserveFullLog ? new Appender(BTFullLogFilePath) : null;
+
             btLogFormatter = new Formatter(Settings.BattleTechLogFormatting);
 
             Directory.CreateDirectory(FilePaths.TempModTekDirectory);
@@ -35,17 +38,21 @@ namespace ModTek.Features.Logging
                 var prefixes = Settings.PrefixesToIgnore;
                 if (prefixes.Any())
                 {
-                    var ignoredPrefixesPattern = $"^(?:{string.Join("|", prefixes.OrderBy(m => m).Select(Regex.Escape))})";
-                    IgnorePrefixesMatcher = new Regex(ignoredPrefixesPattern);
+                    try
+                    {
+                        var trie = Trie.Create(prefixes);
+                        IgnorePrefixesMatcher = trie.CompileRegex();
+                    }
+                    catch (Exception e)
+                    {
+                        btCleanAppender.WriteLine("Issue processing logging ignore prefixes" + e);
+                    }
                 }
                 else
                 {
                     IgnorePrefixesMatcher = null;
                 }
             }
-
-            btCleanAppender = new Appender(BTCleanLogFilePath);
-            btFullAppender = Settings.PreserveFullLog ? new Appender(BTFullLogFilePath) : null;
         }
 
         // used for direct logging from ModTek code
@@ -67,21 +74,24 @@ namespace ModTek.Features.Logging
             );
 
             btFullAppender?.WriteLine(logLine.Line);
+            // btFullAppender?.WriteLine("overheadPrefixMatcher " + overheadPrefixMatcher);
 
             if (IgnorePrefixesMatcher != null)
             {
-                // var tracker = new TickTracker();
-                // tracker.Begin();
-                var ignore = IgnorePrefixesMatcher.IsMatch(logLine.LineWithoutTime);
-                // tracker.End();
-                // overheadPrefixMatcher.IncrementBy(tracker);
+                bool ignore;
+                {
+                    // var tracker = new TickTracker();
+                    // tracker.Begin();
+                    ignore = IgnorePrefixesMatcher.IsMatch(logLine.LineWithoutTime);
+                    // tracker.End();
+                    // overheadPrefixMatcher.IncrementBy(tracker);
+                }
                 if (ignore)
                 {
                     return;
                 }
             }
             btCleanAppender.WriteLine(logLine.Line);
-            // btCleanAppender.WriteLine("overhead prefix matcher " + overheadPrefixMatcher);
         }
     }
 }

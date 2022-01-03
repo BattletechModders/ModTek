@@ -37,7 +37,7 @@ namespace ModTek.Features.Profiling
             var total = Interlocked.Read(ref totalRawTicks);
             count = Interlocked.Read(ref incrementCount);
             totalTimeSpan = ConvertRawTicksToTimeSpan(total);
-            var average= total / count;
+            var average= count ==  0 ? 0 : total / count;
             averageTimeSpan = ConvertRawTicksToTimeSpan(average);
         }
 
