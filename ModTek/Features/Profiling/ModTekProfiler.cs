@@ -28,7 +28,7 @@ namespace ModTek.Features.Profiling
             }
             catch (Exception e)
             {
-                MTLogger.Log("Error running postfix", e);
+                MTLogger.Error.Log("Failed running postfix", e);
             }
         }
 
@@ -114,7 +114,7 @@ namespace ModTek.Features.Profiling
             }
             catch (Exception e)
             {
-                MTLogger.Log("Error running prefix", e);
+                MTLogger.Error.Log("Failed running prefix", e);
             }
         }
 
@@ -154,7 +154,7 @@ namespace ModTek.Features.Profiling
                     .Take(20)
                     .ToList();
 
-                MTLogger.Log($"dumping profiler stats, last frame above threshold ({frameDeltaSeconds})");
+                MTLogger.Info.Log($"dumping profiler stats, last frame above threshold ({frameDeltaSeconds})");
 
                 {
                     var dump = $"\tdelta since last frame:";
@@ -164,7 +164,7 @@ namespace ModTek.Features.Profiling
                         var p = kv.Delta.Ticks / (float)frameDelta.Ticks;
                         dump += $"\nd {kv.Delta:c} {p:P0} {id}";
                     }
-                    MTLogger.Log(dump);
+                    MTLogger.Info.Log(dump);
                 }
 
                 {
@@ -174,12 +174,12 @@ namespace ModTek.Features.Profiling
                         var id = GetIdFromObject(kv.Target);
                         dump += $"\nt {kv.Total:c} ({kv.Count}) {id}";
                     }
-                    MTLogger.Log(dump);
+                    MTLogger.Info.Log(dump);
                 }
 
                 {
                     var path = FilePaths.ProfilingSummaryPath;
-                    MTLogger.Log($"Writing all totals to {path}");
+                    MTLogger.Info.Log($"Writing all totals to {path}");
                     var top = list.Where(kv => kv.Total.TotalMilliseconds >= 100).OrderByDescending(kv => kv.Total);
                     using (var writer = File.CreateText(path))
                     {

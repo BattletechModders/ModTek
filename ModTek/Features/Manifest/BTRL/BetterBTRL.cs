@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.BTRL
 {
@@ -35,7 +35,7 @@ namespace ModTek.Features.Manifest.BTRL
                     && EntryByID(entry.AssetBundleName, BattleTechResourceType.AssetBundle) == null
                     && !entry.GetRawPath().StartsWith("Assets/Resources/UnlockedAssets"))
                 {
-                    Log($"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName} by {entry.ToShortString()}.");
+                    MTLogger.Info.Log($"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName} by {entry.ToShortString()}.");
                 }
             }
 
@@ -319,7 +319,7 @@ namespace ModTek.Features.Manifest.BTRL
                 currentManifest.AddAddendum(addendum);
             }
             sw.Stop();
-            LogIfSlow(sw);
+            MTLogger.Info.LogIfSlow(sw);
         }
 
         public VersionManifestEntry[] AllEntries()

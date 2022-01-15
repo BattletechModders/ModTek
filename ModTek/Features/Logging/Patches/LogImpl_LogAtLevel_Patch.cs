@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Harmony;
 using HBS.Logging;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Logging.Patches
 {
@@ -106,7 +105,7 @@ namespace ModTek.Features.Logging.Patches
             }
             catch (Exception e)
             {
-                Log("Couldn't rewrite LogAtLevel call",  e);
+                MTLogger.Info.Log("Couldn't rewrite LogAtLevel call",  e);
             }
             return true;
         }

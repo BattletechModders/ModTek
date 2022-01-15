@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
-using static ModTek.Features.Logging.MTLogger;
 
 // ReSharper disable RedundantAssignment
 
@@ -58,7 +58,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -80,7 +80,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -102,7 +102,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -124,7 +124,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -146,7 +146,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -168,7 +168,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -190,7 +190,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -212,7 +212,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -234,7 +234,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -256,7 +256,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -278,7 +278,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -300,7 +300,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }
@@ -322,7 +322,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                Log("Error running prefix", e);
+                MTLogger.Info.Log("Error running prefix", e);
             }
             return false;
         }

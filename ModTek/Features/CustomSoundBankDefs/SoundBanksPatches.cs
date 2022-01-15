@@ -9,8 +9,8 @@ using BattleTech;
 using BattleTech.UI;
 using Harmony;
 using HBS;
+using ModTek.Features.Logging;
 using UnityEngine;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomSoundBankDefs
 {
@@ -28,7 +28,7 @@ namespace ModTek.Features.CustomSoundBankDefs
             bank.loaded = true;
             foreach (var ev in bank.events)
             {
-                Log("\t\tsound event:" + ev.Key + ":" + ev.Value);
+                MTLogger.Debug.Log("\t\tsound event:" + ev.Key + ":" + ev.Value);
                 if (SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().ContainsKey(ev.Key) == false)
                 {
                     SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().Add(ev.Key, ev.Value);
@@ -57,11 +57,11 @@ namespace ModTek.Features.CustomSoundBankDefs
             volume += bank.volumeShift;
             volume = Mathf.Min(100f, volume);
             volume = Mathf.Max(0f, volume);
-            Log("SoundBankDef.setVolume " + bank.name);
+            MTLogger.Debug.Log("SoundBankDef.setVolume " + bank.name);
             foreach (var id in bank.volumeRTPCIds)
             {
                 var res = AkSoundEngine.SetRTPCValue(id, volume);
-                Log("\tSetRTPCValue " + id + " " + volume + " result:" + res);
+                MTLogger.Debug.Log("\tSetRTPCValue " + id + " " + volume + " result:" + res);
             }
         }
     }
@@ -83,7 +83,7 @@ namespace ModTek.Features.CustomSoundBankDefs
 
         public static void Postfix()
         {
-            Log("AudioEventManager.LoadAudioSettings");
+            MTLogger.Debug.Log("AudioEventManager.LoadAudioSettings");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
@@ -113,7 +113,7 @@ namespace ModTek.Features.CustomSoundBankDefs
 
         public static void Postfix(AudioSettingsModule __instance)
         {
-            Log("AudioSettingsModule.SaveSettings");
+            MTLogger.Debug.Log("AudioSettingsModule.SaveSettings");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.loaded != true)
@@ -143,7 +143,7 @@ namespace ModTek.Features.CustomSoundBankDefs
 
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
-            Log("WwiseManager.LoadCombatBanks");
+            MTLogger.Debug.Log("WwiseManager.LoadCombatBanks");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
@@ -156,7 +156,7 @@ namespace ModTek.Features.CustomSoundBankDefs
                     continue;
                 }
 
-                Log("\tLoading:" + soundBank.Key);
+                MTLogger.Debug.Log("\tLoading:" + soundBank.Key);
                 ___loadedBanks.Add(new LoadedAudioBank(soundBank.Key, true));
             }
         }
@@ -179,7 +179,7 @@ namespace ModTek.Features.CustomSoundBankDefs
 
         public static void Postfix(WwiseManager __instance, ref List<LoadedAudioBank> ___loadedBanks)
         {
-            Log("WwiseManager.UnloadCombatBanks");
+            MTLogger.Debug.Log("WwiseManager.UnloadCombatBanks");
             foreach (var soundBank in SoundBanksFeature.soundBanks)
             {
                 if (soundBank.Value.type != SoundBankType.Combat)
@@ -195,7 +195,7 @@ namespace ModTek.Features.CustomSoundBankDefs
                 var loadedAudioBank = ___loadedBanks.Find(x => x.name == soundBank.Value.name);
                 if (loadedAudioBank != null)
                 {
-                    Log("\tUnloading:" + soundBank.Key);
+                    MTLogger.Debug.Log("\tUnloading:" + soundBank.Key);
                     loadedAudioBank.UnloadBank();
                     ___loadedBanks.Remove(loadedAudioBank);
                 }
@@ -220,7 +220,7 @@ namespace ModTek.Features.CustomSoundBankDefs
 
         public static void Postfix(LoadedAudioBank __instance)
         {
-            Log("LoadedAudioBank.UnloadBank " + __instance.name);
+            MTLogger.Debug.Log("LoadedAudioBank.UnloadBank " + __instance.name);
             if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name))
             {
                 SoundBanksFeature.soundBanks[__instance.name].loaded = false;
@@ -246,27 +246,27 @@ namespace ModTek.Features.CustomSoundBankDefs
         [Obsolete]
         public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
         {
-            Log("LoadedAudioBank.LoadBankExternal " + __instance.name);
+            MTLogger.Debug.Log("LoadedAudioBank.LoadBankExternal " + __instance.name);
             if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name) == false)
             {
                 return false;
             }
 
             var uri = new Uri(SoundBanksFeature.soundBanks[__instance.name].filename).AbsoluteUri;
-            Log("\t" + uri);
+            MTLogger.Debug.Log("\t" + uri);
             var www = new WWW(uri);
             while (!www.isDone)
             {
                 Thread.Sleep(25);
             }
 
-            Log("\t'" + uri + "' loaded");
+            MTLogger.Debug.Log("\t'" + uri + "' loaded");
             var pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
             GCHandle? handle = null;
             var dataLength = (uint) www.bytes.Length;
             if (pparams != null)
             {
-                Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
+                MTLogger.Debug.Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
                 var aes = Aes.Create();
                 aes.Mode = CipherMode.CBC;
                 aes.KeySize = 256;
@@ -319,7 +319,7 @@ namespace ModTek.Features.CustomSoundBankDefs
                 __result = AKRESULT.AK_Fail;
             }
 
-            Log("\tResult:" + __result + " id:" + ___id + " length:" + dataLength);
+            MTLogger.Debug.Log("\tResult:" + __result + " id:" + ___id + " length:" + dataLength);
             return false;
         }
     }

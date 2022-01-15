@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using ModTek.Features.Logging;
 using Newtonsoft.Json.Linq;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.AdvJSONMerge
 {
@@ -18,7 +18,7 @@ namespace ModTek.Features.AdvJSONMerge
             {
                 if (!instruction.Process(target))
                 {
-                    Log($"Warning: An instruction (Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') did not perform anything.");
+                    MTLogger.Warning.Log($"An instruction (Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') did not perform anything.");
                 }
             }
         }

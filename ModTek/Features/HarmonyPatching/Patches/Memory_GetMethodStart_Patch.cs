@@ -19,12 +19,12 @@ namespace ModTek.Features.HarmonyPatching.Patches
             {
                 if (exception != null)
                 {
-                    MTLogger.Log("Full exception from failed patch", exception);
+                    MTLogger.Info.Log("Full exception from failed patch", exception);
                 }
             }
             catch (Exception e)
             {
-                MTLogger.Log("Error running prefix", e);
+                MTLogger.Error.Log("Failed running prefix", e);
             }
         }
     }

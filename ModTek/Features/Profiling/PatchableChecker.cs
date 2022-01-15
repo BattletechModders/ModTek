@@ -22,12 +22,12 @@ namespace ModTek.Features.Profiling
             BlacklistedAssemblies =
                 AssemblyUtil.GetAssembliesByPattern(ModTek.Config.Profiling.BlacklistedAssemblyNamePattern)
                     .ToArray();
-            MTLogger.Log("\tblacklisted assemblies:" + BlacklistedAssemblies.Select(x => x.FullName).AsTextList());
+            MTLogger.Info.Log("\tblacklisted assemblies:" + BlacklistedAssemblies.Select(x => x.FullName).AsTextList());
 
             BlacklistedTypes =
                 AssemblyUtil.GetTypesByPattern(ModTek.Config.Profiling.BlacklistedTypeNamePattern, BlacklistedAssemblies)
                     .ToArray();
-            MTLogger.Log("\tblacklisted types:" + BlacklistedTypes.Select(x => x.FullName).AsTextList());
+            MTLogger.Info.Log("\tblacklisted types:" + BlacklistedTypes.Select(x => x.FullName).AsTextList());
         }
 
         internal bool IsAssemblyPatchable(Assembly assembly)
@@ -36,7 +36,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsAssemblyPatchable BlacklistedAssemblies assembly=" + assembly.FullName);
+                    MTLogger.Info.Log("IsAssemblyPatchable BlacklistedAssemblies assembly=" + assembly.FullName);
                 }
                 return false;
             }
@@ -49,7 +49,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsTypePatchable !IsClass type=" + type.FullName);
+                    MTLogger.Info.Log("IsTypePatchable !IsClass type=" + type.FullName);
                 }
                 return false;
             }
@@ -57,7 +57,7 @@ namespace ModTek.Features.Profiling
             // {
             //     if (DebugLogging)
             //     {
-            //         MTLogger.Log("IsTypePatchable IsAbstract type=" + type.FullName);
+            //         MTLogger.Info.Log("IsTypePatchable IsAbstract type=" + type.FullName);
             //     }
             //     return false;
             // }
@@ -66,7 +66,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsTypePatchable IsGeneric type=" + type.FullName);
+                    MTLogger.Info.Log("IsTypePatchable IsGeneric type=" + type.FullName);
                 }
                 return false;
             }
@@ -74,7 +74,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsTypePatchable BlacklistedTypes type=" + type.FullName);
+                    MTLogger.Info.Log("IsTypePatchable BlacklistedTypes type=" + type.FullName);
                 }
                 return false;
             }
@@ -82,7 +82,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsTypePatchable !IsTypePatchable(type.BaseType) type=" + type.FullName);
+                    MTLogger.Info.Log("IsTypePatchable !IsTypePatchable(type.BaseType) type=" + type.FullName);
                 }
                 return false;
             }
@@ -95,7 +95,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsMethodPatchable IsConstructor method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsMethodPatchable IsConstructor method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -103,7 +103,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsMethodPatchable IsAbstract method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsMethodPatchable IsAbstract method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -112,7 +112,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsMethodPatchable IsGeneric method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsMethodPatchable IsGeneric method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -125,14 +125,14 @@ namespace ModTek.Features.Profiling
                 {
                     if (DebugLogging)
                     {
-                        MTLogger.Log("IsMethodPatchable GetMethodBody=null");
+                        MTLogger.Info.Log("IsMethodPatchable GetMethodBody=null");
                     }
                     return false;
                 }
             }
             catch (Exception e)
             {
-                MTLogger.Log($"Error checking for body in {method.FullDescription()}", e);
+                MTLogger.Info.Log($"Error checking for body in {method.FullDescription()}", e);
                 return false;
             }
 
@@ -150,7 +150,7 @@ namespace ModTek.Features.Profiling
             }
             catch (Exception e)
             {
-                MTLogger.Log($"Issue finding methods in {containerMethod}", e);
+                MTLogger.Info.Log($"Issue finding methods in {containerMethod}", e);
             }
             return Array.Empty<MethodBase>();
         }
@@ -179,7 +179,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsPatchable type=null method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsPatchable type=null method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -187,7 +187,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsPatchable !IsAssemblyPatchable method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsPatchable !IsAssemblyPatchable method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -195,7 +195,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsPatchable !IsTypePatchable method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsPatchable !IsTypePatchable method=" + method.FullDescription());
                 }
                 return false;
             }
@@ -203,7 +203,7 @@ namespace ModTek.Features.Profiling
             {
                 if (DebugLogging)
                 {
-                    MTLogger.Log("IsPatchable !IsMethodPatchable method=" + method.FullDescription());
+                    MTLogger.Info.Log("IsPatchable !IsMethodPatchable method=" + method.FullDescription());
                 }
                 return false;
             }

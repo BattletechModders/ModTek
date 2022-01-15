@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
 using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
 using CacheKeyValue = System.Collections.Generic.KeyValuePair<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.Merges.MergeCacheEntry>;
 
@@ -38,14 +38,14 @@ namespace ModTek.Features.Manifest.Merges
                 }
                 catch (Exception e)
                 {
-                    Log("MergeCache: Loading merge cache failed.", e);
+                    MTLogger.Info.Log("MergeCache: Loading merge cache failed.", e);
                 }
             }
 
             FileUtils.CleanDirectory(PersistentDirPath);
 
             // create a new one if it doesn't exist or couldn't be added'
-            Log("MergeCache: Rebuilding cache.");
+            MTLogger.Info.Log("MergeCache: Rebuilding cache.");
             CachedMerges = new CacheDB();
         }
 
@@ -57,22 +57,22 @@ namespace ModTek.Features.Manifest.Merges
                 saveSW.Restart();
                 if (!HasChanges)
                 {
-                    Log($"MergeCache: No changes detected, skipping save.");
+                    MTLogger.Info.Log($"MergeCache: No changes detected, skipping save.");
                     return;
                 }
 
                 ModTekCacheStorage.WriteTo(CachedMerges.ToList(), PersistentFilePath);
-                Log($"MergeCache: Saved to {PersistentFilePath}.");
+                MTLogger.Info.Log($"MergeCache: Saved to {PersistentFilePath}.");
                 HasChanges = false;
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Couldn't write to {PersistentFilePath}", e);
+                MTLogger.Info.Log($"MergeCache: Couldn't write to {PersistentFilePath}", e);
             }
             finally
             {
                 saveSW.Stop();
-                LogIfSlow(saveSW);
+                MTLogger.Info.LogIfSlow(saveSW);
             }
         }
 
@@ -81,7 +81,7 @@ namespace ModTek.Features.Manifest.Merges
             var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type);
             if (manifestEntry == null)
             {
-                Log($"\t\tError: Can't find referenced resource: {entry.ToShortString()}");
+                MTLogger.Info.Log($"\t\tError: Can't find referenced resource: {entry.ToShortString()}");
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace ModTek.Features.Manifest.Merges
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Couldn't merge {queuedEntry.CachedAbsolutePath}", e);
+                MTLogger.Info.Log($"MergeCache: Couldn't merge {queuedEntry.CachedAbsolutePath}", e);
                 return;
             }
 
@@ -124,7 +124,7 @@ namespace ModTek.Features.Manifest.Merges
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Couldn't write cached merge result to {queuedEntry.CachedAbsolutePath}", e);
+                MTLogger.Info.Log($"MergeCache: Couldn't write cached merge result to {queuedEntry.CachedAbsolutePath}", e);
             }
         }
 
@@ -140,7 +140,7 @@ namespace ModTek.Features.Manifest.Merges
             }
             catch (Exception e)
             {
-                Log($"MergeCache: Error when deleting cached file for {key}", e);
+                MTLogger.Info.Log($"MergeCache: Error when deleting cached file for {key}", e);
             }
         }
 
@@ -166,13 +166,13 @@ namespace ModTek.Features.Manifest.Merges
 
                     if (!cachedEntry.Equals(queuedEntry))
                     {
-                        Log($"MergeCache: {key} outdated in cache.");
+                        MTLogger.Info.Log($"MergeCache: {key} outdated in cache.");
                         CacheUpdate(key, queuedEntry);
                     }
                 }
                 else
                 {
-                    Log($"MergeCache: {key} missing in cache.");
+                    MTLogger.Info.Log($"MergeCache: {key} missing in cache.");
                     CacheUpdate(key, queuedEntry);
                 }
             }
@@ -189,7 +189,7 @@ namespace ModTek.Features.Manifest.Merges
                     continue;
                 }
 
-                Log($"MergeCache: {key} left over in cache.");
+                MTLogger.Info.Log($"MergeCache: {key} left over in cache.");
                 CacheRemove(kv.Key, kv.Value);
             }
 

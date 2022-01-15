@@ -5,9 +5,9 @@ using System.Linq;
 using System.Reflection;
 using Harmony;
 using ModTek.Features.CustomSVGAssets.Patches;
+using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.HarmonyPatching
 {
@@ -17,7 +17,7 @@ namespace ModTek.Features.HarmonyPatching
 
         internal static void PatchAll()
         {
-            Log("Applying ModTek harmony patches");
+            MTLogger.Info.Log("Applying ModTek harmony patches");
 
             var harmony = CreateInstance();
 
@@ -35,7 +35,7 @@ namespace ModTek.Features.HarmonyPatching
                 }
                 catch
                 {
-                    Log($"ERROR: Applying patch {type} failed");
+                    MTLogger.Error.Log($"Applying patch {type} failed");
                     throw;
                 }
             }
@@ -46,7 +46,7 @@ namespace ModTek.Features.HarmonyPatching
             }
             catch
             {
-                Log($"ERROR: Applying patch {nameof(SVGAssetLoadRequest_Load)} failed");
+                MTLogger.Error.Log($"Applying patch {nameof(SVGAssetLoadRequest_Load)} failed");
                 throw;
             }
         }
@@ -56,7 +56,7 @@ namespace ModTek.Features.HarmonyPatching
             var harmony = CreateInstance();
 
             var path = FilePaths.HarmonySummaryPath;
-            Log($"Writing Harmony Summary to {path}");
+            MTLogger.Info.Log($"Writing Harmony Summary to {path}");
             using (var writer = File.CreateText(path))
             {
                 writer.WriteLine($"Harmony Patched Methods (after ModTek startup) -- {DateTime.Now}");

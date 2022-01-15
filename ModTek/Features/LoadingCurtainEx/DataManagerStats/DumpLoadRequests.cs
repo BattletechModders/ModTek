@@ -14,7 +14,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
     {
         internal static void DumpProcessing(DataManagerStats stats)
         {
-            MTLogger.Log($"Dumping DataManager stats: {stats}");
+            MTLogger.Info.Log($"Dumping DataManager stats: {stats}");
             var dumper = new DumpLoadRequests();
             dumper.Analyze(stats.ActiveLoadRequests);
             dumper.LogSummary();
@@ -48,10 +48,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             {
                 return;
             }
-            MTLogger.Log($"Which resource are blocking:");
+            MTLogger.Info.Log($"Which resource are blocking:");
             foreach (var kv in incoming.OrderByDescending(x => x.Value))
             {
-                MTLogger.Log($"\t{kv.Key} {kv.Value}");
+                MTLogger.Info.Log($"\t{kv.Key} {kv.Value}");
             }
         }
 
@@ -122,7 +122,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                     }
                 }
 
-                MTLogger.Log(message);
+                MTLogger.Info.Log(message);
 
                 if (dependency != null)
                 {

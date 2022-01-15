@@ -2,7 +2,7 @@ using System;
 using BattleTech.UI;
 using Harmony;
 using ModTek.Features.LoadingCurtainEx.DataManagerStats;
-using static ModTek.Features.Logging.MTLogger;
+using ModTek.Features.Logging;
 
 namespace ModTek.Features.LoadingCurtainEx
 {
@@ -22,7 +22,7 @@ namespace ModTek.Features.LoadingCurtainEx
             }
             catch (Exception e)
             {
-                Log("Error running postfix", e);
+                MTLogger.Error.Log("Failed running postfix", e);
             }
         }
     }

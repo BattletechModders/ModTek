@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Harmony;
+using ModTek.Features.Logging;
 using ModTek.Features.Profiling.MPatches;
 using ModTek.UI;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
+using UnityEngine.Profiling;
 
 namespace ModTek.Features.Profiling
 {
@@ -23,13 +24,13 @@ namespace ModTek.Features.Profiling
 
             var sliderText = "Patching methods for profiling";
             yield return new ProgressReport(1, sliderText, "Gathering methods to be profiled", true);
-            Log(sliderText);
+            MTLogger.Info.Log(sliderText);
 
             if (ModTek.Config.Profiling.UseUnityProfilerIfSupported)
             {
-                UnityEngine.Profiling.Profiler.enabled = true;
-                UnityEngine.Profiling.Profiler.maxUsedMemory = ModTek.Config.Profiling.UnityProfilerMaxMemory;
-                Log($"Unity Profiling supported={UnityEngine.Profiling.Profiler.supported} enabled={UnityEngine.Profiling.Profiler.enabled}");
+                Profiler.enabled = true;
+                Profiler.maxUsedMemory = ModTek.Config.Profiling.UnityProfilerMaxMemory;
+                MTLogger.Info.Log($"Unity Profiling supported={Profiler.supported} enabled={Profiler.enabled}");
             }
 
             var harmony = HarmonyInstance.Create("ModTek.Profiler");
@@ -69,7 +70,7 @@ namespace ModTek.Features.Profiling
 
                 prefix.prioritiy = Priority.First;
                 postfix.prioritiy = Priority.Last;
-                Log($"\tPatching using Prefix {prefix.method.GetFullName()} and Postfix {postfix.method.GetFullName()}");
+                MTLogger.Info.Log($"\tPatching using Prefix {prefix.method.GetFullName()} and Postfix {postfix.method.GetFullName()}");
 
                 var countCurrent = 0;
                 var countMax = (float) methodTuples.Count;
@@ -80,7 +81,7 @@ namespace ModTek.Features.Profiling
                         sliderText,
                         $"{t.AssemblyName}\n{t.TypeName}\n{t.Method.Name}"
                     );
-                    Log($"\tPatching {t.TypeName}.{t.Method.Name} in {t.AssemblyName}");
+                    MTLogger.Info.Log($"\tPatching {t.TypeName}.{t.Method.Name} in {t.AssemblyName}");
 
                     var processor = new PatchProcessor(
                         harmony,
@@ -94,7 +95,7 @@ namespace ModTek.Features.Profiling
                     }
                     catch (Exception e)
                     {
-                        Log("Warning: Failed applying profiler patch", e);
+                        MTLogger.Warning.Log("Failed applying profiler patch", e);
                     }
                 }
             }

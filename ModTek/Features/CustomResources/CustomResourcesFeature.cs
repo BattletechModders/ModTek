@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using BattleTech;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
-using static ModTek.Features.Logging.MTLogger;
 using CustomResourcesDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
 namespace ModTek.Features.CustomResources
@@ -25,13 +23,13 @@ namespace ModTek.Features.CustomResources
             {
                 if (BTConstants.PREDEFINED_TYPES.Contains(customResourceType))
                 {
-                    Log($"\tWarning: {modDef.QuotedName} has custom resource type '{customResourceType}' that has the same name as a vanilla/modtek resource type. Ignoring this type.");
+                    MTLogger.Warning.Log($"\t{modDef.QuotedName} has custom resource type '{customResourceType}' that has the same name as a vanilla/modtek resource type. Ignoring this type.");
                     continue;
                 }
 
                 if (CustomResources.Add(customResourceType))
                 {
-                    Log($"\tAdded mod custom resource type '{customResourceType}'.");
+                    MTLogger.Info.Log($"\tAdded mod custom resource type '{customResourceType}'.");
                 }
             }
         }

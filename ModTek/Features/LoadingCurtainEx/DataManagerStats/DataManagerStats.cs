@@ -37,7 +37,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                 stats = LastStats;
                 if (!stats.dumped && Time.realtimeSinceStartup - stats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
                 {
-                    MTLogger.Log("Detected stuck DataManager.");
+                    MTLogger.Info.Log("Detected stuck DataManager.");
                     stats.dumped = true;
                     stats.Dump();
                 }

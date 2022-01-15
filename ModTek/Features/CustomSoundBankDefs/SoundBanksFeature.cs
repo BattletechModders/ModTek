@@ -4,11 +4,11 @@ using System.IO;
 using Harmony;
 using HBS;
 using ModTek.Features.CustomResources;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.UI;
 using Newtonsoft.Json;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomSoundBankDefs
 {
@@ -24,10 +24,10 @@ namespace ModTek.Features.CustomSoundBankDefs
                 yield break;
             }
 
-            Log($"Processing sound banks defs");
+            MTLogger.Info.Log($"Processing sound banks defs");
             if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
             {
-                Log("\tWWise manager not inited");
+                MTLogger.Warning.Log("\tWWise manager not inited");
                 yield break;
             }
 
@@ -40,18 +40,18 @@ namespace ModTek.Features.CustomSoundBankDefs
             foreach (var entry in entries)
             {
                 yield return new ProgressReport(countCurrent++/countMax, sliderText, entry.Id);
-                Log($"\tProcessing {entry.ToShortString()}");
+                MTLogger.Info.Log($"\tProcessing {entry.ToShortString()}");
                 try
                 {
                     var def = LoadDef(entry.FilePath);
-                    Log($"\t\tDef: {def.name} ({def.type}): {def.filename}");
+                    MTLogger.Debug.Log($"\t\tDef: {def.name} ({def.type}): {def.filename}");
                     if (string.IsNullOrEmpty(def.name))
                     {
                         def.name = entry.Id;
                     }
                     else if (def.name != entry.Id)
                     {
-                        Log("\t\tError: Name inside def is defined but not equal to the manifest entry id, skipping processing and load.");
+                        MTLogger.Warning.Log("\t\tName inside def is defined but not equal to the manifest entry id, skipping processing and load.");
                         continue;
                     }
                     soundBanks[def.name] = def;
@@ -68,7 +68,7 @@ namespace ModTek.Features.CustomSoundBankDefs
                 }
                 catch (Exception e)
                 {
-                    Log("\t\tError" + e);
+                    MTLogger.Error.Log("\t\tFailed processing", e);
                 }
             }
         }

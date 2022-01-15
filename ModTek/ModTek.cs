@@ -13,7 +13,6 @@ using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek
 {
@@ -54,7 +53,7 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                Log("Fatal error", e);
+                MTLogger.Error.Log("Fatal error", e);
             }
         }
 
@@ -75,7 +74,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"Error: Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
+                    MTLogger.Error.Log($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
                     FinishAndCleanup();
                     return;
                 }
@@ -83,7 +82,7 @@ namespace ModTek
 
             if (SettingsDef == null)
             {
-                Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
+                MTLogger.Info.Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
                 SettingsDef = new ModDefEx
                 {
                     Enabled = true,
@@ -102,7 +101,7 @@ namespace ModTek
             // load progress bar
             if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{VersionTools.ShortVersion}"))
             {
-                Log("Error: Failed to load progress bar.  Skipping mod loading completely.");
+                MTLogger.Error.Log("Failed to load progress bar.  Skipping mod loading completely.");
                 FinishAndCleanup();
             }
 
@@ -114,14 +113,14 @@ namespace ModTek
                 Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
             }
 
-            LogIf(Config.AssembliesToPreload.Length > 0, "Preloading assemblies");
-            foreach (var assemblyToPreload in ModTek.Config.AssembliesToPreload)
+            MTLogger.Info.LogIf(Config.AssembliesToPreload.Length > 0, "Preloading assemblies");
+            foreach (var assemblyToPreload in Config.AssembliesToPreload)
             {
-                Log($"\tLoading {assemblyToPreload}");
+                MTLogger.Info.Log($"\tLoading {assemblyToPreload}");
                 var assemblyPath = Path.Combine(FilePaths.ModsDirectory, assemblyToPreload);
                 if (!File.Exists(assemblyPath))
                 {
-                    Log($"\t\tWarning: Can't find assembly at {assemblyPath}, aborting load.");
+                    MTLogger.Warning.Log($"\t\tCan't find assembly at {assemblyPath}, aborting load.");
                     continue;
                 }
 
@@ -131,7 +130,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    Log($"\t\tError: Failed to preload the assembly.", e);
+                    MTLogger.Error.Log($"\t\tFailed to preload the assembly.", e);
                 }
             }
 
@@ -141,13 +140,13 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                Log("Error: PATCHING FAILED!", e);
+                MTLogger.Error.Log("PATCHING FAILED!", e);
                 return;
             }
 
             if (Enabled == false)
             {
-                Log("ModTek not enabled");
+                MTLogger.Info.Log("ModTek not enabled");
                 FinishAndCleanup();
                 return;
             }
@@ -174,7 +173,7 @@ namespace ModTek
 
             var sliderText = "Finishing Loading Mods";
             yield return new ProgressReport(1, sliderText, "", true);
-            Log(sliderText);
+            MTLogger.Info.Log(sliderText);
             ModDefsDatabase.FinishedLoadingMods();
         }
 
@@ -182,7 +181,7 @@ namespace ModTek
         {
             var sliderText = "Saving Harmony Summary";
             yield return new ProgressReport(1, sliderText, "", true);
-            Log(sliderText);
+            MTLogger.Info.Log(sliderText);
             HarmonyUtils.PrintHarmonySummary();
 
             yield return new ProgressReport(1, "Game now loading", "", true);
@@ -194,7 +193,7 @@ namespace ModTek
             HasLoaded = true;
 
             stopwatch.Stop();
-            Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
+            MTLogger.Info.Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
             stopwatch = null;
         }
     }

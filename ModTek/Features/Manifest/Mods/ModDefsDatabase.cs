@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Features.HarmonyPatching;
+using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.Mods
 {
@@ -59,7 +58,7 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             yield return new ProgressReport(1, sliderText, "Gather enable influence tree", true);
-            Log("FAIL LIST:");
+            MTLogger.Debug.Log("FAIL LIST:");
             foreach (var mod in allModDefs.Values)
             {
                 if (mod.Enabled == false)
@@ -73,13 +72,13 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
 
-                Log($"\t{mod.QuotedName} fail {mod.FailReason}");
+                MTLogger.Debug.Log($"\t{mod.QuotedName} fail {mod.FailReason}");
                 foreach (var dmod in mod.AffectingOnline)
                 {
                     var state = dmod.Key.Enabled && dmod.Key.LoadFail == false;
                     if (state != dmod.Value)
                     {
-                        Log($"\t\tdepends on {dmod.Key.QuotedName} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
+                        MTLogger.Debug.Log($"\t\tdepends on {dmod.Key.QuotedName} should be loaded:{dmod.Value} but it is not cause enabled:{dmod.Key.Enabled} and fail:{dmod.Key.LoadFail} due to {dmod.Key.FailReason}");
                     }
                 }
 
@@ -87,7 +86,7 @@ namespace ModTek.Features.Manifest.Mods
                 {
                     if (allModDefs.ContainsKey(deps) == false)
                     {
-                        Log($"\t\tdepends on {deps} but abcent");
+                        MTLogger.Debug.Log($"\t\tdepends on {deps} but abcent");
                     }
                 }
             }
@@ -121,7 +120,7 @@ namespace ModTek.Features.Manifest.Mods
 
             if (modJsons.Length == 0)
             {
-                Log("No ModTek-compatible mods found.");
+                MTLogger.Info.Log("No ModTek-compatible mods found.");
                 yield break;
             }
 
@@ -131,7 +130,7 @@ namespace ModTek.Features.Manifest.Mods
             // try loading each mod
             var countCurrent = 0;
             var countMax = (float) ModLoadOrder.Count;
-            Log("");
+            MTLogger.Info.Log("");
             foreach (var modName in ModLoadOrder)
             {
                 var modDef = ModDefs[modName];
@@ -175,7 +174,7 @@ namespace ModTek.Features.Manifest.Mods
         {
             if (modDef.Manifest.Any(entry => string.IsNullOrEmpty(entry.Path)))
             {
-                Log($"\tError: {modDef.QuotedName} has a manifest entry that is missing its path! Aborting load.");
+                MTLogger.Info.Log($"\tError: {modDef.QuotedName} has a manifest entry that is missing its path! Aborting load.");
                 return false;
             }
 
@@ -204,7 +203,7 @@ namespace ModTek.Features.Manifest.Mods
                     var modDir = Path.GetDirectoryName(modDefPath);
                     var modDirRelative = FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDir);
                     FailedToLoadMods.Add(modDirRelative);
-                    Log($"Error: Caught exception while parsing {modDefPath}", e);
+                    MTLogger.Info.Log($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }
 
@@ -268,11 +267,11 @@ namespace ModTek.Features.Manifest.Mods
         {
             if (e != null)
             {
-                Log(reason, e);
+                MTLogger.Warning.Log(reason, e);
             }
             else
             {
-                Log(reason);
+                MTLogger.Warning.Log(reason);
             }
 
             ModDefs.Remove(modName);
@@ -298,7 +297,7 @@ namespace ModTek.Features.Manifest.Mods
             }
 
             {
-                Log("Calling FinishedLoading:");
+                MTLogger.Info.Log("Calling FinishedLoading:");
                 foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
                 {
                     ModDefExLoading.FinishedLoading(modDef, ModLoadOrder);

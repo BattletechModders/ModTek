@@ -1,20 +1,30 @@
 using System;
 using System.Diagnostics;
+using HBS.Logging;
 
 namespace ModTek.Features.Logging
 {
-    // TODO introduce log levels
-    // MTLogger.Info.Log(message)
-    // if debug is optional: MTLogger.Debug?.Log(message)
-    internal static class MTLogger
+    internal class MTLogger
     {
-        internal static void Log(string message = null, Exception e = null)
+        internal static readonly MTLogger Error = new MTLogger(LogLevel.Error);
+        internal static readonly MTLogger Warning = new MTLogger(LogLevel.Warning);
+        internal static readonly MTLogger Info = new MTLogger(LogLevel.Log);
+        internal static readonly MTLogger Debug = new MTLogger(LogLevel.Debug);
+
+        private readonly LogLevel logLevel;
+
+        public MTLogger(LogLevel logLevel)
         {
-            message = message ?? "Method " + GetFullMethodName() + " called";
-            LoggingFeature.Log(message, e);
+            this.logLevel = logLevel;
         }
 
-        internal static void LogIf(bool condition, string message)
+        internal void Log(string message = null, Exception e = null)
+        {
+            message = message ?? "Method " + GetFullMethodName() + " called";
+            LoggingFeature.Log(logLevel, message, e);
+        }
+
+        internal void LogIf(bool condition, string message)
         {
             if (condition)
             {
@@ -22,7 +32,7 @@ namespace ModTek.Features.Logging
             }
         }
 
-        internal static void LogIfSlow(Stopwatch sw, string id = null, long threshold = 1000, bool resetIfLogged = true)
+        internal void LogIfSlow(Stopwatch sw, string id = null, long threshold = 1000, bool resetIfLogged = true)
         {
             if (sw.ElapsedMilliseconds < threshold)
             {

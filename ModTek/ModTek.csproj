@@ -58,12 +58,6 @@
     <Reference Include="UnityEngine.CoreModule">
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.ProfilerModule">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TextCoreModule">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <Private>False</Private>
     </Reference>

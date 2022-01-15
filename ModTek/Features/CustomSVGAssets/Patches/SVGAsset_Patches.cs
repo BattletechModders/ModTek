@@ -8,9 +8,9 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
+using ModTek.Features.Logging;
 using SVGImporter;
 using static BattleTech.Data.DataManager;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.CustomSVGAssets.Patches
 {
@@ -32,7 +32,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
 
         public static void Postfix(ApplicationConstants __instance)
         {
-            Log("ApplicationConstants.FromJSON. PrewarmRequests:");
+            MTLogger.Info.Log("ApplicationConstants.FromJSON. PrewarmRequests:");
             try
             {
                 var prewarmRequests = new List<PrewarmRequest>();
@@ -91,12 +91,12 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                     );
                 foreach (var preq in __instance.PrewarmRequests)
                 {
-                    Log("\t" + preq.ResourceType + ":" + preq.ResourceID);
+                    MTLogger.Info.Log("\t" + preq.ResourceType + ":" + preq.ResourceID);
                 }
             }
             catch (Exception e)
             {
-                Log(e: e);
+                MTLogger.Error.Log(e: e);
             }
         }
     }
@@ -115,7 +115,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
 
         public static void Postfix(DataManager __instance)
         {
-            Log("DataManager.PrewarmComplete");
+            MTLogger.Info.Log("DataManager.PrewarmComplete");
             dataManager = __instance;
             if (UIManager.HasInstance)
             {
@@ -131,14 +131,14 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                     var result = dataManager.GetObjectOfType<SVGAsset>("UILookAndColorConstants." + field.Name, BattleTechResourceType.SVGAsset);
                     if (result != null)
                     {
-                        Log("\tUpdating icon " + field.Name);
+                        MTLogger.Info.Log("\tUpdating icon " + field.Name);
                         field.SetValue(UIManager.Instance.UILookAndColorConstants, result);
                     }
                 }
             }
             else
             {
-                Log("\tUIManager have no instance");
+                MTLogger.Warning.Log("\tUIManager have no instance");
             }
         }
     }
@@ -298,7 +298,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                 gen.Emit(OpCodes.Ret);
                 ResourceLoadRequest_Load = (Action<ResourceLoadRequest<SVGAsset>>) dm.CreateDelegate(typeof(Action<ResourceLoadRequest<SVGAsset>>));
                 var fields = typeof(UILookAndColorConstants).GetFields();
-                Log("UILookAndColorConstants fields:" + fields.Length);
+                MTLogger.Info.Log("UILookAndColorConstants fields:" + fields.Length);
                 foreach (var field in fields)
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
@@ -312,7 +312,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
             }
             catch (Exception e)
             {
-                Log(e: e);
+                MTLogger.Error.Log(e: e);
             }
         }
 
@@ -376,11 +376,11 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                                     resource
                                 }
                             );
-                        Log("\tLoaded from external file:" + __instance.ManifestEntry.FilePath);
+                        MTLogger.Info.Log("\tLoaded from external file:" + __instance.ManifestEntry.FilePath);
                     }
                     catch (Exception e)
                     {
-                        Log("Fail to load external file:" + __instance.ManifestEntry.FilePath, e);
+                        MTLogger.Error.Log("Failed to load external file:" + __instance.ManifestEntry.FilePath, e);
                         throw new ArgumentNullException("THIS IS !NOT! I REPEAT, !NOT! MODTEK ERROR. YOUR SVG FILE FAIL TO LOAD! More info in ModTek_runtime_log.txt");
                     }
 

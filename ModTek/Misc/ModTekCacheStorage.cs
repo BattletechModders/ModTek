@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Reflection;
-using BattleTech;
-using Harmony;
 using HBS.Util;
+using ModTek.Features.Logging;
 using Newtonsoft.Json;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Misc
 {
@@ -28,7 +25,7 @@ namespace ModTek.Misc
             foreach (var file in baseDir.EnumerateFiles())
             {
                 file.IsReadOnly = false;
-                Log("delete file " + file.FullName);
+                MTLogger.Info.Log("delete file " + file.FullName);
                 try
                 {
                     file.Delete();
@@ -39,7 +36,7 @@ namespace ModTek.Misc
                 }
             }
 
-            Log("delete directory " + baseDir.FullName);
+            MTLogger.Info.Log("delete directory " + baseDir.FullName);
             try
             {
                 baseDir.Delete();

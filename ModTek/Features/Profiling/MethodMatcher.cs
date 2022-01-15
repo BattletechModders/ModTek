@@ -65,7 +65,7 @@ namespace ModTek.Features.Profiling
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Log($"Can't get methods from Type {type.FullName}", e);
+                    MTLogger.Warning.Log($"Can't get methods from Type {type.FullName}", e);
                     continue;
                 }
 

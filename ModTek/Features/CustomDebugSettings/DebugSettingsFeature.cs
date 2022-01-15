@@ -18,7 +18,7 @@ namespace ModTek.Features.CustomDebugSettings
         public static string GetDebugSettings()
         {
             var entry = BetterBTRL.Instance.EntryByIDAndType("settings", InternalCustomResourceType.DebugSettings.ToString());
-            MTLogger.Log($"Debug settings: {entry.FilePath}");
+            MTLogger.Info.Log($"Debug settings: {entry.FilePath}");
             return ModsManifest.GetJson(entry);
         }
 

@@ -1,8 +1,6 @@
 using System.Linq;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Features.LoadingCurtainEx.DataManagerStats;
-using ModTek.UI;
 using UnityEngine;
 using Logger = HBS.Logging.Logger;
 

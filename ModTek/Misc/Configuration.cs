@@ -3,7 +3,6 @@ using System.IO;
 using ModTek.Features.Logging;
 using ModTek.Features.Profiling;
 using Newtonsoft.Json;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Misc
 {
@@ -112,7 +111,7 @@ namespace ModTek.Misc
                             NullValueHandling = NullValueHandling.Ignore
                         }
                     );
-                    Log($"Loaded config from path: {path}");
+                    MTLogger.Info.Log($"Loaded config from path: {path}");
                 }
                 catch (Exception e)
                 {
@@ -133,7 +132,7 @@ namespace ModTek.Misc
         {
             if (ReadConfigurationException != null)
             {
-                Log("Reading configuration failed, using defaults", ReadConfigurationException);
+                MTLogger.Warning.Log("Reading configuration failed, using defaults", ReadConfigurationException);
             }
         }
 

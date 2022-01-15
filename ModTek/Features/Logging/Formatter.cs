@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using Harmony;
 using HBS.Logging;
 using UnityEngine;
@@ -71,7 +72,7 @@ namespace ModTek.Features.Logging
 
         private string GetFormattedAbsoluteTime()
         {
-            return DateTime.UtcNow.ToString(settings.FormatAbsoluteTime, System.Globalization.CultureInfo.InvariantCulture);
+            return DateTime.UtcNow.ToString(settings.FormatAbsoluteTime, CultureInfo.InvariantCulture);
         }
 
         private string LogToString(LogLevel level)

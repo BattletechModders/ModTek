@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Features.Manifest.Mods;
+using ModTek.Features.Logging;
 using Newtonsoft.Json;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Util
 {
@@ -99,17 +98,17 @@ namespace ModTek.Util
                 try
                 {
                     order = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
-                    Log("Loaded cached load order.");
+                    MTLogger.Info.Log("Loaded cached load order.");
                     return order;
                 }
                 catch (Exception e)
                 {
-                    Log("Loading cached load order failed, rebuilding it.", e);
+                    MTLogger.Info.Log("Loading cached load order failed, rebuilding it.", e);
                 }
             }
 
             // create a new one if it doesn't exist or couldn't be added
-            Log("Building new load order!");
+            MTLogger.Info.Log("Building new load order!");
             order = new List<string>();
             return order;
         }

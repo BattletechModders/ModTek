@@ -4,8 +4,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Harmony;
 using HBS.Util;
+using ModTek.Features.Logging;
 using Newtonsoft.Json.Linq;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Util
 {
@@ -19,7 +19,7 @@ namespace ModTek.Util
 
         internal static JObject ParseGameJSON(string content, bool log = false)
         {
-            LogIf(log,"content: " + content);
+            MTLogger.Info.LogIf(log,"content: " + content);
 
             try
             {
@@ -31,10 +31,10 @@ namespace ModTek.Util
             }
 
             var commentsStripped = StripHBSCommentsFromJSON(content);
-            LogIf(log, "commentsStripped: " + commentsStripped);
+            MTLogger.Info.LogIf(log, "commentsStripped: " + commentsStripped);
 
             var commasAdded = FixHBSJsonCommas(commentsStripped);
-            LogIf(log,"commasAdded: " + commasAdded);
+            MTLogger.Info.LogIf(log,"commasAdded: " + commasAdded);
 
             return JObject.Parse(commasAdded);
         }

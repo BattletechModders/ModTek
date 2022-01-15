@@ -32,7 +32,7 @@ namespace ModTek.Features.Logging
             Directory.CreateDirectory(FilePaths.TempModTekDirectory);
             var appender = new Appender(MTLogFilePath, Settings.ModTekLogFormatting);
             Logger.AddAppender(MainLogger.Name, appender);
-            Logger.SetLoggerLevel(MainLogger.Name, LogLevel.Log);
+            Logger.SetLoggerLevel(MainLogger.Name, LogLevel.Debug);
 
             {
                 var prefixes = Settings.PrefixesToIgnore;
@@ -56,9 +56,9 @@ namespace ModTek.Features.Logging
         }
 
         // used for direct logging from ModTek code
-        internal static void Log(string message, Exception e)
+        internal static void Log(LogLevel logLevel, string message, Exception e)
         {
-            MainLogger.Log(message, e);
+            MainLogger.LogAtLevel(logLevel, message, e);
         }
 
         // private static readonly TickCounter overheadPrefixMatcher = new TickCounter();

@@ -6,11 +6,11 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using ModTek.Features.LoadingCurtainEx.DataManagerStats;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Patches;
 using UnityEngine.Video;
-using static ModTek.Features.Logging.MTLogger;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace ModTek.Features.Manifest
@@ -26,24 +26,24 @@ namespace ModTek.Features.Manifest
         {
             if (preloader != null)
             {
-                Log("ERROR: Can't start prewarming, prewarm load request exists already");
+                MTLogger.Info.Log("ERROR: Can't start prewarming, prewarm load request exists already");
                 return;
             }
 
             if (!ModTek.Config.DelayPrewarmToMainMenu)
             {
-                Log("Prewarm delay disabled.");
+                MTLogger.Info.Log("Prewarm delay disabled.");
                 return;
             }
 
             var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
             if (prewarmRequests.Count == 0)
             {
-                Log("Nothing to prewarm.");
+                MTLogger.Info.Log("Nothing to prewarm.");
                 return;
             }
 
-            Log("Prewarming resources.");
+            MTLogger.Info.Log("Prewarming resources.");
 
             preloadSW.Start();
             preloader = new ModsManifestPreloader(prewarmRequests);
@@ -55,7 +55,7 @@ namespace ModTek.Features.Manifest
             finishedChecksAndPreloadsCounter++;
             preloader = null;
             preloadSW.Stop();
-            LogIfSlow(preloadSW, "Prewarming");
+            MTLogger.Info.LogIfSlow(preloadSW, "Prewarming");
         }
 
         private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
@@ -81,7 +81,7 @@ namespace ModTek.Features.Manifest
                 StartPrewarm,
                 () =>
                 {
-                    Log("Ongoing DataManager activity, waiting to finish before prewarm phase");
+                    MTLogger.Info.Log("Ongoing DataManager activity, waiting to finish before prewarm phase");
                     DataManagerStats.GetStats(out var stats);
                     stats.Dump();
                 }
@@ -133,18 +133,18 @@ namespace ModTek.Features.Manifest
             }
             catch (Exception e)
             {
-                Log("ERROR: Couldn't start loading via preload", e);
+                MTLogger.Info.Log("ERROR: Couldn't start loading via preload", e);
             }
         }
 
         private void AddPrewarmRequestsToQueue()
         {
-            Log("Prewarming resources during preload.");
+            MTLogger.Info.Log("Prewarming resources during preload.");
             foreach (var prewarm in prewarmRequests)
             {
                 if (prewarm.PrewarmAllOfType)
                 {
-                    Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
+                    MTLogger.Info.Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
                     foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(prewarm.ResourceType, true))
                     {
                         QueueLoadingResource(entry);
@@ -155,7 +155,7 @@ namespace ModTek.Features.Manifest
                     var entry = BetterBTRL.Instance.EntryByID(prewarm.ResourceID, prewarm.ResourceType, true);
                     if (entry != null)
                     {
-                        Log($"\tPrewarming resource {entry.ToShortString()}.");
+                        MTLogger.Info.Log($"\tPrewarming resource {entry.ToShortString()}.");
                         QueueLoadingResource(entry);
                     }
                 }
@@ -188,20 +188,20 @@ namespace ModTek.Features.Manifest
                 }
                 catch (Exception e)
                 {
-                    Log("ERROR execute PrewarmComplete", e);
+                    MTLogger.Info.Log("ERROR execute PrewarmComplete", e);
                 }
 
                 FinalizePrewarm();
             }
             catch (Exception e)
             {
-                Log("ERROR can't fully finish preload", e);
+                MTLogger.Info.Log("ERROR can't fully finish preload", e);
             }
         }
 
         private static void ShowLoadingCurtainOnMainMenu()
         {
-            Log("Showing LoadingCurtain on Main Menu.");
+            MTLogger.Info.Log("Showing LoadingCurtain on Main Menu.");
             LoadingCurtain.ShowPopupUntil(
                 PopupClosureConditionalCheck,
                 "Prewarming game resources.\nGame can temporarily freeze."
@@ -224,7 +224,7 @@ namespace ModTek.Features.Manifest
                 {
                     if (videoPlayer.isPaused)
                     {
-                        Log("Resuming MainMenu background video.");
+                        MTLogger.Debug.Log("Resuming MainMenu background video.");
                         videoPlayer.Play();
                     }
                     return true;
@@ -233,7 +233,7 @@ namespace ModTek.Features.Manifest
                 {
                     if (videoPlayer.isPlaying)
                     {
-                        Log("Pausing MainMenu background video.");
+                        MTLogger.Debug.Log("Pausing MainMenu background video.");
                         videoPlayer.Pause();
                     }
                     return false;
@@ -241,7 +241,7 @@ namespace ModTek.Features.Manifest
             }
             catch (Exception e)
             {
-                Log("Can't properly check if popup can be closed", e);
+                MTLogger.Warning.Log("Can't properly check if popup can be closed", e);
             }
             return false;
         }

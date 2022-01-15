@@ -73,7 +73,7 @@ namespace ModTek.Features.Profiling
             }
             catch (Exception e)
             {
-                MTLogger.Log($"Could find matching data for {this}", e);
+                MTLogger.Warning.Log($"Could find matching data for {this}", e);
                 return false;
             }
         }

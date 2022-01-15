@@ -32,7 +32,7 @@ namespace ModTek.Features.Logging
         [JsonProperty]
         internal FormatterSettings ModTekLogFormatting = new FormatterSettings
         {
-            FormatLine = "{2}{3}" // log level is always LOG and we know its ModTek
+            FormatLine = "[{1}] {2}{3}" // log level is always LOG and we know its ModTek
         };
 
         [JsonProperty]

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BattleTech.Data;
+using ModTek.Features.Logging;
 using ModTek.Util;
-using static ModTek.Features.Logging.MTLogger;
 
 namespace ModTek.Features.Manifest.BTRL
 {
@@ -23,7 +23,7 @@ namespace ModTek.Features.Manifest.BTRL
             AllContentPacksOwned = AllContentPacksLoaded && packIndex.AreContactPacksOwned(packIndex.GetAllLoadedContentPackIds());
             if (AllContentPacksLoaded)
             {
-                LogIf(OwnedContentPacks.Count > 0, "Owned content packs: " + OwnedContentPacks.AsTextList());
+                MTLogger.Info.LogIf(OwnedContentPacks.Count > 0, "Owned content packs: " + OwnedContentPacks.AsTextList());
             }
         }
 
@@ -45,7 +45,7 @@ namespace ModTek.Features.Manifest.BTRL
                 {
                     if (requiredContentPack != manifest.RequiredContentPack)
                     {
-                        Log($"Warning: Detected multiple entries with same resource id ({entry.Id}) but different {nameof(ModEntry.RequiredContentPack)} ({requiredContentPack} vs {manifest.RequiredContentPack}).");
+                        MTLogger.Warning.Log($"Detected multiple entries with same resource id ({entry.Id}) but different {nameof(ModEntry.RequiredContentPack)} ({requiredContentPack} vs {manifest.RequiredContentPack}).");
                     }
                     continue;
                 }
@@ -86,7 +86,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void PatchMDD(ContentPackIndex packIndex)
         {
-            Log("Patching MDDB for content pack items added by mods.");
+            MTLogger.Info.Log("Patching MDDB for content pack items added by mods.");
             var loadedContentPacks = packIndex.GetAllLoadedContentPackIds();
             foreach (var manifest in ModManifests)
             {

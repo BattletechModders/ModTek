@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using BattleTech;
 using Harmony;
-using static ModTek.Features.Logging.MTLogger;
+using ModTek.Features.Logging;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -37,7 +37,7 @@ namespace ModTek.Features.CustomGameTips.Patches
             }
             catch (Exception e)
             {
-                Log("Error trying to read custom GameTip", e);
+                MTLogger.Error.Log("Failed trying to read custom GameTip", e);
                 return File.ReadAllText(path);
             }
         }
