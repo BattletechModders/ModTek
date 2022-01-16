@@ -13,6 +13,7 @@ using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace ModTek
 {
@@ -37,6 +38,7 @@ namespace ModTek
         // INITIALIZATION (called by injected code)
         public static void Init()
         {
+            Application.runInBackground = true; // should be true by default, however there is at least one report of ModTek not loading in background on Linux
             Load();
         }
 
