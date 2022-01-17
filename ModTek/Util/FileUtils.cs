@@ -113,5 +113,15 @@ namespace ModTek.Util
             }
             Directory.CreateDirectory(path);
         }
+
+        public static void CreateParentOfPath(string path)
+        {
+            var fi = new FileInfo(path);
+            var dir = fi.Directory;
+            if (dir != null && !dir.Exists)
+            {
+                dir.Create();
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace ModTek.Features.Logging
 
         internal Appender(string path)
         {
+            FileUtils.CreateParentOfPath(path);
             writer = new StreamWriter(path) { AutoFlush = true };
             writer.WriteLine($"{DateTime.Now} ModTek v{VersionTools.LongVersion}");
             writer.WriteLine(new string('-', 80));
