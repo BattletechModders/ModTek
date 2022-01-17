@@ -105,7 +105,7 @@ namespace ModTek.Features.Logging.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log("Couldn't rewrite LogAtLevel call",  e);
+                MTLogger.Error.Log("Couldn't rewrite LogAtLevel call", e);
             }
             return true;
         }
