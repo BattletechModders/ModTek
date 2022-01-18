@@ -10,7 +10,7 @@ namespace ModTek.Features.Logging.Patches
     {
         public static bool Prepare()
         {
-            return ModTek.Enabled && false;
+            return ModTek.Enabled && ModTek.Config.Logging.DebugLogLevelSetters;
         }
 
         public static MethodInfo TargetMethod()

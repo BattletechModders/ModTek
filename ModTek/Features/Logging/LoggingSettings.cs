@@ -17,7 +17,12 @@ namespace ModTek.Features.Logging
         [JsonProperty]
         internal bool IgnoreLoggerLogLevel;
         [JsonProperty]
-        internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored.";
+        internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored to a certain extend. Set to true for FYLS behavior, not recommended though.";
+
+        [JsonProperty]
+        internal bool DebugLogLevelSetters;
+        [JsonProperty]
+        internal const string DebugLogLevelSetters_Description = "Log if a loggers log level changed and by whom.";
 
         [JsonProperty]
         internal bool SkipOriginalLoggers;
