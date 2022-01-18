@@ -61,9 +61,15 @@ namespace ModTek.Features.Manifest.BTRL
                 return addendum;
             }
 
+            var dedupe = new List<VersionManifestEntry>();
+            dedupe.AddRange(addendum.Cast<VersionManifestEntry>());
+            dedupe.AddRange(overrides);
+            dedupe.Reverse();
+            dedupe = dedupe.Distinct(new VersionManifestEntryComparer()).ToList();
+            dedupe.Reverse();
+
             var copy = new VersionManifestAddendum(addendum.Name);
-            copy.AddRange(addendum.Entries);
-            copy.AddRange(overrides); // duplicates are sorted inside TypedManifest
+            copy.AddRange(dedupe);
             return copy;
         }
 
@@ -146,7 +152,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         public VersionManifestAddendum GetAddendumByName(string name)
         {
-            return addendums.FirstOrDefault(x => x.Name == name);
+            return currentManifest.GetAddendumByName(name);
         }
 
         #region memory stores

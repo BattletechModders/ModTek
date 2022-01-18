@@ -17,6 +17,7 @@ namespace ModTek.Features.Manifest.BTRL
         private readonly TypedDict manifest = new TypedDict();
         private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new Dictionary<string, HashSet<BattleTechResourceType>>();
         private readonly BetterCPI packIndex;
+        private readonly Dictionary<string, VersionManifestAddendum> addendums = new Dictionary<string, VersionManifestAddendum>();
 
         private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
         private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();
@@ -30,6 +31,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             manifest.Clear();
             idToTypes.Clear();
+            addendums.Clear();
             SetEntries(defaultEntries);
             SetEntries(DebugSettingsFeature.DefaulManifestEntries);
             SetEntries(GameTipsFeature.DefaulManifestEntries);
@@ -51,7 +53,13 @@ namespace ModTek.Features.Manifest.BTRL
 
         public void AddAddendum(VersionManifestAddendum addendum)
         {
+            addendums[addendum.Name] = addendum;
             SetEntries(addendum.Entries);
+        }
+
+        public VersionManifestAddendum GetAddendumByName(string name)
+        {
+            return addendums.TryGetValue(name, out var addendum) ? addendum : null;
         }
 
         public VersionManifestEntry[] AllEntries(bool filterByOwnership)
