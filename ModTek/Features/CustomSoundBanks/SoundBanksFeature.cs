@@ -8,7 +8,7 @@ namespace ModTek.Features.CustomSoundBanks
     {
         internal static VersionManifestEntry GetSoundBank(string id)
         {
-            return BetterBTRL.Instance.EntryByIDAndType(InternalCustomResourceType.SoundBank.ToString(), id);
+            return BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.SoundBank.ToString());
         }
     }
 }
