@@ -32,7 +32,7 @@ namespace ModTek.Features.Manifest
             var sw = new Stopwatch();
             sw.Restart();
             bundleManager.LoadAllContentPacks();
-            MTLogger.Info.LogIfSlow(sw, "LoadAllContentPacks");
+            MTLogger.Debug.LogIfSlow(sw, "LoadAllContentPacks");
             // lets assume we own everything during merging and indexing
             BetterBTRL.Instance.PackIndex.AllContentPacksOwned = true;
 
@@ -43,7 +43,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Info.LogIfSlow(sw, "BuildModdedBTRL");
+            MTLogger.Debug.LogIfSlow(sw, "BuildModdedBTRL");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -52,7 +52,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Info.LogIfSlow(sw, "BuildMergeCache");
+            MTLogger.Debug.LogIfSlow(sw, "BuildMergeCache");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -61,7 +61,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Info.LogIfSlow(sw, "BuildMDDBCache");
+            MTLogger.Debug.LogIfSlow(sw, "BuildMDDBCache");
 
             BetterBTRL.Instance.PackIndex.AllContentPacksOwned = false;
             bundleManager.UnloadAll();
@@ -147,7 +147,7 @@ namespace ModTek.Features.Manifest
             }
             else
             {
-                MTLogger.Info.Log($"\tWarning: Could not find path {entry.RelativePathToMods}.");
+                MTLogger.Warning.Log($"\tCould not find path {entry.RelativePathToMods}.");
             }
         }
 
@@ -207,7 +207,7 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            MTLogger.Info.Log($"\tError: Type of entry unknown: {entry}.");
+            MTLogger.Warning.Log($"\tType of entry unknown: {entry}.");
         }
 
         private static bool FixMissingIdAndType(ModEntry entry)
@@ -239,12 +239,12 @@ namespace ModTek.Features.Manifest
 
             if (entriesById.Count == 0)
             {
-                MTLogger.Info.Log($"\t\tError: Can't resolve type, no types found for id and extension, either an issue with mod order or typo (case sensitivity): {entry}");
+                MTLogger.Warning.Log($"\t\tCan't resolve type, no types found for id and extension, either an issue with mod order or typo (case sensitivity): {entry}");
                 return false;
             }
             if (entriesById.Count > 1)
             {
-                MTLogger.Info.Log($"\t\tError: Can't resolve type, more than one type found for id and extension, please specify manually: {entry}");
+                MTLogger.Warning.Log($"\t\tCan't resolve type, more than one type found for id and extension, please specify manually: {entry}");
                 return false;
             }
             entry.Type = entriesById[0].Type;
@@ -354,7 +354,7 @@ namespace ModTek.Features.Manifest
         {
             if (entry.RequiredContentPack != null)
             {
-                MTLogger.Info.Log($"\t\tWarning: Specified {nameof(entry.RequiredContentPack)} is being ignored.");
+                MTLogger.Warning.Log($"\t\tSpecified {nameof(entry.RequiredContentPack)} is being ignored.");
                 entry.RequiredContentPack = null;
             }
         }
@@ -363,7 +363,7 @@ namespace ModTek.Features.Manifest
         {
             if (!entry.AddToDB)
             {
-                MTLogger.Info.Log($"\t\tWarning: {nameof(entry.AddToDB)}={entry.AddToDB} is being ignored");
+                MTLogger.Warning.Log($"\t\t{nameof(entry.AddToDB)}={entry.AddToDB} is being ignored");
             }
         }
 
@@ -380,7 +380,7 @@ namespace ModTek.Features.Manifest
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log($"\t\tError: Can't read: {entry}", e);
+                MTLogger.Warning.Log($"\t\tCan't read file at path {entry.FilePath}", e);
                 return null;
             }
         }
