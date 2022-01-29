@@ -53,6 +53,27 @@ namespace ModTek.Features.Logging
                     IgnorePrefixesMatcher = null;
                 }
             }
+
+            if (Settings.LogUncaughtExceptions)
+            {
+                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                {
+                    var message = "UnhandledException";
+                    if (!(e.ExceptionObject is Exception ex))
+                    {
+                        ex = null;
+                        message += " " + e.ExceptionObject;
+                    }
+
+                    LogAtLevel(
+                        "AppDomain",
+                        LogLevel.Debug,
+                        message,
+                        ex,
+                        null
+                    );
+                };
+            }
         }
 
         // used for direct logging from ModTek code
