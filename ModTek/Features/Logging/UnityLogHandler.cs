@@ -8,23 +8,12 @@ namespace ModTek.Features.Logging
         internal static void Setup()
         {
             // the normal way
-            Application.logMessageReceived += LogMessageReceived;
             Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
-        }
-        private static void LogMessageReceived(string logString, string stackTrace, LogType type)
-        {
-            LoggingFeature.LogAtLevel(
-                "Unity",
-                UnityLogTypeToHBSLogLevel(type),
-                logString,
-                null,
-                GetLocation(stackTrace)
-            );
         }
         private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
         {
             LoggingFeature.LogAtLevel(
-                "UnityThreaded",
+                "Unity",
                 UnityLogTypeToHBSLogLevel(type),
                 logString,
                 null,
