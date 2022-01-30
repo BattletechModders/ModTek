@@ -18,7 +18,7 @@ namespace ModTek.Features.Logging.Patches
             LoggingFeature.LogAtLevel(
                 "Debugger",
                 LogLevel.Debug,
-                "A thread was started with id " + __instance.ManagedThreadId + st,
+                "A thread was started with ThreadId=" + __instance.ManagedThreadId + st,
                 null,
                 null
             );

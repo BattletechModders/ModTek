@@ -89,7 +89,7 @@ namespace ModTek.Features.Logging
             {
                 return null;
             }
-            return "[Thread=" + thread.ManagedThreadId + "]";
+            return "[ThreadId=" + thread.ManagedThreadId + "]";
         }
 
         private string LogToString(LogLevel level)
