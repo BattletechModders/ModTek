@@ -51,7 +51,7 @@ RT benchmark by loading into the game
                 exitedLastSibling = node => sb.Append(")")
             };
             Traverse(traverser);
-            return new Regex(sb.ToString());
+            return new Regex(sb.ToString(), RegexOptions.Compiled);
         }
 
         private class Traverser

@@ -83,14 +83,21 @@ namespace ModTek.Features.Logging
             MainLogger.LogAtLevel(logLevel, message, e);
         }
 
+        // used to remove logging unfriendly characters
+        private static readonly Regex MessageSanitizer = new Regex(@"[\p{C}-[\r\n\t]]+", RegexOptions.Compiled);
+
         // private static readonly TickCounter overheadPrefixMatcher = new TickCounter();
         // used for intercepting all logging attempts and to log centrally
         internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
         {
+            var messageString = message == null
+                ? string.Empty
+                : MessageSanitizer.Replace(message.ToString(), string.Empty);
+
             var logLine = btLogFormatter.GetFormattedLogLine(
                 loggerName,
                 logLevel,
-                message,
+                messageString,
                 exception,
                 location,
                 Thread.CurrentThread
