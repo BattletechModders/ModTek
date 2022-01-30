@@ -20,6 +20,16 @@ namespace ModTek.Features.Logging
         internal const string LogUncaughtExceptions_Description = "Logs uncaught exceptions via AppDomain handler.";
 
         [JsonProperty]
+        internal bool LogExceptionInitializations = true;
+        [JsonProperty]
+        internal const string LogExceptionInitializations_Description = "Logs out any exceptions being initialized, even before they are thrown or ignored.";
+
+        [JsonProperty]
+        internal bool LogThreadStarts = true;
+        [JsonProperty]
+        internal const string LogThreadStarts_Description = "Logs who starts threads.";
+
+        [JsonProperty]
         internal bool IgnoreLoggerLogLevel;
         [JsonProperty]
         internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored to a certain extend. Set to true for FYLS behavior, not recommended though.";

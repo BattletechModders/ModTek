@@ -31,7 +31,7 @@ namespace ModTek.Features.Logging.Patches
                     var logImplType = AccessTools.Inner(typeof(Logger), "LogImpl");
                     var LogImplIsEnabledForMethod = AccessTools.Method(logImplType, "IsEnabledFor");
                     var dm = new DynamicMethod(
-                        "IsEnabledForWrapper",
+                        "ModTek_IsEnabledFor",
                         typeof(bool),
                         new[]
                         {

@@ -21,9 +21,6 @@ namespace ModTek.Features.Logging
             " Absolute time is useful when using mods that do not use HBS logging and use absolute time for their logging.";
 
         [JsonProperty]
-        internal string FormatTimeAndLine { get; set; } = "{0} {1}";
-
-        [JsonProperty]
         internal string FormatStartupTime { get; set; } = "{1:D2}:{2:D2}.{3:D3}";
         [JsonProperty]
         internal const string FormatStartupTime_Description = "Runs through string.Format, arguments in order are: Hours, Minutes, Seconds, Milliseconds.";

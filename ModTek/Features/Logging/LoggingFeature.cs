@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
 
@@ -91,10 +92,11 @@ namespace ModTek.Features.Logging
                 logLevel,
                 message,
                 exception,
-                location
+                location,
+                Thread.CurrentThread
             );
 
-            btFullAppender?.WriteLine(logLine.Line);
+            btFullAppender?.WriteLine(logLine.FullLine);
             // btFullAppender?.WriteLine("overheadPrefixMatcher " + overheadPrefixMatcher);
 
             if (IgnorePrefixesMatcher != null)
@@ -103,7 +105,7 @@ namespace ModTek.Features.Logging
                 {
                     // var tracker = new TickTracker();
                     // tracker.Begin();
-                    ignore = IgnorePrefixesMatcher.IsMatch(logLine.LineWithoutTime);
+                    ignore = IgnorePrefixesMatcher.IsMatch(logLine.PrefixLine);
                     // tracker.End();
                     // overheadPrefixMatcher.IncrementBy(tracker);
                 }
@@ -112,7 +114,7 @@ namespace ModTek.Features.Logging
                     return;
                 }
             }
-            btCleanAppender.WriteLine(logLine.Line);
+            btCleanAppender.WriteLine(logLine.FullLine);
         }
     }
 }

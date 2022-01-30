@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading;
 using Harmony;
 using HBS.Logging;
+using ModTek.Util;
 using UnityEngine;
 
 namespace ModTek.Features.Logging
@@ -15,9 +17,10 @@ namespace ModTek.Features.Logging
             this.settings = settings;
         }
 
-        internal LogLine GetFormattedLogLine(string name, LogLevel logLevel, object message, Exception exception, IStackTrace location)
+        internal LogLine GetFormattedLogLine(string name, LogLevel logLevel, object message, Exception exception, IStackTrace location, Thread thread)
         {
             var time = GetFormattedTime();
+            var formattedThread = GetFormattedThread(thread);
             var line = string.Format(settings.FormatLine,
                 name,
                 LogToString(logLevel),
@@ -36,21 +39,26 @@ namespace ModTek.Features.Logging
                 line = line.Replace("\n", "\n\t");
             }
 
-            var timeWithLine = string.Format(settings.FormatTimeAndLine, time, line);
-
-            return new LogLine(timeWithLine, line);
+            return new LogLine(time, formattedThread, line);
         }
 
         internal class LogLine
         {
-            public LogLine(string line, string lineWithoutTime)
+            public LogLine(string time, string thread, string line)
             {
-                Line = line;
-                LineWithoutTime = lineWithoutTime;
+                if (thread == null)
+                {
+                    FullLine = time + " " + line;
+                }
+                else
+                {
+                    FullLine = time + " " + thread + " " + line;
+                }
+                PrefixLine = line;
             }
 
-            internal string Line { get; }
-            internal string LineWithoutTime { get; }
+            internal string FullLine { get; }
+            internal string PrefixLine { get; }
         }
 
         private string GetFormattedTime()
@@ -73,6 +81,15 @@ namespace ModTek.Features.Logging
         private string GetFormattedAbsoluteTime()
         {
             return DateTime.UtcNow.ToString(settings.FormatAbsoluteTime, CultureInfo.InvariantCulture);
+        }
+
+        private string GetFormattedThread(Thread thread)
+        {
+            if (MTUnityUtils.MainManagedThreadId == thread.ManagedThreadId)
+            {
+                return null;
+            }
+            return "[Thread=" + thread.ManagedThreadId + "]";
         }
 
         private string LogToString(LogLevel level)

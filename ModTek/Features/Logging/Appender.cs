@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using HBS.Logging;
 using ModTek.Util;
 using Object = UnityEngine.Object;
@@ -27,8 +28,8 @@ namespace ModTek.Features.Logging
 
         public void OnLogMessage(string logName, LogLevel level, object message, Object context, Exception exception, IStackTrace location)
         {
-            var logLine = formatter.GetFormattedLogLine(logName, level, message, exception, location);
-            WriteLine(logLine.Line);
+            var logLine = formatter.GetFormattedLogLine(logName, level, message, exception, location, Thread.CurrentThread);
+            WriteLine(logLine.PrefixLine);
         }
 
         public void Flush()
