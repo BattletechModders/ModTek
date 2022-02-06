@@ -58,11 +58,6 @@ namespace ModTek.Features.Manifest
             loadedBundles.Clear();
         }
 
-        internal bool HasContentPack(string name)
-        {
-            return loadedBundles.ContainsKey(name);
-        }
-
         internal string GetText(string bundleName, string resourceId)
         {
             if (!loadedBundles.TryGetValue(bundleName, out var bundle))

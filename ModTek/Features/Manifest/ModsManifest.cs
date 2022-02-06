@@ -87,13 +87,10 @@ namespace ModTek.Features.Manifest
                 AddImplicitManifest(modDef);
 
                 MTLogger.Info.LogIf(modDef.Manifest.Count > 0, $"{modDef.QuotedName} Manifest:");
-                var packager = new ModAddendumPackager(modDef.Name);
                 foreach (var modEntry in modDef.Manifest)
                 {
-                    NormalizeAndExpandAndAddModEntries(modDef, modEntry, packager);
+                    NormalizeAndExpandAndAddModEntries(modDef, modEntry);
                 }
-
-                packager.SaveToBTRL();
             }
         }
 
@@ -115,23 +112,23 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static void NormalizeAndExpandAndAddModEntries(ModDefEx modDef, ModEntry entry, ModAddendumPackager packager)
+        private static void NormalizeAndExpandAndAddModEntries(ModDefEx modDef, ModEntry entry)
         {
             entry.ModDef = modDef;
 
             if (entry.AssetBundleName != null)
             {
-                AddModEntry(entry, packager);
+                AddModEntry(entry);
             }
             else if (entry.IsFile)
             {
                 if (BTConstants.CType(entry.Type, out var customType) && customType == CustomType.AdvancedJSONMerge)
                 {
-                    ExpandAdvancedMerges(entry, packager);
+                    ExpandAdvancedMerges(entry);
                 }
                 else
                 {
-                    AddModEntry(entry, packager);
+                    AddModEntry(entry);
                 }
 
             }
@@ -142,7 +139,7 @@ namespace ModTek.Features.Manifest
                 {
                     var copy = entry.copy();
                     copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
-                    NormalizeAndExpandAndAddModEntries(modDef, copy, packager); // could lead to adv json merges that again expand
+                    NormalizeAndExpandAndAddModEntries(modDef, copy); // could lead to adv json merges that again expand
                 }
             }
             else
@@ -151,7 +148,7 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        private static void ExpandAdvancedMerges(ModEntry entry, ModAddendumPackager packager)
+        private static void ExpandAdvancedMerges(ModEntry entry)
         {
             var advMerge = AdvancedJSONMerge.FromFile(entry.AbsolutePath);
             if (advMerge == null)
@@ -181,11 +178,11 @@ namespace ModTek.Features.Manifest
                 copy.Id = target;
                 copy.Type = advMerge.TargetType;
                 copy.ShouldMergeJSON = true;
-                AddModEntry(copy, packager);
+                AddModEntry(copy);
             }
         }
 
-        private static void AddModEntry(ModEntry entry, ModAddendumPackager packager)
+        private static void AddModEntry(ModEntry entry)
         {
             if (!FixMissingIdAndType(entry))
             {
@@ -197,12 +194,12 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (AddModEntryAsBTR(entry, packager))
+            if (AddModEntryAsBTR(entry))
             {
                 return;
             }
 
-            if (AddModEntryAsCR(entry, packager))
+            if (AddModEntryAsCR(entry))
             {
                 return;
             }
@@ -274,7 +271,7 @@ namespace ModTek.Features.Manifest
             return false;
         }
 
-        private static bool AddModEntryAsBTR(ModEntry entry, ModAddendumPackager packager)
+        private static bool AddModEntryAsBTR(ModEntry entry)
         {
             if (!BTConstants.BTResourceType(entry.Type, out var resourceType))
             {
@@ -299,20 +296,20 @@ namespace ModTek.Features.Manifest
                     LogModEntryAction("Replace", entry);
                     UnsupportedFeatureAddToDb(entry);
                     UnsupportedFeatureContentPackRequirements(entry);
-                    packager.AddEntry(entry);
+                    AddEntryToBTRL(entry);
                 }
                 else
                 {
                     LogModEntryAction("Add", entry);
                     AddToDbIfApplicable(entry);
-                    packager.AddEntry(entry);
+                    AddEntryToBTRL(entry);
                 }
             }
 
             return true;
         }
 
-        private static bool AddModEntryAsCR(ModEntry entry, ModAddendumPackager packager)
+        private static bool AddModEntryAsCR(ModEntry entry)
         {
             if (!entry.IsTypeCustomResource)
             {
@@ -324,16 +321,39 @@ namespace ModTek.Features.Manifest
                 LogModEntryAction("Replace", entry);
                 UnsupportedFeatureAddToDb(entry);
                 UnsupportedFeatureContentPackRequirements(entry);
-                packager.AddEntry(entry);
+                AddEntryToBTRL(entry);
             }
             else
             {
                 LogModEntryAction("Add", entry);
                 AddToDbIfApplicable(entry);
-                UnsupportedFeatureContentPackRequirements(entry);
-                packager.AddEntry(entry);
+                AddEntryToBTRL(entry);
             }
             return true;
+        }
+
+        private static void AddEntryToBTRL(ModEntry entry)
+        {
+            TrackModEntryOwnershipIfApplicable(entry);
+            BetterBTRL.Instance.AddModEntry(entry);
+        }
+
+        private static void TrackModEntryOwnershipIfApplicable(ModEntry entry)
+        {
+            if (entry.RequiredContentPack == null)
+            {
+                return;
+            }
+
+            // type independent check
+            var types = BetterBTRL.Instance.EntriesByID(entry.Id);
+            if (types.Length > 0)
+            {
+                MTLogger.Warning.Log($"Detected existing entry with same resource id ({entry.Id}), ignoring specified {nameof(ModEntry.RequiredContentPack)}.");
+                return;
+            }
+
+            BetterBTRL.Instance.PackIndex.TrackModEntry(entry);
         }
 
         private static void LogModEntryAction(string action, ModEntry entry)

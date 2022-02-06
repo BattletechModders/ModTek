@@ -19,7 +19,7 @@ namespace ModTek.Features.Manifest.BTRL
 
         private readonly VersionManifest defaultManifest;
         private readonly List<VersionManifestAddendum> addendums = new List<VersionManifestAddendum>();
-        private readonly List<ModAddendumManifest> orderedModAddendumManifests = new List<ModAddendumManifest>();
+        private readonly VersionManifestAddendum modsManifest = new VersionManifestAddendum("ModTekModsManifestAddendum");
         private readonly VersionManifestAddendum mergeAddendum = new VersionManifestAddendum("ModTekMergeCacheAddendum");
         private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new Dictionary<string, List<VersionManifestEntry>>();
 
@@ -35,7 +35,7 @@ namespace ModTek.Features.Manifest.BTRL
                     && EntryByID(entry.AssetBundleName, BattleTechResourceType.AssetBundle) == null
                     && !entry.GetRawPath().StartsWith("Assets/Resources/UnlockedAssets"))
                 {
-                    MTLogger.Info.Log($"\t\tError: Cannot find referenced asset bundle {entry.AssetBundleName} by {entry.ToShortString()}.");
+                    MTLogger.Warning.Log($"Cannot find referenced asset bundle {entry.AssetBundleName} by {entry.ToShortString()}.");
                 }
             }
 
@@ -125,15 +125,12 @@ namespace ModTek.Features.Manifest.BTRL
             return addendums.Any(x => name.Equals(x.Name));
         }
 
-        public void AddModAddendum(ModAddendumManifest modManifest, bool forceApply)
+        internal void AddModEntry(ModEntry modEntry)
         {
-            orderedModAddendumManifests.Add(modManifest);
-            HasChanges = true;
-            // avoid to do a full refresh just so modded content can merge into other modded content
-            if (forceApply)
-            {
-                currentManifest.AddAddendum(modManifest.Addendum);
-            }
+            var entry = modEntry.CreateVersionManifestEntry();
+            modsManifest.Add(entry);
+            currentManifest.SetEntry(entry); // avoids full refresh
+            HasChanges = true; // might not be necessary due to direct SetEntry call
         }
 
         public void RemoveAddendum(VersionManifestAddendum addendum)
@@ -305,12 +302,7 @@ namespace ModTek.Features.Manifest.BTRL
                 currentManifest.AddAddendum(ApplyOverrides(addendum));
             }
 
-            PackIndex.ClearTrackedModAddendumManifests();
-            foreach (var modAddendum in orderedModAddendumManifests)
-            {
-                PackIndex.TrackModAddendumManifest(modAddendum);
-                currentManifest.AddAddendum(ApplyOverrides(modAddendum.Addendum));
-            }
+            currentManifest.AddAddendum(modsManifest);
 
             // add merge cache, make sure to only overwrite resources already in the locator
             {

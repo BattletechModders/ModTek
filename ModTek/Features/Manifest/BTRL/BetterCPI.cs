@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using BattleTech.Data;
 using ModTek.Features.Logging;
 using ModTek.Util;
@@ -10,8 +10,8 @@ namespace ModTek.Features.Manifest.BTRL
     {
         private List<string> OwnedContentPacks = new List<string>();
         private Dictionary<string, string> BaseResourceMap = new Dictionary<string, string>();
-        private readonly Dictionary<string, string> ModResourceMap = new Dictionary<string, string>();
-        private readonly List<ModAddendumManifest> ModManifests = new List<ModAddendumManifest>();
+        private readonly Dictionary<string, string> ModsResourceMap = new Dictionary<string, string>(); // resourceId, contentPackName
+        private readonly Dictionary<string, string> ModsTypeMap = new Dictionary<string, string>(); // resourceId, resourceType
         internal bool AllContentPacksOwned; // used to speed up checks and helps during merging/indexing
 
         // called on ownership changes
@@ -27,30 +27,10 @@ namespace ModTek.Features.Manifest.BTRL
             }
         }
 
-        internal void ClearTrackedModAddendumManifests()
+        internal void TrackModEntry(ModEntry modEntry)
         {
-            ModResourceMap.Clear();
-            ModManifests.Clear();
-        }
-        internal void TrackModAddendumManifest(ModAddendumManifest manifest)
-        {
-            if (string.IsNullOrEmpty(manifest.RequiredContentPack))
-            {
-                return;
-            }
-            ModManifests.Add(manifest);
-            foreach (var entry in manifest.Addendum.Entries)
-            {
-                if (ModResourceMap.TryGetValue(entry.Id, out var requiredContentPack))
-                {
-                    if (requiredContentPack != manifest.RequiredContentPack)
-                    {
-                        MTLogger.Warning.Log($"Detected multiple entries with same resource id ({entry.Id}) but different {nameof(ModEntry.RequiredContentPack)} ({requiredContentPack} vs {manifest.RequiredContentPack}).");
-                    }
-                    continue;
-                }
-                ModResourceMap[entry.Id] = manifest.RequiredContentPack;
-            }
+            ModsResourceMap[modEntry.Id] = modEntry.RequiredContentPack;
+            ModsTypeMap[modEntry.Id] = modEntry.Type;
         }
 
         internal bool IsResourceOwned(string resourceId)
@@ -73,7 +53,7 @@ namespace ModTek.Features.Manifest.BTRL
                     return false;
                 }
             }
-            else if (ModResourceMap.TryGetValue(resourceId, out var mrmContentPackName))
+            else if (ModsResourceMap.TryGetValue(resourceId, out var mrmContentPackName))
             {
                 if (!OwnedContentPacks.Contains(mrmContentPackName))
                 {
@@ -86,23 +66,25 @@ namespace ModTek.Features.Manifest.BTRL
 
         internal void PatchMDD(ContentPackIndex packIndex)
         {
-            MTLogger.Info.Log("Patching MDDB for content pack items added by mods.");
-            var loadedContentPacks = packIndex.GetAllLoadedContentPackIds();
-            foreach (var manifest in ModManifests)
+            var sw = new Stopwatch();
+            sw.Start();
+            MTLogger.Debug.Log("PatchMDD for content pack items added by mods.");
+            foreach (var kv in ModsResourceMap)
             {
-                if (!loadedContentPacks.Contains(manifest.RequiredContentPack))
+                var resourceId = kv.Key;
+                var contentPackName = kv.Value;
+
+                // filter out vanilla resources, those are already set and ModTek shouldn't override vanilla data
+                if (BaseResourceMap.ContainsKey(resourceId))
                 {
                     continue;
                 }
-                foreach (var entry in manifest.Addendum.Entries)
-                {
-                    if (!BTConstants.MDDBTypes.Contains(entry.Type))
-                    {
-                        continue;
-                    }
-                    MetadataDatabase.Instance.UpdateContentPackItem(entry.Type, entry.Id, manifest.RequiredContentPack);
-                }
+
+                var resourceType = ModsTypeMap[kv.Key];
+                MetadataDatabase.Instance.UpdateContentPackItem(resourceType, resourceId, contentPackName);
             }
+            sw.Stop();
+            MTLogger.Debug.LogIfSlow(sw, "BetterCPI.PatchMDD");
         }
     }
 }

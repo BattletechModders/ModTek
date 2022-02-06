@@ -123,14 +123,19 @@ namespace ModTek.Features.Manifest.BTRL
         {
             foreach (var entry in entries)
             {
-                var dict = manifest.GetOrCreate(entry.Type);
-                dict[entry.Id] = entry;
+                SetEntry(entry);
+            }
+        }
 
-                if (BTConstants.BTResourceType(entry.Type, out var resourceType))
-                {
-                    var types = idToTypes.GetOrCreate(entry.Id);
-                    types.Add(resourceType);
-                }
+        internal void SetEntry(VersionManifestEntry entry)
+        {
+            var dict = manifest.GetOrCreate(entry.Type);
+            dict[entry.Id] = entry;
+
+            if (BTConstants.BTResourceType(entry.Type, out var resourceType))
+            {
+                var types = idToTypes.GetOrCreate(entry.Id);
+                types.Add(resourceType);
             }
         }
 

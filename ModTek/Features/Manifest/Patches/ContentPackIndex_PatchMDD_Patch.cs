@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Logging;
@@ -14,7 +15,15 @@ namespace ModTek.Features.Manifest.Patches
             return ModTek.Enabled;
         }
 
-        public static void Postfix(ContentPackIndex __instance)
+        public static void Prefix(out bool ___rebuildMDDOnLoadComplete, out Stopwatch __state)
+        {
+            __state = new Stopwatch();
+            __state.Start();
+
+            ___rebuildMDDOnLoadComplete = true; //rebuilding is less work than having to track changes
+        }
+
+        public static void Postfix(ContentPackIndex __instance, Stopwatch __state)
         {
             try
             {
@@ -22,8 +31,10 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log("Error running postfix", e);
+                MTLogger.Error.Log("Error running postfix", e);
             }
+
+            MTLogger.Debug.LogIfSlow(__state, "ContentPackIndex.PatchMDD");
         }
     }
 }
