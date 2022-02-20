@@ -387,7 +387,7 @@ namespace ModTek.Features.Manifest
             }
         }
 
-        internal static string GetJson(VersionManifestEntry entry)
+        internal static string GetText(VersionManifestEntry entry)
         {
             if (!string.IsNullOrEmpty(entry.AssetBundleName))
             {

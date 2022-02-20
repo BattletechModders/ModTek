@@ -63,8 +63,8 @@ namespace ModTek.Util
         }
 
         internal const string JSON_TYPE = ".json";
-        internal const string CSV_TYPE = ".csv";
-        internal const string TXT_TYPE = ".txt";
+        private const string CSV_TYPE = ".csv";
+        private const string TXT_TYPE = ".txt";
 
         internal static bool IsJson(string name)
         {
@@ -122,6 +122,16 @@ namespace ModTek.Util
             {
                 dir.Create();
             }
+        }
+
+        internal static StreamReader StreamReaderFromString(string s)
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return new StreamReader(stream);
         }
     }
 }

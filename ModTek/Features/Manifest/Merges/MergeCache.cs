@@ -96,35 +96,21 @@ namespace ModTek.Features.Manifest.Merges
 
         private void CacheUpdate(CacheKey key, MergeCacheEntry queuedEntry)
         {
-            var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(key.Id, key.Type);
-
-            var json = ModsManifest.GetJson(manifestEntry);
-            if (json == null)
-            {
-                return;
-            }
             try
             {
-                json = queuedEntry.Merge(json);
-            }
-            catch (Exception e)
-            {
-                MTLogger.Info.Log($"MergeCache: Couldn't merge {queuedEntry.CachedAbsolutePath}", e);
-                return;
-            }
-
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(queuedEntry.CachedAbsolutePath) ?? throw new InvalidOperationException());
-                File.WriteAllText(queuedEntry.CachedAbsolutePath, json);
-                queuedEntry.CachedUpdatedOn = DateTime.Now;
-                queuedEntry.CacheHit = true;
+                var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(key.Id, key.Type);
+                var content = ModsManifest.GetText(manifestEntry);
+                if (content == null)
+                {
+                    return;
+                }
+                queuedEntry.Merge(content);
                 CachedMerges[key] = queuedEntry;
                 HasChanges = true;
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log($"MergeCache: Couldn't write cached merge result to {queuedEntry.CachedAbsolutePath}", e);
+                MTLogger.Info.Log($"MergeCache: Couldn't merge {key} as {queuedEntry}", e);
             }
         }
 

@@ -30,6 +30,7 @@ namespace ModTek.Features.Manifest.Merges
 
         internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
         private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
+        private bool IsCsvAppend => FileUtils.IsCsv(CachedPath);
 
         // used by newtonsoft?
         internal MergeCacheEntry()
@@ -49,12 +50,28 @@ namespace ModTek.Features.Manifest.Merges
             Merges.Add(merge);
         }
 
-        internal string Merge(string content)
+        internal void Merge(string originalContent)
         {
-            return IsJsonMerge ? JsonMerge(content) : TextAppend(content);
+            Directory.CreateDirectory(Path.GetDirectoryName(CachedAbsolutePath) ?? throw new InvalidOperationException());
+
+            if (IsJsonMerge)
+            {
+                JsonMerge(originalContent);
+            }
+            else if (IsCsvAppend && ModTek.Config.NormalizeCsvIfAppending)
+            {
+                CsvAppend(originalContent);
+            }
+            else
+            {
+                TextAppend(originalContent);
+            }
+
+            CachedUpdatedOn = DateTime.Now;
+            CacheHit = true;
         }
 
-        private string JsonMerge(string originalContent)
+        private void JsonMerge(string originalContent)
         {
             var target = HBSJsonUtils.ParseGameJSON(originalContent);
             foreach (var entry in Merges)
@@ -63,12 +80,66 @@ namespace ModTek.Features.Manifest.Merges
                 AdvJSONMergeFeature.MergeIntoTarget(target, merge);
             }
 
-            return target.ToString(Formatting.Indented);
+            var mergedContent = target.ToString(Formatting.Indented);
+            File.WriteAllText(CachedAbsolutePath, mergedContent);
         }
 
-        private string TextAppend(string originalContent)
+        private void CsvAppend(string originalContent)
         {
-            return Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
+            using (var writer = new StreamWriter(CachedAbsolutePath))
+            {
+                string titleLine = null;
+
+                void process(StreamReader reader)
+                {
+                    var checkTitle = true;
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        if (string.IsNullOrWhiteSpace(line))
+                        {
+                            continue;
+                        }
+                        if (checkTitle)
+                        {
+                            checkTitle = false;
+                            if (titleLine == null) // very first valid line is assumed to be the title
+                            {
+                                titleLine = line;
+                            }
+                            else if (titleLine == line) // any duplication of a detected title will be removed
+                            {
+                                continue;
+                            }
+                        }
+                        writer.WriteLine(line);
+                    }
+                }
+
+                using (var reader = FileUtils.StreamReaderFromString(originalContent))
+                {
+                    process(reader);
+                }
+
+                foreach (var path in Merges.Select(x => x.AbsolutePath))
+                {
+                    using (var reader = new StreamReader(path))
+                    {
+                        process(reader);
+                    }
+                }
+            }
+        }
+
+        private void TextAppend(string originalContent)
+        {
+            var mergedContent = Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
+            File.WriteAllText(CachedAbsolutePath, mergedContent);
+        }
+
+        public override string ToString()
+        {
+            return CachedAbsolutePath;
         }
 
         // GENERATED CODE BELOW, used Rider IDE for that, Merges have to be done using SequenceEqual (rider uses Equals)

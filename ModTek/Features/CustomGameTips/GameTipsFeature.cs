@@ -14,7 +14,7 @@ namespace ModTek.Features.CustomGameTips
         {
             var id = Path.GetFileNameWithoutExtension(path);
             var entry = BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.GameTip.ToString());
-            return ModsManifest.GetJson(entry);
+            return ModsManifest.GetText(entry);
         }
 
         internal static readonly VersionManifestEntry[] DefaulManifestEntries =

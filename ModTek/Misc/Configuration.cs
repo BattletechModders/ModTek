@@ -42,6 +42,11 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
+        internal bool NormalizeCsvIfAppending = true;
+        [JsonProperty]
+        internal const string NormalizeCsvIfAppending_Description = "Normalize CSV files when merging/appending. Filters out empty lines and adds newlines where appropiate. Duplicate title detection and removal from appending files.";
+
+        [JsonProperty]
         internal float DataManagerUnfreezeDelta = 2f;
         [JsonProperty]
         internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";

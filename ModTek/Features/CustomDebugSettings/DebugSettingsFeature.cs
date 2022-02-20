@@ -19,7 +19,7 @@ namespace ModTek.Features.CustomDebugSettings
         {
             var entry = BetterBTRL.Instance.EntryByIDAndType("settings", InternalCustomResourceType.DebugSettings.ToString());
             MTLogger.Info.Log($"Debug settings: {entry.FilePath}");
-            return ModsManifest.GetJson(entry);
+            return ModsManifest.GetText(entry);
         }
 
         internal static readonly VersionManifestEntry[] DefaulManifestEntries =

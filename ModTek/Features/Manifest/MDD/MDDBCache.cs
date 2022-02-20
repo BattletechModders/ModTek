@@ -99,7 +99,7 @@ namespace ModTek.Features.Manifest.MDD
                 return;
             }
 
-            var json = ModsManifest.GetJson(entry);
+            var json = ModsManifest.GetText(entry);
             if (json == null)
             {
                 MTLogger.Info.Log($"MDDBCache: Error trying to get json for {entry.ToShortString()}");
