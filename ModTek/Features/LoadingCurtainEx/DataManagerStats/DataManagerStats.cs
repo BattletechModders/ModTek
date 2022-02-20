@@ -118,8 +118,12 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             }
 
             if (
-                ActiveLoadRequests.Count > 0
+                ActiveLoadRequests != null
+                && ActiveLoadRequests.Count > 0
+                && ActiveLoadRequests[0] != null
+                && other.ActiveLoadRequests != null
                 && other.ActiveLoadRequests.Count > 0
+                && other.ActiveLoadRequests[0] != null
                 && ActiveLoadRequests[0].GetHashCode() != other.ActiveLoadRequests[0].GetHashCode()
                 )
             {
