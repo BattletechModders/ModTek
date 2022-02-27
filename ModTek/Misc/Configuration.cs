@@ -42,6 +42,11 @@ namespace ModTek.Misc
         internal const string ImplicitManifestShouldAppendText_Description = "How CSVs in a mods implicit manifest (StreamingAssets) are being treated.";
 
         [JsonProperty]
+        internal bool ReplaceResetsMerges = true;
+        [JsonProperty]
+        internal const string ReplaceResetsMerges_Description = "If enabled, once a manifest entry gets replaced, all previously queued merges will not apply.";
+
+        [JsonProperty]
         internal bool NormalizeCsvIfAppending = true;
         [JsonProperty]
         internal const string NormalizeCsvIfAppending_Description = "Normalize CSV files when merging/appending. Filters out empty lines and adds newlines where appropiate. Duplicate title detection and removal from appending files.";

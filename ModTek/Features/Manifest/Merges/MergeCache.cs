@@ -81,7 +81,7 @@ namespace ModTek.Features.Manifest.Merges
             var manifestEntry = BetterBTRL.Instance.EntryByIDAndType(entry.Id, entry.Type);
             if (manifestEntry == null)
             {
-                MTLogger.Info.Log($"\t\tError: Can't find referenced resource: {entry.ToShortString()}");
+                MTLogger.Warning.Log($"Can't find resource for merging into {entry.ToShortString()}");
                 return;
             }
 
@@ -92,6 +92,25 @@ namespace ModTek.Features.Manifest.Merges
                 QueuedMerges[key] = temp;
             }
             temp.Add(entry);
+        }
+
+        internal void ClearQueuedMergesForEntryIfApplicable(ModEntry entry)
+        {
+            var key = new CacheKey(entry);
+
+            if (ModTek.Config.ReplaceResetsMerges)
+            {
+                if (QueuedMerges.Remove(key))
+                {
+                    MTLogger.Warning.Log($"Queued merges already exists for {entry.ToShortString()}, removing them.");                }
+            }
+            else
+            {
+                if (QueuedMerges.ContainsKey(key))
+                {
+                    MTLogger.Warning.Log($"Queued merges already exists for {entry.ToShortString()}, keeping them around.");
+                }
+            }
         }
 
         private void CacheUpdate(CacheKey key, MergeCacheEntry queuedEntry)

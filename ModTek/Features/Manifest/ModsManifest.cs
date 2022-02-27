@@ -335,6 +335,7 @@ namespace ModTek.Features.Manifest
         private static void AddEntryToBTRL(ModEntry entry)
         {
             TrackModEntryOwnershipIfApplicable(entry);
+            mergeCache.ClearQueuedMergesForEntryIfApplicable(entry);
             BetterBTRL.Instance.AddModEntry(entry);
         }
 
