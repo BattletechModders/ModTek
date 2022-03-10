@@ -80,7 +80,8 @@ namespace ModTek.Features.Logging
 
         private string GetFormattedAbsoluteTime()
         {
-            return DateTime.UtcNow.ToString(settings.FormatAbsoluteTime, CultureInfo.InvariantCulture);
+            var dto = settings.FormatAbsoluteTimeUseUtc ? DateTimeOffset.UtcNow : DateTimeOffset.Now;
+            return dto.ToString(settings.FormatAbsoluteTime, CultureInfo.InvariantCulture);
         }
 
         private string GetFormattedThread(Thread thread)

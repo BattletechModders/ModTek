@@ -26,9 +26,14 @@ namespace ModTek.Features.Logging
         internal const string FormatStartupTime_Description = "Runs through string.Format, arguments in order are: Hours, Minutes, Seconds, Milliseconds.";
 
         [JsonProperty]
-        internal string FormatAbsoluteTime { get; set; } = "yyyy-MM-dd HH:mm:ss.fff";
+        internal bool FormatAbsoluteTimeUseUtc = true;
         [JsonProperty]
-        internal const string FormatAbsoluteTime_Description = "Runs through DateTime.ToString .";
+        internal const string FormatAbsoluteTimeUseUtc_Description = "Use UTC instead of local time.";
+
+        [JsonProperty]
+        internal string FormatAbsoluteTime { get; set; } = "HH:mm:ss.fff";
+        [JsonProperty]
+        internal const string FormatAbsoluteTime_Description = "Runs through `DateTimeOffset.ToString`.";
 
         [JsonProperty]
         internal string FormatLine { get; set; } = "{0} [{1}] {2}{3}";
