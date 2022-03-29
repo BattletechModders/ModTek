@@ -25,7 +25,7 @@ namespace ModTek.Features.Logging
         internal const string LogExceptionInitializations_Description = "Logs out any exceptions being initialized, even before they are thrown or ignored.";
 
         [JsonProperty]
-        internal bool LogSqlQueryInitializations = true;
+        internal bool LogSqlQueryInitializations;
         [JsonProperty]
         internal const string LogSqlQueries_Description = "Logs out any sql queries being initialized, even before they are executed or ignored.";
 
