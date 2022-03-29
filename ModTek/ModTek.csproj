@@ -28,6 +28,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Dapper.Unity">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="InControl">
       <Private>False</Private>
     </Reference>

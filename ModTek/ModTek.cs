@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using BattleTech.Data;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
 using ModTek.Features.HarmonyPatching;
@@ -153,6 +154,11 @@ namespace ModTek
             }
 
             ModDefExLoading.Setup();
+
+            {
+                var version = MetadataDatabase.Instance.ExecuteScalar<string>("select sqlite_version();");
+                MTLogger.Info.Log("SQLite version "+ version);
+            }
 
             LoadUsingProgressPanel();
         }
