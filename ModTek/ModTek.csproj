@@ -31,6 +31,9 @@
     <Reference Include="InControl">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mono.Data.Sqlite">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
