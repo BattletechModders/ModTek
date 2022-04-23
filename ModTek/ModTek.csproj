@@ -9,6 +9,7 @@
     <Optimize>true</Optimize>
     <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
     <AssemblySearchPaths>$(ReferencePath)</AssemblySearchPaths>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <ItemGroup>
     <OutDirFiles Include="$(OutDir)**" />
