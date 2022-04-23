@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using Ionic.Zip;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Options;
@@ -675,15 +675,15 @@ namespace ModTekInjector
             var factions = new List<FactionStub>();
             var id = FACTION_ENUM_STARTING_ID;
 
-            using (var archive = ZipFile.Read(path))
+            using (var archive = ZipFile.Open(path, ZipArchiveMode.Read))
             {
-                foreach (var entry in archive)
+                foreach (var entry in archive.Entries)
                 {
-                    if (!entry.FileName.StartsWith("faction_", StringComparison.OrdinalIgnoreCase)
-                        || !entry.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    if (!entry.Name.StartsWith("faction_", StringComparison.OrdinalIgnoreCase)
+                        || !entry.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    using (var reader = new StreamReader(entry.OpenReader()))
+                    using (var reader = new StreamReader(entry.Open()))
                     {
                         var faction = JsonConvert.DeserializeAnonymousType(reader.ReadToEnd(), factionDefinition);
                         factions.Add(new FactionStub { Name = faction.Faction, Id = id });

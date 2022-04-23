@@ -1,11 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <BattleTechGameDir>CHANGEME_TO_FULL_PATH_TO_BTG_DIR</BattleTechGameDir>
+        <BattleTechGameDir>C:\Games\Steam\SteamApps\common\BATTLETECH\</BattleTechGameDir>
     </PropertyGroup>
-
-    <PropertyGroup>
-        <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\;$(ReferencePath)</ReferencePath>
-    </PropertyGroup>
-
 </Project>

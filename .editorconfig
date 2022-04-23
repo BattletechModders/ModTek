@@ -7,6 +7,11 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 
+[*.{yaml,yml}]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+
 [*.csproj]
 indent_size = 2
 

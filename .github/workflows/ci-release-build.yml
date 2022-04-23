@@ -5,7 +5,11 @@ jobs:
     runs-on: windows-latest
     #runs-on: ubuntu-latest # missing .NET 4.6 Framework
     steps:
-    - name: Download Build Dependencies
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@master
+      with:
+        dotnet-version: '6.0.x'
+    - name: Download Dependencies
       shell: bash
       env:
         MANAGED_ARCHIVE_PW: ${{ secrets.MANAGED_ARCHIVE_PW }}
@@ -14,82 +18,36 @@ jobs:
         set -e
         curl -L -o "$GITHUB_WORKSPACE/Managed.7z" "$MANAGED_ARCHIVE_URL"
         7z e -p"$MANAGED_ARCHIVE_PW" -o"$GITHUB_WORKSPACE/deps" "$GITHUB_WORKSPACE/Managed.7z"
-    - name: Checkout ModTek
+    - name: Checkout
       uses: actions/checkout@master
-      with:
-        path: ModTek/
-    - name: Fetch ModTek Branches and Tags
+    - name: Fetch Branches and Tags
       shell: bash
       run: |
-        cd ModTek/
         git fetch --prune --unshallow
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@master
-      with:
-        dotnet-version: '5.0.x'
     - name: Build Release
       shell: bash
       env:
         MSBUILDSINGLELOADCONTEXT: 1 # workaround for GitVersionTask
       run: |
         set -e
-        cd "$GITHUB_WORKSPACE/ModTek/"
         ./release.sh "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
-    - name: Upload Build
-      uses: actions/upload-artifact@master
-      with:
-        name: dist
-        path: "./ModTek/dist/ModTek.zip"
-
-  latest:
-      needs: build
-      runs-on: ubuntu-latest
+    - name: Release Latest
+      uses: marvinpinto/action-automatic-releases@latest
       if: github.ref == 'refs/heads/master'
-      steps:
-          - name: Download Build
-            uses: actions/download-artifact@master
-            with:
-                name:  dist
-                path: .
-          - name: Latest Release
-            uses: "marvinpinto/action-automatic-releases@latest"
-            with:
-                repo_token: "${{ secrets.GITHUB_TOKEN }}"
-                automatic_release_tag: "latest"
-                title: "Latest (unstable)"
-                prerelease: true
-                files: ModTek.zip
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: contains(github.ref, 'refs/tags')
-    steps:
-    - name: Download Build
-      uses: actions/download-artifact@master
       with:
-        name:  dist
-        path: .
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: true
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        title: "Latest (unstable)"
         prerelease: true
+        files: |
+          ./dist/ModTek.zip
+    - name: Release stable
+      uses: softprops/action-gh-release@master
+      if: startsWith(github.ref, 'refs/tags')
+      with:
+        draft: false
+        prerelease: false
         body: |
           ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
           see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md)
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ModTek.zip
-        asset_name: ModTek.zip
-        asset_content_type: application/zip
+        files: "./dist/ModTek.zip"

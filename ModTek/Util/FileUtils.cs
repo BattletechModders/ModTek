@@ -53,7 +53,7 @@ namespace ModTek.Util
 
         internal static List<string> FindFiles(string basePath, params string[] suffixes)
         {
-            var query = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)
+            var query = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories)
                 .Where(path => !FileIsOnDenyList(path));
             if (suffixes != null && suffixes.Length > 0)
             {

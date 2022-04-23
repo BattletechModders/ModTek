@@ -8,6 +8,7 @@
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <AssemblySearchPaths>
+      $(BattleTechGameDir)\BattleTech_Data\Managed\;
       $(AssemblySearchPaths);
       $(ReferencePath);
     </AssemblySearchPaths>
@@ -15,7 +16,7 @@
   <ItemGroup>
     <OutDirFiles Include="$(OutDir)**" />
   </ItemGroup>
-  <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild">
+  <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild" Condition="'$(BattleTechGameDir)' != ''">
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
   <ItemGroup>
@@ -75,7 +76,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GitVersion.MsBuild" Version="5.6.10">
+    <PackageReference Include="GitVersion.MsBuild" Version="5.10.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
