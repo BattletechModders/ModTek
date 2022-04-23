@@ -7,11 +7,8 @@
     <LangVersion>7.3</LangVersion>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <AssemblySearchPaths>
-      $(BattleTechGameDir)\BattleTech_Data\Managed\;
-      $(AssemblySearchPaths);
-      $(ReferencePath);
-    </AssemblySearchPaths>
+    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
+    <AssemblySearchPaths>$(ReferencePath)</AssemblySearchPaths>
   </PropertyGroup>
   <ItemGroup>
     <OutDirFiles Include="$(OutDir)**" />

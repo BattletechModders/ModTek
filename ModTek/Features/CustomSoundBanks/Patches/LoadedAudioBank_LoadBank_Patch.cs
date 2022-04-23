@@ -29,8 +29,6 @@ namespace ModTek.Features.CustomSoundBanks.Patches
             AkSoundEngine.SetBasePath(directory);
         }
 
-        //ZipFile.CreateFromDirectory(startPath, zipPath, CompressionLevel.Fastest, true);
-        //System.IO.Compression.ZipFile.CreateFromDirectory("","",CompressionLevel.Fastest,true);
         public static void Postfix(string ___name)
         {
             if (SoundBanksFeature.GetSoundBank(___name) == null)
