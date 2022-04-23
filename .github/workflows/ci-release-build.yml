@@ -33,6 +33,7 @@ jobs:
       run: |
         set -e
         cd ModTek/
+        chmod 755 release.sh
         ./release.sh "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
     - name: Release Latest
       uses: marvinpinto/action-automatic-releases@latest
