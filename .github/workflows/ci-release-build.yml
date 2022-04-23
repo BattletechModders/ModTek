@@ -20,9 +20,12 @@ jobs:
         7z e -p"$MANAGED_ARCHIVE_PW" -o"$GITHUB_WORKSPACE/deps" "$GITHUB_WORKSPACE/Managed.7z"
     - name: Checkout
       uses: actions/checkout@master
+      with:
+        path: ModTek/
     - name: Fetch Branches and Tags
       shell: bash
       run: |
+        cd ModTek/
         git fetch --prune --unshallow
     - name: Build Release
       shell: bash
@@ -30,6 +33,7 @@ jobs:
         MSBUILDSINGLELOADCONTEXT: 1 # workaround for GitVersionTask
       run: |
         set -e
+        cd ModTek/
         ./release.sh "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
     - name: Release Latest
       uses: marvinpinto/action-automatic-releases@latest
@@ -40,7 +44,7 @@ jobs:
         title: "Latest (unstable)"
         prerelease: true
         files: |
-          ./dist/ModTek.zip
+          ./ModTek/dist/ModTek.zip
     - name: Release stable
       uses: softprops/action-gh-release@master
       if: startsWith(github.ref, 'refs/tags')
@@ -50,4 +54,5 @@ jobs:
         body: |
           ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
           see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md)
-        files: "./dist/ModTek.zip"
+        files: |
+          ./ModTek/dist/ModTek.zip
