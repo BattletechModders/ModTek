@@ -8,6 +8,7 @@ set -ex
 
 rm -fr dist/
 
+dotnet --version
 dotnet publish ModTekInjector -c Release -o ./dist/ModTek
 dotnet build ModTek -c Release -p:OutputPath=./dist/ModTek "$@"
 
