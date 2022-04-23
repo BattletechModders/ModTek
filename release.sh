@@ -8,8 +8,8 @@ set -ex
 
 rm -fr dist/
 
-dotnet build ModTek -c Release -p:OutputPath=./dist/ModTek "$@"
 dotnet publish ModTekInjector -c Release -o ./dist/ModTek
+dotnet build ModTek -c Release -p:OutputPath=./dist/ModTek "$@"
 
 cp -a README.md dist/ModTek
 cp -a UNLICENSE dist/ModTek
