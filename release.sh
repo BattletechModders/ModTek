@@ -6,13 +6,14 @@ SEVENZIP="7z"
 
 set -ex
 
-rm -fr dist/
+DIST="$(pwd)/dist/ModTek"
+rm -fr "${DIST}"
 
 dotnet --version
-dotnet publish ModTekInjector -c Release -o ./dist/ModTek
-dotnet build ModTek -c Release -p:OutputPath=./dist/ModTek "$@"
+dotnet publish ModTekInjector -c Release -o "${DIST}"
+dotnet build ModTek -c Release -p:OutputPath="${DIST}" "$@"
 
-cp -a README.md dist/ModTek
-cp -a UNLICENSE dist/ModTek
+cp -a README.md "${DIST}"
+cp -a UNLICENSE "${DIST}"
 
-"$SEVENZIP" a -tzip -mx9 dist/ModTek.zip -ir!./dist/ModTek
+"$SEVENZIP" a -tzip -mx9 "${DIST}".zip -ir!"${DIST}"
