@@ -3,51 +3,45 @@ name: Release Build
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BT_DIR: ${{ github.workspace }}/BATTLETECH
     steps:
     - name: Setup dotnet
       uses: actions/setup-dotnet@master
       with:
         dotnet-version: '6.0.x'
     - name: Download Dependencies
-      shell: bash
       env:
         MANAGED_ARCHIVE_PW: ${{ secrets.MANAGED_ARCHIVE_PW }}
         MANAGED_ARCHIVE_URL: ${{ secrets.MANAGED_ARCHIVE_URL }}
       run: |
-        set -e
-        curl -L -o "$GITHUB_WORKSPACE/Managed.7z" "$MANAGED_ARCHIVE_URL"
-        7z e -p"$MANAGED_ARCHIVE_PW" -o"$GITHUB_WORKSPACE/deps" "$GITHUB_WORKSPACE/Managed.7z"
+        curl -L -o Managed.7z "$MANAGED_ARCHIVE_URL"
+        MANAGED_DIR="$BT_DIR/BattleTech_Data/Managed"
+        mkdir -p "$MANAGED_DIR"
+        7z e -p"$MANAGED_ARCHIVE_PW" -o"$MANAGED_DIR" Managed.7z
     - name: Checkout
       uses: actions/checkout@master
       with:
         path: ModTek/
     - name: Fetch Branches and Tags
-      shell: bash
+      run: cd ModTek/ && git fetch --prune --unshallow
+    - name: Build
       run: |
         cd ModTek/
-        git fetch --prune --unshallow
-    - name: Build Release
-      shell: bash
-      run: |
-        set -e
-        cd ModTek/
-        DIST_DIR="$GITHUB_WORKSPACE/dist/ModTek"
-        DIST_ZIP="${DIST_DIR}.zip"
-        dotnet publish ModTekInjector -c Release -o "${DIST_DIR}"
-        dotnet build ModTek -c Release -p:OutputPath="${DIST_DIR}" "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
-        cp -a README.md "${DIST_DIR}"
-        cp -a UNLICENSE "${DIST_DIR}"
-        7z a -tzip -mx9 "${DIST_ZIP}" -ir!"${DIST_DIR}"
+        dotnet publish ModTekInjector -c Release -o dist/
+        dotnet build ModTek -c Release -p:OutputPath=dist/ -p:BattleTechGameDir="$BT_DIR"
+        cp -a README.md dist/
+        cp -a UNLICENSE dist/
+        7z a -tzip -mx9 ../ModTek.zip -ir!dist/
     - name: Release Latest
       uses: marvinpinto/action-automatic-releases@latest
       if: github.ref == 'refs/heads/master'
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
         automatic_release_tag: "latest"
         title: "Latest (unstable)"
         prerelease: true
-        files: |
-          ./dist/ModTek.zip
+        files: ModTek.zip
     - name: Release stable
       uses: softprops/action-gh-release@master
       if: startsWith(github.ref, 'refs/tags')
@@ -57,5 +51,4 @@ jobs:
         body: |
           ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
           see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md)
-        files: |
-          ./dist/ModTek.zip
+        files: ModTek.zip
