@@ -1,32 +1,71 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Required: Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ProjectGuid>{8D955C2C-D75B-453C-99D1-B337BBF82CCA}</ProjectGuid>
+    <!-- Required: All mods are libraries and produce a dll -->
     <OutputType>Library</OutputType>
+
+    <!-- Required: The last BattleTech game version uses .NET Framework 4.7.2, newer target frameworks won't work -->
     <TargetFramework>net472</TargetFramework>
+
+    <!-- Optional: By default "7.3" due to net472 and VS 2022, but can be set to "Latest" or even "11" --> 
     <LangVersion>7.3</LangVersion>
+
+    <!-- Optional: Traditional debugging does not work anyway, so no need to have such options available -->
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+
+    <!-- Optional: Allows to use publicized DLLs -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Required: We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
-    <AssemblySearchPaths>$(ReferencePath)</AssemblySearchPaths>
+    <AssemblySearchPaths>$(ReferencePath);{HintPathFromItem}</AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
+
+  <!-- Optional: Copies the mod DLL to the mod directory -->
   <ItemGroup>
     <OutDirFiles Include="$(OutDir)**" />
   </ItemGroup>
   <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild" Condition="'$(BattleTechGameDir)' != ''">
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
+
   <ItemGroup>
+    <!-- Required: Harmony is needed to hook into the game -->
     <Reference Include="0Harmony">
+      <!-- Required: Every dll found in Managed should not be copied to OutDir when building -->
       <Private>False</Private>
     </Reference>
+
+    <!-- Required: The main game file containing most of the BattleTech game logic -->
     <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>
+
+    <!-- Required: Important system libraries that are basically always used -->
+    <Reference Include="System">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Optional: Below libraries are selected specifically for ModTek and may not be useful in your mod' use case -->
+    
     <Reference Include="Assembly-CSharp-firstpass">
       <Private>False</Private>
     </Reference>
+    
+    <Reference Include="System.Data">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Private>False</Private>
+    </Reference>
+    
     <Reference Include="Dapper.Unity">
       <Private>False</Private>
     </Reference>
@@ -39,18 +78,7 @@
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
-    <Reference Include="System">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Private>False</Private>
-    </Reference>
+    
     <Reference Include="Unity.TextMeshPro">
       <Private>False</Private>
     </Reference>
@@ -74,6 +102,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <!-- Optional: Automatically set the version number of your assembly based on git tags and semver -->
     <PackageReference Include="GitVersion.MsBuild" Version="5.10.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

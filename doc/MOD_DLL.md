@@ -9,8 +9,8 @@ The easiest way to change how the game works is to see if you can do it by editi
 This tutorial/walk-through uses:
 
 * BattleTech itself
-* [Visual Studio Community 2019](https://www.visualstudio.com/downloads/) to write and compile your mod's `.dll`
-* [dnSpy](https://github.com/0xd4d/dnSpy) to decompile game assembly back to C#
+* [Visual Studio Community 2022](https://www.visualstudio.com/downloads/) to write and compile your mod's `.dll`
+* [dnSpyEx](https://github.com/dnSpyEx/dnSpy) to decompile game assembly back to C#
 * [Harmony](https://github.com/pardeike/Harmony) to patch methods at runtime
 
 ## Do Your Research
@@ -21,7 +21,7 @@ In our case, we want to simply add the condition that you cannot launch a missio
 
 ## Setting Your Project Up
 
-Create a new project and solution with Visual Studio. You should target .NET 4.7, as this is what the game is using.
+Create a new project and solution with Visual Studio. You should target .NET 4.7, as this is what the game is using. See [ModTek.csproj](../ModTek/ModTek.csproj) on how your csproj can look like.
 
 On the right, make sure that you add references to the `0Harmony.dll` and `Assembly-CSharp.dll`. If you will be using the settings from your `mod.json`, you will also need `Newtonsoft.Json.dll`. 
 
@@ -142,3 +142,8 @@ if (DropLimit.Settings.OnlyInSimGame && !__instance.IsSimGame)
 if (lanceTonnage <= DropLimit.Settings.MaxTonnage)
     return;
 ```
+
+## Building on github
+
+ModTek itself is build on github using github workflows,
+see [ci-release-build.yml](.github/workflows/ci-release-build.yml) which you can copy and adjust to your mod.

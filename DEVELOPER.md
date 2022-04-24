@@ -6,8 +6,8 @@ This page lists some common knowledge useful if you're extending or improving Mo
 
 Visual Studio 2022 Community
 - visual studio 2022 community is for free
-- newer visual studios and newer C# versions can be used, as long as they can target the old dotnet 4.7 used by the game.
-- also the latest csproj format is supported, ModTek itself uses it and works fine
+- newer visual studios and newer C# versions can be used, as long as they can target the old .NET Framework 4.7.2 used by the game.
+- also the latest csproj format is supported, ModTek itself uses it and it works fine
 
 Harmony
 - dll that helps with in-memory patching of .NET code
@@ -27,7 +27,7 @@ BTDebug Mod
 
 GitHub Workflow
 - ModTek uses github workflow as a CI
-- every commit is build (no automated testing though!)
+- every commit is built (no automated testing though!)
 - commits on master are release as "latest" in github
 - tags are released as their version number on github
 
@@ -41,11 +41,17 @@ publicized assemblies
 
 # Build ModTek
 
-After checking out the project, you must update a configuration file with the full path to your BattleTech Game directory. Copy the file from `CHANGEME.Directory.Build.props` to `Directory.Build.props`. Open `Directory.Build.props` in the editor of your choice, and replace `CHANGEME_TO_FULL_PATH_TO_BTG_DIR` with the full path to your BattleTech Game (BTG) directory (one example - `E:\steam\SteamApps\common\BATTLETECH`). Close and save. `Directory.Build.props` is excluded in `.gitignore` so you changes will not affect other developers, only you.
+After checking out the project, you must update a configuration file with the full path to your BattleTech Game directory.
+Copy the file from `CHANGEME.Directory.Build.props` to `Directory.Build.props`.
+Open `Directory.Build.props` in the editor of your choice, and replace the path value for `BattleTechGameDir` with the full path to your BattleTech Game.
+Close and save. `Directory.Build.props` is excluded in `.gitignore` so you changes will not affect other developers, only you.
 
-:information_source: Linux users should note that `Directory.Build.props` is case-sensitive. If you find the project won't compile for you, make sure the case is correct.
+ℹ️Linux users should note that `Directory.Build.props` is case-sensitive.
+If you find the project won't compile for you, make sure the case is correct.
 
-Once you can updated the configuration, open the VS solution and restore NuGet dependencies. You should be able to build ModTek once these steps are complete.
+Once you can updated the configuration, open the VS solution and restore NuGet dependencies.
+You should be able to build ModTek once these steps are complete.
 
 # Releasing ModTek
 
+See GitHub Workflow above.

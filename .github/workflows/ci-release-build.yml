@@ -28,13 +28,16 @@ jobs:
         git fetch --prune --unshallow
     - name: Build Release
       shell: bash
-      env:
-        MSBUILDSINGLELOADCONTEXT: 1 # workaround for GitVersionTask
       run: |
         set -e
         cd ModTek/
-        chmod 755 release.sh
-        ./release.sh "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
+        DIST_DIR="$GITHUB_WORKSPACE/dist/ModTek"
+        DIST_ZIP="${DIST_DIR}.zip"
+        dotnet publish ModTekInjector -c Release -o "${DIST_DIR}"
+        dotnet build ModTek -c Release -p:OutputPath="${DIST_DIR}" "-p:ReferencePath=$GITHUB_WORKSPACE/deps"
+        cp -a README.md "${DIST_DIR}"
+        cp -a UNLICENSE "${DIST_DIR}"
+        7z a -tzip -mx9 "${DIST_ZIP}" -ir!"${DIST_DIR}"
     - name: Release Latest
       uses: marvinpinto/action-automatic-releases@latest
       if: github.ref == 'refs/heads/master'
@@ -44,7 +47,7 @@ jobs:
         title: "Latest (unstable)"
         prerelease: true
         files: |
-          ./ModTek/dist/ModTek.zip
+          ./dist/ModTek.zip
     - name: Release stable
       uses: softprops/action-gh-release@master
       if: startsWith(github.ref, 'refs/tags')
@@ -55,4 +58,4 @@ jobs:
           ModTek.zip contains the ModTek tools, please unzip them to (Your BattleTechGame Location)/mods/ModTek and run the injector.
           see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md)
         files: |
-          ./ModTek/dist/ModTek.zip
+          ./dist/ModTek.zip
