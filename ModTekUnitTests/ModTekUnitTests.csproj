@@ -9,10 +9,11 @@
     <TestProjectType>UnitTest</TestProjectType>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <AssemblySearchPaths>
-      $(AssemblySearchPaths);
-      $(ReferencePath);
-    </AssemblySearchPaths>
+
+    <!-- hybrid between battletech and system libs -->
+    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\;$(ReferencePath);</ReferencePath>
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths);</AssemblySearchPaths>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">

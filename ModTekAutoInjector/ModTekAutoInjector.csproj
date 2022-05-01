@@ -7,10 +7,11 @@
     <LangVersion>7.3</LangVersion>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <AssemblySearchPaths>
-      $(AssemblySearchPaths);
-      $(ReferencePath);
-    </AssemblySearchPaths>
+
+    <!-- hybrid between battletech and system libs -->
+    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\;$(ReferencePath);</ReferencePath>
+    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths);</AssemblySearchPaths>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
