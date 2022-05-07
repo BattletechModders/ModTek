@@ -25,6 +25,11 @@ namespace ModTek.Features.Logging
             this.logLevel = logLevel;
         }
 
+        internal void Log(Exception e)
+        {
+            Log(null, e);
+        }
+
         internal void Log(string message = null, Exception e = null)
         {
             message = message ?? "Method " + GetFullMethodName() + " called";

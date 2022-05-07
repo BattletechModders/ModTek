@@ -7,8 +7,8 @@ namespace ModTek.Features.Logging
     {
         internal static void Setup()
         {
-            // the normal way
             Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
+            Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
         }
         private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
         {

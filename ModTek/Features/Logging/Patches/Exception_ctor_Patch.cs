@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Harmony;
 using HBS.Logging;
+using ModTek.Util;
 
 namespace ModTek.Features.Logging.Patches
 {
@@ -21,6 +22,12 @@ namespace ModTek.Features.Logging.Patches
 
         public static void Postfix(Exception __instance)
         {
+            // fix for "crash during exit"
+            if (MTUnityUtils.ApplicationIsQuitting)
+            {
+                return;
+            }
+
             var ex = __instance;
             var st = new System.Diagnostics.StackTrace(1).ToString();
             LoggingFeature.LogAtLevel(

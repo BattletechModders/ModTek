@@ -2,12 +2,27 @@
 using System.Reflection.Emit;
 using System.Threading;
 using Harmony;
+using UnityEngine;
 
 namespace ModTek.Util
 {
     internal static class MTUnityUtils
     {
         internal static void Init()
+        {
+            SetupApplicationIsQuittingDetection();
+            SetupMainThreadDetection();
+        }
+
+        internal static bool ApplicationIsQuitting { get; private set; }
+        private static void SetupApplicationIsQuittingDetection()
+        {
+            Application.quitting += () => ApplicationIsQuitting = true;
+        }
+
+        internal static int MainManagedThreadId { get; private set; }
+        private static Func<bool> CurrentThreadIsMainThread;
+        private static void SetupMainThreadDetection()
         {
             {
                 var type = typeof(UnityEngine.Object);
@@ -29,7 +44,5 @@ namespace ModTek.Util
             }
             MainManagedThreadId = Thread.CurrentThread.ManagedThreadId;
         }
-        private static Func<bool> CurrentThreadIsMainThread;
-        internal static int MainManagedThreadId { get; private set; }
     }
 }
