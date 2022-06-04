@@ -229,9 +229,9 @@ namespace ModTek.Features.Manifest
                 return true;
             }
 
-            var ext = entry.Path.GetExtension();
+            var ext = entry.Path.GetExtension() ?? "";
             var entriesById = BetterBTRL.Instance.EntriesByID(entry.Id)
-                .Where(x => ext.Equals(x.GetRawPath().GetExtension()))
+                .Where(x => ext.Equals(x.GetRawPath().GetExtension() ?? ""))
                 .ToList();
 
             if (entriesById.Count == 0)
