@@ -15,7 +15,7 @@ namespace ModTek.Features.Manifest.BTRL
     internal class TypedManifest
     {
         private readonly TypedDict manifest = new TypedDict();
-        private readonly Dictionary<string, HashSet<BattleTechResourceType>> idToTypes = new Dictionary<string, HashSet<BattleTechResourceType>>();
+        private readonly Dictionary<string, HashSet<string>> idToTypes = new Dictionary<string, HashSet<string>>();
         private readonly BetterCPI packIndex;
         private readonly Dictionary<string, VersionManifestAddendum> addendums = new Dictionary<string, VersionManifestAddendum>();
 
@@ -114,7 +114,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             if (idToTypes.TryGetValue(id, out var set))
             {
-                return set.Select(type => EntryByID(id, type, false)).ToArray();
+                return set.Select(type => EntryByIDAndType(id, type)).ToArray();
             }
             return emptyArray;
         }
@@ -132,11 +132,7 @@ namespace ModTek.Features.Manifest.BTRL
             var dict = manifest.GetOrCreate(entry.Type);
             dict[entry.Id] = entry;
 
-            if (BTConstants.BTResourceType(entry.Type, out var resourceType))
-            {
-                var types = idToTypes.GetOrCreate(entry.Id);
-                types.Add(resourceType);
-            }
+            idToTypes.GetOrCreate(entry.Id).Add(entry.Type);
         }
 
         internal void DumpToDisk()

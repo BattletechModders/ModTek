@@ -10,7 +10,7 @@ For users:
 
 For modders:
 - Support for merging DLC content. Overall improved support for DLC content.
-- Dropped support for BTRL removals and CustomResources merging.
+- Dropped support for BTRL removals.
 - StreamingAssets resources are now better supported, only need to use the correct filename to merge. No need to mirror the path in StreamingAssets or supply a type.
 - Many more configuration options and all of them described in `ModTek/config.defaults.json` (once the game started at least once with ModTek enabled).
 - Mods are loaded recursively from subdirectories by default, e.g. `Mods/MyWorkspace/MyMods/mod.json`.
