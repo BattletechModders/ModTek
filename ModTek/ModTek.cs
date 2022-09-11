@@ -35,7 +35,7 @@ namespace ModTek
 
         private static Stopwatch stopwatch = new Stopwatch();
 
-        // INITIALIZATION (called by injected code)
+        // Called by assembly modified with ModTekInjector.exe
         public static void Init()
         {
             Load();
