@@ -5,13 +5,7 @@ VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek", "ModTek\ModTek.csproj", "{8D955C2C-D75B-453C-99D1-B337BBF82CCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekUnitTests", "ModTekUnitTests\ModTekUnitTests.csproj", "{0924FD5F-434E-4278-A326-0F43697F4355}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekInjector", "ModTekInjector\ModTekInjector.csproj", "{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekAutoInjector", "ModTekAutoInjector\ModTekAutoInjector.csproj", "{FA4943DD-9F22-48CA-9648-414FAB7307DD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekInstaller", "ModTekInstaller\ModTekInstaller.csproj", "{32F6D68F-7E2D-4FA6-884D-35A9517538DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,22 +17,10 @@ Global
 		{8D955C2C-D75B-453C-99D1-B337BBF82CCA}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{8D955C2C-D75B-453C-99D1-B337BBF82CCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D955C2C-D75B-453C-99D1-B337BBF82CCA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0924FD5F-434E-4278-A326-0F43697F4355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0924FD5F-434E-4278-A326-0F43697F4355}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0924FD5F-434E-4278-A326-0F43697F4355}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0924FD5F-434E-4278-A326-0F43697F4355}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF7BFCDB-8D25-49D8-9FC3-AB3A0D19A35F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA4943DD-9F22-48CA-9648-414FAB7307DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA4943DD-9F22-48CA-9648-414FAB7307DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA4943DD-9F22-48CA-9648-414FAB7307DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA4943DD-9F22-48CA-9648-414FAB7307DD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{32F6D68F-7E2D-4FA6-884D-35A9517538DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{32F6D68F-7E2D-4FA6-884D-35A9517538DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{32F6D68F-7E2D-4FA6-884D-35A9517538DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{32F6D68F-7E2D-4FA6-884D-35A9517538DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,1 +1,0 @@
-powershell.exe -nologo -noprofile -command "& { Add-Type -Path 'C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.x\\System.IO.Compression.dll'; [IO.Compression.ZipFile]::CreateFromDirectory('..\\..\\Mods\\ModTek', '..\\Resources\\ModTek.zip'); }"
