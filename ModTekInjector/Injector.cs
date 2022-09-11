@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Options;
-using Newtonsoft.Json;
 using static System.Console;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
 
 namespace ModTekInjector
 {
@@ -25,7 +22,6 @@ namespace ModTekInjector
         private const int RC_BAD_MANAGED_DIRECTORY_PROVIDED = 5;
         private const int RC_MISSING_MODTEK_ASSEMBLY = 6;
         private const int RC_REQUIRED_GAME_VERSION_MISMATCH = 7;
-        private const int RC_MISSING_FACTION_FILE = 8;
 
         private const string MODTEK_DLL_FILE_NAME = "ModTek.dll";
         private const string INJECT_TYPE = "ModTek.Injection";
@@ -49,9 +45,6 @@ namespace ModTekInjector
 
         private static readonly List<string> MANAGED_DIRECTORY_OLD_FILES = new List<string> {"BattleTechModLoader.dll", "BattleTechModLoaderInjector.exe", "Mono.Cecil.dll", "rt-factions.zip" };
         private static readonly List<string> MOD_DIRECTORY_OLD_FILES = new List<string> { "ModTek.dll", "modtekassetbundle", "BTModLoader.log" };
-
-        private const int FACTION_ENUM_STARTING_ID = 5000;
-        private const FieldAttributes ENUM_ATTRIBUTES = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault;
 
         private static ManagedAssemblyResolver managedAssemblyResolver;
 
@@ -658,57 +651,6 @@ namespace ModTekInjector
             WriteLine($"Writing back to {Path.GetFileName(hookFilePath)}...");
             game.Write();
             WriteLine("Injection complete!");
-            return true;
-        }
-
-
-        // FACTIONS
-        private struct FactionStub
-        {
-            public string Name;
-            public int Id;
-        }
-
-        private static List<FactionStub> ReadFactions(string path)
-        {
-            var factionDefinition = new { Faction = "" };
-            var factions = new List<FactionStub>();
-            var id = FACTION_ENUM_STARTING_ID;
-
-            using (var archive = ZipFile.Open(path, ZipArchiveMode.Read))
-            {
-                foreach (var entry in archive.Entries)
-                {
-                    if (!entry.Name.StartsWith("faction_", StringComparison.OrdinalIgnoreCase)
-                        || !entry.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    using (var reader = new StreamReader(entry.Open()))
-                    {
-                        var faction = JsonConvert.DeserializeAnonymousType(reader.ReadToEnd(), factionDefinition);
-                        factions.Add(new FactionStub { Name = faction.Faction, Id = id });
-                        id++;
-                    }
-                }
-            }
-
-            return factions;
-        }
-
-        private static bool InjectNewFactions(ModuleDefinition game, string path)
-        {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return false;
-
-            Write("Injecting factions... ");
-
-            var factions = ReadFactions(path);
-            var factionBase = game.GetType("BattleTech.Faction");
-
-            foreach (var faction in factions)
-                factionBase.Fields.Add(new FieldDefinition(faction.Name, ENUM_ATTRIBUTES, factionBase) { Constant = faction.Id });
-
-            WriteLine($"Injected {factions.Count} factions.");
             return true;
         }
 
