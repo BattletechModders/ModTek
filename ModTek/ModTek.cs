@@ -35,7 +35,7 @@ namespace ModTek
 
         private static Stopwatch stopwatch = new Stopwatch();
 
-        // Called by assembly modified with ModTekInjector.exe
+        // Called by assembly modified with ModTekPreloader via Doorstop
         public static void Init()
         {
             Load();
@@ -113,27 +113,6 @@ namespace ModTek
                 ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
                 Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
                 Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
-            }
-
-            MTLogger.Info.LogIf(Config.AssembliesToPreload.Length > 0, "Preloading assemblies");
-            foreach (var assemblyToPreload in Config.AssembliesToPreload)
-            {
-                MTLogger.Info.Log($"\tLoading {assemblyToPreload}");
-                var assemblyPath = Path.Combine(FilePaths.ModsDirectory, assemblyToPreload);
-                if (!File.Exists(assemblyPath))
-                {
-                    MTLogger.Warning.Log($"\t\tCan't find assembly at {assemblyPath}, aborting load.");
-                    continue;
-                }
-
-                try
-                {
-                    AssemblyUtil.LoadDLL(assemblyPath);
-                }
-                catch (Exception e)
-                {
-                    MTLogger.Error.Log($"\t\tFailed to preload the assembly.", e);
-                }
             }
 
             try

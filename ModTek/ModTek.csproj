@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Required: Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
+﻿<!-- Required: Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Required: All mods are libraries and produce a dll -->
@@ -103,13 +102,21 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Optional: Automatically set the version number of your assembly based on git tags and semver -->
-    <PackageReference Include="GitVersion.MsBuild" Version="5.10.1">
+    <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!-- Optional: Reference static files to be copied -->
   <ItemGroup>
-    <None Update="modtekassetbundle">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="modtekassetbundle" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(ProjectDir)\..\README.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(ProjectDir)\..\UNLICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Optional: Reference files generated in the game directory for quick access in the IDE -->
+  <ItemGroup>
+    <None LinkBase=".modtek" Include="$(BattleTechGameDir)\Mods\.modtek\**" />
+    <None LinkBase="ModTek" Include="$(BattleTechGameDir)\Mods\ModTek\**" />
   </ItemGroup>
 </Project>

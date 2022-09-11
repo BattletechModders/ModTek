@@ -82,13 +82,6 @@ namespace ModTek.Misc
         internal const string IgnoreMissingMods_Description = "Ignore the dependency requirement of mods that depend on the listed mods. Useful if e.g. ModTek provides the same functionality as the ignored mods.";
 
         [JsonProperty]
-        internal string[] AssembliesToPreload = { };
-        [JsonProperty]
-        internal const string AssembliesToPreload_Description = "A list of assemblies to preload before ModTek starts harmony patching." +
-            " Useful for mods that modify the assembly directly and introduce dependencies not found in the default assembly search path of the game." +
-            " Path is relative to the Mods/ directory";
-
-        [JsonProperty]
         internal LoggingSettings Logging = new LoggingSettings();
 
         [JsonProperty]
