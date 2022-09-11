@@ -29,7 +29,7 @@ jobs:
       run: |
         cd ModTek/
         dotnet build -c Release -p:BattleTechGameDir="$BT_DIR/" -p:OutputPath="$BT_DIR/Mods/ModTek"
-        rm -fr "$MANAGED_DIR/"
+        rm -fr "$BT_DIR/BattleTech_Data/"
         cd "$BT_DIR/"
         chmod 755 run.sh
         find . -type f -printf "%m:%p\n"
