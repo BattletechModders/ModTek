@@ -148,7 +148,7 @@ namespace ModTekPreloader
 
                 var parameters = new object[] { cache };
 
-                foreach (var injectorPath in Directory.GetFiles(injectorsDirectory, "*.dll"))
+                foreach (var injectorPath in Directory.GetFiles(injectorsDirectory, "*.dll").OrderBy(p => p))
                 {
                     // Injector
                     var injector = Assembly.LoadFile(injectorPath);
@@ -162,7 +162,7 @@ namespace ModTekPreloader
                     }
                 }
 
-                cache.DumpAssembliesToDiskThenLoadFromFile(assembliesInjectedDirectory);
+                cache.SaveAssembliesToDiskAndPreloadInjected(assembliesInjectedDirectory);
             }
         }
     }

@@ -9,13 +9,9 @@ namespace ModTekPreloader
 {
     internal class AssemblyCache : IAssemblyResolver
     {
-        private readonly Dictionary<string, AssemblyDefinition> assemblies = new Dictionary<string, AssemblyDefinition>();
-        private readonly IAssemblyResolver resolver;
-
-        internal AssemblyCache()
-        {
-            resolver = new DefaultAssemblyResolver();
-        }
+        private readonly Dictionary<string, AssemblyDefinition> definitions = new Dictionary<string, AssemblyDefinition>();
+        private readonly Dictionary<string, byte[]> serializations = new Dictionary<string, byte[]>();
+        private readonly IAssemblyResolver resolver = new DefaultAssemblyResolver();
 
         public AssemblyDefinition Resolve(AssemblyNameReference name)
         {
@@ -26,39 +22,30 @@ namespace ModTekPreloader
         {
             parameters.AssemblyResolver = parameters.AssemblyResolver ?? this;
 
-            if (!assemblies.TryGetValue(reference.Name, out var def))
+            if (!definitions.TryGetValue(reference.Name, out var definition))
             {
-                def = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
-                assemblies[reference.Name] = def;
+                definition = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
+                definitions[reference.Name] = definition;
+                serializations[reference.Name] = serialize(definition);
             }
-            return def;
+            return definition;
         }
 
-        // workaround to force those assemblies to be used
-        internal void DumpAssembliesToDiskThenLoadFromFile(string output)
+        internal void SaveAssembliesToDiskAndPreloadInjected(string assembliesInjectedDirectory)
         {
-            foreach (var kv in assemblies.ToList())
+            foreach (var kv in definitions)
             {
-                var assemblyName = kv.Key;
-                var assembly = kv.Value;
-                var path = Path.Combine(output, $"{assemblyName}.dll");
-                assembly.Write(path);
-                Assembly.LoadFile(path);
-                /*
-                byte[] assemblyBytes;
+                var name = kv.Key;
+                var definition = kv.Value;
+                var serialization = serialize(definition);
+                if (serialization.SequenceEqual(serializations[name]))
                 {
-                    assemblies.Remove(kv.Key);
-                    using (var s = new MemoryStream())
-                    {
-                        assembly.Write(s);
-                        assemblyBytes = s.ToArray();
-                    }
+                    continue;
                 }
-                Assembly.Load(assemblyBytes);
-                File.WriteAllBytes(Path.Combine(output, $"{name}.dll"), assemblyBytes);
-                */
+                var path = Path.Combine(assembliesInjectedDirectory, $"{name}.dll");
+                File.WriteAllBytes(path, serialization);
+                Assembly.LoadFile(path); // workaround to force injected assemblies to be used
             }
-            assemblies.Clear();
 
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -67,13 +54,20 @@ namespace ModTekPreloader
             }
         }
 
+        private static byte[] serialize(AssemblyDefinition definition)
+        {
+            using (var s = new MemoryStream())
+            {
+                definition.Write(s);
+                return s.ToArray();
+            }
+        }
+
         public void Dispose()
         {
             resolver.Dispose();
-            foreach (var assembly in assemblies.Values)
-            {
-                assembly.Dispose();
-            }
+            definitions.Clear();
+            serializations.Clear();
         }
     }
 }
