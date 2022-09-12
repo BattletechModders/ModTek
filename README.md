@@ -4,21 +4,46 @@ ModTek is a mod-loader for [HBS's BattleTech PC game](https://harebrained-scheme
 
 In version 1.7 HBS introduced an internal mod-loader. The in-game mod-loader shares many similarities to ModTek, but has fewer features and less robust handling. We strongly recommend using a stand-alone copy of ModTek instead of the in-game mod-loader. You'll have a better experience and be more in-line with current community best practices.
 
-# Installing
+# Installing ModTek 2.1.0 or later
 
-Installation of ModTek is straightforward. You download a .zip file, extract it and run an injection utility.
+:warning: If an existing ModTek installation older than 2.1.0 is installed, backup the .json configuration files if you wish, and then remove the folder at `BATTLETECH\Mods\ModTek\`.
 
-1. Download a [release from here](https://github.com/BattletechModders/ModTek/releases).
-1. If the `BATTLETECH\Mods\` directory doesn't exist, create it.
-1. Move the entire ModTek folder from the release download into the `BATTLETECH\Mods\` folder
-1. You should now have a `BATTLETECH\Mods\ModTek\` folder
-1. Run the injector `ModTekInjector.exe` in `BATTLETECH\Mods\ModTek\`. This code to `BATTLETECH\BattleTech_Data\Managed\Assembly-CSharp.dll` which will launch ModTek at startup.
+Installation of ModTek is straightforward for windows. You download the `ModTek.zip` file and extract it.
 
-:no_entry: DO NOT move anything from the `BATTLETECH\Mods\ModTek\` folder, it is self-contained.
+1. Download the latest [release from here](https://github.com/BattletechModders/ModTek/releases).
+1. Extract the contents of the zip to `BATTLETECH\` so that the `Mods\` folder in the zip appears as `BATTLETECH\Mods\` and the Doorstop files (winhttp.dll etc..) appear directly under `BATTLETECH\`.
 
 :warning: `BATTLETECH\Mods\` is in game installation folder NOT in `Documents\My Games`
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu with "/W MODTEK". If you don't see this something has gone wrong.
+
+## Linux
+
+The zip contains UnityDoorstop script `run.sh` and libraries to run the game with.
+
+### Wine
+
+Using wine is also supported, make sure to let wine load up `winhttp.dll` by setting override to `native, builtin`.
+
+## macOS
+
+:warning: UnityDoorstop should work on macOS but it wasn't tested yet in combination with ModTek.
+
+The zip contains UnityDoorstop script `run.sh` and libraries to run the game with.
+
+### Obsolete
+
+:warning: Obsolete! These installation instructions are for ModTek 2.0 and older.
+
+1. Use the following directory instead of the BATTLETECH directory: ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/
+2. If the Mods directory doesn't exist, create it here: ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/Mods/
+3. Move the entire ModTek folder from the release download into the /Mods/ folder created above.
+4. You should now have a ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/Mods/ModTek/ folder
+5. Run the injector program (ModTekInjector.exe) in that folder. To do this:
+   a. Open a Terminal window.
+   b. At the command line, type "cd ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/Mods/ModTek" and press Return.
+   c. At the command line, type "mono ModTekInjector.exe" then press Return to run the injector.
+6. DO NOT move anything from the /Mods/ModTek/ folder, it is self-contained.
 
 # Further Documentation
 
@@ -47,14 +72,11 @@ ModTek 0.7.6 or higher can be enabled or disabled from within the in-game mods m
 
 :warning: You must restart the game to enable or disable an external ModTek!
 
-## What is the Injector
+## What is UnityDoorstop and what those files like winhttp.dll
 
-Some people worry about running `ModTekInjector.exe` as it's an unknown, unsigned executable file. This file is a small program that injects ModTek code into HBS code before the main game-loop gets started. This allows ModTek to load mods that modify before Unity takes control of everything. It's similar in concept to [BepInEx](https://github.com/BepInEx/BepInEx.UnityInjectorLoader), [Unity DoorStop](https://github.com/NeighTools/UnityDoorstop), and related programs that enable modding before the main Unity thread begins.
-
-## Handling Game Updates
-
-Generally, updates can be dealt with by re-running `ModTekInjector.exe` -- though sometimes ModTek will have to if certain game API's change. If the game has changed in a way that breaks an individual mod, that mod will need to be updated, but generally, this will only happen in large updates.
-
+[Unity DoorStop](https://github.com/NeighTools/UnityDoorstop) provides a set of files that trick Unity into loading ModTek, but without modifying the game files.
+The old way was asking the user to run a `ModTekInjector.exe` manually, which modified the game so it loaded ModTek.
+In cases of updates, the old way required the user to "verify" the game files and re-install mods, but using UnityDoorstop this is not necessary anymore.
 
 ## License
 

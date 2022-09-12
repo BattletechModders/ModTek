@@ -3,7 +3,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.0 Major Changes
+## 2.1 Changes
+
+For users:
+- ModTekInjector was replaced by UnityDoorstop. [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) just requires the user to copy certain files next to the games executable. Running any injectors like `ModTekInjector.exe` must **not** be done, as this is now done on-the-fly during the preloading process triggered by UnityDoorstop. (TODO add more explanations and move to README).
+
+For modders:
+- ModTek now has a preloader triggered by UnityDoorstop, which in turn can trigger plugins to modify assemblies on the fly. Meaning mods don't have to write injectors that directly modify the games assemblies files. Issues with the preloader are logged to `Mods/.modtek/ModTekPreloader.log`. See [RogueTechPerfFixes](https://github.com/BattletechModders/RogueTechPerfFixes/blob/master/RogueTechPerfFixesInjector/Injector.cs) as an example. (TODO add more explanations and move to README)
+- UnityDoorstop also makes it easy to override or add assemblies. Just put them into `Mods/ModTek/AssembliesOverride`.
+
+## 2.0 Changes
 
 For users:
 - Moved Wiki content to main repository.
