@@ -85,6 +85,7 @@ namespace ModTekPreloader
 
         private void RestoreFromBackupAndDeleteBackup()
         {
+            Logger.Log(nameof(RestoreFromBackupAndDeleteBackup));
             if (File.Exists(gameDLLBackupPath))
             {
                 Restore();
@@ -125,6 +126,7 @@ namespace ModTekPreloader
 
         private void CleanupObsoleteFiles()
         {
+            Logger.Log(nameof(CleanupObsoleteFiles));
             foreach (var relativePathWithPlaceholder in OBSOLETE_FILES)
             {
                 var path = relativePathWithPlaceholder
@@ -136,6 +138,7 @@ namespace ModTekPreloader
 
         private void RunInjectors()
         {
+            Logger.Log(nameof(RunInjectors));
             Directory.CreateDirectory(assembliesInjectedDirectory);
             foreach (var file in Directory.GetFiles(assembliesInjectedDirectory, "*.dlL"))
             {
@@ -144,12 +147,17 @@ namespace ModTekPreloader
 
             using (var cache = new AssemblyCache())
             {
-                ModTekInjector.Inject(cache);
+                {
+                    Logger.Log($"Running {nameof(ModTekInjector)}.");
+                    ModTekInjector.Inject(cache);
+                }
 
                 var parameters = new object[] { cache };
 
+                Logger.Log($"Searching injector dlls.");
                 foreach (var injectorPath in Directory.GetFiles(injectorsDirectory, "*.dll").OrderBy(p => p))
                 {
+                    Logger.Log($"Running injector {Path.GetFileName(injectorPath)}.");
                     // Injector
                     var injector = Assembly.LoadFile(injectorPath);
                     foreach (var injectMethod in injector
@@ -159,6 +167,7 @@ namespace ModTekPreloader
                                  .Where(m => m != null))
                     {
                         injectMethod.Invoke(null, parameters);
+                        break;
                     }
                 }
 
