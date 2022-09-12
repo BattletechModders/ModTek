@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <DoorstopFiles Include="doorstop_config.ini;run.sh" CopyToOutputDirectory="PreserveNewest" />
-    <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTek.log" />
+    <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader.log" />
     <OutDirFiles Include="$(OutDir)**" />
   </ItemGroup>
   <Target Name="CopyOutDirFilesToGame" AfterTargets="AfterBuild" Condition="'$(BattleTechGameDir)' != ''">

@@ -4,9 +4,9 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace ModTekPreloader
+namespace ModTekInjector
 {
-    internal static class ModTekInjector
+    internal static class Injector
     {
         private const string MODTEK_DLL_FILE_NAME = "ModTek.dll";
         private const string MODTEK_INIT_TYPE = "ModTek.ModTek";
@@ -17,7 +17,7 @@ namespace ModTekPreloader
 
         public static void Inject(IAssemblyResolver resolver)
         {
-            Logger.Log($"Injecting call to {MODTEK_INIT_TYPE}.{MODTEK_INIT_METHOD} from {GAME_HOOK_TYPE}.{GAME_HOOK_METHOD}");
+            Console.WriteLine($"Injecting call to {MODTEK_INIT_TYPE}.{MODTEK_INIT_METHOD} from {GAME_HOOK_TYPE}.{GAME_HOOK_METHOD}");
 
             var gameDirectory = Directory.GetCurrentDirectory();
             var modsDirectory = Path.Combine(gameDirectory, "Mods");
