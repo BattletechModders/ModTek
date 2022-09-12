@@ -9,12 +9,6 @@ namespace ModTekPreloader
 {
     internal class Preloader
     {
-        private static readonly List<string> MANAGED_DIRECTORY_SEEK_LIST = new List<string>
-        {
-            "BattleTech_Data/Managed",
-            "Data/Managed"
-        };
-
         private static readonly List<string> OBSOLETE_FILES = new List<string>
         {
             "(Managed)/BattleTechModLoader.dll",
@@ -27,66 +21,21 @@ namespace ModTekPreloader
             "(Mods)/ModTek/Newtonsoft.Json.dll"
         };
 
-        private const string GAME_DLL_FILE_NAME = "Assembly-CSharp.dll";
-
         // ENTRY POINT
-        internal static void Run(string gameDirectory)
+        internal static void Run()
         {
-            var injector = new Preloader(gameDirectory);
+            var injector = new Preloader();
             injector.RestoreFromBackupAndDeleteBackup();
             injector.CleanupObsoleteFiles();
             injector.RunInjectors();
         }
 
-        private readonly string managedDirectory;
-        private readonly string gameDLLPath;
-        private readonly string gameDLLBackupPath;
-        private readonly string modsDirectory;
-        private readonly string injectorsDirectory;
-        private readonly string assembliesInjectedDirectory;
-
-        private Preloader(string gameDirectory)
-        {
-            managedDirectory = FindManagedDirectory(gameDirectory);
-            gameDLLPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME);
-            gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + ".orig");
-            modsDirectory = Path.Combine(gameDirectory, "Mods");
-            var modTekDirectory = Path.Combine(modsDirectory, "ModTek");
-            injectorsDirectory = Path.Combine(modTekDirectory, "Injectors");
-            var dotModTekDirectory = Path.Combine(modsDirectory, ".modtek");
-            assembliesInjectedDirectory = Path.Combine(dotModTekDirectory, "AssembliesInjected");
-            ExistsOrThrow(managedDirectory, gameDLLPath, modsDirectory);
-        }
-
-        private static string FindManagedDirectory(string gameDirectory)
-        {
-            foreach (var candidateRelativePath in MANAGED_DIRECTORY_SEEK_LIST)
-            {
-                var candidateAbsolutePath = Path.GetFullPath(Path.Combine(gameDirectory, candidateRelativePath));
-                var seekPath = Path.Combine(candidateAbsolutePath, GAME_DLL_FILE_NAME);
-                if (File.Exists(seekPath))
-                {
-                    return candidateAbsolutePath;
-                }
-            }
-            throw new Exception("Can't find managed directory");
-        }
-
-        private static void ExistsOrThrow(params string[] paths)
-        {
-            foreach (var path in paths)
-            {
-                if (!Directory.Exists(path) && !File.Exists(path))
-                {
-                    throw new Exception($"Can't find {path}");
-                }
-            }
-        }
+        private readonly Paths paths = new Paths();
 
         private void RestoreFromBackupAndDeleteBackup()
         {
             Logger.Log(nameof(RestoreFromBackupAndDeleteBackup));
-            if (File.Exists(gameDLLBackupPath))
+            if (File.Exists(paths.gameDLLBackupPath))
             {
                 Restore();
             }
@@ -94,7 +43,7 @@ namespace ModTekPreloader
             {
                 // read the assembly for game version and injected status
                 bool injected;
-                using (var game = ModuleDefinition.ReadModule(gameDLLPath))
+                using (var game = ModuleDefinition.ReadModule(paths.gameDLLPath))
                 {
                     injected = InjectedChecker.IsInjected(game);
                 }
@@ -104,15 +53,15 @@ namespace ModTekPreloader
                 }
             }
 
-            File.Delete(gameDLLBackupPath);
+            File.Delete(paths.gameDLLBackupPath);
         }
 
         private void Restore()
         {
-            if (!File.Exists(gameDLLBackupPath))
-                throw new FileNotFoundException(gameDLLBackupPath);
+            if (!File.Exists(paths.gameDLLBackupPath))
+                throw new FileNotFoundException(paths.gameDLLBackupPath);
 
-            using (var backup = ModuleDefinition.ReadModule(gameDLLBackupPath))
+            using (var backup = ModuleDefinition.ReadModule(paths.gameDLLBackupPath))
             {
                 if (InjectedChecker.IsInjected(backup))
                 {
@@ -120,8 +69,8 @@ namespace ModTekPreloader
                 }
             }
 
-            File.Copy(gameDLLBackupPath, gameDLLPath, true);
-            Logger.Log($"{Path.GetFileName(gameDLLBackupPath)} restored to {Path.GetFileName(gameDLLPath)}");
+            File.Copy(paths.gameDLLBackupPath, paths.gameDLLPath, true);
+            Logger.Log($"{Path.GetFileName(paths.gameDLLBackupPath)} restored to {Path.GetFileName(paths.gameDLLPath)}");
         }
 
         private void CleanupObsoleteFiles()
@@ -130,8 +79,8 @@ namespace ModTekPreloader
             foreach (var relativePathWithPlaceholder in OBSOLETE_FILES)
             {
                 var path = relativePathWithPlaceholder
-                    .Replace("(Mods)", modsDirectory)
-                    .Replace("(Managed)", managedDirectory);
+                    .Replace("(Mods)", paths.modsDirectory)
+                    .Replace("(Managed)", paths.managedDirectory);
                 File.Delete(path);
             }
         }
@@ -139,39 +88,33 @@ namespace ModTekPreloader
         private void RunInjectors()
         {
             Logger.Log(nameof(RunInjectors));
-            Directory.CreateDirectory(assembliesInjectedDirectory);
-            foreach (var file in Directory.GetFiles(assembliesInjectedDirectory, "*.dlL"))
+            Directory.CreateDirectory(paths.assembliesInjectedDirectory);
+            string[] GetAssembliesInjectedFiles() => Directory.GetFiles(paths.assembliesInjectedDirectory, "*.dlL");
+            foreach (var file in GetAssembliesInjectedFiles())
             {
                 File.Delete(file);
             }
 
-            using (var cache = new AssemblyCache())
+            var injectorAppDomain = AppDomain.CreateDomain("Injectors");
+            try
             {
-                {
-                    Logger.Log($"Running {nameof(ModTekInjector)}.");
-                    ModTekInjector.Inject(cache);
-                }
+                var runner = (InjectorRunner)injectorAppDomain.CreateInstanceAndUnwrap(
+                    nameof(ModTekPreloader),
+                    $"{nameof(ModTekPreloader)}.{nameof(InjectorRunner)}"
+                );
+                runner.RunInjectors(Logger.Start);
+            }
+            finally
+            {
+                AppDomain.Unload(injectorAppDomain);
+            }
 
-                var parameters = new object[] { cache };
-
-                Logger.Log($"Searching injector dlls.");
-                foreach (var injectorPath in Directory.GetFiles(injectorsDirectory, "*.dll").OrderBy(p => p))
-                {
-                    Logger.Log($"Running injector {Path.GetFileName(injectorPath)}.");
-                    // Injector
-                    var injector = Assembly.LoadFile(injectorPath);
-                    foreach (var injectMethod in injector
-                                 .GetTypes()
-                                 .Where(t => t.Name == "Injector")
-                                 .Select(t => t.GetMethod("Inject", BindingFlags.Public | BindingFlags.Static))
-                                 .Where(m => m != null))
-                    {
-                        injectMethod.Invoke(null, parameters);
-                        break;
-                    }
-                }
-
-                cache.SaveAssembliesToDiskAndPreloadInjected(assembliesInjectedDirectory);
+            // to force injected assemblies to be used
+            Logger.Log("Preloading injected assemblies.");
+            foreach (var file in GetAssembliesInjectedFiles())
+            {
+                Logger.Log($"\t{FileUtils.GetRelativePath(file)}");
+                Assembly.LoadFile(file);
             }
         }
     }

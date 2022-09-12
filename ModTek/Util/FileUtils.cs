@@ -7,6 +7,18 @@ namespace ModTek.Util
 {
     internal static class FileUtils
     {
+        internal static string GetRelativePath(string path)
+        {
+            try
+            {
+                return new Uri(Directory.GetCurrentDirectory()).MakeRelativeUri(new Uri(path)).ToString();
+            }
+            catch
+            {
+                return path;
+            }
+        }
+
         internal static string GetRelativePath(string basePath, string absolutePath)
         {
             if (!Path.IsPathRooted(absolutePath))

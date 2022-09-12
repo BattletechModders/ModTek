@@ -40,15 +40,8 @@ namespace ModTekPreloader
             return null;
         }
 
-        internal void SaveAssembliesToDiskAndPreloadInjected(string assembliesInjectedDirectory)
+        internal void SaveAssembliesToDisk(string assembliesInjectedDirectory)
         {
-            Logger.Log("Assemblies loaded after injectors ran:");
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().OrderBy(a => a.Location))
-            {
-                var location = string.IsNullOrWhiteSpace(a.Location) ? "Memory" : FileUtils.GetRelativePath(a.Location);
-                Logger.Log($"\t{location}");
-            }
-
             Logger.Log("Assemblies modified by injectors:");
             foreach (var kv in assemblies.OrderBy(kv => kv.Key))
             {
@@ -61,7 +54,6 @@ namespace ModTekPreloader
                 var path = Path.Combine(assembliesInjectedDirectory, $"{name}.dll");
                 Logger.Log($"\t{FileUtils.GetRelativePath(path)}");
                 File.WriteAllBytes(path, serialized);
-                Assembly.LoadFile(path); // workaround; to force injected assemblies to be used
             }
         }
 

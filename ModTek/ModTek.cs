@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using BattleTech.Data;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
@@ -169,6 +170,12 @@ namespace ModTek
             yield return new ProgressReport(1, sliderText, "", true);
             MTLogger.Info.Log(sliderText);
             HarmonyUtils.PrintHarmonySummary();
+
+            MTLogger.Info.Log("Assemblies loaded:" + AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => AssemblyUtil.GetLocationOrName(a))
+                .OrderBy(a => a)
+                .AsTextList()
+            );
 
             yield return new ProgressReport(1, "Game now loading", "", true);
             FinishAndCleanup();

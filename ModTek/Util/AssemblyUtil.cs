@@ -196,5 +196,21 @@ namespace ModTek.Util
         {
             return Method.DeclaringType?.FullName + "." + Method.Name;
         }
+
+        public static string GetLocationOrName(Assembly assembly)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(assembly.Location))
+                {
+                    return FileUtils.GetRelativePath(assembly.Location);
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+            return assembly.GetName().Name;
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using ModTekPreloader;
 
 namespace Doorstop
@@ -12,7 +11,7 @@ namespace Doorstop
             {
                 Logger.Setup();
                 Logger.Log("Preloader starting");
-                Preloader.Run(Directory.GetCurrentDirectory());
+                Preloader.Run();
                 Logger.Log("Preloader finished");
             }
             catch (Exception e)
