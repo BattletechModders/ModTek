@@ -7,9 +7,12 @@ namespace ModTekPreloader
 {
     internal static class InjectedChecker
     {
-        internal static bool IsInjected(ModuleDefinition game)
+        internal static bool IsInjected(string path)
         {
-            return IsModTekInjected(game) || IsBTMLInjected(game) || IsRogueTechPerfFixInjected(game);
+            using (var game = ModuleDefinition.ReadModule(path))
+            {
+                return IsModTekInjected(game) || IsBTMLInjected(game) || IsRogueTechPerfFixInjected(game);
+            }
         }
 
         private static bool IsModTekInjected(ModuleDefinition game)

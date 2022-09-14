@@ -11,7 +11,6 @@ namespace ModTekPreloader
 
         internal readonly string managedDirectory;
         internal readonly string gameDLLPath;
-        internal readonly string gameDLLBackupPath;
         internal readonly string modsDirectory;
         internal readonly string injectorsDirectory;
         internal readonly string assembliesInjectedDirectory;
@@ -21,7 +20,6 @@ namespace ModTekPreloader
             managedDirectory = Environment.GetEnvironmentVariable(ENV_DOORSTOP_MANAGED_FOLDER_DIR)
                 ?? throw new Exception($"Can't find {ENV_DOORSTOP_MANAGED_FOLDER_DIR}");
             gameDLLPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME);
-            gameDLLBackupPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME + ".orig");
 
             var gameExeDirectory = Directory.GetCurrentDirectory();
             modsDirectory = Path.Combine(gameExeDirectory, "Mods");

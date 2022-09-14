@@ -35,42 +35,31 @@ namespace ModTekPreloader
         private void RestoreFromBackupAndDeleteBackup()
         {
             Logger.Log(nameof(RestoreFromBackupAndDeleteBackup));
-            if (File.Exists(paths.gameDLLBackupPath))
+
+            var gameDLLModTekBackupPath = paths.gameDLLPath + ".orig";
+            var gameDLLPerFixBackupPath = paths.gameDLLPath + ".PerfFix.orig";
+
+            if (InjectedChecker.IsInjected(paths.gameDLLPath)
+                && !RestoreIfUnInjectedBackupFound(gameDLLModTekBackupPath)
+                && !RestoreIfUnInjectedBackupFound(gameDLLPerFixBackupPath))
             {
-                Restore();
-            }
-            else
-            {
-                // read the assembly for game version and injected status
-                bool injected;
-                using (var game = ModuleDefinition.ReadModule(paths.gameDLLPath))
-                {
-                    injected = InjectedChecker.IsInjected(game);
-                }
-                if (injected)
-                {
-                    Restore();
-                }
+                throw new Exception("No un-injected backup found, please verify/reset game files");
             }
 
-            File.Delete(paths.gameDLLBackupPath);
+            File.Delete(gameDLLModTekBackupPath);
+            File.Delete(gameDLLPerFixBackupPath);
         }
 
-        private void Restore()
+        private bool RestoreIfUnInjectedBackupFound(string backupPath)
         {
-            if (!File.Exists(paths.gameDLLBackupPath))
-                throw new FileNotFoundException(paths.gameDLLBackupPath);
-
-            using (var backup = ModuleDefinition.ReadModule(paths.gameDLLBackupPath))
+            if (!File.Exists(backupPath) || InjectedChecker.IsInjected(backupPath))
             {
-                if (InjectedChecker.IsInjected(backup))
-                {
-                    throw new Exception("Backups are injected and not originals, please verify/reset game files");
-                }
+                return false;
             }
 
-            File.Copy(paths.gameDLLBackupPath, paths.gameDLLPath, true);
-            Logger.Log($"{Path.GetFileName(paths.gameDLLBackupPath)} restored to {Path.GetFileName(paths.gameDLLPath)}");
+            File.Copy(backupPath, paths.gameDLLPath, true);
+            Logger.Log($"{Path.GetFileName(backupPath)} restored to {Path.GetFileName(paths.gameDLLPath)}");
+            return true;
         }
 
         private void CleanupObsoleteFiles()
