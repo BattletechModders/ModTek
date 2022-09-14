@@ -25,10 +25,11 @@
   </PropertyGroup>
 
   <!-- Optional: Copies the mod DLL to the mod directory -->
-  <ItemGroup>
-    <OutDirFiles Include="$(OutDir)**" />
-  </ItemGroup>
-  <Target Name="CopyOutDirFilesToModDir" AfterTargets="AfterBuild" Condition="'$(BattleTechGameDir)' != ''">
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
+    <ItemGroup>
+      <OutDirFiles Include="$(OutDir)**" />
+    </ItemGroup>
+
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
 

@@ -28,11 +28,16 @@ jobs:
     - name: Build
       run: |
         cd ModTek/
-        dotnet build -c Release -p:BattleTechGameDir="$BT_DIR/" -p:OutputPath="$BT_DIR/Mods/ModTek"
+        dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$BT_DIR/"
         rm -fr "$BT_DIR/BattleTech_Data/"
         cd "$BT_DIR/"
-        chmod 755 run.sh
         find . -type f -printf "%m:%p\n"
+        # set permissions and also check if files exist
+        chmod 755 run.sh
+        chmod 644 winhttp.dll
+        chmod 644 Mods/ModTek/ModTekPreloader.dll
+        chmod 644 Mods/ModTek/ModTek.dll
+        chmod 644 Mods/ModTek/Injectors/ModTekInjector.dll
         7z a -tzip -mx9 ../ModTek.zip -ir!.
     - name: Upload Artifact
       uses: actions/upload-artifact@main
@@ -57,6 +62,9 @@ jobs:
         draft: false
         prerelease: false
         body: |
-          ModTek.zip contains the ModTek tools, please unzip them as directly into your games location.
+          ### Important
+          **ModTekInjector.exe was replaced by UnityDoorstop**, [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) works by just copying files to the games directory. Running any injectors exes is not necessary or allowed anymore.
+          
+          ModTek.zip contains the ModTek tools, please unzip them as directly into your game's location.
           see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md)
         files: ModTek.zip

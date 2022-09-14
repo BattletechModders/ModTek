@@ -11,21 +11,24 @@
     <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
     <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <DoorstopFiles Include="doorstop_config.ini;run.sh" CopyToOutputDirectory="PreserveNewest" />
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader.log" />
-    <OutDirFiles Include="$(OutDir)**" />
   </ItemGroup>
-  <Target Name="CopyOutDirFilesToGame" AfterTargets="AfterBuild" Condition="'$(BattleTechGameDir)' != ''">
+
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
+    <ItemGroup>
+      <OutDirFiles Include="$(OutDir)**" />
+      <DoorstopFiles Include="run.sh;doorstop_config.ini" />
+    </ItemGroup>
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
   </Target>
-  
-  <Target Name="DoorstopFetchWin" BeforeTargets="Build" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
+
+  <Target Name="DoorstopFetchWin" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
-      <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
       <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_win_release_4.0.0.zip</DoorstopUrl>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
@@ -33,9 +36,8 @@
     <Copy SourceFiles="$(DoorstopIntDir)\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
   </Target>
 
-  <Target Name="DoorstopFetchMacos" BeforeTargets="Build" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.dylib')">
+  <Target Name="DoorstopFetchMacos" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.dylib')">
     <PropertyGroup>
-      <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
       <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_macos_release_4.0.0.zip</DoorstopUrl>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
@@ -43,9 +45,8 @@
     <Copy SourceFiles="$(DoorstopIntDir)\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
   </Target>
 
-  <Target Name="DoorstopFetchLinux" BeforeTargets="Build" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.so')">
+  <Target Name="DoorstopFetchLinux" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.so')">
     <PropertyGroup>
-      <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
       <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_linux_release_4.0.0.zip</DoorstopUrl>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
