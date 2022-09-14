@@ -11,7 +11,27 @@ namespace ModTekPreloader
         {
             using (var game = ModuleDefinition.ReadModule(path))
             {
-                return IsModTekInjected(game) || IsBTMLInjected(game) || IsRogueTechPerfFixInjected(game);
+                bool injected = false;
+                if (IsModTekInjected(game))
+                {
+                    Logger.Log($"{FileUtils.GetRelativePath(path)} was modified by ModTek.");
+                    injected = true;
+                }
+                if (IsBTMLInjected(game))
+                {
+                    Logger.Log($"{FileUtils.GetRelativePath(path)} was modified by BTML.");
+                    injected = true;
+                }
+                if (IsRogueTechPerfFixInjected(game))
+                {
+                    Logger.Log($"{FileUtils.GetRelativePath(path)} was modified by RogueTechPerfFix.");
+                    injected = true;
+                }
+                if (!injected)
+                {
+                    Logger.Log($"{FileUtils.GetRelativePath(path)} contains no known injections.");
+                }
+                return injected;
             }
         }
 

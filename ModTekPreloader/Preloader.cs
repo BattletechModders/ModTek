@@ -58,7 +58,7 @@ namespace ModTekPreloader
             }
 
             File.Copy(backupPath, paths.gameDLLPath, true);
-            Logger.Log($"{Path.GetFileName(backupPath)} restored to {Path.GetFileName(paths.gameDLLPath)}");
+            Logger.Log($"{FileUtils.GetRelativePath(paths.gameDLLPath)} restored from {FileUtils.GetRelativePath(backupPath)} .");
             return true;
         }
 
