@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Mono.Cecil;
 
-namespace ModTekPreloader
+namespace ModTekPreloader.Injector
 {
     internal class AssemblyCache : IAssemblyResolver
     {
@@ -55,6 +54,11 @@ namespace ModTekPreloader
                 Logger.Log($"\t{FileUtils.GetRelativePath(path)}");
                 File.WriteAllBytes(path, serialized);
             }
+        }
+
+        internal void SaveAssembliesPublicizedToDisk(string assembliesPublicizedDirectory)
+        {
+            AssemblyPublicizer.MakePublic(this, assembliesPublicizedDirectory);
         }
 
         public void Dispose()

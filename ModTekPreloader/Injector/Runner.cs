@@ -4,9 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace ModTekPreloader
+namespace ModTekPreloader.Injector
 {
-    public class InjectorRunner : MarshalByRefObject
+    public class Runner : MarshalByRefObject
     {
         public void RunInjectors(DateTime loggerStart)
         {
@@ -56,6 +56,8 @@ namespace ModTekPreloader
                 }
 
                 cache.SaveAssembliesToDisk(paths.assembliesInjectedDirectory);
+
+                cache.SaveAssembliesPublicizedToDisk(paths.assembliesPublicizedDirectory);
             }
         }
 

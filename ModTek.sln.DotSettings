@@ -80,4 +80,5 @@ UnityEngine.Assertions.Assert.IsNotNull($EXPR$, $MESSAGE$);</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=MODTEK/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=mpstark/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=nomedia/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Publicizer/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=transpilers/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

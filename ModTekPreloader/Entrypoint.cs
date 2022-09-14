@@ -1,10 +1,13 @@
 using System;
 using ModTekPreloader;
 
+// ReSharper disable once CheckNamespace
 namespace Doorstop
 {
+    // ReSharper disable once UnusedMember.Global
     class Entrypoint
     {
+        // ReSharper disable once UnusedMember.Global
         public static void Start()
         {
             try

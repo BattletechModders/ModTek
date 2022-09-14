@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using Mono.Cecil;
+using ModTekPreloader.Injector;
 
 namespace ModTekPreloader
 {
@@ -39,7 +38,7 @@ namespace ModTekPreloader
             var gameDLLModTekBackupPath = paths.gameDLLPath + ".orig";
             var gameDLLPerFixBackupPath = paths.gameDLLPath + ".PerfFix.orig";
 
-            if (InjectedChecker.IsInjected(paths.gameDLLPath)
+            if (LegacyChecker.IsInjected(paths.gameDLLPath)
                 && !RestoreIfUnInjectedBackupFound(gameDLLModTekBackupPath)
                 && !RestoreIfUnInjectedBackupFound(gameDLLPerFixBackupPath))
             {
@@ -52,7 +51,7 @@ namespace ModTekPreloader
 
         private bool RestoreIfUnInjectedBackupFound(string backupPath)
         {
-            if (!File.Exists(backupPath) || InjectedChecker.IsInjected(backupPath))
+            if (!File.Exists(backupPath) || LegacyChecker.IsInjected(backupPath))
             {
                 return false;
             }
@@ -87,9 +86,10 @@ namespace ModTekPreloader
             var injectorAppDomain = AppDomain.CreateDomain("Injectors");
             try
             {
-                var runner = (InjectorRunner)injectorAppDomain.CreateInstanceAndUnwrap(
-                    nameof(ModTekPreloader),
-                    $"{nameof(ModTekPreloader)}.{nameof(InjectorRunner)}"
+                var runner = (Runner)injectorAppDomain.CreateInstanceAndUnwrap(
+                    typeof(Runner).Assembly.FullName,
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    typeof(Runner).FullName
                 );
                 runner.RunInjectors(Logger.Start);
             }

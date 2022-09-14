@@ -14,6 +14,7 @@ namespace ModTekPreloader
         internal readonly string modsDirectory;
         internal readonly string injectorsDirectory;
         internal readonly string assembliesInjectedDirectory;
+        internal readonly string assembliesPublicizedDirectory;
 
         internal Paths()
         {
@@ -25,6 +26,7 @@ namespace ModTekPreloader
             modsDirectory = Path.Combine(gameExeDirectory, "Mods");
             injectorsDirectory = Path.Combine(modsDirectory, "ModTek", "Injectors");
             assembliesInjectedDirectory = Path.Combine(modsDirectory, ".modtek", "AssembliesInjected");
+            assembliesPublicizedDirectory = Path.Combine(modsDirectory, ".modtek", "AssembliesPublicized");
             ExistsOrThrow(managedDirectory, gameDLLPath, modsDirectory);
         }
 

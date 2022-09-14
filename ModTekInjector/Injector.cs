@@ -60,15 +60,21 @@ namespace ModTekInjector
                 var instruction = hookedMethod.Body.Instructions[i];
 
                 if (!instruction.OpCode.Code.Equals(Code.Call) || !instruction.OpCode.OperandType.Equals(OperandType.InlineMethod))
+                {
                     continue;
+                }
 
                 var methodReference = (MethodReference)instruction.Operand;
                 if (methodReference.Name.Contains("PrepareSerializer"))
+                {
                     targetInstruction = i;
+                }
             }
 
             if (targetInstruction == -1)
+            {
                 throw new Exception("Couldn't find anything");
+            }
 
             hookedMethod.Body.GetILProcessor().InsertAfter(hookedMethod.Body.Instructions[targetInstruction],
                 Instruction.Create(OpCodes.Call, game.MainModule.ImportReference(injectedMethod)));
