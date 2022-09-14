@@ -54,6 +54,16 @@
     <Copy SourceFiles="$(DoorstopIntDir)\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
   </Target>
 
+  <Target Name="FastHarmonyFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
+    <PropertyGroup>
+      <FastHarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</FastHarmonyUrl>
+      <FastHarmonyIntDir>$(MSBuildProjectExtensionsPath)\harmony</FastHarmonyIntDir>
+    </PropertyGroup>
+    <DownloadFile SourceUrl="$(FastHarmonyUrl)" DestinationFolder="$(MSBuildProjectExtensionsPath)\harmony" />
+    <Unzip SourceFiles="$(FastHarmonyIntDir)\0Harmony.zip" DestinationFolder="$(FastHarmonyIntDir)" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(FastHarmonyIntDir)\0Harmony.dll" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" Condition="'$(BattleTechGameDir)' != ''" />
+  </Target>
+
   <ItemGroup>
     <Reference Include="System">
       <Private>False</Private>
