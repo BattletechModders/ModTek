@@ -53,7 +53,7 @@ namespace ModTekPreloader.Injector
 
                 foreach (var method in type.Methods)
 				{
-					if (method.IsCompilerControlled || IsCompiledGenerated(method))
+                    if (method.IsCompilerControlled || IsCompiledGenerated(method))
                     {
                         continue;
                     }
@@ -65,6 +65,20 @@ namespace ModTekPreloader.Injector
 
                     method.IsPublic = true;
 				}
+
+                // property methods are made by the compiler and therefore skipped earlier
+                foreach (var property in type.Properties)
+                {
+                    if (property.GetMethod != null)
+                    {
+                        property.GetMethod.IsPublic = true;
+                    }
+
+                    if (property.SetMethod != null)
+                    {
+                        property.SetMethod.IsPublic = true;
+                    }
+                }
 
 				foreach (var field in type.Fields)
 				{
