@@ -108,14 +108,6 @@ namespace ModTek
                 FinishAndCleanup();
             }
 
-            if (File.Exists(FilePaths.ChangedFlagPath))
-            {
-                File.Delete(FilePaths.ChangedFlagPath);
-                ModTekCacheStorage.CleanModTekTempDir(new DirectoryInfo(FilePaths.TempModTekDirectory));
-                Directory.CreateDirectory(FilePaths.MergeCacheDirectory);
-                Directory.CreateDirectory(FilePaths.MDDBCacheDirectory);
-            }
-
             try
             {
                 HarmonyUtils.PatchAll();

@@ -226,13 +226,11 @@ namespace ModTek.Features.ModLoaderSupport.Patches
         public static bool Prefix(Dictionary<string, ModStatusItem> tempLoadedMods)
         {
             MTLogger.Info.Log("SaveModStatusToFile");
-            var changed = false;
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 MTLogger.Info.Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
-                    changed = true;
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
@@ -244,11 +242,6 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                         MTLogger.Info.Log("Can't save mod state", e);
                     }
                 }
-            }
-
-            if (changed)
-            {
-                File.WriteAllText(FilePaths.ChangedFlagPath, "changed");
             }
             return false;
         }

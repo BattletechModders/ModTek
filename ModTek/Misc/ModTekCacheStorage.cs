@@ -10,43 +10,6 @@ namespace ModTek.Misc
 {
     internal static class ModTekCacheStorage
     {
-        internal static void CleanModTekTempDir(DirectoryInfo baseDir)
-        {
-            if (!baseDir.Exists)
-            {
-                return;
-            }
-
-            foreach (var dir in baseDir.EnumerateDirectories())
-            {
-                CleanModTekTempDir(dir);
-            }
-
-            foreach (var file in baseDir.EnumerateFiles())
-            {
-                file.IsReadOnly = false;
-                MTLogger.Info.Log("delete file " + file.FullName);
-                try
-                {
-                    file.Delete();
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            MTLogger.Info.Log("delete directory " + baseDir.FullName);
-            try
-            {
-                baseDir.Delete();
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-
         internal static void CSVWriteTo<T>
         (
             string path,

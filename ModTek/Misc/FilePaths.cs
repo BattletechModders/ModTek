@@ -21,7 +21,6 @@ namespace ModTek.Misc
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
         private const string HARMONY_SUMMARY_FILE_NAME = "harmony_summary.log";
         private const string PROFILING_SUMMARY_FILE_NAME = "profiling_summary.log";
-        private const string CHANGED_FLAG_NAME = ".changed";
 
         internal static string ModTekDirectory { get; private set; }
         internal static string TempModTekDirectory { get; private set; }
@@ -38,7 +37,6 @@ namespace ModTek.Misc
         internal static string StreamingAssetsDirectory { get; private set; }
         internal static string StreamingAssetsDirectoryName { get; private set; }
         internal static string AssetBundlesDirectory { get; private set; }
-        internal static string ChangedFlagPath { get; private set; }
         internal static string LogPath { get; set; }
         internal static string LogPathRelativeToGameDirectory => FileUtils.GetRelativePath(GameDirectory, LogPath);
 
@@ -70,7 +68,6 @@ namespace ModTek.Misc
             MergeCacheDirectory = Path.Combine(TempModTekDirectory, CACHE_DIRECTORY_NAME);
             MDDBCacheDirectory = Path.Combine(TempModTekDirectory, DATABASE_DIRECTORY_NAME);
 
-            ChangedFlagPath = Path.Combine(TempModTekDirectory, CHANGED_FLAG_NAME);
             LogPath = Path.Combine(TempModTekDirectory, LOG_NAME);
             HarmonySummaryPath = Path.Combine(TempModTekDirectory, HARMONY_SUMMARY_FILE_NAME);
             ProfilingSummaryPath = Path.Combine(TempModTekDirectory, PROFILING_SUMMARY_FILE_NAME);
