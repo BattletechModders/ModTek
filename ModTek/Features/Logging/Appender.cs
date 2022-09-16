@@ -15,8 +15,8 @@ namespace ModTek.Features.Logging
         internal Appender(string path)
         {
             FileUtils.CreateParentOfPath(path);
+            FileUtils.RotatePath(path, 1);
             writer = new StreamWriter(path) { AutoFlush = true };
-            writer.WriteLine();
             writer.WriteLine($"{DateTime.Now} ModTek v{VersionTools.LongVersion}");
             writer.WriteLine(new string('-', 80));
             writer.WriteLine(VersionInfo.GetFormattedInfo());

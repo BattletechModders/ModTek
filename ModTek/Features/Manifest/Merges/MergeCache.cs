@@ -22,7 +22,15 @@ namespace ModTek.Features.Manifest.Merges
         private readonly CacheDB CachedMerges; // stuff in here was merged
         private readonly CacheDB QueuedMerges = new CacheDB(); // stuff in here has merges queued
 
-        private static bool HasChanges;
+        private bool hasChanges;
+        private void SetHasChangedAndRemoveIndex()
+        {
+            if (!hasChanges) // remove existing cache on first invalidation
+            {
+                hasChanges = true;
+                File.Delete(PersistentFilePath);
+            }
+        }
 
         internal MergeCache()
         {
@@ -34,6 +42,7 @@ namespace ModTek.Features.Manifest.Merges
                 {
                     CachedMerges = ModTekCacheStorage.ReadFrom<List<CacheKeyValue>>(PersistentFilePath)
                         .ToDictionary(kv => kv.Key, kv => kv.Value);
+                    MTLogger.Info.Log("MergeCache: Loaded.");
                     return;
                 }
                 catch (Exception e)
@@ -55,7 +64,7 @@ namespace ModTek.Features.Manifest.Merges
             try
             {
                 saveSW.Restart();
-                if (!HasChanges)
+                if (!hasChanges)
                 {
                     MTLogger.Info.Log($"MergeCache: No changes detected, skipping save.");
                     return;
@@ -63,7 +72,7 @@ namespace ModTek.Features.Manifest.Merges
 
                 ModTekCacheStorage.WriteTo(CachedMerges.ToList(), PersistentFilePath);
                 MTLogger.Info.Log($"MergeCache: Saved to {PersistentFilePath}.");
-                HasChanges = false;
+                hasChanges = false;
             }
             catch (Exception e)
             {
@@ -123,9 +132,9 @@ namespace ModTek.Features.Manifest.Merges
                 {
                     return;
                 }
-                queuedEntry.Merge(content);
+                SetHasChangedAndRemoveIndex();
                 CachedMerges[key] = queuedEntry;
-                HasChanges = true;
+                queuedEntry.Merge(content);
             }
             catch (Exception e)
             {
@@ -135,6 +144,7 @@ namespace ModTek.Features.Manifest.Merges
 
         private void CacheRemove(CacheKey key, MergeCacheEntry cacheEntry)
         {
+            SetHasChangedAndRemoveIndex();
             CachedMerges.Remove(key);
             try
             {

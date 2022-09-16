@@ -25,7 +25,17 @@ namespace ModTek.Features.Manifest.MDD
         private static string ModMDDBPath => FilePaths.ModMDDBPath;
 
         private CacheDB CachedItems { get; }
-        internal static bool HasChanges;
+        internal static bool SaveMDDB;
+
+        private bool hasChanges;
+        private void SetHasChangedAndRemoveIndex()
+        {
+            if (!hasChanges) // remove existing cache on first invalidation
+            {
+                hasChanges = true;
+                File.Delete(PersistentFilePath);
+            }
+        }
 
         internal MDDBCache()
         {
@@ -69,16 +79,21 @@ namespace ModTek.Features.Manifest.MDD
             try
             {
                 saveSW.Restart();
-                if (!HasChanges)
+                if (!hasChanges && !SaveMDDB)
                 {
                     MTLogger.Info.Log($"MDDBCache: No changes detected, skipping save.");
                     return;
                 }
-                MetadataDatabase.SaveMDDToPath();
 
-                ModTekCacheStorage.WriteTo(CachedItems.ToList(), PersistentFilePath);
-                MTLogger.Info.Log($"MDDBCache: Saved to {PersistentFilePath}.");
-                HasChanges = false;
+                MetadataDatabase.SaveMDDToPath();
+                MTLogger.Info.Log($"MDDBCache: Saved MDD.");
+
+                if (hasChanges)
+                {
+                    ModTekCacheStorage.WriteTo(CachedItems.ToList(), PersistentFilePath);
+                    MTLogger.Info.Log($"MDDBCache: Saved to {PersistentFilePath}.");
+                    hasChanges = false;
+                }
             }
             catch (Exception e)
             {
@@ -106,6 +121,7 @@ namespace ModTek.Features.Manifest.MDD
                 return;
             }
 
+            SetHasChangedAndRemoveIndex();
             sw.Start();
             try
             {
@@ -122,7 +138,6 @@ namespace ModTek.Features.Manifest.MDD
             {
                 CachedItems[key] = FileVersionTuple.From(entry);
             }
-            HasChanges = true;
         }
 
         private readonly HashSet<CacheKey> IgnoredItems = new HashSet<CacheKey>();

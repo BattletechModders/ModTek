@@ -15,6 +15,7 @@ namespace ModTekPreloader
             {
                 Start = DateTime.Now;
                 Directory.CreateDirectory(Path.GetDirectoryName(LogFileRelativePath));
+                FileUtils.RotatePath(LogFileRelativePath, 1);
                 File.WriteAllText(LogFileRelativePath, "");
             }
             else

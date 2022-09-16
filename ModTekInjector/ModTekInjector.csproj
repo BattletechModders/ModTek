@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader.log" />
+    <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader.log*" />
   </ItemGroup>
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
     <Copy SourceFiles="$(OutDir)\$(AssemblyName).dll" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Injectors\" />

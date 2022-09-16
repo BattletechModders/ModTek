@@ -22,7 +22,7 @@ namespace ModTek.Features.Manifest.MDD
                     {
                         MTLogger.Info.Log($"\tLoading DataAddendum {dataAddendumEntry.Name}");
                         var filePath = Path.Combine(modDef.Directory, dataAddendumEntry.Path);
-                        LoadDataAddendum(dataAddendumEntry.Name, filePath, ref MDDBCache.HasChanges);
+                        LoadDataAddendum(dataAddendumEntry.Name, filePath, ref MDDBCache.SaveMDDB);
                         MTLogger.Info.Log($"\tSuccessfully loaded DataAddendum {dataAddendumEntry.Name}");
                     }
                     catch (Exception ex)

@@ -14,12 +14,14 @@ namespace Doorstop
             {
                 Logger.Setup();
                 Logger.Log("Preloader starting");
+                SingleInstanceEnforcer.Enforce();
                 Preloader.Run();
                 Logger.Log("Preloader finished");
             }
             catch (Exception e)
             {
-                Logger.Log("Preloader failed: " + e);
+                Logger.Log("Exiting the game, preloader failed: " + e);
+                Environment.Exit(0);
             }
         }
     }
