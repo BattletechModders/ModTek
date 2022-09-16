@@ -1,19 +1,18 @@
 # ModTek
 
-ModTek is a mod-loader for [HBS's BattleTech PC game](https://harebrained-schemes.com/battletech/). It allows modders to create self-contained mods that do not over-write game files. ModTek is run at game startup and dynamically loads mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). Mod dependencies are resolved and load order enforced without needing to edit the dreaded `VersionManifest.csv`. It also provides for incremental patching of stock game files that are easy to remove, version, and persist through patches.
+ModTek is a mod-loader for [HBS's BattleTech PC game](https://harebrained-schemes.com/battletech/). It allows modders to create self-contained mods that do not over-write game files. ModTek is run at game startup and dynamically loads mods that conform to the [mod.json format](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format). Mod dependencies are resolved and load order enforced without needing to edit the `VersionManifest.csv`.
 
-In version 1.7 HBS introduced an internal mod-loader. The in-game mod-loader shares many similarities to ModTek, but has fewer features and less robust handling. We strongly recommend using a stand-alone copy of ModTek instead of the in-game mod-loader. You'll have a better experience and be more in-line with current community best practices.
+Since BattleTech 1.7, HBS introduced their own mod-loader based on an older ModTek version. It is missing many features of newer ModTek versions, including DLC support.
 
 # Installing ModTek 2.1.0 or later
 
-:warning: If an existing ModTek installation older than 2.1.0 is installed, backup the .json configuration files if you wish, and then remove the folder at `BATTLETECH\Mods\ModTek\`.
-
 Installation of ModTek is straightforward for windows. You download the `ModTek.zip` file and extract it.
 
-1. Download the latest [release from here](https://github.com/BattletechModders/ModTek/releases).
+1. Download the [latest stable release from github](https://github.com/BattletechModders/ModTek/releases).
 1. Extract the contents of the zip to `BATTLETECH\` so that the `Mods\` folder in the zip appears as `BATTLETECH\Mods\` and the Doorstop files (winhttp.dll etc..) appear directly under `BATTLETECH\`.
 
-:warning: `BATTLETECH\Mods\` is in game installation folder NOT in `Documents\My Games`
+> **Warning**
+> `BATTLETECH\Mods\` is in game installation folder NOT in `Documents\My Games\`
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu with "/W MODTEK". If you don't see this something has gone wrong.
 
@@ -27,13 +26,15 @@ Using wine is also supported, make sure to let wine load up `winhttp.dll` by set
 
 ## macOS
 
-:warning: UnityDoorstop should work on macOS but it wasn't tested yet in combination with ModTek.
+> **Warning**
+> UnityDoorstop should work on macOS but it wasn't tested yet in combination with ModTek.
 
 The zip contains UnityDoorstop script `run.sh` and libraries to run the game with.
 
 ### Obsolete
 
-:warning: Obsolete! These installation instructions are for ModTek 2.0 and older.
+> **Warning**
+> Obsolete! These installation instructions are for ModTek 2.0 and older.
 
 1. Use the following directory instead of the BATTLETECH directory: ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/
 2. If the Mods directory doesn't exist, create it here: ~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/Mods/
@@ -47,7 +48,6 @@ The zip contains UnityDoorstop script `run.sh` and libraries to run the game wit
 
 # Further Documentation
 
-- [The Drop-Dead-Simple-Guide to Installing BTML & ModTek & ModTek mods](doc/QUICKSTART.md)
 - [A Brief Primer on Developing ModTek Mods](doc/PRIMER.md)
 - [The mod.json Format](doc/MOD_JSON_FORMAT.md)
 - [Writing ModTek JSON mods](doc/MOD_JSON.md)
@@ -61,6 +61,7 @@ The zip contains UnityDoorstop script `run.sh` and libraries to run the game wit
 - [Dynamic Enums / DataAddendumEntries](doc/DATA_ADDENDUM_ENTRIES.md)
 - [Manifest Manipulation](doc/MANIFEST.md)
 - [Content Pack Assets](doc/CONTENT_PACK_ASSETS.md)
+- [Preloader and Injectors](doc/PRELOADER.md)
 
 ## Developing ModTek
 
@@ -70,7 +71,8 @@ Information on how to build and release ModTek is documented in [DEVELOPER.md](D
 
 ModTek 0.7.6 or higher can be enabled or disabled from within the in-game mods menu. If ModTek is enabled, the  "MODS ENABLED" check box will always be set to enabled. To disable ModTek look through the mod list until you find 'ModTek', and disable that 'mod'. Restart the game, and only the in-game mod-loader will be used. Repeat the process but enable the 'ModTek' mod to re-enable an external ModTek install. 
 
-:warning: You must restart the game to enable or disable an external ModTek!
+> **Warning**
+> You must restart the game to enable or disable an external ModTek!
 
 ## What is UnityDoorstop and what those files like winhttp.dll
 

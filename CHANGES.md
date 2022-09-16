@@ -6,11 +6,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.1 Changes
 
 For users:
-- ModTekInjector was replaced by UnityDoorstop. [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) just requires the user to copy certain files next to the games executable. Running any injectors like `ModTekInjector.exe` must **not** be done, as this is now done on-the-fly during the preloading process triggered by UnityDoorstop. (TODO add more explanations and move to README).
+- `ModTekInjector.exe` was replaced by [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop), removes the need to run any injector by the user.
 
 For modders:
-- ModTek now has a preloader triggered by UnityDoorstop, which in turn can trigger plugins to modify assemblies on the fly. Meaning mods don't have to write injectors that directly modify the games assemblies files. Issues with the preloader are logged to `Mods/.modtek/ModTekPreloader.log`. See [RogueTechPerfFixes](https://github.com/BattletechModders/RogueTechPerfFixes/blob/master/RogueTechPerfFixesInjector/Injector.cs) as an example. (TODO add more explanations and move to README)
-- UnityDoorstop also makes it easy to override or add assemblies. Just put them into `Mods/ModTek/AssembliesOverride`.
+- ModTek now has a preloader that runs injectors automatically.
+- UnityDoorstop also makes it easy to override or add assemblies by adding them to `Mods/ModTek/AssembliesOverride`.
 
 ## 2.0 Changes
 
@@ -26,7 +26,3 @@ For modders:
 - Integrated the FYLS mod into ModTek, central log found in `.modtek/battletech_log.txt`. Improved HBS logging format in general.
 - Internal representation of the games manifest is dumped to `.modtek/Manifest.csv`, that includes CustomResources.
 - (Experimental) A simple profiler that may help to determine causes for stuttering. The profiler is disabled by default.
-
-## Before 2.0
-
-see [ModTek releases](https://github.com/BattletechModders/ModTek/releases)
