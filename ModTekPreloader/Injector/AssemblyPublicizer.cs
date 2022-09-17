@@ -7,16 +7,12 @@ namespace ModTekPreloader.Injector
 {
     internal static class AssemblyPublicizer
     {
+        // assemblies that are modified by injectors or require low-level access
         private static readonly string[] assembliesToMakePublic =
         {
             "Assembly-CSharp",
             "Assembly-CSharp-firstpass",
             "BattleTech.Common"
-        };
-
-        private static readonly string[] typesNotToMakePublic =
-        {
-            ""
         };
 
         internal static void MakePublic(IAssemblyResolver resolver, string assembliesPublicizedDirectory)
@@ -25,73 +21,90 @@ namespace ModTekPreloader.Injector
             Directory.CreateDirectory(assembliesPublicizedDirectory);
             foreach (var name in assembliesToMakePublic)
             {
-                var definition = resolver.Resolve(new AssemblyNameReference(name, null));
-                MakePublic(definition);
-                var path = Path.Combine(assembliesPublicizedDirectory, $"{definition.Name.Name}.dll");
+                var assembly = resolver.Resolve(new AssemblyNameReference(name, null));
+                MakeAssemblyPublic(assembly);
+                var path = Path.Combine(assembliesPublicizedDirectory, $"{assembly.Name.Name}.dll");
                 Logger.Log($"\t{FileUtils.GetRelativePath(path)}");
-                definition.Write(path);
+                assembly.Write(path);
             }
         }
 
-        private static void MakePublic(AssemblyDefinition assembly)
+        private static void MakeAssemblyPublic(AssemblyDefinition assembly)
         {
             foreach (var type in GetAllTypes(assembly))
-			{
-                if (IsCompiledGenerated(type))
-                {
-                    continue;
-                }
+            {
+                MakeTypePublic(type);
+            }
+        }
 
-                if (type.IsNested)
-                {
-                    type.IsNestedPublic = true;
-                }
-                else
-                {
-                    type.IsPublic = true;
-                }
+        private static void MakeTypePublic(TypeDefinition type)
+        {
+            if (IsCompiledGenerated(type))
+            {
+                return;
+            }
 
-                foreach (var method in type.Methods)
-				{
-                    if (method.IsCompilerControlled || IsCompiledGenerated(method))
-                    {
-                        continue;
-                    }
+            if (type.IsNested)
+            {
+                type.IsNestedPublic = true;
+            }
+            else
+            {
+                type.IsPublic = true;
+            }
 
-                    if (method.IsStatic && method.IsConstructor)
-                    {
-                        continue;
-                    }
+            foreach (var method in type.Methods)
+            {
+                MakeMethodPublic(method);
+            }
 
-                    method.IsPublic = true;
-				}
+            // property methods are made by the compiler and therefore skipped during generic method publicizing
+            foreach (var property in type.Properties)
+            {
+                MakePropertyPublic(property);
+            }
 
-                // property methods are made by the compiler and therefore skipped earlier
-                foreach (var property in type.Properties)
-                {
-                    if (property.GetMethod != null)
-                    {
-                        property.GetMethod.IsPublic = true;
-                    }
+            foreach (var field in type.Fields)
+            {
+                MakeFieldPublic(field);
+            }
+        }
 
-                    if (property.SetMethod != null)
-                    {
-                        property.SetMethod.IsPublic = true;
-                    }
-                }
+        private static void MakeMethodPublic(MethodDefinition method)
+        {
+            if (method.IsCompilerControlled || IsCompiledGenerated(method))
+            {
+                return;
+            }
+            if (method.IsStatic && method.IsConstructor)
+            {
+                return;
+            }
+            method.IsCheckAccessOnOverride = false;
+            method.IsPublic = true;
+        }
 
-				foreach (var field in type.Fields)
-				{
-					if (field.IsCompilerControlled || IsCompiledGenerated(field))
-                    {
-                        continue;
-                    }
+        private static void MakePropertyPublic(PropertyDefinition property)
+        {
+            if (property.GetMethod != null)
+            {
+                property.GetMethod.IsPublic = true;
+            }
+            if (property.SetMethod != null)
+            {
+                property.SetMethod.IsPublic = true;
+            }
+        }
 
-                    field.IsPublic = true;
-                    field.IsInitOnly = false;
-				}
-			}
-		}
+        private static void MakeFieldPublic(FieldDefinition field)
+        {
+            if (field.IsCompilerControlled || IsCompiledGenerated(field))
+            {
+                return;
+            }
+            field.IsPublic = true;
+            field.IsInitOnly = false;
+        }
 
         private static bool IsCompiledGenerated(ICustomAttributeProvider member)
         {
@@ -104,10 +117,7 @@ namespace ModTekPreloader.Injector
 
             while (typeQueue.TryPop(out var type))
             {
-                if (!typesNotToMakePublic.Contains(type.Name))
-                {
-                    yield return type;
-                }
+                yield return type;
 
                 foreach (var nestedType in type.NestedTypes)
                 {

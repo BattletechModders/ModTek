@@ -19,8 +19,9 @@
 > **Note**
 > TODO finalize
 
-- See the [ModTekInjector](https://github.com/BattletechModders/ModTek/blob/master/ModTekInjector/ModTekInjector.csproj)
-  or [RogueTechPerfFixesInjector](https://github.com/BattletechModders/RogueTechPerfFixes/blob/master/RogueTechPerfFixesInjector/RogueTechPerfFixesInjector.csproj) on how an injector works.
+- See [ModTekInjector](https://github.com/BattletechModders/ModTek/blob/master/ModTekInjector/ModTekInjector.csproj)
+  or [RogueTechPerfFixesInjector](https://github.com/BattletechModders/RogueTechPerfFixes/blob/master/RogueTechPerfFixesInjector/RogueTechPerfFixesInjector.csproj)
+  on how an injector works.
 - Only assemblies resolved as a AssemblyDefinition will be loaded into the game, make sure to only use the resolver interface in the Inject method.
 - Injectors are loaded and run in the order of their names from `Mods\ModTek\Injectors\`.
 - The preloader searches for a class named `Injector` with a `public static void Inject` method, that then will be called with a parameter of type `Mono.Cecil.IAssemblyResolver`.
@@ -33,7 +34,7 @@
   >   }
   > }
   > ```
-- Injectors run in their own AppDomain which is then unloaded. All directly loaded dlls (via Assembly.Load or due to reference in Assembly) during the injection phase will be lost.
+- Injectors run in their own AppDomain. All directly loaded dlls (via Assembly.Load or due to reference in Assembly) during the injection phase will be lost.
 - Console output is redirected into `Mods\.modtek\ModTekPreloader.log`, use `Console.WriteLine` or `Console.Error.WriteLine` instead of writing a logger.
 - Modified assemblies (that were resolved earlier via the resolver) are then written to and loaded from `Mods\.modtek\AssembliesInjected\`
 
@@ -41,17 +42,15 @@
 
 > **Warning**
 > The publicized assemblies feature is still being developed.
-> What exactly to publicize and what to keep as is.
-> Making really everything public could lead to crashes when used. We think its an inheritance issue, maybe related to constructors.
-> While publicized assemblies are already in use since years in the ModTek community (CAC, ME), ModTek itself was not providing them.
+> Inheriting from publicized classes is prone to crashes and produces incompatibility issues with other mods.
 
 > **Note**
 > TODO finalize
 
-- Makes all classes, methods, properties and fields public (with some exceptions) for a select few assemblies
+- Makes all classes, methods, properties and fields public (with some exceptions) for a select few assemblies.
 - Those assemblies are only for compiling against, these assemblies are not loaded into the game!
-- Avoids the need to write reflection tools or wrappers to access private stuff
-- Requires that the mod dll was marked as unsafe to disable access checks against loaded assembles. Put into your csproj:
+- Avoids the need to write reflection tools or wrappers to access private stuff, leads to cleaner and faster code.
+- Requires that dlls using publicized assemblies are marked as unsafe, to disable runtime access checks. Put into your csproj:
   > ```<AllowUnsafeBlocks>true</AllowUnsafeBlocks>```
 - Make your mod reference `Mods\.modtek\AssembliesPublicized\`:
   > ```<AssemblySearchPaths>$(BattleTechGameDir)\Mods\.modtek\AssembliesPublicized\;$(BattleTechGameDir)\BattleTech_Data\Managed\</AssemblySearchPaths>```

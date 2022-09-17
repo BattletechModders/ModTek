@@ -22,14 +22,15 @@ namespace ModTekPreloader.Injector
             {
                 parameters.AssemblyResolver = parameters.AssemblyResolver ?? this;
 
-                if (!assemblies.TryGetValue(reference.Name, out var assembly))
+                if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
                 {
-                    var definition = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
-                    assembly = new AssemblyBag(definition);
-                    assemblies[reference.Name] = assembly;
+                    var assembly = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
+                    Logger.Log($"assembly {assembly.Name} {new AssemblySecurityPermission(assembly)}");
+                    assemblyBag = new AssemblyBag(assembly);
+                    assemblies[reference.Name] = assemblyBag;
                 }
 
-                return assembly.Definition;
+                return assemblyBag.Definition;
             }
             catch (Exception e)
             {
@@ -46,7 +47,7 @@ namespace ModTekPreloader.Injector
             {
                 var name = kv.Key;
                 var assembly = kv.Value;
-                if (!assembly.HasChanged(out var serialized))
+                if (!assembly.CheckIfChanged(out var serialized))
                 {
                     continue;
                 }
@@ -58,7 +59,7 @@ namespace ModTekPreloader.Injector
 
         internal void SaveAssembliesPublicizedToDisk(string assembliesPublicizedDirectory)
         {
-            AssemblyPublicizer.MakePublic(this, assembliesPublicizedDirectory);
+            AssemblyPublicizer.MakePublic(resolver, assembliesPublicizedDirectory);
         }
 
         public void Dispose()
@@ -100,7 +101,7 @@ namespace ModTekPreloader.Injector
 
             private string Name => Definition.Name.Name;
 
-            internal bool HasChanged(out byte[] serialized)
+            internal bool CheckIfChanged(out byte[] serialized)
             {
                 if (NeverChanged)
                 {
@@ -122,6 +123,25 @@ namespace ModTekPreloader.Injector
                     definition.Write(stream);
                     return stream.ToArray();
                 }
+            }
+        }
+
+        // SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)
+        private class AssemblySecurityPermission
+        {
+            private readonly bool skipVerification;
+            public AssemblySecurityPermission(AssemblyDefinition assembly)
+            {
+                skipVerification = assembly.SecurityDeclarations
+                    .SelectMany(x => x.SecurityAttributes)
+                    .SelectMany(x => x.Properties)
+                    .Where(x => x.Name == "SkipVerification")
+                    .Select(x => (bool)x.Argument.Value)
+                    .FirstOrDefault();
+            }
+            public override string ToString()
+            {
+                return $"SkipVerification = {skipVerification})";
             }
         }
     }
