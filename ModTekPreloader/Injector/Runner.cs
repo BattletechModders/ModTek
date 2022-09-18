@@ -12,6 +12,12 @@ namespace ModTekPreloader.Injector
         {
             Logger.Setup(loggerStart);
 
+            var cacheManifest = CacheManifest.Load();
+            if (cacheManifest.IsUpToDate)
+            {
+                Logger.Log("Skipping injection, cache manifest is up to date");
+                return;
+            }
             using (var assemblyCache = new AssemblyCache())
             {
                 var parameters = new object[]
@@ -54,10 +60,10 @@ namespace ModTekPreloader.Injector
                     }
                 }
 
-                assemblyCache.SaveAssembliesToDisk(Paths.AssembliesInjectedDirectory);
-
-                assemblyCache.SaveAssembliesPublicizedToDisk(Paths.AssembliesPublicizedDirectory);
+                assemblyCache.SaveAssembliesToDisk();
+                assemblyCache.SaveAssembliesPublicizedToDisk();
             }
+            cacheManifest.Save();
         }
 
         private class ConsoleLogger : TextWriter

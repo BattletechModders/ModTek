@@ -75,11 +75,6 @@ namespace ModTekPreloader
         {
             Logger.Log(nameof(RunInjectors));
             Directory.CreateDirectory(Paths.AssembliesInjectedDirectory);
-            string[] GetAssembliesInjectedFiles() => Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dlL");
-            foreach (var file in GetAssembliesInjectedFiles())
-            {
-                File.Delete(file);
-            }
 
             var injectorAppDomain = AppDomain.CreateDomain("Injectors");
             try
@@ -98,7 +93,7 @@ namespace ModTekPreloader
 
             // to force injected assemblies to be used
             Logger.Log("Preloading injected assemblies.");
-            foreach (var file in GetAssembliesInjectedFiles())
+            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dlL"))
             {
                 Logger.Log($"\t{Paths.GetRelativePath(file)}");
                 Assembly.LoadFile(file);

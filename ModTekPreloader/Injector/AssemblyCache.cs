@@ -25,7 +25,7 @@ namespace ModTekPreloader.Injector
                 if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
                 {
                     var assembly = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
-                    Logger.Log($"assembly {assembly.Name} {new AssemblySecurityPermission(assembly)}");
+                    // Logger.Log($"assembly {assembly.Name.Name} {new AssemblySecurityPermission(assembly)}");
                     assemblyBag = new AssemblyBag(assembly);
                     assemblies[reference.Name] = assemblyBag;
                 }
@@ -40,8 +40,12 @@ namespace ModTekPreloader.Injector
             return null;
         }
 
-        internal void SaveAssembliesToDisk(string assembliesInjectedDirectory)
+        internal void SaveAssembliesToDisk()
         {
+            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory))
+            {
+                File.Delete(file);
+            }
             Logger.Log("Assemblies modified by injectors:");
             foreach (var kv in assemblies.OrderBy(kv => kv.Key))
             {
@@ -51,15 +55,19 @@ namespace ModTekPreloader.Injector
                 {
                     continue;
                 }
-                var path = Path.Combine(assembliesInjectedDirectory, $"{name}.dll");
+                var path = Path.Combine(Paths.AssembliesInjectedDirectory, $"{name}.dll");
                 Logger.Log($"\t{Paths.GetRelativePath(path)}");
                 File.WriteAllBytes(path, serialized);
             }
         }
 
-        internal void SaveAssembliesPublicizedToDisk(string assembliesPublicizedDirectory)
+        internal void SaveAssembliesPublicizedToDisk()
         {
-            AssemblyPublicizer.MakePublic(resolver, assembliesPublicizedDirectory);
+            foreach (var file in Directory.GetFiles(Paths.AssembliesPublicizedDirectory))
+            {
+                File.Delete(file);
+            }
+            AssemblyPublicizer.MakePublic(resolver, Paths.AssembliesPublicizedDirectory);
         }
 
         public void Dispose()
