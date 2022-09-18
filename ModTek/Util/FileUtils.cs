@@ -2,25 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTek.Misc;
 
 namespace ModTek.Util
 {
     internal static class FileUtils
     {
-        internal static string GetRelativePath(string path)
+        internal static string GetRelativePath(string absolutePath, string basePath = null)
         {
-            try
+            if (basePath == null)
             {
-                return new Uri(Directory.GetCurrentDirectory()).MakeRelativeUri(new Uri(path)).ToString();
+                basePath = FilePaths.GameDirectory;
             }
-            catch
-            {
-                return path;
-            }
-        }
 
-        internal static string GetRelativePath(string basePath, string absolutePath)
-        {
             if (!Path.IsPathRooted(absolutePath))
             {
                 return absolutePath;

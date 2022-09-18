@@ -63,7 +63,6 @@ namespace ModTek
             stopwatch.Start();
 
             MTUnityUtils.Init();
-            FilePaths.SetupPaths();
             Config = Configuration.FromDefaultFile();
             LoggingFeature.Init();
             Config.LogAnyDanglingExceptions();

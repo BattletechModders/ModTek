@@ -200,9 +200,8 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    var modDir = Path.GetDirectoryName(modDefPath);
-                    var modDirRelative = FileUtils.GetRelativePath(FilePaths.ModsDirectory, modDir);
-                    FailedToLoadMods.Add(modDirRelative);
+                    var probableModName = Path.GetFileName(Path.GetDirectoryName(modDefPath));
+                    FailedToLoadMods.Add(probableModName);
                     MTLogger.Info.Log($"Error: Caught exception while parsing {modDefPath}", e);
                     continue;
                 }

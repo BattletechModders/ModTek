@@ -101,11 +101,12 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            if (Directory.Exists(modDef.GetFullPath(FilePaths.StreamingAssetsDirectoryName)))
+            const string streamingAssetsDirectoryName = "StreamingAssets";
+            if (Directory.Exists(modDef.GetFullPath(streamingAssetsDirectoryName)))
             {
                 modDef.Manifest.Add(new ModEntry
                 {
-                    Path = FilePaths.StreamingAssetsDirectoryName,
+                    Path = streamingAssetsDirectoryName,
                     ShouldMergeJSON = ModTek.Config.ImplicitManifestShouldMergeJSON,
                     ShouldAppendText = ModTek.Config.ImplicitManifestShouldAppendText
                 });
@@ -138,7 +139,7 @@ namespace ModTek.Features.Manifest
                 foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                 {
                     var copy = entry.copy();
-                    copy.Path = FileUtils.GetRelativePath(modDef.Directory, file);
+                    copy.Path = FileUtils.GetRelativePath(file, modDef.Directory);
                     NormalizeAndExpandAndAddModEntries(modDef, copy); // could lead to adv json merges that again expand
                 }
             }
@@ -453,7 +454,7 @@ namespace ModTek.Features.Manifest
             GenericPopupBuilder.Create(
                     "Some Mods Didn't Load",
                     "Continuing might break your game." +
-                    $"\nCheck \"{FilePaths.LogPathRelativeToGameDirectory}\" for more info" +
+                    $"\nCheck \"{FileUtils.GetRelativePath(FilePaths.LogPath)}\" for more info" +
                     "\n\n" + string.Join(", ", ModDefsDatabase.FailedToLoadMods.ToArray())
                 )
                 .AddButton("Risk Continuing", ModsManifestPreloader.PrewarmResourcesIfEnabled)

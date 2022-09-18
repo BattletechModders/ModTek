@@ -33,7 +33,7 @@ namespace ModTek.Features.LoadingCurtainEx
             var cleanLogPath = Path.Combine(FilePaths.ModsDirectory, "cleaned_output_log.txt");
             if (File.Exists(cleanLogPath))
             {
-                currentMessage += $"\"{FileUtils.GetRelativePath(FilePaths.GameDirectory, cleanLogPath)}\"\n";
+                currentMessage += $"\"{FileUtils.GetRelativePath(cleanLogPath)}\"\n";
             }
             else
             {
