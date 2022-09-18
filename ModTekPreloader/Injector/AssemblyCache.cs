@@ -52,7 +52,7 @@ namespace ModTekPreloader.Injector
                     continue;
                 }
                 var path = Path.Combine(assembliesInjectedDirectory, $"{name}.dll");
-                Logger.Log($"\t{FileUtils.GetRelativePath(path)}");
+                Logger.Log($"\t{Paths.GetRelativePath(path)}");
                 File.WriteAllBytes(path, serialized);
             }
         }

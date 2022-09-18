@@ -5,8 +5,6 @@ namespace ModTekPreloader
 {
     public static class Logger
     {
-        private const string LogFileRelativePath = "Mods/.modtek/ModTekPreloader.log";
-
         internal static DateTime Start { get; private set; }
 
         public static void Setup(DateTime? start = null)
@@ -14,9 +12,9 @@ namespace ModTekPreloader
             if (start == null)
             {
                 Start = DateTime.Now;
-                Directory.CreateDirectory(Path.GetDirectoryName(LogFileRelativePath));
-                FileUtils.RotatePath(LogFileRelativePath, 1);
-                File.WriteAllText(LogFileRelativePath, "");
+                Paths.CreateDirectoryForFile(Paths.LogFile);
+                Paths.RotatePath(Paths.LogFile, 1);
+                File.WriteAllText(Paths.LogFile, "");
             }
             else
             {
@@ -26,7 +24,7 @@ namespace ModTekPreloader
 
         public static void Log(object obj)
         {
-            File.AppendAllText(LogFileRelativePath, $"{(DateTime.Now-Start).TotalSeconds:00.000} {obj}{Environment.NewLine}");
+            File.AppendAllText(Paths.LogFile, $"{(DateTime.Now-Start).TotalSeconds:00.000} {obj}{Environment.NewLine}");
         }
     }
 }

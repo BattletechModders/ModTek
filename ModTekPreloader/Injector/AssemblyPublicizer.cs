@@ -24,7 +24,7 @@ namespace ModTekPreloader.Injector
                 var assembly = resolver.Resolve(new AssemblyNameReference(name, null));
                 MakeAssemblyPublic(assembly);
                 var path = Path.Combine(assembliesPublicizedDirectory, $"{assembly.Name.Name}.dll");
-                Logger.Log($"\t{FileUtils.GetRelativePath(path)}");
+                Logger.Log($"\t{Paths.GetRelativePath(path)}");
                 assembly.Write(path);
             }
         }

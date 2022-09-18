@@ -5,39 +5,54 @@ namespace ModTekPreloader
 {
     internal class Paths
     {
-        internal const string GAME_DLL_FILE_NAME = "Assembly-CSharp.dll";
-
         private const string ENV_DOORSTOP_MANAGED_FOLDER_DIR = "DOORSTOP_MANAGED_FOLDER_DIR";
+        internal static readonly string ManagedDirectory = Environment.GetEnvironmentVariable(ENV_DOORSTOP_MANAGED_FOLDER_DIR)
+            ?? throw new Exception($"Can't find {ENV_DOORSTOP_MANAGED_FOLDER_DIR}");
+        internal static readonly string GameMainAssemblyFile = Path.Combine(ManagedDirectory, "Assembly-CSharp.dll");
 
-        internal readonly string managedDirectory;
-        internal readonly string gameDLLPath;
-        internal readonly string modsDirectory;
-        internal readonly string injectorsDirectory;
-        internal readonly string assembliesInjectedDirectory;
-        internal readonly string assembliesPublicizedDirectory;
+        private static readonly string GameExecutableDirectory = Directory.GetCurrentDirectory();
+        internal static readonly string ModsDirectory = Path.Combine(GameExecutableDirectory, "Mods");
 
-        internal Paths()
+        private static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
+        internal static readonly string InjectorsDirectory = Path.Combine(ModTekDirectory, "Injectors");
+        internal static readonly string PreloaderAssemblyFile = Path.Combine(ModTekDirectory, "ModTekPreloader.dll");
+
+        private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
+        internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");
+        internal static readonly string LockFile = Path.Combine(DotModTekDirectory, ".lock");
+        internal static readonly string CacheManifestFile = Path.Combine(DotModTekDirectory, "ModTekPreloaderCacheManifest.csv");
+        internal static readonly string AssembliesInjectedDirectory = Path.Combine(DotModTekDirectory, "AssembliesInjected");
+        internal static readonly string AssembliesPublicizedDirectory = Path.Combine(DotModTekDirectory, "AssembliesPublicized");
+
+        internal static void CreateDirectoryForFile(string filePath)
         {
-            managedDirectory = Environment.GetEnvironmentVariable(ENV_DOORSTOP_MANAGED_FOLDER_DIR)
-                ?? throw new Exception($"Can't find {ENV_DOORSTOP_MANAGED_FOLDER_DIR}");
-            gameDLLPath = Path.Combine(managedDirectory, GAME_DLL_FILE_NAME);
-
-            var gameExeDirectory = Directory.GetCurrentDirectory();
-            modsDirectory = Path.Combine(gameExeDirectory, "Mods");
-            injectorsDirectory = Path.Combine(modsDirectory, "ModTek", "Injectors");
-            assembliesInjectedDirectory = Path.Combine(modsDirectory, ".modtek", "AssembliesInjected");
-            assembliesPublicizedDirectory = Path.Combine(modsDirectory, ".modtek", "AssembliesPublicized");
-            ExistsOrThrow(managedDirectory, gameDLLPath, modsDirectory);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new Exception($"Could not find directory for {filePath}"));
         }
 
-        private static void ExistsOrThrow(params string[] paths)
+        internal static string GetRelativePath(string path)
         {
-            foreach (var path in paths)
+            try
             {
-                if (!Directory.Exists(path) && !File.Exists(path))
+                return new Uri(Directory.GetCurrentDirectory()).MakeRelativeUri(new Uri(path)).ToString();
+            }
+            catch
+            {
+                return path;
+            }
+        }
+
+        internal static void RotatePath(string path, int backups)
+        {
+            for (var i = backups - 1; i >= 0; i--)
+            {
+                var pathCurrent = path + (i == 0 ? "" : "." + i);
+                var pathNext = path + "." + (i + 1);
+                if (!File.Exists(pathCurrent))
                 {
-                    throw new Exception($"Can't find {path}");
+                    continue;
                 }
+                File.Delete(pathNext);
+                File.Move(pathCurrent, pathNext);
             }
         }
     }

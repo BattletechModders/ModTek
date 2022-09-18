@@ -12,19 +12,18 @@ namespace ModTekPreloader.Injector
         {
             Logger.Setup(loggerStart);
 
-            using (var cache = new AssemblyCache())
+            using (var assemblyCache = new AssemblyCache())
             {
-                var paths = new Paths();
                 var parameters = new object[]
                 {
-                    cache
+                    assemblyCache
                 };
 
                 var originalConsoleOut = Console.Out;
                 var originalConsoleError = Console.Error;
 
                 Logger.Log($"Searching injector dlls.");
-                foreach (var injectorPath in Directory.GetFiles(paths.injectorsDirectory, "*.dll").OrderBy(p => p))
+                foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
                 {
                     Logger.Log($"Running injector {Path.GetFileName(injectorPath)}.");
                     var injector = Assembly.LoadFile(injectorPath);
@@ -55,9 +54,9 @@ namespace ModTekPreloader.Injector
                     }
                 }
 
-                cache.SaveAssembliesToDisk(paths.assembliesInjectedDirectory);
+                assemblyCache.SaveAssembliesToDisk(Paths.AssembliesInjectedDirectory);
 
-                cache.SaveAssembliesPublicizedToDisk(paths.assembliesPublicizedDirectory);
+                assemblyCache.SaveAssembliesPublicizedToDisk(Paths.AssembliesPublicizedDirectory);
             }
         }
 

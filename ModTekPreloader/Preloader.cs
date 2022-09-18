@@ -29,16 +29,14 @@ namespace ModTekPreloader
             injector.RunInjectors();
         }
 
-        private readonly Paths paths = new Paths();
-
         private void RestoreFromBackupAndDeleteBackup()
         {
             Logger.Log(nameof(RestoreFromBackupAndDeleteBackup));
 
-            var gameDLLModTekBackupPath = paths.gameDLLPath + ".orig";
-            var gameDLLPerFixBackupPath = paths.gameDLLPath + ".PerfFix.orig";
+            var gameDLLModTekBackupPath = Paths.GameMainAssemblyFile + ".orig";
+            var gameDLLPerFixBackupPath = Paths.GameMainAssemblyFile + ".PerfFix.orig";
 
-            if (LegacyChecker.IsInjected(paths.gameDLLPath)
+            if (LegacyChecker.IsInjected(Paths.GameMainAssemblyFile)
                 && !RestoreIfUnInjectedBackupFound(gameDLLModTekBackupPath)
                 && !RestoreIfUnInjectedBackupFound(gameDLLPerFixBackupPath))
             {
@@ -56,8 +54,8 @@ namespace ModTekPreloader
                 return false;
             }
 
-            File.Copy(backupPath, paths.gameDLLPath, true);
-            Logger.Log($"{FileUtils.GetRelativePath(paths.gameDLLPath)} restored from {FileUtils.GetRelativePath(backupPath)} .");
+            File.Copy(backupPath, Paths.GameMainAssemblyFile, true);
+            Logger.Log($"{Paths.GetRelativePath(Paths.GameMainAssemblyFile)} restored from {Paths.GetRelativePath(backupPath)} .");
             return true;
         }
 
@@ -67,8 +65,8 @@ namespace ModTekPreloader
             foreach (var relativePathWithPlaceholder in OBSOLETE_FILES)
             {
                 var path = relativePathWithPlaceholder
-                    .Replace("(Mods)", paths.modsDirectory)
-                    .Replace("(Managed)", paths.managedDirectory);
+                    .Replace("(Mods)", Paths.ModsDirectory)
+                    .Replace("(Managed)", Paths.ManagedDirectory);
                 File.Delete(path);
             }
         }
@@ -76,8 +74,8 @@ namespace ModTekPreloader
         private void RunInjectors()
         {
             Logger.Log(nameof(RunInjectors));
-            Directory.CreateDirectory(paths.assembliesInjectedDirectory);
-            string[] GetAssembliesInjectedFiles() => Directory.GetFiles(paths.assembliesInjectedDirectory, "*.dlL");
+            Directory.CreateDirectory(Paths.AssembliesInjectedDirectory);
+            string[] GetAssembliesInjectedFiles() => Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dlL");
             foreach (var file in GetAssembliesInjectedFiles())
             {
                 File.Delete(file);
@@ -102,7 +100,7 @@ namespace ModTekPreloader
             Logger.Log("Preloading injected assemblies.");
             foreach (var file in GetAssembliesInjectedFiles())
             {
-                Logger.Log($"\t{FileUtils.GetRelativePath(file)}");
+                Logger.Log($"\t{Paths.GetRelativePath(file)}");
                 Assembly.LoadFile(file);
             }
         }

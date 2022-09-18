@@ -4,16 +4,15 @@ namespace ModTekPreloader
 {
     internal static class SingleInstanceEnforcer
     {
-        private const string LockFileRelativePath = "Mods/.modtek/.lock";
         private static FileStream LockFileStream;
 
         internal static void Enforce()
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(LockFileRelativePath));
+            Paths.CreateDirectoryForFile(Paths.LockFile);
             try
             {
                 LockFileStream = new FileStream(
-                    LockFileRelativePath,
+                    Paths.LockFile,
                     FileMode.OpenOrCreate,
                     FileAccess.Write,
                     FileShare.None, // this is only supported on windows
@@ -25,7 +24,7 @@ namespace ModTekPreloader
             }
             catch
             {
-                Logger.Log($"Another BattleTech process is locking {LockFileRelativePath}");
+                Logger.Log($"Another BattleTech process is locking {Paths.LockFile}");
                 throw;
             }
         }

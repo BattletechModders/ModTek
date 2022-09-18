@@ -10,7 +10,6 @@ namespace ModTek.Misc
     {
         internal const string MOD_JSON_NAME = "mod.json";
 
-        internal const string MODS_DIRECTORY_NAME = "Mods";
         internal const string MODTEK_DIRECTORY_NAME = "ModTek";
 
         private const string TEMP_MODTEK_DIRECTORY_NAME = ".modtek";
@@ -42,22 +41,11 @@ namespace ModTek.Misc
 
         internal static void SetupPaths()
         {
-            // if the manifest directory is null, there is something seriously wrong
-            var manifestDirectory = Path.GetDirectoryName(VersionManifestUtilities.MANIFEST_FILEPATH);
-            if (manifestDirectory == null)
-            {
-                throw new Exception("Can't find manifest directory");
-            }
-
             // setup directories
-            ModsDirectory = Path.GetFullPath(
-                Path.Combine(
-                    manifestDirectory,
-                    Path.Combine(Path.Combine(Path.Combine("..", ".."), ".."), MODS_DIRECTORY_NAME)
-                )
-            );
+            ModsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Mods");
 
             StreamingAssetsDirectory = Application.streamingAssetsPath;
+
             StreamingAssetsDirectoryName = Path.GetFileName(StreamingAssetsDirectory);
             AssetBundlesDirectory = Path.Combine(StreamingAssetsDirectory, "data/assetbundles");
             GameDirectory = Path.GetFullPath(Path.Combine(Path.Combine(StreamingAssetsDirectory, ".."), ".."));
