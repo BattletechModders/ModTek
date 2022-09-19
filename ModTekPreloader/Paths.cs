@@ -14,11 +14,11 @@ namespace ModTekPreloader
         private static readonly string GameExecutableDirectory = Directory.GetCurrentDirectory();
         internal static readonly string ModsDirectory = Path.Combine(GameExecutableDirectory, "Mods");
 
-        private static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
+        internal static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
         internal static readonly string InjectorsDirectory = Path.Combine(ModTekDirectory, "Injectors");
-        internal static readonly string PreloaderAssemblyFile = Path.Combine(ModTekDirectory, "ModTekPreloader.dll");
         internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfig.json");
         internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfigHelp.json");
+        internal static readonly string AssembliesOverrideDirectory = Path.Combine(ModTekDirectory, "AssembliesOverride");
 
         private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
         internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");

@@ -48,17 +48,31 @@ namespace ModTekPreloader.Injector
         private static string GetActualManifestContent()
         {
             var files = new List<string>();
-            files.Add(Paths.PreloaderAssemblyFile);
+            // input
             files.AddRange(Directory.GetFiles(Paths.ManagedDirectory));
+
+            // preloader
+            files.Add(Paths.PreloaderConfigFile);
+            if (Directory.Exists(Paths.ModTekDirectory))
+            {
+                files.AddRange(Directory.GetFiles(Paths.ModTekDirectory, "*.dll"));
+            }
             files.AddRange(Directory.GetFiles(Paths.InjectorsDirectory));
+            if (Directory.Exists(Paths.AssembliesOverrideDirectory))
+            {
+                files.AddRange(Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll"));
+            }
+
+            // output
             if (Directory.Exists(Paths.AssembliesInjectedDirectory))
             {
                 files.AddRange(Directory.GetFiles(Paths.AssembliesInjectedDirectory));
             }
             if (Directory.Exists(Paths.AssembliesPublicizedDirectory))
             {
-                files.AddRange(Directory.GetFiles(Paths.AssembliesPublicizedDirectory));
+                files.AddRange(Directory.GetFiles(Paths.AssembliesPublicizedDirectory, "*.dll"));
             }
+
             var content = files
                 .Select(CacheEntry.FromFile)
                 .OrderBy(x => x)
