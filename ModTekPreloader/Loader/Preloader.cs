@@ -85,10 +85,10 @@ namespace ModTekPreloader.Loader
         private void PreloadAssemblies(Entrypoint.GameAssemblyLoader loader)
         {
             // to force injected assemblies to be used
-            Logger.Log($"Preloading injected assemblies from {Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}.");
+            Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
             foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
             {
-                Logger.Log($"\t{Paths.GetRelativePath(file)}");
+                Logger.Log($"\t{Path.GetFileName(file)}");
                 loader.LoadFile(file);
             }
         }

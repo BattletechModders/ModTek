@@ -15,22 +15,22 @@ namespace ModTekPreloader.Loader
                 bool injected = false;
                 if (IsModTekInjected(game))
                 {
-                    Logger.Log($"{Paths.GetRelativePath(path)} was modified by ModTek.");
+                    Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");
                     injected = true;
                 }
                 if (IsBTMLInjected(game))
                 {
-                    Logger.Log($"{Paths.GetRelativePath(path)} was modified by BTML.");
+                    Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by BTML.");
                     injected = true;
                 }
                 if (IsRogueTechPerfFixInjected(game))
                 {
-                    Logger.Log($"{Paths.GetRelativePath(path)} was modified by RogueTechPerfFix.");
+                    Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by RogueTechPerfFix.");
                     injected = true;
                 }
                 if (!injected)
                 {
-                    Logger.Log($"{Paths.GetRelativePath(path)} contains no known injections.");
+                    Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` contains no known injections.");
                 }
                 return injected;
             }

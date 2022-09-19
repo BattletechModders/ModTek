@@ -13,7 +13,7 @@ namespace ModTekPreloader.Injector
             var cacheManifest = CacheManifest.Load();
             if (cacheManifest.IsUpToDate)
             {
-                Logger.Log("Skipping injection, cache manifest is up to date");
+                Logger.Log($"Skipping injection, cache manifest at `{Paths.GetRelativePath(Paths.CacheManifestFile)}` is up to date.");
                 return;
             }
             using (var assemblyCache = new AssemblyCache())
@@ -26,10 +26,10 @@ namespace ModTekPreloader.Injector
                 var originalConsoleOut = Console.Out;
                 var originalConsoleError = Console.Error;
 
-                Logger.Log($"Searching injector dlls in {Paths.GetRelativePath(Paths.InjectorsDirectory)}.");
+                Logger.Log($"Searching injector dlls in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
                 foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
                 {
-                    Logger.Log($"Running injector {Path.GetFileName(injectorPath)}.");
+                    Logger.Log($"\t{Path.GetFileName(injectorPath)}");
                     var injector = Assembly.LoadFile(injectorPath);
                     foreach (var injectMethod in injector
                                  .GetTypes()

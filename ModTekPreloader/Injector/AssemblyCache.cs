@@ -45,7 +45,7 @@ namespace ModTekPreloader.Injector
         internal void SaveAssembliesToDisk()
         {
             Paths.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
-            Logger.Log("Assemblies modified by injectors:");
+            Logger.Log($"Assemblies modified by injectors and saved to `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
             foreach (var kv in assemblies.OrderBy(kv => kv.Key))
             {
                 var name = kv.Key;
@@ -55,7 +55,7 @@ namespace ModTekPreloader.Injector
                     continue;
                 }
                 var path = Path.Combine(Paths.AssembliesInjectedDirectory, $"{name}.dll");
-                Logger.Log($"\t{Paths.GetRelativePath(path)}");
+                Logger.Log($"\t{Path.GetFileName(path)}");
                 File.WriteAllBytes(path, serialized);
             }
         }
@@ -63,7 +63,7 @@ namespace ModTekPreloader.Injector
         internal void SaveAssembliesPublicizedToDisk()
         {
             Paths.SetupCleanDirectory(Paths.AssembliesPublicizedDirectory);
-            AssemblyPublicizer.MakePublic(resolver, Paths.AssembliesPublicizedDirectory);
+            AssemblyPublicizer.MakePublic(resolver);
         }
 
         public void Dispose()

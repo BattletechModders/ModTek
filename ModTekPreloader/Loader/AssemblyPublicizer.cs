@@ -8,16 +8,16 @@ namespace ModTekPreloader.Loader
 {
     internal static class AssemblyPublicizer
     {
-        internal static void MakePublic(IAssemblyResolver resolver, string assembliesPublicizedDirectory)
+        internal static void MakePublic(IAssemblyResolver resolver)
         {
-            Logger.Log("Assemblies publicized:");
-            Directory.CreateDirectory(assembliesPublicizedDirectory);
+            Logger.Log($"Publicizing assemblies to `{Paths.GetRelativePath(Paths.AssembliesPublicizedDirectory)}`:");
+            Directory.CreateDirectory(Paths.AssembliesPublicizedDirectory);
             foreach (var name in Config.Instance.AssembliesToMakePublic)
             {
                 var assembly = resolver.Resolve(new AssemblyNameReference(name, null));
                 MakeAssemblyPublic(assembly);
-                var path = Path.Combine(assembliesPublicizedDirectory, $"{assembly.Name.Name}.dll");
-                Logger.Log($"\t{Paths.GetRelativePath(path)}");
+                var path = Path.Combine(Paths.AssembliesPublicizedDirectory, $"{assembly.Name.Name}.dll");
+                Logger.Log($"\t{Path.GetFileName(path)}");
                 assembly.Write(path);
             }
         }
