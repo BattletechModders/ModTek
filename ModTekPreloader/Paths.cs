@@ -56,6 +56,29 @@ namespace ModTekPreloader
             }
         }
 
+        internal static void SetupCleanDirectory(string path, bool recursive = false)
+        {
+            var di = new DirectoryInfo(path);
+            if (di.Exists)
+            {
+                foreach (var file in di.GetFiles())
+                {
+                    file.Delete();
+                }
+                if (recursive)
+                {
+                    foreach (var dir in di.GetDirectories())
+                    {
+                        dir.Delete(true);
+                    }
+                }
+            }
+            else
+            {
+                di.Create();
+            }
+        }
+
         internal static void Print()
         {
             Logger.Log($"{nameof(GameMainAssemblyFile)}: {GameMainAssemblyFile}");

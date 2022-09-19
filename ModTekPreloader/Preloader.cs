@@ -75,7 +75,6 @@ namespace ModTekPreloader
         private void RunInjectors()
         {
             Logger.Log(nameof(RunInjectors));
-            Directory.CreateDirectory(Paths.AssembliesInjectedDirectory);
 
             var injectorAppDomain = AppDomain.CreateDomain("Injectors");
             try

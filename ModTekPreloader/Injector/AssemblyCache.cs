@@ -42,10 +42,7 @@ namespace ModTekPreloader.Injector
 
         internal void SaveAssembliesToDisk()
         {
-            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory))
-            {
-                File.Delete(file);
-            }
+            Paths.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
             Logger.Log("Assemblies modified by injectors:");
             foreach (var kv in assemblies.OrderBy(kv => kv.Key))
             {
@@ -63,10 +60,7 @@ namespace ModTekPreloader.Injector
 
         internal void SaveAssembliesPublicizedToDisk()
         {
-            foreach (var file in Directory.GetFiles(Paths.AssembliesPublicizedDirectory))
-            {
-                File.Delete(file);
-            }
+            Paths.SetupCleanDirectory(Paths.AssembliesPublicizedDirectory);
             AssemblyPublicizer.MakePublic(resolver, Paths.AssembliesPublicizedDirectory);
         }
 
