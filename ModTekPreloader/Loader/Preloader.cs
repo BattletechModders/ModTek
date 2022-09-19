@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using Doorstop;
 using ModTekPreloader.Injector;
+using ModTekPreloader.Logging;
 
-namespace ModTekPreloader
+namespace ModTekPreloader.Loader
 {
-    internal class Preloader
+    internal class Preloader : MarshalByRefObject
     {
         private static readonly List<string> OBSOLETE_FILES = new List<string>
         {
@@ -21,13 +22,16 @@ namespace ModTekPreloader
             "(Mods)/ModTek/Newtonsoft.Json.dll"
         };
 
-        // ENTRY POINT
-        internal static void Run()
+        internal void Run(Entrypoint.GameAssemblyLoader loader)
         {
-            var injector = new Preloader();
-            injector.RestoreFromBackupAndDeleteBackup();
-            injector.CleanupObsoleteFiles();
-            injector.RunInjectors();
+            Logger.Log("Preloader starting");
+            Paths.Print();
+            SingleInstanceEnforcer.Enforce();
+            RestoreFromBackupAndDeleteBackup();
+            CleanupObsoleteFiles();
+            RunInjectors();
+            PreloadAssemblies(loader);
+            Logger.Log("Preloader finished");
         }
 
         private void RestoreFromBackupAndDeleteBackup()
@@ -75,28 +79,17 @@ namespace ModTekPreloader
         private void RunInjectors()
         {
             Logger.Log(nameof(RunInjectors));
+            InjectorsRunner.RunInjectors();
+        }
 
-            var injectorAppDomain = AppDomain.CreateDomain("Injectors");
-            try
-            {
-                var runner = (Runner)injectorAppDomain.CreateInstanceAndUnwrap(
-                    typeof(Runner).Assembly.FullName,
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    typeof(Runner).FullName
-                );
-                runner.RunInjectors(Logger.Start);
-            }
-            finally
-            {
-                AppDomain.Unload(injectorAppDomain);
-            }
-
+        private void PreloadAssemblies(Entrypoint.GameAssemblyLoader loader)
+        {
             // to force injected assemblies to be used
             Logger.Log($"Preloading injected assemblies from {Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}.");
             foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
             {
                 Logger.Log($"\t{Paths.GetRelativePath(file)}");
-                Assembly.LoadFile(file);
+                loader.LoadFile(file);
             }
         }
     }

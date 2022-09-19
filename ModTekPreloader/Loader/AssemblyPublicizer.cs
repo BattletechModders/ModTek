@@ -1,25 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTekPreloader.Logging;
 using Mono.Cecil;
 
-namespace ModTekPreloader.Injector
+namespace ModTekPreloader.Loader
 {
     internal static class AssemblyPublicizer
     {
-        // assemblies that are modified by injectors or require low-level access
-        private static readonly string[] assembliesToMakePublic =
-        {
-            "Assembly-CSharp",
-            "Assembly-CSharp-firstpass",
-            "BattleTech.Common"
-        };
-
         internal static void MakePublic(IAssemblyResolver resolver, string assembliesPublicizedDirectory)
         {
             Logger.Log("Assemblies publicized:");
             Directory.CreateDirectory(assembliesPublicizedDirectory);
-            foreach (var name in assembliesToMakePublic)
+            foreach (var name in Config.Instance.AssembliesToMakePublic)
             {
                 var assembly = resolver.Resolve(new AssemblyNameReference(name, null));
                 MakeAssemblyPublic(assembly);
@@ -117,7 +110,10 @@ namespace ModTekPreloader.Injector
 
             while (typeQueue.TryPop(out var type))
             {
-                yield return type;
+                if (!Config.Instance.TypesToNotMakePublic.Contains(type.FullName))
+                {
+                    yield return type;
+                }
 
                 foreach (var nestedType in type.NestedTypes)
                 {

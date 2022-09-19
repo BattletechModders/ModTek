@@ -2,16 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Injector
 {
-    public class Runner : MarshalByRefObject
+    internal static class InjectorsRunner
     {
-        public void RunInjectors(DateTime loggerStart)
+        internal static void RunInjectors()
         {
-            Logger.Setup(loggerStart);
-
             var cacheManifest = CacheManifest.Load();
             if (cacheManifest.IsUpToDate)
             {
@@ -41,8 +39,8 @@ namespace ModTekPreloader.Injector
                     {
                         var name = injector.GetName().Name;
 
-                        using (var errorLogger = new ConsoleLogger { Prefix = $"{name} Error: " })
-                        using (var infoLogger = new ConsoleLogger { Prefix = $"{name}: " })
+                        using (var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " })
+                        using (var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " })
                         {
                             Console.SetOut(infoLogger);
                             Console.SetError(errorLogger);
@@ -64,49 +62,6 @@ namespace ModTekPreloader.Injector
                 assemblyCache.SaveAssembliesPublicizedToDisk();
             }
             cacheManifest.Save();
-        }
-
-        private class ConsoleLogger : TextWriter
-        {
-            public string Prefix { get; set; } = string.Empty;
-            public override Encoding Encoding => Encoding.UTF8;
-
-            private readonly StringBuilder buffer = new StringBuilder();
-
-            public override void Write(char value)
-            {
-                if (value == '\n')
-                {
-                    Flush();
-                }
-                else if (value == '\r')
-                {
-                    // ignore
-                }
-                else
-                {
-                    buffer.Append(value);
-                }
-            }
-
-            public override void Flush()
-            {
-                Logger.Log(Prefix + buffer);
-                buffer.Clear();
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (!disposing)
-                {
-                    return;
-                }
-
-                if (buffer.Length > 0)
-                {
-                    Flush();
-                }
-            }
         }
     }
 }

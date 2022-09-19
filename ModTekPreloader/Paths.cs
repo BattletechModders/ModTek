@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using ModTekPreloader.Logging;
 
 namespace ModTekPreloader
 {
@@ -16,6 +17,8 @@ namespace ModTekPreloader
         private static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
         internal static readonly string InjectorsDirectory = Path.Combine(ModTekDirectory, "Injectors");
         internal static readonly string PreloaderAssemblyFile = Path.Combine(ModTekDirectory, "ModTekPreloader.dll");
+        internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfig.json");
+        internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfigHelp.json");
 
         private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
         internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");

@@ -1,6 +1,7 @@
 ﻿using System.IO;
+using ModTekPreloader.Logging;
 
-namespace ModTekPreloader
+namespace ModTekPreloader.Loader
 {
     internal static class SingleInstanceEnforcer
     {

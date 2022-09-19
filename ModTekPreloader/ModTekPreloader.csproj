@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader*" />
+    <Link Include="$(BattleTechGameDir)\Mods\ModTek\ModTekPreloader*" />
   </ItemGroup>
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
@@ -69,6 +70,9 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
   </ItemGroup>
