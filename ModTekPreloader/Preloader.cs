@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using ModTekPreloader.Injector;
 
@@ -92,8 +93,8 @@ namespace ModTekPreloader
             }
 
             // to force injected assemblies to be used
-            Logger.Log("Preloading injected assemblies.");
-            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dlL"))
+            Logger.Log($"Preloading injected assemblies from {Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}.");
+            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dlL").OrderBy(p => p))
             {
                 Logger.Log($"\t{Paths.GetRelativePath(file)}");
                 Assembly.LoadFile(file);

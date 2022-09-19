@@ -28,7 +28,7 @@ namespace ModTekPreloader.Injector
                 var originalConsoleOut = Console.Out;
                 var originalConsoleError = Console.Error;
 
-                Logger.Log($"Searching injector dlls.");
+                Logger.Log($"Searching injector dlls in {Paths.GetRelativePath(Paths.InjectorsDirectory)}.");
                 foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
                 {
                     Logger.Log($"Running injector {Path.GetFileName(injectorPath)}.");

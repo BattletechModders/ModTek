@@ -55,5 +55,11 @@ namespace ModTekPreloader
                 File.Move(pathCurrent, pathNext);
             }
         }
+
+        internal static void Print()
+        {
+            Logger.Log($"{nameof(GameMainAssemblyFile)}: {GameMainAssemblyFile}");
+            Logger.Log($"{nameof(ModTekDirectory)}: {ModTekDirectory}");
+        }
     }
 }

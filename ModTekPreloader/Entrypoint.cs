@@ -14,6 +14,7 @@ namespace Doorstop
             {
                 Logger.Setup();
                 Logger.Log("Preloader starting");
+                Paths.Print();
                 SingleInstanceEnforcer.Enforce();
                 Preloader.Run();
                 Logger.Log("Preloader finished");
