@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using BattleTech;
-using ModTek.Util;
+﻿using System.IO;
 using UnityEngine;
 
 namespace ModTek.Misc
