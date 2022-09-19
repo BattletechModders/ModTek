@@ -12,7 +12,7 @@ namespace ModTekPreloader.Logging
             start = DateTime.Now;
             Paths.CreateDirectoryForFile(Paths.LogFile);
             Paths.RotatePath(Paths.LogFile, 1);
-            File.WriteAllText(Paths.LogFile, "");
+            File.WriteAllText(Paths.LogFile, start.ToString("o", System.Globalization.CultureInfo.InvariantCulture) + Environment.NewLine);
         }
 
         internal static void Log(object obj)
