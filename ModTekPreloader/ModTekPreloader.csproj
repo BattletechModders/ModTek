@@ -26,33 +26,25 @@
     </ItemGroup>
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
+<!--    <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
+<!--    <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />-->
   </Target>
 
-  <Target Name="DoorstopFetchWin" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
+  <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
-      <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_win_release_4.0.0.zip</DoorstopUrl>
+      <DoorstopUrl>https://github.com/CptMoore/UnityDoorstop/releases/download/latest/doorstop_all_in_one_4.0.1steamfix.zip</DoorstopUrl>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
-    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_win_release_4.0.0.zip" DestinationFolder="$(DoorstopIntDir)" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(DoorstopIntDir)\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
-  </Target>
-
-  <Target Name="DoorstopFetchMacos" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.dylib')">
-    <PropertyGroup>
-      <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_macos_release_4.0.0.zip</DoorstopUrl>
-    </PropertyGroup>
-    <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
-    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_macos_release_4.0.0.zip" DestinationFolder="$(DoorstopIntDir)" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(DoorstopIntDir)\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
-  </Target>
-
-  <Target Name="DoorstopFetchLinux" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\libdoorstop.so')">
-    <PropertyGroup>
-      <DoorstopUrl>https://github.com/NeighTools/UnityDoorstop/releases/download/v4.0.0/doorstop_linux_release_4.0.0.zip</DoorstopUrl>
-    </PropertyGroup>
-    <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
-    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_linux_release_4.0.0.zip" DestinationFolder="$(DoorstopIntDir)" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(DoorstopIntDir)\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)" Condition="'$(BattleTechGameDir)' != ''" />
+    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_all_in_one_4.0.1steamfix.zip" DestinationFolder="$(DoorstopIntDir)" />
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_release\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)" />
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_release\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)" />
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_release\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)" />
+<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_release\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
+<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_release\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
+<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_release\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_verbose\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_verbose\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
+    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_verbose\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
   </Target>
 
   <Target Name="FastHarmonyFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">

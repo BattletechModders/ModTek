@@ -54,12 +54,12 @@ namespace Doorstop
         {
             if (File.Exists(Paths.LogFile))
             {
-                File.AppendAllText(Paths.LogFile, message);
+                File.AppendAllText(Paths.LogFile, message + Environment.NewLine);
             }
             else
             {
                 Paths.CreateDirectoryForFile(Paths.LogFile);
-                File.WriteAllText(Paths.LogFile, message);
+                File.WriteAllText(Paths.LogFile, message + Environment.NewLine);
             }
         }
     }
