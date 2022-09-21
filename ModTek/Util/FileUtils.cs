@@ -39,7 +39,7 @@ namespace ModTek.Util
             var relativeUri = rootUri.MakeRelativeUri(pathUri);
             var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
 
-            if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+            if (pathUri.Scheme.Equals("file", StringComparison.OrdinalIgnoreCase))
             {
                 relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
@@ -56,7 +56,7 @@ namespace ModTek.Util
 
         internal static bool FileIsOnDenyList(string filePath)
         {
-            return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
+            return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static List<string> FindFiles(string basePath, params string[] suffixes)
@@ -65,7 +65,7 @@ namespace ModTek.Util
                 .Where(path => !FileIsOnDenyList(path));
             if (suffixes != null && suffixes.Length > 0)
             {
-                query = query.Where(path => suffixes.Any(p => path.EndsWith(p, StringComparison.InvariantCultureIgnoreCase)));
+                query = query.Where(path => suffixes.Any(p => path.EndsWith(p, StringComparison.OrdinalIgnoreCase)));
             }
             return query.ToList();
         }

@@ -19,7 +19,7 @@ namespace ModTekPreloader.Injector
         {
             var expected = GetExpectedManifestContent();
             var actual = GetActualManifestContent();
-            return new CacheManifest(string.Equals(expected, actual, StringComparison.Ordinal));
+            return new CacheManifest(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase));
         }
 
         public void Save()

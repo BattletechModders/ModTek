@@ -34,8 +34,8 @@ namespace Doorstop
             catch (Exception e)
             {
                 var message = "Exiting the game, preloader failed: " + e;
-                try { Console.Error.WriteLine(message); } catch (Exception) { /* ignored */ }
-                try { LogFatalError(message); } catch (Exception) { /* ignored */ }
+                try { Console.Error.WriteLine(message); } catch { /* ignored */ }
+                try { LogFatalError(message); } catch { /* ignored */ }
                 Environment.Exit(0);
             }
         }
