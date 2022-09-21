@@ -16,8 +16,8 @@ namespace ModTekPreloader
 
         internal static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
         internal static readonly string InjectorsDirectory = Path.Combine(ModTekDirectory, "Injectors");
-        internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfig.json");
-        internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloaderConfigHelp.json");
+        internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.json");
+        internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.help.json");
         internal static readonly string AssembliesOverrideDirectory = Path.Combine(ModTekDirectory, "AssembliesOverride");
 
         private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
@@ -50,12 +50,11 @@ namespace ModTekPreloader
             {
                 var pathCurrent = path + (i == 0 ? "" : "." + i);
                 var pathNext = path + "." + (i + 1);
-                if (!File.Exists(pathCurrent))
-                {
-                    continue;
-                }
                 File.Delete(pathNext);
-                File.Move(pathCurrent, pathNext);
+                if (File.Exists(pathCurrent))
+                {
+                    File.Move(pathCurrent, pathNext);
+                }
             }
         }
 

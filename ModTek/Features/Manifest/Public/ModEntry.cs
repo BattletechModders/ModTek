@@ -32,7 +32,7 @@ namespace ModTek
             return UpdatedOn;
         }
         public string FileNameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Path);
-        internal string RelativePathToMods => FileUtils.GetRelativePath(AbsolutePath, FilePaths.ModsDirectory);
+        internal string RelativePathToMods => FileUtils.GetRealRelativePath(AbsolutePath, FilePaths.ModsDirectory);
 
         internal bool IsJson => FileUtils.IsJson(Path);
         internal bool IsTxt => FileUtils.IsTxt(Path);

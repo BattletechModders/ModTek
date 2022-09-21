@@ -148,10 +148,7 @@ namespace ModTek.Features.Manifest.Merges
             CachedMerges.Remove(key);
             try
             {
-                if (File.Exists(cacheEntry.CachedAbsolutePath))
-                {
-                    File.Delete(cacheEntry.CachedAbsolutePath);
-                }
+                File.Delete(cacheEntry.CachedAbsolutePath);
             }
             catch (Exception e)
             {

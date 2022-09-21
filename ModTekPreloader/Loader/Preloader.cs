@@ -19,7 +19,8 @@ namespace ModTekPreloader.Loader
             "(Mods)/ModTek.dll",
             "(Mods)/modtekassetbundle",
             "(Mods)/BTModLoader.log",
-            "(Mods)/ModTek/Newtonsoft.Json.dll"
+            "(Mods)/ModTek/Newtonsoft.Json.dll",
+            "(Mods)/ModTek/config.defaults.json",
         };
 
         internal void Run(Entrypoint.GameAssemblyLoader loader)

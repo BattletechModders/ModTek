@@ -8,13 +8,15 @@ namespace ModTek.Util
 {
     internal static class FileUtils
     {
-        internal static string GetRelativePath(string absolutePath, string basePath = null)
+        // this is more an informative path that works for diagnosing issues
+        internal static string GetRelativePath(string absolutePath)
         {
-            if (basePath == null)
-            {
-                basePath = FilePaths.GameDirectory;
-            }
+            return new Uri(FilePaths.GameDirectory).MakeRelativeUri(new Uri(absolutePath)).ToString();
+        }
 
+        // this is the correct relative path with proper directory separators for internal use
+        internal static string GetRealRelativePath(string absolutePath, string basePath)
+        {
             if (!Path.IsPathRooted(absolutePath))
             {
                 return absolutePath;

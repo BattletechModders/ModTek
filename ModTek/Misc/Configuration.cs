@@ -2,12 +2,16 @@ using System;
 using System.IO;
 using ModTek.Features.Logging;
 using ModTek.Features.Profiling;
+using ModTek.Util;
 using Newtonsoft.Json;
 
 namespace ModTek.Misc
 {
     internal class Configuration
     {
+        [JsonProperty]
+        internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{FileUtils.GetRelativePath(ConfigPath)}`.";
+
         [JsonProperty]
         internal bool ShowLoadingScreenErrors = true;
         [JsonProperty]
@@ -91,7 +95,7 @@ namespace ModTek.Misc
         private Exception ReadConfigurationException;
 
         private static string ConfigPath => Path.Combine(FilePaths.ModTekDirectory, "config.json");
-        private static string ConfigDefaultsPath => Path.Combine(FilePaths.ModTekDirectory, "config.defaults.json");
+        private static string ConfigDefaultsPath => Path.Combine(FilePaths.ModTekDirectory, "config.help.json");
         private static string ConfigLastPath => Path.Combine(FilePaths.ModTekDirectory, "config.last.json");
 
         internal static Configuration FromDefaultFile()

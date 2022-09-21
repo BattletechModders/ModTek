@@ -190,7 +190,7 @@ namespace ModTek
             shouldAddToList = false;
             if (alreadyTryLoadMods.Contains(Name))
             {
-                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(FilePaths.ModsDirectory, Directory)}.";
+                reason = $"ModTek already loaded with the same name. Skipping load from {FileUtils.GetRelativePath(Directory)}.";
                 return false;
             }
 

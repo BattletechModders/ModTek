@@ -139,7 +139,7 @@ namespace ModTek.Features.Manifest
                 foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
                 {
                     var copy = entry.copy();
-                    copy.Path = FileUtils.GetRelativePath(file, modDef.Directory);
+                    copy.Path = FileUtils.GetRealRelativePath(file, modDef.Directory);
                     NormalizeAndExpandAndAddModEntries(modDef, copy); // could lead to adv json merges that again expand
                 }
             }

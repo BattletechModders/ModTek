@@ -7,6 +7,32 @@ namespace ModTekPreloader.Loader
 {
     internal class Config
     {
+        [JsonProperty]
+        internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
+
+        [JsonProperty]
+        internal readonly string AssembliesToMakePublic_Description =
+            $"All listed will be copied to `{Paths.GetRelativePath(Paths.AssembliesPublicizedDirectory)}`." +
+            " The copies will have all their members (classes, methods, properties and fields) made public." +
+            " It should be used to compile against, see the README for more information.";
+
+        [JsonProperty]
+        internal string[] AssembliesToMakePublic =
+        {
+            "Assembly-CSharp",
+            "Assembly-CSharp-firstpass",
+            "BattleTech.Common"
+        };
+
+        [JsonProperty]
+        internal readonly string TypesToNotMakePublic_Description =
+            "Add full names of types not to make public, in case you want to subclass these types and visibility changes would throw errors or crash the game.";
+
+        [JsonProperty]
+        internal string[] TypesToNotMakePublic =
+        {
+        };
+
         internal static Config Instance = new Config();
 
         private Config()
@@ -28,7 +54,7 @@ namespace ModTekPreloader.Loader
                         new JsonSerializerSettings
                         {
                             ObjectCreationHandling = ObjectCreationHandling.Replace,
-                            NullValueHandling = NullValueHandling.Ignore
+                            NullValueHandling = NullValueHandling.Ignore,
                         }
                     );
                 }
@@ -42,22 +68,5 @@ namespace ModTekPreloader.Loader
                 File.WriteAllText(Paths.PreloaderConfigFile, "{}");
             }
         }
-
-        public readonly string AssembliesToMakePublic_Description =
-            $"All listed will be copied to {Paths.GetRelativePath(Paths.AssembliesPublicizedDirectory)}." +
-            " The copies will have all their members (classes, methods, properties and fields) made public." +
-            " It should be used to compile against, see the README for more information.";
-        public string[] AssembliesToMakePublic =
-        {
-            "Assembly-CSharp",
-            "Assembly-CSharp-firstpass",
-            "BattleTech.Common"
-        };
-
-        public readonly string TypesToNotMakePublic_Description =
-            "Add full names of types not to make public, in case you want to subclass these types and visibility changes would throw errors or crash the game.";
-        public string[] TypesToNotMakePublic =
-        {
-        };
     }
 }
