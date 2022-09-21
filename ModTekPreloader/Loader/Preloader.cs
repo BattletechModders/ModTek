@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Doorstop;
+using System.Reflection;
+using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
 
@@ -23,15 +24,23 @@ namespace ModTekPreloader.Loader
             "(Mods)/ModTek/config.defaults.json",
         };
 
-        internal void Run(Entrypoint.GameAssemblyLoader loader)
+        internal void Run()
         {
             Logger.Log("Preloader starting");
+
             Paths.Print();
             SingleInstanceEnforcer.Enforce();
             RestoreFromBackupAndDeleteBackup();
             CleanupObsoleteFiles();
+
+            HarmonyInteropFix.RegisterShims();
             RunInjectors();
-            PreloadAssemblies(loader);
+            PreloadAssemblies();
+            if (HarmonyInteropFix.HasShims)
+            {
+                HarmonyPatches.RegisterHooks();
+            }
+
             Logger.Log("Preloader finished");
         }
 
@@ -83,14 +92,14 @@ namespace ModTekPreloader.Loader
             InjectorsRunner.RunInjectors();
         }
 
-        private void PreloadAssemblies(Entrypoint.GameAssemblyLoader loader)
+        private void PreloadAssemblies()
         {
             // to force injected assemblies to be used
             Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
             foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
             {
                 Logger.Log($"\t{Path.GetFileName(file)}");
-                loader.LoadFile(file);
+                Assembly.LoadFile(file);
             }
         }
     }

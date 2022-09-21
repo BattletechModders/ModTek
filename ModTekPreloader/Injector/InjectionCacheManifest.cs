@@ -6,41 +6,41 @@ using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Injector
 {
-    internal class CacheManifest
+    internal class InjectionCacheManifest
     {
         internal bool IsUpToDate { get; }
 
-        private CacheManifest(bool isUpToDate)
+        private InjectionCacheManifest(bool isUpToDate)
         {
             IsUpToDate = isUpToDate;
         }
 
-        public static CacheManifest Load()
+        public static InjectionCacheManifest Load()
         {
             var expected = GetExpectedManifestContent();
             var actual = GetActualManifestContent();
-            return new CacheManifest(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase));
+            return new InjectionCacheManifest(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase));
         }
 
         public void Save()
         {
             var content = GetActualManifestContent();
-            File.WriteAllText(Paths.CacheManifestFile, content);
+            File.WriteAllText(Paths.InjectionCacheManifestFile, content);
         }
 
         private static string GetExpectedManifestContent()
         {
             try
             {
-                if (File.Exists(Paths.CacheManifestFile))
+                if (File.Exists(Paths.InjectionCacheManifestFile))
                 {
-                    return File.ReadAllText(Paths.CacheManifestFile);
+                    return File.ReadAllText(Paths.InjectionCacheManifestFile);
                 }
             }
             catch (Exception e)
             {
-                Logger.Log($"Error reading cache {Paths.CacheManifestFile}: {e}");
-                File.Delete(Paths.CacheManifestFile);
+                Logger.Log($"Error reading cache {Paths.InjectionCacheManifestFile}: {e}");
+                File.Delete(Paths.InjectionCacheManifestFile);
             }
             return null;
         }
@@ -76,24 +76,24 @@ namespace ModTekPreloader.Injector
             var content = files
                 .Select(CacheEntry.FromFile)
                 .OrderBy(x => x)
-                .Aggregate(CacheEntry.Header, (current, entry) => current + "\n" + entry);
+                .Aggregate("Generated", (current, entry) => current + "\n" + entry);
             return content;
         }
 
         private class CacheEntry : IComparable<CacheEntry>, IEquatable<CacheEntry>
         {
-            private readonly string RelativePath;
-            private readonly string LastWriteTime;
+            private readonly string Time;
+            private readonly string Path;
 
-            private CacheEntry(string lastWriteTime, string relativePath)
+            private CacheEntry(string time, string path)
             {
-                LastWriteTime = lastWriteTime;
-                RelativePath = relativePath;
+                Time = time;
+                Path = path;
             }
 
             public int CompareTo(CacheEntry other)
             {
-                return string.CompareOrdinal(RelativePath, other.RelativePath);
+                return string.CompareOrdinal(Path, other.Path);
             }
 
             public bool Equals(CacheEntry other)
@@ -103,17 +103,15 @@ namespace ModTekPreloader.Injector
 
             public override string ToString()
             {
-                return $"{LastWriteTime},{RelativePath}";
+                return $"{Time},{Path}";
             }
 
             public static CacheEntry FromFile(string absolutePath)
             {
-                var lastWrite = File.GetLastWriteTimeUtc(absolutePath).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
-                var relativePath = Paths.GetRelativePath(absolutePath);
-                return new CacheEntry(lastWrite, relativePath);
+                var time = File.GetLastWriteTimeUtc(absolutePath).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+                var path = Paths.GetRelativePath(absolutePath);
+                return new CacheEntry(time, path);
             }
-
-            public const string Header = "LastWriteTime,RelativePath";
         }
     }
 }

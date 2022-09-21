@@ -8,8 +8,7 @@
     <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
-    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+    <AssemblySearchPaths>$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride;$(BattleTechGameDir)\BattleTech_Data\Managed\;$(AssemblySearchPaths)</AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
   </PropertyGroup>
@@ -47,14 +46,18 @@
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_verbose\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
   </Target>
 
-  <Target Name="FastHarmonyFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
+  <Target Name="HarmonyFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
     <PropertyGroup>
-      <FastHarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</FastHarmonyUrl>
-      <FastHarmonyIntDir>$(MSBuildProjectExtensionsPath)\harmony</FastHarmonyIntDir>
+<!--      <HarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</HarmonyUrl>--><!-- fast harmony -->
+      <HarmonyUrl>https://github.com/BattletechModders/ModTek/files/9619752/HarmonyXAssembliesOverride.zip</HarmonyUrl><!-- harmony12X-->
+      <HarmonyIntDir>$(MSBuildProjectExtensionsPath)\harmony</HarmonyIntDir>
     </PropertyGroup>
-    <DownloadFile SourceUrl="$(FastHarmonyUrl)" DestinationFolder="$(MSBuildProjectExtensionsPath)\harmony" />
-    <Unzip SourceFiles="$(FastHarmonyIntDir)\0Harmony.zip" DestinationFolder="$(FastHarmonyIntDir)" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(FastHarmonyIntDir)\0Harmony.dll" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" Condition="'$(BattleTechGameDir)' != ''" />
+    <DownloadFile SourceUrl="$(HarmonyUrl)" DestinationFolder="$(MSBuildProjectExtensionsPath)\harmony" />
+    <Unzip SourceFiles="$(HarmonyIntDir)\HarmonyXAssembliesOverride.zip" DestinationFolder="$(HarmonyIntDir)" />
+    <ItemGroup>
+      <HarmonyFiles Include="$(HarmonyIntDir)\*.dll;$(HarmonyIntDir)\*.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HarmonyFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" Condition="'$(BattleTechGameDir)' != ''" />
   </Target>
 
   <ItemGroup>
@@ -67,13 +70,16 @@
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
+    <Reference Include="0Harmony">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
-      <Version>0.11.4</Version>
+      <Version>0.10.4</Version>
     </PackageReference>
   </ItemGroup>
 </Project>

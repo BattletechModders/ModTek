@@ -213,6 +213,9 @@ namespace ModTek.Features.Profiling
         private int counter;
         private IEnumerable<MethodBase> FindMethodsCalledByMethod(MethodBase containerMethod)
         {
+            // TODO fix some day, or removing profiling
+            yield break;
+            /*
             var dynamicMethod = DynamicTools.CreateDynamicMethod(containerMethod, "_Profiler" + counter++).GetILGenerator();
 
             var instructions = MethodBodyReader.GetInstructions(dynamicMethod, containerMethod);
@@ -233,6 +236,7 @@ namespace ModTek.Features.Profiling
                 }
                 yield return method;
             }
+            */
         }
     }
 }

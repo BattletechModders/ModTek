@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Loader;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
@@ -11,7 +11,17 @@ namespace ModTekPreloader.Injector
     internal class AssemblyCache : IAssemblyResolver
     {
         private readonly Dictionary<string, AssemblyBag> assemblies = new Dictionary<string, AssemblyBag>();
-        private readonly IAssemblyResolver resolver = new DefaultAssemblyResolver();
+        private readonly List<string> searchDirectories;
+
+        internal AssemblyCache()
+        {
+            searchDirectories = new List<string>
+            {
+                Paths.AssembliesOverrideDirectory,
+                Paths.ModTekDirectory,
+                Paths.ManagedDirectory
+            };
+        }
 
         public AssemblyDefinition Resolve(AssemblyNameReference name)
         {
@@ -20,26 +30,29 @@ namespace ModTekPreloader.Injector
 
         public AssemblyDefinition Resolve(AssemblyNameReference reference, ReaderParameters parameters)
         {
-            try
-            {
-                parameters.AssemblyResolver = parameters.AssemblyResolver ?? this;
+            parameters.AssemblyResolver = parameters.AssemblyResolver ?? this;
 
-                if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
+            if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
+            {
+                var assembly = SearchAssembly(reference, parameters);
+                assemblyBag = new AssemblyBag(assembly);
+                assemblies[reference.Name] = assemblyBag;
+            }
+
+            return assemblyBag.Definition;
+        }
+
+        private AssemblyDefinition SearchAssembly(AssemblyNameReference reference, ReaderParameters parameters)
+        {
+            var searchPattern = $"{reference.Name}.dll";
+            foreach (var searchDirectory in searchDirectories)
+            {
+                foreach (var file in Directory.GetFiles(searchDirectory, searchPattern))
                 {
-                    var assembly = resolver.Resolve(new AssemblyNameReference(reference.Name, null), parameters);
-                    // Logger.Log($"assembly {assembly.Name.Name} {new AssemblySecurityPermission(assembly)}");
-                    assemblyBag = new AssemblyBag(assembly);
-                    assemblies[reference.Name] = assemblyBag;
+                    return ModuleDefinition.ReadModule(file, parameters).Assembly;
                 }
-
-                return assemblyBag.Definition;
             }
-            catch (Exception e)
-            {
-                Logger.Log(e);
-            }
-
-            return null;
+            throw new AssemblyResolutionException(reference);
         }
 
         internal void SaveAssembliesToDisk()
@@ -63,12 +76,11 @@ namespace ModTekPreloader.Injector
         internal void SaveAssembliesPublicizedToDisk()
         {
             Paths.SetupCleanDirectory(Paths.AssembliesPublicizedDirectory);
-            AssemblyPublicizer.MakePublic(resolver);
+            AssemblyPublicizer.MakePublic(this);
         }
 
         public void Dispose()
         {
-            resolver.Dispose();
             assemblies.Clear();
         }
 
@@ -80,7 +92,7 @@ namespace ModTekPreloader.Injector
             // performance improvements (1.4s)
             private static readonly string[] AlwaysChangedAssemblies =
             {
-                "Assembly-CSharp"
+                "Assembly-CSharp", "ModTek"
             };
 
             // skips change detection
@@ -98,8 +110,9 @@ namespace ModTekPreloader.Injector
             public AssemblyBag(AssemblyDefinition definition)
             {
                 Definition = definition;
-                AlwaysChanged = AlwaysChangedAssemblies.Contains(Name);
-                NeverChanged = NeverChangedAssemblies.Contains(Name);
+                var hasChanged = HarmonyInteropFix.DetectAndPatchHarmony(definition);
+                AlwaysChanged = hasChanged || AlwaysChangedAssemblies.Contains(Name);
+                NeverChanged = !hasChanged && NeverChangedAssemblies.Contains(Name);
                 Serialized = AlwaysChanged || NeverChanged ? null : Serialize(definition);
             }
 

@@ -8,7 +8,6 @@ namespace ModTekInjector
 {
     internal static class Injector
     {
-        private const string MODTEK_DLL_FILE_NAME = "ModTek.dll";
         private const string MODTEK_INIT_TYPE = "ModTek.ModTek";
         private const string MODTEK_INIT_METHOD = "Init";
 
@@ -19,16 +18,9 @@ namespace ModTekInjector
         {
             Console.WriteLine($"Injecting call to {MODTEK_INIT_TYPE}.{MODTEK_INIT_METHOD} from {GAME_HOOK_TYPE}.{GAME_HOOK_METHOD}");
 
-            var gameDirectory = Directory.GetCurrentDirectory();
-            var modsDirectory = Path.Combine(gameDirectory, "Mods");
-            var modTekDirectory = Path.Combine(modsDirectory, "ModTek");
-            var modTekDLLPath = Path.Combine(modTekDirectory, MODTEK_DLL_FILE_NAME);
-
             var game = resolver.Resolve(new AssemblyNameReference("Assembly-CSharp", null));
-            using (var modtek = AssemblyDefinition.ReadAssembly(modTekDLLPath))
-            {
-                InjectCall(game, modtek);
-            }
+            var modtek = resolver.Resolve(new AssemblyNameReference("ModTek", null));
+            InjectCall(game, modtek);
         }
 
         private static void InjectCall(AssemblyDefinition game, AssemblyDefinition modtek)

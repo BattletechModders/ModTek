@@ -22,10 +22,12 @@ namespace ModTekPreloader
 
         private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
         internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");
-        internal static readonly string LockFile = Path.Combine(DotModTekDirectory, ".lock");
-        internal static readonly string CacheManifestFile = Path.Combine(DotModTekDirectory, "ModTekPreloaderCacheManifest.csv");
+        internal static readonly string LockFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.lock");
         internal static readonly string AssembliesInjectedDirectory = Path.Combine(DotModTekDirectory, "AssembliesInjected");
+        internal static readonly string InjectionCacheManifestFile = Path.Combine(AssembliesInjectedDirectory, "_Manifest.csv");
         internal static readonly string AssembliesPublicizedDirectory = Path.Combine(DotModTekDirectory, "AssembliesPublicized");
+        internal static readonly string AssembliesShimmedDirectory = Path.Combine(DotModTekDirectory, "AssembliesShimmed");
+        internal static readonly string ShimmedCacheManifestFile = Path.Combine(AssembliesShimmedDirectory, "_Manifest.csv");
 
         internal static void CreateDirectoryForFile(string filePath)
         {

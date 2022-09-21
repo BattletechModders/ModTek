@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using ModTekPreloader;
 using ModTekPreloader.Loader;
 
@@ -15,21 +14,8 @@ namespace Doorstop
         {
             try
             {
-                // this AppDomain allows us to unload all dlls used by the Preloader and Injectors
-                var domain = AppDomain.CreateDomain("ModTekPreloader");
-                try
-                {
-                    var preloader = (Preloader)domain.CreateInstanceAndUnwrap(
-                        typeof(Preloader).Assembly.FullName,
-                        // ReSharper disable once AssignNullToNotNullAttribute
-                        typeof(Preloader).FullName
-                    );
-                    preloader.Run(new GameAssemblyLoader());
-                }
-                finally
-                {
-                    AppDomain.Unload(domain);
-                }
+                var preloader = new Preloader();
+                preloader.Run();
             }
             catch (Exception e)
             {
@@ -37,15 +23,6 @@ namespace Doorstop
                 try { Console.Error.WriteLine(message); } catch { /* ignored */ }
                 try { LogFatalError(message); } catch { /* ignored */ }
                 Environment.Exit(0);
-            }
-        }
-
-        // used to preload the injected assemblies in the Game's AppDomain
-        internal class GameAssemblyLoader : MarshalByRefObject
-        {
-            internal void LoadFile(string path)
-            {
-                Assembly.LoadFile(path);
             }
         }
 

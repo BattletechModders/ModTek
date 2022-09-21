@@ -10,10 +10,10 @@ namespace ModTekPreloader.Injector
     {
         internal static void RunInjectors()
         {
-            var cacheManifest = CacheManifest.Load();
+            var cacheManifest = InjectionCacheManifest.Load();
             if (cacheManifest.IsUpToDate)
             {
-                Logger.Log($"Skipping injection, cache manifest at `{Paths.GetRelativePath(Paths.CacheManifestFile)}` is up to date.");
+                Logger.Log($"Skipping injection, cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
                 return;
             }
             using (var assemblyCache = new AssemblyCache())
