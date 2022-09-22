@@ -64,7 +64,7 @@ jobs:
         body: |
           > **Note**
           > **ModTekInjector.exe was replaced by UnityDoorstop**, [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) works by just copying files to the games directory. Running any injectors exes is not necessary or allowed anymore.
-          
-          ModTek.zip contains the ModTek tools, please unzip them as directly into your game's location.
-          see [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md) and [Readme](https://github.com/BattletechModders/ModTek/blob/master/README.md)
+        
+          ModTek.zip contains the ModTek tools. Unzip the contents into your game's location, so that `winhttp.dll` appears in the same folder as `BattleTech.exe`.
+          See [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md) and [Readme](https://github.com/BattletechModders/ModTek/blob/master/README.md).
         files: ModTek.zip
