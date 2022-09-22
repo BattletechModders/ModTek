@@ -56,7 +56,7 @@
       <FastHarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</FastHarmonyUrl>
       <FastHarmonyIntDir>$(MSBuildProjectExtensionsPath)\fastharmony</FastHarmonyIntDir>
     </PropertyGroup>
-    <DownloadFile SourceUrl="$(FastHarmonyUrl)" DestinationFolder="$(MSBuildProjectExtensionsPath)\fastharmony" />
+    <DownloadFile SourceUrl="$(FastHarmonyUrl)" DestinationFolder="$(FastHarmonyIntDir)" />
     <Unzip SourceFiles="$(FastHarmonyIntDir)\0Harmony.zip" DestinationFolder="$(FastHarmonyIntDir)" />
     <ItemGroup>
       <FastHarmonyFiles Include="$(FastHarmonyIntDir)\*.dll" />
@@ -67,9 +67,9 @@
   <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony.dll')">
     <PropertyGroup>
       <Harmony12XUrl>https://github.com/BattletechModders/ModTek/files/9619752/HarmonyXAssembliesOverride.zip</Harmony12XUrl>
-      <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony</Harmony12XIntDir>
+      <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony12x</Harmony12XIntDir>
     </PropertyGroup>
-    <DownloadFile SourceUrl="$(Harmony12XUrl)" DestinationFolder="$(MSBuildProjectExtensionsPath)\harmony12x" />
+    <DownloadFile SourceUrl="$(Harmony12XUrl)" DestinationFolder="$(Harmony12XIntDir)" />
     <Unzip SourceFiles="$(Harmony12XIntDir)\HarmonyXAssembliesOverride.zip" DestinationFolder="$(Harmony12XIntDir)" />
     <ItemGroup>
       <Harmony12XFiles Include="$(Harmony12XIntDir)\*.dll;$(Harmony12XIntDir)\*.txt" />
