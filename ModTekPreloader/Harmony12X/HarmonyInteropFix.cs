@@ -26,11 +26,11 @@ namespace ModTekPreloader.Harmony12X
                 Logger.Log("HarmonyX not enabled, not loading interoperability.");
                 return;
             }
-            if (!Directory.Exists(Paths.AssembliesHarmony12XDirectory))
+            if (!Directory.Exists(Paths.Harmony12XDirectory))
             {
                 return;
             }
-            foreach (var file in Directory.GetFiles(Paths.AssembliesHarmony12XDirectory, "*.dll"))
+            foreach (var file in Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll"))
             {
                 if (Path.GetFileName(file).StartsWith("0Harmony"))
                 {
