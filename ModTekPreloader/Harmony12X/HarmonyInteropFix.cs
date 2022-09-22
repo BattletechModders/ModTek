@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTekPreloader.Loader;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
@@ -20,22 +21,33 @@ namespace ModTekPreloader.Harmony12X
         public static void RegisterShims()
         {
             Logger.Log(nameof(RegisterShims));
-            foreach (var file in Directory.GetFiles(Paths.AssembliesOverrideDirectory, "0Harmony*.dll"))
+            if (!Config.Instance.Harmony12XEnabled)
             {
-                using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(file))
+                Logger.Log("HarmonyX not enabled, not loading interoperability.");
+                return;
+            }
+            if (!Directory.Exists(Paths.AssembliesHarmony12XDirectory))
+            {
+                return;
+            }
+            foreach (var file in Directory.GetFiles(Paths.AssembliesHarmony12XDirectory, "*.dll"))
+            {
+                if (Path.GetFileName(file).StartsWith("0Harmony"))
                 {
-                    if (assemblyDefinition.Name.Name == "0Harmony")
+                    using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(file))
                     {
-                        continue;
+                        if (assemblyDefinition.Name.Name != "0Harmony")
+                        {
+                            Logger.Log($"\tFound shim {assemblyDefinition.Name.Name} {assemblyDefinition.Name.Version}");
+                            Assemblies.Add(assemblyDefinition.Name.Version, assemblyDefinition.Name.Name);
+                            InteropAssemblyNames.Add(assemblyDefinition.Name.Name);
+                        }
                     }
-
-                    Assemblies.Add(assemblyDefinition.Name.Version, assemblyDefinition.Name.Name);
-                    InteropAssemblyNames.Add(assemblyDefinition.Name.Name);
                 }
+                Logger.Log($"\tPreloading assembly `{Paths.GetRelativePath(file)}`.");
                 Assembly.LoadFile(file);
             }
             maxAvailableShimVersion = Assemblies.LastOrDefault().Key;
-            Logger.Log(HasShims ? "Found shims." : "No shims detected.");
         }
 
         public static bool DetectAndPatchHarmony(AssemblyDefinition assemblyDefinition)

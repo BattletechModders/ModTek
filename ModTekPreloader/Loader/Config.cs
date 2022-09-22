@@ -7,6 +7,7 @@ namespace ModTekPreloader.Loader
 {
     internal class Config
     {
+#pragma warning disable CS0649
         [JsonProperty]
         internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
 
@@ -32,6 +33,14 @@ namespace ModTekPreloader.Loader
         internal string[] TypesToNotMakePublic =
         {
         };
+
+        [JsonProperty]
+        internal readonly string Harmony12XEnabled_Description =
+            "Enables Harmony X and its shims for Harmony 1 and 2, does work pretty well but not perfectly and some mods might need to be updated.";
+
+        [JsonProperty]
+        internal bool Harmony12XEnabled;
+#pragma warning restore CS0649
 
         internal static Config Instance = new Config();
 

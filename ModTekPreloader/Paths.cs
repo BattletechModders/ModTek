@@ -19,6 +19,7 @@ namespace ModTekPreloader
         internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.json");
         internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.help.json");
         internal static readonly string AssembliesOverrideDirectory = Path.Combine(ModTekDirectory, "AssembliesOverride");
+        internal static readonly string AssembliesHarmony12XDirectory = Path.Combine(ModTekDirectory, "AssembliesHarmony12X");
 
         private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
         internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");
