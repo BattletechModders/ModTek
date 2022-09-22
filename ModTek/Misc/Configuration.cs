@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using ModTek.Features.Logging;
-using ModTek.Features.Profiling;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -87,9 +86,6 @@ namespace ModTek.Misc
 
         [JsonProperty]
         internal LoggingSettings Logging = new LoggingSettings();
-
-        [JsonProperty]
-        internal ProfilingSettings Profiling = new ProfilingSettings();
 
         [JsonIgnore]
         private Exception ReadConfigurationException;

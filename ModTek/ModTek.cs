@@ -10,7 +10,6 @@ using ModTek.Features.HarmonyPatching;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Features.Profiling;
 using ModTek.Misc;
 using ModTek.UI;
 using ModTek.Util;
@@ -142,7 +141,6 @@ namespace ModTek
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishingLoadingMods);
-            ProgressPanel.SubmitWork(ProfilerPatcher.ProfilerSetupLoop);
             ProgressPanel.SubmitWork(HarmonySummaryAndFinish);
         }
 
