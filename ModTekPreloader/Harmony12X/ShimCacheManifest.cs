@@ -10,30 +10,68 @@ namespace ModTekPreloader.Harmony12X
     internal class ShimCacheManifest
     {
         private readonly SortedDictionary<string, CacheEntry> data = new SortedDictionary<string, CacheEntry>();
+        private readonly DynamicShimInjector _injector;
+        private readonly string manifestHeader;
 
-        public void Load()
+        internal ShimCacheManifest(DynamicShimInjector injector)
+        {
+            _injector = injector;
+            manifestHeader = Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll")
+                .OrderBy(f => f)
+                .Select(f => File.GetLastWriteTimeUtc(f).ToString("o", System.Globalization.CultureInfo.InvariantCulture) + ":" + Paths.GetRelativePath(f))
+                .Aggregate("", (prev, item) => prev + ";" + item);
+            Load();
+        }
+
+        private void Load()
         {
             try
             {
                 if (File.Exists(Paths.ShimmedCacheManifestFile))
                 {
+                    var headerProcessed = false;
                     foreach (var line in File.ReadAllLines(Paths.ShimmedCacheManifestFile))
                     {
+                        if (!headerProcessed)
+                        {
+                            if (manifestHeader != line)
+                            {
+                                throw new CacheInvalidatedException();
+                            }
+
+                            headerProcessed = true;
+                            continue;
+                        }
+
                         var entry = new CacheEntry(line);
                         data[entry.OriginalPath] = entry;
                     }
+
                     return;
                 }
             }
+            catch (CacheInvalidatedException)
+            {
+                Logger.Log("Shimmed cache manifest is outdated.");
+            }
             catch (Exception e)
             {
-                Logger.Log($"Error reading cache {Paths.ShimmedCacheManifestFile}: {e}");
+                Logger.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
                 File.Delete(Paths.ShimmedCacheManifestFile);
             }
             Paths.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
         }
 
-        public string GetPath(string originalAbsolutePath)
+        private class CacheInvalidatedException : Exception
+        {
+        }
+
+        private void Save()
+        {
+            File.WriteAllLines(Paths.ShimmedCacheManifestFile, data.Values.Select(x => x.ToString()).Prepend(manifestHeader));
+        }
+
+        internal string GetPathToShimmedAssembly(string originalAbsolutePath)
         {
             var time = CacheEntry.GetTimeFromFile(originalAbsolutePath);
             var originalPath = Paths.GetRelativePath(originalAbsolutePath);
@@ -57,11 +95,11 @@ namespace ModTekPreloader.Harmony12X
             return absolutePath;
         }
 
-        private static string DetectAndPatchHarmony(string originalPath)
+        private string DetectAndPatchHarmony(string originalPath)
         {
             Logger.Log($"\tOpening assembly to check if a harmony shim should be applied `{Paths.GetRelativePath(originalPath)}`.");
             var assemblyDefinition = AssemblyDefinition.ReadAssembly(originalPath);
-            if (!HarmonyInteropFix.DetectAndPatchHarmony(assemblyDefinition))
+            if (!_injector.DetectAndPatchHarmony(assemblyDefinition))
             {
                 return null;
             }
@@ -70,11 +108,6 @@ namespace ModTekPreloader.Harmony12X
             Logger.Log($"\tSaving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
             assemblyDefinition.Write(path);
             return path;
-        }
-
-        private void Save()
-        {
-            File.WriteAllLines(Paths.ShimmedCacheManifestFile, data.Values.Select(x => x.ToString()));
         }
 
         private class CacheEntry : IComparable<CacheEntry>, IEquatable<CacheEntry>

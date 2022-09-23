@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using Doorstop;
 using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
@@ -24,29 +24,18 @@ namespace ModTekPreloader.Loader
             "(Mods)/ModTek/config.defaults.json",
         };
 
-        internal void Run()
+        internal void PrepareInjection()
         {
             Logger.Log("Preloader starting");
-
             Paths.Print();
             SingleInstanceEnforcer.Enforce();
             RestoreFromBackupAndDeleteBackup();
             CleanupObsoleteFiles();
-
-            HarmonyInteropFix.RegisterShims();
-            RunInjectors();
-            PreloadAssemblies();
-            if (HarmonyInteropFix.HasShims)
-            {
-                HarmonyPatches.RegisterHooks();
-            }
-
-            Logger.Log("Preloader finished");
         }
 
         private void RestoreFromBackupAndDeleteBackup()
         {
-            Logger.Log(nameof(RestoreFromBackupAndDeleteBackup));
+            Logger.Log("Find backups, restore assemblies and remove backups.");
 
             var gameDLLModTekBackupPath = Paths.GameMainAssemblyFile + ".orig";
             var gameDLLPerFixBackupPath = Paths.GameMainAssemblyFile + ".PerfFix.orig";
@@ -76,7 +65,7 @@ namespace ModTekPreloader.Loader
 
         private void CleanupObsoleteFiles()
         {
-            Logger.Log(nameof(CleanupObsoleteFiles));
+            Logger.Log("Cleaning up obsolete files.");
             foreach (var relativePathWithPlaceholder in OBSOLETE_FILES)
             {
                 var path = relativePathWithPlaceholder
@@ -86,21 +75,72 @@ namespace ModTekPreloader.Loader
             }
         }
 
-        private void RunInjectors()
+        private DynamicShimInjector _shimInjector;
+        internal void RunInjectors(Entrypoint.GameAssemblyLoader assemblyLoader)
         {
-            Logger.Log(nameof(RunInjectors));
-            InjectorsRunner.RunInjectors();
+            _shimInjector = new DynamicShimInjector();
+
+            // TODO allow Harmony modifications
+            // not supporting modifying Harmony assemblies during injection, hence preloading them now
+            PreloadAssembliesHarmony(assemblyLoader);
+
+            using (var injectorsRunner = new InjectorsRunner(_shimInjector))
+            {
+                if (!injectorsRunner.IsUpToDate)
+                {
+                    injectorsRunner.RunInjectors();
+                    injectorsRunner.SaveToDisk();
+                }
+                injectorsRunner.PreloadAssembliesInjected(assemblyLoader);
+            }
+            PreloadAssembliesOverride(assemblyLoader);
         }
 
-        private void PreloadAssemblies()
+        // TODO allow Harmony modifications
+        // would need to implement different AppDomains to support Harmony1, 2 and X modifications
+        // meaning 3 different injection phases and in between upgrading the shims
+        // all the while having to share the assembly cache between the app domains
+        private void PreloadAssembliesHarmony(Entrypoint.GameAssemblyLoader assemblyLoader)
         {
-            // to force injected assemblies to be used
-            Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
-            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
+            if (_shimInjector.Enabled)
+            {
+                _shimInjector.PreloadAssembliesHarmonyX(assemblyLoader);
+                return;
+            }
+
+            {
+                var path = Path.Combine(Paths.AssembliesOverrideDirectory, "0Harmony.dll");
+                if (File.Exists(path))
+                {
+                    Logger.Log($"Preloading harmony from {Path.GetFileName(path)} into {Entrypoint.AppDomainNameUnity}.");
+                    assemblyLoader.LoadFile(path);
+                    return;
+                }
+            }
+
+            {
+                var path = Path.Combine(Paths.ManagedDirectory, "0Harmony.dll");
+                Logger.Log($"Preloading harmony from {Path.GetFileName(path)} into the Unity AppDomain.");
+                assemblyLoader.LoadFile(path);
+            }
+        }
+
+        private void PreloadAssembliesOverride(Entrypoint.GameAssemblyLoader assemblyLoader)
+        {
+            Logger.Log($"Preloading override assemblies from `{Paths.GetRelativePath(Paths.AssembliesOverrideDirectory)}` into {Entrypoint.AppDomainNameUnity}:");
+            foreach (var file in Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll").OrderBy(p => p))
             {
                 Logger.Log($"\t{Path.GetFileName(file)}");
-                Assembly.LoadFile(file);
+                assemblyLoader.LoadFile(file);
             }
+        }
+
+        internal bool ShouldRegisterShimInjectorPatches => _shimInjector.Enabled;
+
+        // used by patches
+        internal void InjectShimIfNecessary(ref string path)
+        {
+            _shimInjector.InjectShimIfNecessary(ref path);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ModTekPreloader.Harmony12X;
@@ -12,15 +13,21 @@ namespace ModTekPreloader.Injector
     {
         private readonly Dictionary<string, AssemblyBag> assemblies = new Dictionary<string, AssemblyBag>();
         private readonly List<string> searchDirectories;
+        private readonly DynamicShimInjector _shimInjector;
 
-        internal AssemblyCache()
+        internal AssemblyCache(DynamicShimInjector shimInjector)
         {
+            _shimInjector = shimInjector;
             searchDirectories = new List<string>
             {
                 Paths.AssembliesOverrideDirectory,
                 Paths.ModTekDirectory,
                 Paths.ManagedDirectory
             };
+            if (shimInjector.Enabled)
+            {
+                searchDirectories.Insert(0, Paths.Harmony12XDirectory);
+            }
         }
 
         public AssemblyDefinition Resolve(AssemblyNameReference name)
@@ -35,7 +42,8 @@ namespace ModTekPreloader.Injector
             if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
             {
                 var assembly = SearchAssembly(reference, parameters);
-                assemblyBag = new AssemblyBag(assembly);
+                var wasShimmed = _shimInjector.DetectAndPatchHarmony(assembly);
+                assemblyBag = new AssemblyBag(assembly, wasShimmed);
                 assemblies[reference.Name] = assemblyBag;
             }
 
@@ -44,6 +52,16 @@ namespace ModTekPreloader.Injector
 
         private AssemblyDefinition SearchAssembly(AssemblyNameReference reference, ReaderParameters parameters)
         {
+            // TODO allow Harmony modifications
+            // TODO allow all Harmony12X versions
+            if (reference.Name.StartsWith("OHarmony"))
+            {
+                var version = reference.Version;
+                if (!(version.Major == 1 && version.Minor == 2))
+                {
+                    throw new NotSupportedException("Missing harmony version number, only 1.2 is supported for assembly definition loading for now.");
+                }
+            }
             var searchPattern = $"{reference.Name}.dll";
             foreach (var searchDirectory in searchDirectories)
             {
@@ -62,10 +80,16 @@ namespace ModTekPreloader.Injector
             foreach (var kv in assemblies.OrderBy(kv => kv.Key))
             {
                 var name = kv.Key;
-                var assembly = kv.Value;
-                if (!assembly.CheckIfChanged(out var serialized))
+                var bag = kv.Value;
+                if (!bag.CheckIfChanged(out var serialized))
                 {
                     continue;
+                }
+                // TODO allow Harmony modifications
+                if (name.StartsWith("OHarmony"))
+                {
+                    Logger.Log($"\t {name} not saved. Modifying harmony assemblies is not supported.");
+                    return;
                 }
                 var path = Path.Combine(Paths.AssembliesInjectedDirectory, $"{name}.dll");
                 Logger.Log($"\t{Path.GetFileName(path)}");
@@ -73,7 +97,7 @@ namespace ModTekPreloader.Injector
             }
         }
 
-        internal void SaveAssembliesPublicizedToDisk()
+        internal void MakeAssembliesPublicAndSaveToDisk()
         {
             Paths.SetupCleanDirectory(Paths.AssembliesPublicizedDirectory);
             AssemblyPublicizer.MakePublic(this);
@@ -107,12 +131,11 @@ namespace ModTekPreloader.Injector
             private readonly bool NeverChanged;
             private readonly byte[] Serialized;
 
-            public AssemblyBag(AssemblyDefinition definition)
+            public AssemblyBag(AssemblyDefinition definition, bool hasAlreadyChanged)
             {
                 Definition = definition;
-                var hasChanged = HarmonyInteropFix.DetectAndPatchHarmony(definition);
-                AlwaysChanged = hasChanged || AlwaysChangedAssemblies.Contains(Name);
-                NeverChanged = !hasChanged && NeverChangedAssemblies.Contains(Name);
+                AlwaysChanged = hasAlreadyChanged || AlwaysChangedAssemblies.Contains(Name);
+                NeverChanged = !hasAlreadyChanged && NeverChangedAssemblies.Contains(Name);
                 Serialized = AlwaysChanged || NeverChanged ? null : Serialize(definition);
             }
 

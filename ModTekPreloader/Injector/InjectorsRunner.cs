@@ -2,66 +2,92 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Doorstop;
+using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Injector
 {
-    internal static class InjectorsRunner
+    internal class InjectorsRunner : IDisposable
     {
-        internal static void RunInjectors()
+        private readonly AssemblyCache _assemblyCache;
+        private readonly InjectionCacheManifest _injectionCacheManifest;
+        internal InjectorsRunner(DynamicShimInjector shimInjector)
         {
-            var cacheManifest = InjectionCacheManifest.Load();
-            if (cacheManifest.IsUpToDate)
-            {
-                Logger.Log($"Skipping injection, cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
-                return;
-            }
-            using (var assemblyCache = new AssemblyCache())
-            {
-                var parameters = new object[]
-                {
-                    assemblyCache
-                };
+            _assemblyCache = new AssemblyCache(shimInjector);
+            _injectionCacheManifest = new InjectionCacheManifest();
+        }
 
+        internal bool IsUpToDate => _injectionCacheManifest.IsUpToDate;
+
+        internal void RunInjectors()
+        {
+            Logger.Log($"Searching injector assemblies in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
+            foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
+            {
+                SearchInjectorEntrypointAndInvoke(injectorPath);
+            }
+        }
+
+        internal void SaveToDisk()
+        {
+            _assemblyCache.SaveAssembliesToDisk();
+            _assemblyCache.MakeAssembliesPublicAndSaveToDisk();
+            _injectionCacheManifest.RefreshAndSave();
+        }
+
+        // force load assemblies in case they can't be found
+        internal void PreloadAssembliesInjected(Entrypoint.GameAssemblyLoader assemblyLoader)
+        {
+            Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}` into {Entrypoint.AppDomainNameUnity}:");
+            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
+            {
+                Logger.Log($"\t{Path.GetFileName(file)}");
+                assemblyLoader.LoadFile(file);
+            }
+        }
+
+        private void SearchInjectorEntrypointAndInvoke(string injectorPath)
+        {
+            Logger.Log($"\t{Path.GetFileName(injectorPath)}");
+            var injector = Assembly.LoadFile(injectorPath);
+            foreach (var injectMethod in injector
+                         .GetTypes()
+                         .Where(t => t.Name == "Injector")
+                         .Select(t => t.GetMethod("Inject", BindingFlags.Public | BindingFlags.Static))
+                         .Where(m => m != null))
+            {
+                var name = injector.GetName().Name;
+
+                InvokeInjector(name, injectMethod);
+                break;
+            }
+        }
+
+        private void InvokeInjector(string name, MethodInfo injectMethod)
+        {
+            using (var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " })
+            using (var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " })
+            {
                 var originalConsoleOut = Console.Out;
                 var originalConsoleError = Console.Error;
-
-                Logger.Log($"Searching injector dlls in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
-                foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
+                Console.SetOut(infoLogger);
+                Console.SetError(errorLogger);
+                try
                 {
-                    Logger.Log($"\t{Path.GetFileName(injectorPath)}");
-                    var injector = Assembly.LoadFile(injectorPath);
-                    foreach (var injectMethod in injector
-                                 .GetTypes()
-                                 .Where(t => t.Name == "Injector")
-                                 .Select(t => t.GetMethod("Inject", BindingFlags.Public | BindingFlags.Static))
-                                 .Where(m => m != null))
-                    {
-                        var name = injector.GetName().Name;
-
-                        using (var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " })
-                        using (var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " })
-                        {
-                            Console.SetOut(infoLogger);
-                            Console.SetError(errorLogger);
-                            try
-                            {
-                                injectMethod.Invoke(null, parameters);
-                            }
-                            finally
-                            {
-                                Console.SetOut(originalConsoleOut);
-                                Console.SetError(originalConsoleError);
-                            }
-                        }
-                        break;
-                    }
+                    injectMethod.Invoke(null, new object[] { _assemblyCache });
                 }
-
-                assemblyCache.SaveAssembliesToDisk();
-                assemblyCache.SaveAssembliesPublicizedToDisk();
+                finally
+                {
+                    Console.SetOut(originalConsoleOut);
+                    Console.SetError(originalConsoleError);
+                }
             }
-            cacheManifest.Save();
+        }
+
+        public void Dispose()
+        {
+            _assemblyCache.Dispose();
         }
     }
 }

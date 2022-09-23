@@ -10,19 +10,24 @@ namespace ModTekPreloader.Injector
     {
         internal bool IsUpToDate { get; }
 
-        private InjectionCacheManifest(bool isUpToDate)
-        {
-            IsUpToDate = isUpToDate;
-        }
-
-        public static InjectionCacheManifest Load()
+        internal InjectionCacheManifest()
         {
             var expected = GetExpectedManifestContent();
             var actual = GetActualManifestContent();
-            return new InjectionCacheManifest(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase));
+            // File.WriteAllText("Mods/.modtek/cache_a.csv", actual);
+            // File.WriteAllText("Mods/.modtek/cache_e.csv", expected);
+            IsUpToDate = string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+            if (IsUpToDate)
+            {
+                Logger.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
+            }
+            else
+            {
+                Logger.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is outdated.");
+            }
         }
 
-        public void Save()
+        internal void RefreshAndSave()
         {
             var content = GetActualManifestContent();
             File.WriteAllText(Paths.InjectionCacheManifestFile, content);
@@ -66,7 +71,7 @@ namespace ModTekPreloader.Injector
             // output
             if (Directory.Exists(Paths.AssembliesInjectedDirectory))
             {
-                files.AddRange(Directory.GetFiles(Paths.AssembliesInjectedDirectory));
+                files.AddRange(Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll"));
             }
             if (Directory.Exists(Paths.AssembliesPublicizedDirectory))
             {

@@ -11,6 +11,15 @@ namespace ModTekPreloader.Loader
         [JsonProperty]
         internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
 
+/*
+        [JsonProperty]
+        internal readonly string WriteAssembliesToDisk_Description = "Assemblies are written to disk for debugging and caching purposes." +
+            " However if a user has problems with anti-virus software, it might be necessary skip any operation that saves assemblies to the disk.";
+
+        [JsonProperty]
+        [DefaultValue(true)]
+        internal bool WriteAssembliesToDisk = true;
+*/
         [JsonProperty]
         internal readonly string AssembliesToMakePublic_Description =
             $"All listed will be copied to `{Paths.GetRelativePath(Paths.AssembliesPublicizedDirectory)}`." +
