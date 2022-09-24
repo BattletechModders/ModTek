@@ -4,7 +4,7 @@ ModTek is a mod-loader for [HBS's BattleTech PC game](https://harebrained-scheme
 
 Since BattleTech 1.7, HBS introduced their own mod-loader based on an older ModTek version. It is missing many features of newer ModTek versions, including DLC support.
 
-# Installing ModTek 2.1.0 or later
+# Installing ModTek 3.0.0 or later
 
 Installation of ModTek is straightforward for windows. You download the `ModTek.zip` file and extract it.
 
