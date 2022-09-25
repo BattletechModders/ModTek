@@ -19,7 +19,7 @@ namespace ModTekPreloader.Logging
 
         private static string GetTime()
         {
-            return DateTime.Now.ToString("hh:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
+            return DateTime.Now.ToString("HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }
