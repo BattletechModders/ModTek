@@ -80,24 +80,37 @@ namespace ModTekPreloader.Harmony12X
             {
                 if (time.Equals(entry.Time) && File.Exists(entry.AbsolutePath))
                 {
-                    if (originalAbsolutePath != entry.AbsolutePath)
-                    {
-                        Logger.Log($"\tLoading shimmed assembly from `{Paths.GetRelativePath(entry.AbsolutePath)}`.");
-                    }
+                    LogLoading(originalAbsolutePath, entry.AbsolutePath);
                     return entry.AbsolutePath;
                 }
             }
 
+            var begin = DateTime.Now;
             var shimmedPath = DetectAndPatchHarmony(originalAbsolutePath);
             var absolutePath = shimmedPath ?? originalAbsolutePath;
             data[originalPath] = new CacheEntry(time, originalPath, absolutePath);
             Save();
+            LogLoading(originalAbsolutePath, absolutePath, begin);
             return absolutePath;
+        }
+
+        private static void LogLoading(string originalAbsolutePath, string absolutePath, DateTime? begin = null)
+        {
+            var text = $"Loading assembly from `{Paths.GetRelativePath(absolutePath)}`";
+            if (originalAbsolutePath != absolutePath)
+            {
+                text += $" instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
+            }
+            if (begin != null)
+            {
+                text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";
+            }
+            text += ".";
+            Logger.Log(text);
         }
 
         private string DetectAndPatchHarmony(string originalPath)
         {
-            Logger.Log($"\tOpening assembly to check if a harmony shim should be applied `{Paths.GetRelativePath(originalPath)}`.");
             var assemblyDefinition = AssemblyDefinition.ReadAssembly(originalPath);
             if (!_injector.DetectAndPatchHarmony(assemblyDefinition))
             {
@@ -105,7 +118,7 @@ namespace ModTekPreloader.Harmony12X
             }
 
             var path = Path.Combine(Paths.AssembliesShimmedDirectory, $"{assemblyDefinition.Name.Name}.dll");
-            Logger.Log($"\tSaving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
+            Logger.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
             assemblyDefinition.Write(path);
             return path;
         }

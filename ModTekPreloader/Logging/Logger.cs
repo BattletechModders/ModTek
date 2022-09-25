@@ -5,19 +5,21 @@ namespace ModTekPreloader.Logging
 {
     internal static class Logger
     {
-        private static readonly DateTime start;
-
-        static Logger()
+        internal static void Setup()
         {
-            start = DateTime.Now;
             Paths.CreateDirectoryForFile(Paths.LogFile);
             Paths.RotatePath(Paths.LogFile, 1);
-            File.WriteAllText(Paths.LogFile, start.ToString("o", System.Globalization.CultureInfo.InvariantCulture) + Environment.NewLine);
+            File.WriteAllText(Paths.LogFile, "");
         }
 
         internal static void Log(object obj)
         {
-            File.AppendAllText(Paths.LogFile, $"{(DateTime.Now-start).TotalSeconds:00.000} {obj}{Environment.NewLine}");
+            File.AppendAllText(Paths.LogFile, $"{GetTime()} {obj}{Environment.NewLine}");
+        }
+
+        private static string GetTime()
+        {
+            return DateTime.Now.ToString("hh:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }

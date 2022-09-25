@@ -161,10 +161,12 @@ namespace ModTek
             MTLogger.Info.Log(sliderText);
             HarmonyUtils.PrintHarmonySummary();
 
-            MTLogger.Info.Log("Assemblies loaded:" + AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => AssemblyUtil.GetLocationOrName(a))
-                .OrderBy(a => a)
-                .AsTextList()
+            File.WriteAllText(
+                FilePaths.AssembliesLoadedLogPath,
+                "Assemblies loaded:" + AppDomain.CurrentDomain.GetAssemblies()
+                    .Select(AssemblyUtil.GetLocationOrName)
+                    .OrderBy(a => a)
+                    .AsTextList()
             );
 
             yield return new ProgressReport(1, "Game now loading", "", true);

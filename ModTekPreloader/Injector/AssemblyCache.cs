@@ -42,8 +42,7 @@ namespace ModTekPreloader.Injector
             if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
             {
                 var assembly = SearchAssembly(reference, parameters);
-                var wasShimmed = _shimInjector.DetectAndPatchHarmony(assembly);
-                assemblyBag = new AssemblyBag(assembly, wasShimmed);
+                assemblyBag = new AssemblyBag(assembly);
                 assemblies[reference.Name] = assemblyBag;
             }
 
@@ -131,11 +130,11 @@ namespace ModTekPreloader.Injector
             private readonly bool NeverChanged;
             private readonly byte[] Serialized;
 
-            public AssemblyBag(AssemblyDefinition definition, bool hasAlreadyChanged)
+            public AssemblyBag(AssemblyDefinition definition)
             {
                 Definition = definition;
-                AlwaysChanged = hasAlreadyChanged || AlwaysChangedAssemblies.Contains(Name);
-                NeverChanged = !hasAlreadyChanged && NeverChangedAssemblies.Contains(Name);
+                AlwaysChanged = AlwaysChangedAssemblies.Contains(Name);
+                NeverChanged = NeverChangedAssemblies.Contains(Name);
                 Serialized = AlwaysChanged || NeverChanged ? null : Serialize(definition);
             }
 

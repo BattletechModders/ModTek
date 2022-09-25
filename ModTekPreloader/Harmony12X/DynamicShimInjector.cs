@@ -58,16 +58,6 @@ namespace ModTekPreloader.Harmony12X
 
         internal bool Enabled => maxAvailableShimVersion != null;
 
-        internal void PreloadAssembliesHarmonyX(Entrypoint.GameAssemblyLoader assemblyLoader)
-        {
-            Logger.Log($"Preloading Harmony12X assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` into {Entrypoint.AppDomainNameUnity}:");
-            foreach (var file in Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll").OrderBy(p => p))
-            {
-                Logger.Log($"\t{Path.GetFileName(file)}");
-                assemblyLoader.LoadFile(file);
-            }
-        }
-
         internal bool DetectAndPatchHarmony(AssemblyDefinition assemblyDefinition)
         {
             if (!Enabled)
@@ -87,12 +77,12 @@ namespace ModTekPreloader.Harmony12X
             var assToLoad = InteropAssemblyVersions.LastOrDefault(kv => VersionMatches(kv.Key, harmonyRef.Version));
             if (assToLoad.Key == null)
             {
-                Logger.Log($"\tAssembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to.");
+                Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to.");
                 return false;
             }
 
             // replace ref
-            Logger.Log($"\tAssembly {assemblyDefinition.Name.Name} being relinked to {assToLoad.Value}.");
+            Logger.Log($"Assembly {assemblyDefinition.Name.Name} being relinked to {assToLoad.Value}.");
             harmonyRef.Name = assToLoad.Value;
             return true;
         }
@@ -107,16 +97,19 @@ namespace ModTekPreloader.Harmony12X
                 throw new Exception("Should not be called");
             }
 
+            if (string.IsNullOrEmpty(uriOrPath))
+            {
+                return;
+            }
+
             try
             {
                 var originalPath = Path.GetFullPath(uriOrPath);
-                Logger.Log($"Checking if shim required for `{Paths.GetRelativePath(originalPath)}`.");
-                if (!originalPath.StartsWith(Paths.ManagedDirectory) && !originalPath.StartsWith(Paths.AssembliesInjectedDirectory) && !originalPath.StartsWith(Paths.AssembliesShimmedDirectory))
+                if (originalPath.StartsWith(Paths.AssembliesShimmedDirectory))
                 {
-                    // only main assembly should have harmony and we patched that already
-                    uriOrPath = cache.GetPathToShimmedAssembly(originalPath);
+                    return;
                 }
-                Logger.Log($"Finished checking.");
+                uriOrPath = cache.GetPathToShimmedAssembly(originalPath);
             }
             catch (Exception e)
             {

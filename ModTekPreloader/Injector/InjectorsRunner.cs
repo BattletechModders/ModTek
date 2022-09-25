@@ -36,17 +36,6 @@ namespace ModTekPreloader.Injector
             _injectionCacheManifest.RefreshAndSave();
         }
 
-        // force load assemblies in case they can't be found
-        internal void PreloadAssembliesInjected(Entrypoint.GameAssemblyLoader assemblyLoader)
-        {
-            Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}` into {Entrypoint.AppDomainNameUnity}:");
-            foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
-            {
-                Logger.Log($"\t{Path.GetFileName(file)}");
-                assemblyLoader.LoadFile(file);
-            }
-        }
-
         private void SearchInjectorEntrypointAndInvoke(string injectorPath)
         {
             Logger.Log($"\t{Path.GetFileName(injectorPath)}");
