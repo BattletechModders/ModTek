@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekPreloader", "ModTekPreloader\ModTekPreloader.csproj", "{35BBAEB2-0461-46BB-BC45-B9A39FD83DFF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekInjector", "ModTekInjector\ModTekInjector.csproj", "{4AC287C0-84D3-49A7-9BA5-87BBFAFE4496}"
+	ProjectSection(ProjectDependencies) = postProject
+		{35BBAEB2-0461-46BB-BC45-B9A39FD83DFF} = {35BBAEB2-0461-46BB-BC45-B9A39FD83DFF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
