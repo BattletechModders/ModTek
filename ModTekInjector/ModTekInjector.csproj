@@ -8,8 +8,10 @@
     <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
-    <AssemblySearchPaths>$(ReferencePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+    <AssemblySearchPaths>
+      $(BattleTechGameDir)\Mods\ModTek\;
+      $(BattleTechGameDir)\BattleTech_Data\Managed\
+    </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 
@@ -17,7 +19,7 @@
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader.log*" />
   </ItemGroup>
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
-    <Copy SourceFiles="$(OutDir)\$(AssemblyName).dll" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Injectors\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Injectors\" />
   </Target>
 
   <ItemGroup>
@@ -27,13 +29,13 @@
     <Reference Include="System.Core">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mono.Cecil">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
       <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Mono.Cecil">
-      <Version>0.11.4</Version>
     </PackageReference>
   </ItemGroup>
 </Project>

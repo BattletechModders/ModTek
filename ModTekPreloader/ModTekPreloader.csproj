@@ -9,10 +9,9 @@
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblySearchPaths>
-      $(BattleTechGameDir)\Mods\ModTek\Harmony12X;
-      $(BattleTechGameDir)\Mods\ModTek\AssembliesOverride;
+      $(BattleTechGameDir)\Mods\ModTek\Harmony12X\;
       $(BattleTechGameDir)\BattleTech_Data\Managed\;
-      $(AssemblySearchPaths)
+      {HintPathFromItem}
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
