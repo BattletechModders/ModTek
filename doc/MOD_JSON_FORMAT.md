@@ -27,7 +27,7 @@
 
 # The ModTek `mod.json` format
 
-Every ModTek mod needs a `mod.json` folder in the root of its directory i.e. `\BATTLETECH\Mods\MyAwesomeMod\mod.json`. This file contains information about your mod, serves as a table of contents, and tells ModTek how your mod should be loaded.
+Every ModTek mod needs a `mod.json` folder in the root of its directory i.e. `/BATTLETECH/Mods/MyAwesomeMod/mod.json`. This file contains information about your mod, serves as a table of contents, and tells ModTek how your mod should be loaded.
 
 The only field in this file that is *explicitly* required is the `Name`, which serves as a ***unique identifier*** for your mod for each given user's install. If two mods have the same name and the games tries to launch, the first mod that loads wins and the second mod simply isn't loaded.
 

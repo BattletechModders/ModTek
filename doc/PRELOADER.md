@@ -23,7 +23,7 @@
   or [RogueTechPerfFixesInjector](https://github.com/BattletechModders/RogueTechPerfFixes/blob/master/RogueTechPerfFixesInjector/RogueTechPerfFixesInjector.csproj)
   on how an injector works.
 - Only assemblies resolved and modified as a AssemblyDefinition will be loaded into the game, make sure to only use the resolver interface in the Inject method.
-- Injectors are loaded and run in the order of their names from `Mods\ModTek\Injectors\`.
+- Injectors are loaded and run in the order of their names from `Mods/ModTek/Injectors/`.
 - The preloader searches for a class named `Injector` with a `public static void Inject` method, that then will be called with a parameter of type `Mono.Cecil.IAssemblyResolver`.
   > ```
   > internal static class Injector
@@ -35,9 +35,9 @@
   > }
   > ```
 - Injectors run in their own AppDomain. All directly loaded dlls (via Assembly.Load or due to reference in Assembly) during the injection phase will be lost.
-- Console output is redirected into `Mods\.modtek\ModTekPreloader.log`, use `Console.WriteLine` or `Console.Error.WriteLine` instead of writing a logger.
-- Modified assemblies (that were resolved earlier via the resolver) are then written to and loaded from `Mods\.modtek\AssembliesInjected\`.
-- Injections are cached unless the inputs changed, that includes injector assemblies themselves and any files in `Mods\ModTek\Injectors\`.
+- Console output is redirected into `Mods/.modtek/ModTekPreloader.log`, use `Console.WriteLine` or `Console.Error.WriteLine` instead of writing a logger.
+- Modified assemblies (that were resolved earlier via the resolver) are then written to and loaded from `Mods/.modtek/AssembliesInjected/`.
+- Injections are cached unless the inputs changed, that includes injector assemblies themselves and any files in `Mods/ModTek/Injectors/`.
   Add configuration files for injectors in that folder, so any time a user changes an injector setting, the cache gets invalidated.
 
 ## Publicized Assemblies
@@ -54,5 +54,5 @@
 - Avoids the need to write reflection tools or wrappers to access private stuff, leads to cleaner and faster code.
 - Requires that dlls using publicized assemblies are marked as unsafe, to disable runtime access checks. Put into your csproj:
   > ```<AllowUnsafeBlocks>true</AllowUnsafeBlocks>```
-- Make your mod reference `Mods\.modtek\AssembliesPublicized\`:
+- Make your mod reference `Mods/.modtek/AssembliesPublicized/`:
   > ```<AssemblySearchPaths>$(BattleTechGameDir)\Mods\.modtek\AssembliesPublicized\;$(BattleTechGameDir)\BattleTech_Data\Managed\</AssemblySearchPaths>```

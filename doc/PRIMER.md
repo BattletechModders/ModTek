@@ -1,19 +1,19 @@
 # Anatomy of a ModTek Mod
 
 ```
-\BATTLETECH\Mods\
-    \ReallyCoolMod\
+/BATTLETECH/Mods/
+    /ReallyCoolMod/
         mod.json
         LegomanCoolMod.dll
 
-        MyCustomWeaponDefsFolder\
+        MyCustomWeaponDefsFolder/
             Weapon_UAC5.json
             Weapon_LB10_X.json
 
-        MyCustomMech\
+        MyCustomMech/
             mechdef_my_super_mech.json
 
-        StreamingAssets\data\weapon\
+        StreamingAssets/data/weapon/
             Weapon_Autocannon_AC5_0-Stock.json
 ```
 
@@ -36,8 +36,8 @@ Here's an example `mod.json`:
     "DLLEntryPoint": "CoolModNamespace.CoolModClass.CoolModPublicStaticMethod",
 
     "Manifest": [
-        { "Type": "WeaponDef", "Path": "MyCustomWeaponDefsFolder\\" },
-        { "Type": "MechDef", "Path": "MyCustomMech\\mechdef_my_super_mech.json" }
+        { "Type": "WeaponDef", "Path": "MyCustomWeaponDefsFolder/" },
+        { "Type": "MechDef", "Path": "MyCustomMech/mechdef_my_super_mech.json" }
     ],
 
     "Settings": {
@@ -49,7 +49,7 @@ Here's an example `mod.json`:
 
 The only required field is "Name" which must be **unique** between all installed mods in a session. The other fields are optional with some having default values, but it is highly recommended that you fill them in for mods intended for distribution. Many of those fields are self-explanatory -- but currently they are only read at game startup. Again, you can read about the `mod.json` format [in-depth here](https://github.com/BattletechModders/ModTek/wiki/The-mod.json-format).
 
-The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `\MyModDirectory\StreamingAssets\` are mirrors of base game files in contained in `\BattleTech_Data\StreamingAssets\` and will load those files without needing to be told about them.
+The "Manifest" entry here is of particular note, as this will load files into the `VersionManifest` at load. By default, ModTek assumes that files in `/MyModDirectory/StreamingAssets/` are mirrors of base game files in contained in `/BattleTech_Data/StreamingAssets/` and will load those files without needing to be told about them.
 
 # DLL Mods
 
@@ -74,7 +74,7 @@ For JSON files of specific types, if a file is loaded that has the same ID as a 
 }
 ```
 
-`\BoostedAC5\StreamingAssets\data\weapon\Weapon_Autocannon_AC5_0-Stock.json`:
+`/BoostedAC5/StreamingAssets/data/weapon/Weapon_Autocannon_AC5_0-Stock.json`:
 
 ```JSON
 {

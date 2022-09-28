@@ -9,7 +9,8 @@ ModTek 0.7.8 and above supports adding and update Tags and TagSets in the Metada
 ],
 ```
 
-(!) There is currently no way to delete CustomTags or CustomTagSets. These are modified in the ModTek MDDB copy (located in `BATTLETECH\Mods\.modtek\Database\`) and should not alter the base MDDB located in the `BATTLETECH\Data` directory.
+> **Warning**
+> There is currently no way to delete CustomTags or CustomTagSets. These are modified in the ModTek MDDB copy (located in `BATTLETECH/Mods/.modtek/Database/`) and should not alter the base MDDB located in the `BATTLETECH/Data` directory.
 
 Each CustomTag needs to be defined in a .json file with the following structure:  
 ```json  
