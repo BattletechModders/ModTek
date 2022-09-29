@@ -22,25 +22,28 @@ namespace ModTekPreloader.Harmony12X
             [HarmonyPrefix]
             private static void LoadFrom_Prefix(ref string assemblyFile)
             {
-                _preloader.InjectShimIfNecessary(ref assemblyFile);
+                try
+                {
+                    _preloader.InjectShimIfNecessary(ref assemblyFile);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("Exception injecting shim: " + e);
+                }
             }
 
             [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
             [HarmonyPrefix]
             private static void LoadAssemblyRaw_Prefix(ref byte[] rawAssembly)
             {
-                // TODO implement
-            }
-
-            [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
-            [HarmonyPostfix]
-            private static void LoadAssemblyRaw_Postfix(ref byte[] rawAssembly, ref Assembly __result)
-            {
-                if (__result != null && (__result.GetName().Name.StartsWith("DMDASM.") || __result.GetName().Name == "MonoMod.Utils.GetManagedSizeHelper"))
+                try
                 {
-                    return;
+                    _preloader.InjectShimIfNecessary(ref rawAssembly);
                 }
-                Logger.Log($"Warning: LoadAssemblyRaw called with Assembly {__result?.GetName().Name} of size {rawAssembly.Length} bytes, shimming does not support loading this way." + Environment.NewLine + Environment.StackTrace);
+                catch (Exception e)
+                {
+                    Logger.Log("Exception injecting shim: " + e);
+                }
             }
         }
     }

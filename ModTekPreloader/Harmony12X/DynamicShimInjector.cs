@@ -116,5 +116,42 @@ namespace ModTekPreloader.Harmony12X
                 Logger.Log("Error preparing assembly load for shim: " + e);
             }
         }
+
+        internal void InjectShimIfNecessary(ref byte[] rawAssembly)
+        {
+            if (!Enabled)
+            {
+                throw new Exception("Should not be called");
+            }
+
+            // TODO implement caching if needed
+            // probably a checksum -> (no shimming necessary || path to shimmed assembly)
+            using (var stream = new MemoryStream(rawAssembly, false))
+            using (var definition = AssemblyDefinition.ReadAssembly(stream))
+            {
+                var name = definition.Name.Name;
+                if (name.StartsWith("DMDASM.") || name == "MonoMod.Utils.GetManagedSizeHelper")
+                {
+                    return;
+                }
+
+                var begin = DateTime.Now;
+                if (!DetectAndPatchHarmony(definition))
+                {
+                    return;
+                }
+
+                using (var newStream = new MemoryStream(rawAssembly.Length * 2))
+                {
+                    definition.Write(newStream);
+                    rawAssembly = newStream.ToArray();
+                }
+
+                var text = $"Loading shimmed assembly {name} from memory";
+                text += $", shimming took {(DateTime.Now-begin).TotalSeconds:#0.000}s";
+                text += ".";
+                Logger.Log(text);
+            }
+        }
     }
 }

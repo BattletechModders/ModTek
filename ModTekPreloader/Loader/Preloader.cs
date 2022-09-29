@@ -96,5 +96,9 @@ namespace ModTekPreloader.Loader
         {
             _shimInjector.InjectShimIfNecessary(ref path);
         }
+        internal void InjectShimIfNecessary(ref byte[] rawAssembly)
+        {
+            _shimInjector.InjectShimIfNecessary(ref rawAssembly);
+        }
     }
 }
