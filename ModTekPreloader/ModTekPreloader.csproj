@@ -14,7 +14,6 @@
       {HintPathFromItem}
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstep</DoorstopIntDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,22 +28,18 @@
     </ItemGroup>
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
-<!--    <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
-<!--    <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />-->
   </Target>
 
   <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
       <DoorstopUrl>https://github.com/CptMoore/UnityDoorstop/releases/download/latest/doorstop_all_in_one_4.0.1steamfix.zip</DoorstopUrl>
+      <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstop</DoorstopIntDir>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
     <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_all_in_one_4.0.1steamfix.zip" DestinationFolder="$(DoorstopIntDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_release\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_release\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_release\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)" />
-<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_release\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
-<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_release\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
-<!--    <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_release\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\release" />-->
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_verbose\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_verbose\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_verbose\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />

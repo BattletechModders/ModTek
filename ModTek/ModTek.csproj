@@ -15,6 +15,9 @@
     <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
 
+    <!-- Optional: Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
+    <NoWarn>CS0649</NoWarn>
+
     <!-- Optional: Allows to use publicized DLLs -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
