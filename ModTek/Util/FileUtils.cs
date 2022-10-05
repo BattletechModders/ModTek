@@ -11,7 +11,7 @@ namespace ModTek.Util
         // this is more an informative path that works for diagnosing issues
         internal static string GetRelativePath(string absolutePath)
         {
-            return new Uri(FilePaths.GameDirectory).MakeRelativeUri(new Uri(absolutePath)).ToString();
+            return new Uri(FilePaths.BaseDirectory).MakeRelativeUri(new Uri(absolutePath)).ToString();
         }
 
         // this is the correct relative path with proper directory separators for internal use

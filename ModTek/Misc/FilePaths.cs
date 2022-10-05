@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using UnityEngine;
 
 namespace ModTek.Misc
@@ -9,10 +10,14 @@ namespace ModTek.Misc
 
         private const string MDD_FILE_NAME = "MetadataDatabase.db";
 
+        private const string ENV_DOORSTOP_MANAGED_FOLDER_DIR = "DOORSTOP_MANAGED_FOLDER_DIR";
+        internal static readonly string ManagedDirectory = Environment.GetEnvironmentVariable(ENV_DOORSTOP_MANAGED_FOLDER_DIR)
+            ?? throw new Exception($"Can't find {ENV_DOORSTOP_MANAGED_FOLDER_DIR}");
+        internal static readonly string BaseDirectory = Path.GetFullPath(Path.Combine(ManagedDirectory, "..", ".."));
+
         internal static readonly string StreamingAssetsDirectory = Application.streamingAssetsPath;
-        internal static readonly string GameDirectory = Directory.GetCurrentDirectory();
         internal static readonly string MDDBPath = Path.Combine(StreamingAssetsDirectory, "MDD", MDD_FILE_NAME);
-        internal static readonly string ModsDirectory = Path.Combine(GameDirectory, "Mods");
+        internal static readonly string ModsDirectory = Path.Combine(BaseDirectory, "Mods");
         internal static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
         internal static readonly string TempModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
         internal static readonly string MergeCacheDirectory = Path.Combine(TempModTekDirectory, "Cache");

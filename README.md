@@ -6,7 +6,7 @@ Since BattleTech 1.7, HBS introduced their own mod-loader based on an older ModT
 
 # Installing ModTek 3.0.0 or later
 
-Installation of ModTek is straightforward for windows. You download the `ModTek.zip` file and extract it to the directory of the game.
+Installation of ModTek is straightforward for Windows. You download the `ModTek.zip` file and extract it to the directory of the game.
 
 1. Download the [latest stable release from github](https://github.com/BattletechModders/ModTek/releases).
 1. Extract the contents of the zip to `BATTLETECH/` so that the `Mods/` folder in the zip appears as `BATTLETECH/Mods/` and the [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) files (winhttp.dll etc..) appear directly under `BATTLETECH/`.
@@ -16,15 +16,11 @@ Installation of ModTek is straightforward for windows. You download the `ModTek.
 
 On game startup, ModTek decorates the version number found in the bottom left corner of the main menu with `/W MODTEK`. If you don't see this something has gone wrong.
 
-## Linux and macOS
-
-> **Note**
-> For macOS, use the following directory instead of the BATTLETECH directory for the installation instructions:
-> `~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/`
+## Linux
 
 The zip contains the UnityDoorstop script `run.sh` and libraries to run the game with.
 
-### Steam
+### Steam on Linux
 
 > **Note**
 > These instructions are based on the [Steam Guide for BepInEx](https://docs.bepinex.dev/master/articles/advanced/steam_interop.html).
@@ -36,12 +32,29 @@ Right mouse click on the game in the Steam library -> `Properties...` -> `SET LA
 Launch options for Linux:
 > `./run.sh %command%`
 
-Launch options for macOS:
-> `"~/Library/Application\ Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/run.sh" %command%`
+Use printed line as launch options.
 
-### Proton/Wine
+### Proton/Wine on Linux
 
 Using Proton or Wine is also supported, make sure the `winhttp.dll` from UnityDoorstop is loaded by setting the override to `native, builtin`.
+
+## macOS
+
+> **Note**
+> The installation instructions for macOS are similar to Linux, only differences are listed here.
+
+The base installation folder is the `Contents/Resources` directory within the .app Application packages.
+For a standard Steam installation that means the following path:
+> `~/"Library/Application Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/"`
+
+### Steam on macOS
+
+Launch options for macOS need to contain the absolute path to the run script.
+In a terminal, run this from the same location where the run script is:
+> `echo "\"$(pwd)/run.sh\" %command%"`
+
+The launch options should then look something like this:
+> `"/Users/ReplaceThisByYourUsername/Library/Application Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/run.sh" %command%`
 
 # Further Documentation
 
