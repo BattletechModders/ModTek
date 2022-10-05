@@ -1,8 +1,6 @@
 #!/bin/sh
 # Doorstop start script (heavily modified and cleaned up for ModTek use case)
 
-export DOORSTOP_ENABLED="1"
-export DOORSTOP_TARGET_ASSEMBLY="Mods/ModTek/ModTekPreloader.dll"
 export DOORSTOP_MONO_DEBUG_ENABLED="0"
 export DOORSTOP_MONO_DEBUG_ADDRESS="127.0.0.1:10000"
 export DOORSTOP_MONO_DEBUG_SUSPEND="0"
@@ -69,5 +67,8 @@ case ${os_type} in
         exit 1
     ;;
 esac
+
+export DOORSTOP_ENABLED="1"
+export DOORSTOP_TARGET_ASSEMBLY="${BASEDIR}/Mods/ModTek/ModTekPreloader.dll"
 
 exec "$executable_path" "$@"
