@@ -32,8 +32,6 @@ Right mouse click on the game in the Steam library -> `Properties...` -> `SET LA
 Launch options for Linux:
 > `./run.sh %command%`
 
-Use printed line as launch options.
-
 ### Proton/Wine on Linux
 
 Using Proton or Wine is also supported, make sure the `winhttp.dll` from UnityDoorstop is loaded by setting the override to `native, builtin`.
