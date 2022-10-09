@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using ModTek.Features.Logging;
 
 namespace ModTek.Util
@@ -33,33 +32,6 @@ namespace ModTek.Util
                 MTLogger.Warning.Log($"\t{fileName}: While loading a .dll, an exception occured", e);
                 return null;
             }
-        }
-
-        internal static IEnumerable<Assembly> GetAssembliesByPattern(string pattern)
-        {
-            var regex = new Regex(pattern);
-            return AppDomain.CurrentDomain.GetAssemblies().Where(a => regex.IsMatch(a.GetName().Name));
-        }
-
-        internal static Assembly GetAssemblyByName(string name)
-        {
-            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == name);
-        }
-
-        internal static IEnumerable<Type> GetTypesByPattern(string pattern, Assembly[] excludedAssemblies)
-        {
-            var regex = new Regex(pattern);
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !excludedAssemblies.Contains(a))
-                .SelectMany(GetTypesSafe)
-                .Where(t => t?.FullName != null && regex.IsMatch(t.FullName));
-        }
-
-        internal static Type GetTypeByName(string name)
-        {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetType(name))
-                .FirstOrDefault(type => type != null);
         }
 
         internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
