@@ -9,9 +9,8 @@
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblySearchPaths>
-      $(BattleTechGameDir)\Mods\ModTek\Harmony12X\;
-      $(BattleTechGameDir)\BattleTech_Data\Managed\;
-      {HintPathFromItem}
+      {HintPathFromItem};
+      $(BattleTechGameDir)\BattleTech_Data\Managed\
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
@@ -23,10 +22,13 @@
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
     <ItemGroup>
-      <OutDirFiles Include="$(OutDir)**" />
+      <ModTekDepFiles Include="$(OutDir)\Mono.Cecil*" />
+      <Harmony12XDeps Exclude="$(OutDir)\Mono.Cecil*;$(TargetPath)" Include="$(OutDir)**" />
       <DoorstopFiles Include="run.sh;doorstop_config.ini" />
     </ItemGroup>
-    <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
+    <Copy SourceFiles="@(ModTekDepFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
+    <Copy SourceFiles="@(Harmony12XDeps)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X\" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
   </Target>
 
@@ -58,9 +60,9 @@
     <Copy SourceFiles="@(FastHarmonyFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" Condition="'$(BattleTechGameDir)' != ''" />
   </Target>
 
-  <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony.dll')">
+  <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony12.dll')">
     <PropertyGroup>
-      <Harmony12XUrl>https://github.com/BattletechModders/ModTek/files/9619752/HarmonyXAssembliesOverride.zip</Harmony12XUrl>
+      <Harmony12XUrl>https://github.com/BattletechModders/ModTek/files/9742193/HarmonyXAssembliesOverride.zip</Harmony12XUrl>
       <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony12x</Harmony12XIntDir>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(Harmony12XUrl)" DestinationFolder="$(Harmony12XIntDir)" />
@@ -81,17 +83,11 @@
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
-    <Reference Include="0Harmony">
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Mono.Cecil">
-      <!-- newer versions do not work with Harmony12X -->
-      <Version>0.10.4</Version>
-    </PackageReference>
+    <PackageReference Include="HarmonyX" Version="2.10.0" />
   </ItemGroup>
 </Project>

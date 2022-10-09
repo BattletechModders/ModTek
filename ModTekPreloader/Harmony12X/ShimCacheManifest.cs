@@ -19,6 +19,7 @@ namespace ModTekPreloader.Harmony12X
             manifestHeader = Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll")
                 .OrderBy(f => f)
                 .Select(f => File.GetLastWriteTimeUtc(f).ToString("o", System.Globalization.CultureInfo.InvariantCulture) + ":" + Paths.GetRelativePath(f))
+                .Concat(HarmonyVersion.SupportedVersions.Select(x => x.ToString()))
                 .Aggregate("", (prev, item) => prev + ";" + item);
             Load();
         }

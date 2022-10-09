@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ModTekPreloader.Loader;
@@ -33,7 +32,7 @@ namespace ModTekPreloader.Harmony12X
             }
 
             Logger.Log($"Verifying HarmonyX related assemblies at `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
-            foreach (var harmonyVersion in HarmonyVersions)
+            foreach (var harmonyVersion in HarmonyVersion.SupportedVersions)
             {
                 var file = Path.Combine(Paths.Harmony12XDirectory, $"{harmonyVersion.Name}.dll");
                 if (!File.Exists(file))
@@ -43,39 +42,6 @@ namespace ModTekPreloader.Harmony12X
             }
 
             cache = new ShimCacheManifest(this);
-        }
-
-        private readonly List<HarmonyVersion> HarmonyVersions = new List<HarmonyVersion>
-        {
-            new HarmonyVersion("0Harmony12", new Version(1, 0), new Version(1, 3)),
-            new HarmonyVersion("0Harmony20", new Version(2, 0), new Version(2, 1)),
-            new HarmonyVersion("0Harmony", new Version(2, 9), new Version(2, 10)),
-            /* TODO prepare harmonyX assemblies (for quickfix use dnSpy or cecil, for proper fix setup full repo with everything inside and gitflow working)
-            new HarmonyVersion("0Harmony109", new Version(1, 0), new Version(1, 1)),
-            new HarmonyVersion("0Harmony12", new Version(1, 1), new Version(1, 3)),
-            new HarmonyVersion("0HarmonyX20", new Version(2, 0), new Version(2, 1)),
-            new HarmonyVersion("0HarmonyX29", new Version(2, 9), new Version(2, 10)),
-            */
-        };
-
-        private class HarmonyVersion
-        {
-            public HarmonyVersion(string name, Version lowerBoundInclusive, Version upperBoundExclusive)
-            {
-                Name = name;
-                _lowerBoundInclusive = lowerBoundInclusive;
-                _upperBoundExclusive = upperBoundExclusive;
-            }
-
-            internal string Name { get; }
-
-            private Version _lowerBoundInclusive;
-            private Version _upperBoundExclusive;
-
-            internal bool IsMatch(Version version)
-            {
-                return _lowerBoundInclusive <= version && version < _upperBoundExclusive;
-            }
         }
 
         internal bool DetectAndPatchHarmony(AssemblyDefinition assemblyDefinition)
@@ -95,7 +61,7 @@ namespace ModTekPreloader.Harmony12X
             }
 
             // find compatible shim
-            var compatibleHarmonyAssembly = HarmonyVersions.FirstOrDefault(h => h.IsMatch(harmonyReference.Version));
+            var compatibleHarmonyAssembly = HarmonyVersion.SupportedVersions.FirstOrDefault(h => h.IsMatch(harmonyReference.Version));
             if (compatibleHarmonyAssembly == null)
             {
                 Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to for harmony {harmonyReference.Version}.");
@@ -109,7 +75,7 @@ namespace ModTekPreloader.Harmony12X
             }
 
             // replace ref
-            Logger.Log($"Assembly {assemblyDefinition.Name.Name} using 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
+            Logger.Log($"Assembly {assemblyDefinition.Name.Name} linked to 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
             harmonyReference.Name = compatibleHarmonyAssembly.Name;
             return true;
         }
