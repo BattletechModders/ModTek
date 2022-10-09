@@ -2,25 +2,25 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Doorstop;
 using ModTekPreloader.Loader;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
 namespace ModTekPreloader.Harmony12X
 {
-    // from BepInEx 5
+    /* from BepInEx 5
+     * https://github.com/BepInEx/HarmonyInteropDlls/
+     * https://github.com/BepInEx/BepInEx.Harmony
+     */
     internal class DynamicShimInjector
     {
-        private readonly SortedDictionary<Version, string> InteropAssemblyVersions = new SortedDictionary<Version, string>();
-        private readonly HashSet<string> InteropAssemblyNames = new HashSet<string>();
-        private readonly Version maxAvailableShimVersion;
+        internal bool Enabled => Config.Instance.Harmony12XEnabled;
+
         private readonly ShimCacheManifest cache;
 
         internal DynamicShimInjector()
         {
-            if (!Config.Instance.Harmony12XEnabled)
+            if (!Enabled)
             {
                 Logger.Log("HarmonyX not enabled, not loading interoperability.");
                 return;
@@ -32,31 +32,51 @@ namespace ModTekPreloader.Harmony12X
                 throw new Exception($"HarmonyX can't be loaded, directory `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` missing.");
             }
 
-            Logger.Log($"Loading HarmonyX related assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` into {Entrypoint.AppDomainNamePreloader}.");
-            foreach (var file in Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll"))
+            Logger.Log($"Verifying HarmonyX related assemblies at `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
+            foreach (var harmonyVersion in HarmonyVersions)
             {
-                var shimText = "";
-                if (Path.GetFileName(file).StartsWith("0Harmony"))
+                var file = Path.Combine(Paths.Harmony12XDirectory, $"{harmonyVersion.Name}.dll");
+                if (!File.Exists(file))
                 {
-                    using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(file))
-                    {
-                        if (assemblyDefinition.Name.Name != "0Harmony")
-                        {
-                            shimText = $" ; Shim found named {assemblyDefinition.Name.Name} for Harmony version {assemblyDefinition.Name.Version}";
-                            InteropAssemblyVersions.Add(assemblyDefinition.Name.Version, assemblyDefinition.Name.Name);
-                            InteropAssemblyNames.Add(assemblyDefinition.Name.Name);
-                        }
-                    }
+                    throw new Exception($"Can't find HarmonyX related assembly under {file}.");
                 }
-                Logger.Log($"\t{Path.GetFileName(file)}{shimText}");
-                // TODO allow Harmony modifications
-                Assembly.LoadFile(file);
             }
-            maxAvailableShimVersion = InteropAssemblyVersions.LastOrDefault().Key;
+
             cache = new ShimCacheManifest(this);
         }
 
-        internal bool Enabled => maxAvailableShimVersion != null;
+        private readonly List<HarmonyVersion> HarmonyVersions = new List<HarmonyVersion>
+        {
+            new HarmonyVersion("0Harmony12", new Version(1, 0), new Version(1, 3)),
+            new HarmonyVersion("0Harmony20", new Version(2, 0), new Version(2, 1)),
+            new HarmonyVersion("0Harmony", new Version(2, 9), new Version(2, 10)),
+            /* TODO prepare harmonyX assemblies (for quickfix use dnSpy or cecil, for proper fix setup full repo with everything inside and gitflow working)
+            new HarmonyVersion("0Harmony109", new Version(1, 0), new Version(1, 1)),
+            new HarmonyVersion("0Harmony12", new Version(1, 1), new Version(1, 3)),
+            new HarmonyVersion("0HarmonyX20", new Version(2, 0), new Version(2, 1)),
+            new HarmonyVersion("0HarmonyX29", new Version(2, 9), new Version(2, 10)),
+            */
+        };
+
+        private class HarmonyVersion
+        {
+            public HarmonyVersion(string name, Version lowerBoundInclusive, Version upperBoundExclusive)
+            {
+                Name = name;
+                _lowerBoundInclusive = lowerBoundInclusive;
+                _upperBoundExclusive = upperBoundExclusive;
+            }
+
+            internal string Name { get; }
+
+            private Version _lowerBoundInclusive;
+            private Version _upperBoundExclusive;
+
+            internal bool IsMatch(Version version)
+            {
+                return _lowerBoundInclusive <= version && version < _upperBoundExclusive;
+            }
+        }
 
         internal bool DetectAndPatchHarmony(AssemblyDefinition assemblyDefinition)
         {
@@ -66,29 +86,33 @@ namespace ModTekPreloader.Harmony12X
             }
 
             // has harmony ref
-            var harmonyRef = assemblyDefinition.MainModule.AssemblyReferences
-                .FirstOrDefault(a => a.Name.StartsWith("0Harmony") && !InteropAssemblyNames.Contains(a.Name));
-            if (harmonyRef == null)
+            var harmonyReference = assemblyDefinition.MainModule.AssemblyReferences
+                .SingleOrDefault(a => a.Name == "0Harmony");
+            if (harmonyReference == null)
             {
+                // Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no harmony reference.");
                 return false;
             }
 
             // find compatible shim
-            var assToLoad = InteropAssemblyVersions.LastOrDefault(kv => VersionMatches(kv.Key, harmonyRef.Version));
-            if (assToLoad.Key == null)
+            var compatibleHarmonyAssembly = HarmonyVersions.FirstOrDefault(h => h.IsMatch(harmonyReference.Version));
+            if (compatibleHarmonyAssembly == null)
             {
-                Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to.");
+                Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to for harmony {harmonyReference.Version}.");
+                return false;
+            }
+
+            if (compatibleHarmonyAssembly.Name == "0Harmony")
+            {
+                // Logger.Log($"Assembly {assemblyDefinition.Name.Name} already uses latest harmony.");
                 return false;
             }
 
             // replace ref
-            Logger.Log($"Assembly {assemblyDefinition.Name.Name} being relinked to {assToLoad.Value}.");
-            harmonyRef.Name = assToLoad.Value;
+            Logger.Log($"Assembly {assemblyDefinition.Name.Name} using 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
+            harmonyReference.Name = compatibleHarmonyAssembly.Name;
             return true;
         }
-
-        private bool VersionMatches(Version cmpV, Version refV) =>
-            refV <= maxAvailableShimVersion && cmpV.Major == refV.Major && cmpV.Minor == refV.Minor && cmpV <= refV;
 
         internal void InjectShimIfNecessary(ref string uriOrPath)
         {

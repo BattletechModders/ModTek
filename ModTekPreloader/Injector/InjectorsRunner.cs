@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Doorstop;
 using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Logging;
 
