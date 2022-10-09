@@ -75,31 +75,21 @@ namespace ModTekPreloader.Harmony12X
             }
 
             // replace ref
-            Logger.Log($"Assembly {assemblyDefinition.Name.Name} linked to 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
+            Logger.Log($"Assembly {assemblyDefinition.Name.Name} using 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
             harmonyReference.Name = compatibleHarmonyAssembly.Name;
             return true;
         }
 
-        internal void InjectShimIfNecessary(ref string uriOrPath)
+        internal void InjectShimIfNecessary(ref string path)
         {
             if (!Enabled)
             {
                 throw new Exception("Should not be called");
             }
 
-            if (string.IsNullOrEmpty(uriOrPath))
-            {
-                return;
-            }
-
             try
             {
-                var originalPath = Path.GetFullPath(uriOrPath);
-                if (originalPath.StartsWith(Paths.AssembliesShimmedDirectory))
-                {
-                    return;
-                }
-                uriOrPath = cache.GetPathToShimmedAssembly(originalPath);
+                path = cache.GetPathToShimmedAssembly(path);
             }
             catch (Exception e)
             {

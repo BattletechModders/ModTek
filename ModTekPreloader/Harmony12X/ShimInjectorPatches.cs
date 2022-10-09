@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using HarmonyLib;
 using ModTekPreloader.Loader;
@@ -13,6 +14,7 @@ namespace ModTekPreloader.Harmony12X
         {
             _preloader = preloader;
             Harmony.CreateAndPatchAll(typeof(Patches), "ModTekPreloader.Harmony12X");
+            AssemblyOriginalPathTracker.SetupAssemblyResolve();
         }
 
         // nesting avoids this being loaded by Utilities.BuildExtensionMethodCacheForType
@@ -24,12 +26,38 @@ namespace ModTekPreloader.Harmony12X
             {
                 try
                 {
+                    if (string.IsNullOrEmpty(assemblyFile))
+                    {
+                        return;
+                    }
+
+                    assemblyFile = Path.GetFullPath(assemblyFile);
+                    if (assemblyFile.StartsWith(Paths.AssembliesShimmedDirectory))
+                    {
+                        return;
+                    }
+
+                    AssemblyOriginalPathTracker.AddAssemblyPathsInSameDirectory(assemblyFile);
                     _preloader.InjectShimIfNecessary(ref assemblyFile);
                 }
                 catch (Exception e)
                 {
                     Logger.Log("Exception injecting shim: " + e);
                 }
+            }
+
+            // allow mods to think they are still loaded from their original location
+            // hopefully doesn't mess up dnSpy
+            [HarmonyPatch(typeof(Assembly), nameof(Assembly.Location), MethodType.Getter)]
+            [HarmonyPrefix]
+            private static bool Location(Assembly __instance, ref string __result)
+            {
+                if (AssemblyOriginalPathTracker.TryGetLocation(__instance.GetName().Name, out var path))
+                {
+                    __result = path;
+                    return false;
+                }
+                return true;
             }
 
             [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
