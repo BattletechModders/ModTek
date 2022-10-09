@@ -2,7 +2,7 @@
 # Doorstop start script (heavily modified and cleaned up for ModTek use case)
 
 export DOORSTOP_MONO_DEBUG_ENABLED="0"
-export DOORSTOP_MONO_DEBUG_ADDRESS="127.0.0.1:10000"
+export DOORSTOP_MONO_DEBUG_ADDRESS="127.0.0.1:55555"
 export DOORSTOP_MONO_DEBUG_SUSPEND="0"
 
 ################################################################################
