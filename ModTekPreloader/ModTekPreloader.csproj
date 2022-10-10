@@ -1,4 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
+  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
+    <Error Text="BattleTechGameDir variable not set properly"/>
+  </Target>
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
@@ -20,7 +23,7 @@
     <Link Include="$(BattleTechGameDir)\Mods\ModTek\ModTekPreloader*" />
   </ItemGroup>
 
-  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
       <ModTekDepFiles Include="$(OutDir)\Mono.Cecil*" />
       <Harmony12XDeps Exclude="$(OutDir)\Mono.Cecil*;$(TargetPath)" Include="$(OutDir)**" />
@@ -32,7 +35,7 @@
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
   </Target>
 
-  <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\winhttp.dll')">
+  <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="!Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
       <DoorstopUrl>https://github.com/CptMoore/UnityDoorstop/releases/download/latest/doorstop_all_in_one_4.0.1steamfix.zip</DoorstopUrl>
       <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstop</DoorstopIntDir>
@@ -47,7 +50,7 @@
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_verbose\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
   </Target>
 
-  <Target Name="FastHarmonyFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
+  <Target Name="FastHarmonyFetch" BeforeTargets="PrepareForBuild" Condition="!Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
     <PropertyGroup>
       <FastHarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</FastHarmonyUrl>
       <FastHarmonyIntDir>$(MSBuildProjectExtensionsPath)\fastharmony</FastHarmonyIntDir>
@@ -57,10 +60,10 @@
     <ItemGroup>
       <FastHarmonyFiles Include="$(FastHarmonyIntDir)\*.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(FastHarmonyFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" Condition="'$(BattleTechGameDir)' != ''" />
+    <Copy SourceFiles="@(FastHarmonyFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" />
   </Target>
 
-  <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="'$(BattleTechGameDir)' != '' And !Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony12.dll')">
+  <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="!Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony12.dll')">
     <PropertyGroup>
       <Harmony12XUrl>https://github.com/BattletechModders/ModTek/files/9742193/HarmonyXAssembliesOverride.zip</Harmony12XUrl>
       <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony12x</Harmony12XIntDir>
@@ -70,7 +73,7 @@
     <ItemGroup>
       <Harmony12XFiles Include="$(Harmony12XIntDir)\*.dll;$(Harmony12XIntDir)\*.txt" />
     </ItemGroup>
-    <Copy SourceFiles="@(Harmony12XFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X" Condition="'$(BattleTechGameDir)' != ''" />
+    <Copy SourceFiles="@(Harmony12XFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X"/>
   </Target>
 
   <ItemGroup>

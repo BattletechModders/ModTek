@@ -1,5 +1,10 @@
 ﻿<!-- Required: Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
+  <!-- Required: Check if the BattleTechGameDir variable is correct set  -->
+  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
+    <Error Text="BattleTechGameDir variable not set properly"/>
+  </Target>
+
   <PropertyGroup>
     <!-- Required: All mods are libraries and produce a dll -->
     <OutputType>Library</OutputType>
@@ -27,8 +32,8 @@
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 
-  <!-- Optional: Copies the mod DLL to the mod directory -->
-  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(BattleTechGameDir)' != ''">
+  <!-- Required: Copies the mod DLL to the mod directory -->
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
       <OutDirFiles Include="$(OutDir)**" />
     </ItemGroup>
