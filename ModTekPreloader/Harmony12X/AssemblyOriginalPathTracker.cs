@@ -26,9 +26,14 @@ namespace ModTekPreloader.Harmony12X
             };
         }
 
+        private static readonly HashSet<string> ProcessedDirectories = new HashSet<string>();
         internal static void AddAssemblyPathsInSameDirectory(string assemblyFile)
         {
             var directory = Path.GetDirectoryName(assemblyFile);
+            if (!ProcessedDirectories.Add(directory))
+            {
+                return;
+            }
             if (!Directory.Exists(directory))
             {
                 return;
