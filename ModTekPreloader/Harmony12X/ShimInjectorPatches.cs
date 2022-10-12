@@ -13,6 +13,11 @@ namespace ModTekPreloader.Harmony12X
         internal static void Register(Preloader preloader)
         {
             _preloader = preloader;
+
+            // TODO move to ModTek once HarmonyX is confirmed fully working with RT
+            HarmonyLib.Tools.Logger.MessageReceived += (sender, args) => Logger.Log($"HarmonyX: {args.LogChannel}: {args.Message}");
+            HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.Warn | HarmonyLib.Tools.Logger.LogChannel.Error;
+
             Harmony.CreateAndPatchAll(typeof(Patches), "ModTekPreloader.Harmony12X");
             AssemblyOriginalPathTracker.SetupAssemblyResolve();
         }
