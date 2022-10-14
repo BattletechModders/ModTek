@@ -11,9 +11,9 @@ namespace ModTekPreloader.Injector
     {
         private readonly AssemblyCache _assemblyCache;
         private readonly InjectionCacheManifest _injectionCacheManifest;
-        internal InjectorsRunner(DynamicShimInjector shimInjector)
+        internal InjectorsRunner()
         {
-            _assemblyCache = new AssemblyCache(shimInjector);
+            _assemblyCache = new AssemblyCache();
             _injectionCacheManifest = new InjectionCacheManifest();
         }
 

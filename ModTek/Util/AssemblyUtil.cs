@@ -169,14 +169,16 @@ namespace ModTek.Util
             return Method.DeclaringType?.FullName + "." + Method.Name;
         }
 
-        public static string GetLocationOrName(Assembly assembly)
+        internal static string GetLocationOrName(Assembly assembly)
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(assembly.Location))
-                {
-                    return FileUtils.GetRelativePath(assembly.Location);
-                }
+                var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
+                var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
+                // codebase points to the path of the loaded assembly
+                // location points to the path of the original assembly location
+                // if shimmed, this can differ, see preloader fake assembly location setting
+                return codeBase == location ? location : $"{location} ({codeBase})";
             }
             catch
             {

@@ -22,7 +22,6 @@ namespace ModTekPreloader.Loader
             "(Mods)/ModTek/config.defaults.json",
         };
 
-        private readonly DynamicShimInjector _shimInjector;
         public Preloader()
         {
             Logger.Log("Preloader starting");
@@ -30,7 +29,6 @@ namespace ModTekPreloader.Loader
             SingleInstanceEnforcer.Enforce();
             RestoreFromBackupAndDeleteBackup();
             CleanupObsoleteFiles();
-            _shimInjector = new DynamicShimInjector();
         }
 
         private void RestoreFromBackupAndDeleteBackup()
@@ -77,7 +75,7 @@ namespace ModTekPreloader.Loader
 
         internal void RunInjectors()
         {
-            using (var injectorsRunner = new InjectorsRunner(_shimInjector))
+            using (var injectorsRunner = new InjectorsRunner())
             {
                 if (injectorsRunner.IsUpToDate)
                 {
@@ -87,18 +85,6 @@ namespace ModTekPreloader.Loader
                 injectorsRunner.RunInjectors();
                 injectorsRunner.SaveToDisk();
             }
-        }
-
-        internal bool Harmony12XEnabled => _shimInjector.Enabled;
-
-        // used by patches
-        internal void InjectShimIfNecessary(ref string path)
-        {
-            _shimInjector.InjectShimIfNecessary(ref path);
-        }
-        internal void InjectShimIfNecessary(ref byte[] rawAssembly)
-        {
-            _shimInjector.InjectShimIfNecessary(ref rawAssembly);
         }
     }
 }

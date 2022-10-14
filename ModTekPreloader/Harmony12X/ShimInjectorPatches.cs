@@ -9,21 +9,27 @@ namespace ModTekPreloader.Harmony12X
 {
     internal static class ShimInjectorPatches
     {
-        private static Preloader _preloader;
-        internal static void Register(Preloader preloader)
+        private static DynamicShimInjector _shimInjector;
+        internal static void Register(DynamicShimInjector shimInjector)
         {
-            _preloader = preloader;
+            _shimInjector = shimInjector;
 
-            // TODO move to ModTek once HarmonyX is confirmed fully working with RT
-            HarmonyLib.Tools.Logger.MessageReceived += (sender, args) => Logger.Log($"HarmonyX: {args.LogChannel}: {args.Message}");
-            HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.Warn | HarmonyLib.Tools.Logger.LogChannel.Error;
+            // TODO move to ModTek once ModTek itself was migrated to HarmonyX
+            // TODO GetTypes() on all assemblies (e.g. in BattleTechPerformanceFix) will crash
+            // HarmonyLib.Tools.Logger.MessageReceived += (sender, args) => Logger.Log($"HarmonyX: {args.LogChannel}: {args.Message}");
+            // HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.Warn | HarmonyLib.Tools.Logger.LogChannel.Error;
 
-            Harmony.CreateAndPatchAll(typeof(Patches), "ModTekPreloader.Harmony12X");
+            var harmony = new Harmony("ModTekPreloader.Harmony12X");
+            harmony.PatchAll(typeof(AssemblyLoadPatches));
+            if (Config.Instance.Harmony12XFakeAssemblyLocationEnabled)
+            {
+                harmony.PatchAll(typeof(AssemblyLocationPatch));
+            }
             AssemblyOriginalPathTracker.SetupAssemblyResolve();
         }
 
         // nesting avoids this being loaded by Utilities.BuildExtensionMethodCacheForType
-        private static class Patches
+        private static class AssemblyLoadPatches
         {
             [HarmonyPatch(typeof(Assembly), nameof(Assembly.LoadFrom), typeof(string), typeof(bool))]
             [HarmonyPrefix]
@@ -43,7 +49,7 @@ namespace ModTekPreloader.Harmony12X
                     }
 
                     AssemblyOriginalPathTracker.AddAssemblyPathsInSameDirectory(assemblyFile);
-                    _preloader.InjectShimIfNecessary(ref assemblyFile);
+                    _shimInjector.InjectShimIfNecessary(ref assemblyFile);
                 }
                 catch (Exception e)
                 {
@@ -51,6 +57,23 @@ namespace ModTekPreloader.Harmony12X
                 }
             }
 
+            [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
+            [HarmonyPrefix]
+            private static void LoadAssemblyRaw_Prefix(ref byte[] rawAssembly)
+            {
+                try
+                {
+                    _shimInjector.InjectShimIfNecessary(ref rawAssembly);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("Exception injecting shim: " + e);
+                }
+            }
+        }
+
+        private static class AssemblyLocationPatch
+        {
             // allow mods to think they are still loaded from their original location
             // hopefully doesn't mess up dnSpy
             [HarmonyPatch(typeof(Assembly), nameof(Assembly.Location), MethodType.Getter)]
@@ -63,20 +86,6 @@ namespace ModTekPreloader.Harmony12X
                     return false;
                 }
                 return true;
-            }
-
-            [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
-            [HarmonyPrefix]
-            private static void LoadAssemblyRaw_Prefix(ref byte[] rawAssembly)
-            {
-                try
-                {
-                    _preloader.InjectShimIfNecessary(ref rawAssembly);
-                }
-                catch (Exception e)
-                {
-                    Logger.Log("Exception injecting shim: " + e);
-                }
             }
         }
     }

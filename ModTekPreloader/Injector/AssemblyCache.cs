@@ -13,21 +13,15 @@ namespace ModTekPreloader.Injector
     {
         private readonly Dictionary<string, AssemblyBag> assemblies = new Dictionary<string, AssemblyBag>();
         private readonly List<string> searchDirectories;
-        private readonly DynamicShimInjector _shimInjector;
 
-        internal AssemblyCache(DynamicShimInjector shimInjector)
+        internal AssemblyCache()
         {
-            _shimInjector = shimInjector;
             searchDirectories = new List<string>
             {
                 Paths.AssembliesOverrideDirectory,
                 Paths.ModTekDirectory,
                 Paths.ManagedDirectory
             };
-            if (shimInjector.Enabled)
-            {
-                searchDirectories.Insert(0, Paths.Harmony12XDirectory);
-            }
         }
 
         public AssemblyDefinition Resolve(AssemblyNameReference name)
@@ -52,13 +46,16 @@ namespace ModTekPreloader.Injector
         private AssemblyDefinition SearchAssembly(AssemblyNameReference reference, ReaderParameters parameters)
         {
             // TODO allow Harmony modifications
-            // TODO allow all Harmony12X versions
             if (reference.Name.StartsWith("OHarmony"))
             {
+                if (reference.Name != "OHarmony")
+                {
+                    throw new NotSupportedException("Only 0Harmony is supported, no shims.");
+                }
                 var version = reference.Version;
                 if (!(version.Major == 1 && version.Minor == 2))
                 {
-                    throw new NotSupportedException("Missing harmony version number, only 1.2 is supported for assembly definition loading for now.");
+                    throw new NotSupportedException("Only 0Harmony 1.2 is supported for assembly definition loading.");
                 }
             }
             var searchPattern = $"{reference.Name}.dll";

@@ -6,7 +6,7 @@ using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Harmony12X
 {
-    // workaround for shims being loaded in another directory
+    // workaround for shimmed assemblies being loaded from another directory
     internal static class AssemblyOriginalPathTracker
     {
         // name to path

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using ModTekPreloader.Loader;
+using System.Reflection;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
@@ -13,31 +13,31 @@ namespace ModTekPreloader.Harmony12X
      */
     internal class DynamicShimInjector
     {
-        internal bool Enabled => Config.Instance.Harmony12XEnabled;
-
         private readonly ShimCacheManifest cache;
 
-        internal DynamicShimInjector()
+        internal static void Setup()
         {
-            if (!Enabled)
-            {
-                Logger.Log("HarmonyX not enabled, not loading interoperability.");
-                return;
-            }
+            var shimInjector = new DynamicShimInjector();
+            ShimInjectorPatches.Register(shimInjector);
+        }
 
+        private DynamicShimInjector()
+        {
             Logger.Log("Setting up HarmonyX interoperability");
             if (!Directory.Exists(Paths.Harmony12XDirectory))
             {
                 throw new Exception($"HarmonyX can't be loaded, directory `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` missing.");
             }
 
-            Logger.Log($"Verifying HarmonyX related assemblies at `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
+            Logger.Log($"Preloading supported Harmony12X assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
             foreach (var harmonyVersion in HarmonyVersion.SupportedVersions)
             {
                 var file = Path.Combine(Paths.Harmony12XDirectory, $"{harmonyVersion.Name}.dll");
-                if (!File.Exists(file))
+                Logger.Log($"\t{Path.GetFileName(file)}");
+                var assembly = Assembly.LoadFile(file);
+                if (!harmonyVersion.IsMatch(assembly.GetName().Version))
                 {
-                    throw new Exception($"Can't find HarmonyX related assembly under {file}.");
+                    throw new Exception($"Harmony shim version {assembly.GetName().Version} does not fall within {harmonyVersion}.");
                 }
             }
 
@@ -46,11 +46,6 @@ namespace ModTekPreloader.Harmony12X
 
         internal bool DetectAndPatchHarmony(AssemblyDefinition assemblyDefinition)
         {
-            if (!Enabled)
-            {
-                return false;
-            }
-
             // has harmony ref
             var harmonyReference = assemblyDefinition.MainModule.AssemblyReferences
                 .SingleOrDefault(a => a.Name == "0Harmony");
@@ -82,11 +77,6 @@ namespace ModTekPreloader.Harmony12X
 
         internal void InjectShimIfNecessary(ref string path)
         {
-            if (!Enabled)
-            {
-                throw new Exception("Should not be called");
-            }
-
             try
             {
                 path = cache.GetPathToShimmedAssembly(path);
@@ -99,11 +89,6 @@ namespace ModTekPreloader.Harmony12X
 
         internal void InjectShimIfNecessary(ref byte[] rawAssembly)
         {
-            if (!Enabled)
-            {
-                throw new Exception("Should not be called");
-            }
-
             // TODO implement caching if needed
             // probably a checksum -> (no shimming necessary || path to shimmed assembly)
             using (var stream = new MemoryStream(rawAssembly, false))
