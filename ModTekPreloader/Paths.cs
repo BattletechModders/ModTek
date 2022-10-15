@@ -27,6 +27,7 @@ namespace ModTekPreloader
         internal static readonly string LockFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.lock");
         internal static readonly string AssembliesInjectedDirectory = Path.Combine(DotModTekDirectory, "AssembliesInjected");
         internal static readonly string InjectionCacheManifestFile = Path.Combine(AssembliesInjectedDirectory, "_Manifest.csv");
+        // TODO test BepInEx csproj based publicized, if it works: remove ModTek Publicizer
         internal static readonly string AssembliesPublicizedDirectory = Path.Combine(DotModTekDirectory, "AssembliesPublicized");
         internal static readonly string AssembliesShimmedDirectory = Path.Combine(DotModTekDirectory, "AssembliesShimmed");
         internal static readonly string ShimmedCacheManifestFile = Path.Combine(AssembliesShimmedDirectory, "_Manifest.csv");

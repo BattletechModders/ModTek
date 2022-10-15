@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using ModTekPreloader.Injector;
 
 namespace ModTekPreloader.Logging
 {
     internal static class Logger
     {
+        private static readonly string Prefix = AppDomain.CurrentDomain.FriendlyName == InjectorsRunnerWrapper.ModTekInjectorsDomainName ? $" [Injectors]" : "" ;
         internal static void Setup()
         {
             Paths.CreateDirectoryForFile(Paths.LogFile);
@@ -14,7 +16,7 @@ namespace ModTekPreloader.Logging
 
         internal static void Log(object obj)
         {
-            File.AppendAllText(Paths.LogFile, $"{GetTime()} {obj}{Environment.NewLine}");
+            File.AppendAllText(Paths.LogFile, $"{GetTime()}{Prefix} {obj}{Environment.NewLine}");
         }
 
         private static string GetTime()

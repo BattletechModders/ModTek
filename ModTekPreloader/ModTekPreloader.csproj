@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
   <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly"/>
+    <Error Text="BattleTechGameDir variable not set properly" />
   </Target>
 
   <PropertyGroup>
@@ -73,7 +73,7 @@
     <ItemGroup>
       <Harmony12XFiles Include="$(Harmony12XIntDir)\*.dll;$(Harmony12XIntDir)\*.txt" />
     </ItemGroup>
-    <Copy SourceFiles="@(Harmony12XFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X"/>
+    <Copy SourceFiles="@(Harmony12XFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X" />
   </Target>
 
   <ItemGroup>

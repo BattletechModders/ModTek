@@ -57,6 +57,14 @@ namespace ModTekPreloader.Harmony12X
                 }
             }
 
+            [HarmonyPatch(typeof(AppDomain), "LoadAssembly", MethodType.Normal)]
+            [HarmonyPrefix]
+            private static bool LoadAssembly_Prefix(ref string assemblyRef)
+            {
+                Logger.Log("Warning: LoadAssembly_Prefix: " + assemblyRef);
+                return true;
+            }
+
             [HarmonyPatch(typeof(AppDomain), "LoadAssemblyRaw", MethodType.Normal)]
             [HarmonyPrefix]
             private static void LoadAssemblyRaw_Prefix(ref byte[] rawAssembly)
