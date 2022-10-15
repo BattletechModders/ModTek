@@ -112,7 +112,7 @@ namespace ModTekPreloader.Injector
             // performance improvements (1.4s)
             private static readonly string[] AlwaysChangedAssemblies =
             {
-                "Assembly-CSharp", "ModTek"
+                "Assembly-CSharp"
             };
 
             // skips change detection
