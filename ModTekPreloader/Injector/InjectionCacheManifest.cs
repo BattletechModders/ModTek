@@ -50,7 +50,7 @@ namespace ModTekPreloader.Injector
             return null;
         }
 
-        private static string GetActualManifestContent()
+        internal static string GetActualManifestContent()
         {
             var files = new List<string>();
             // input
@@ -67,6 +67,10 @@ namespace ModTekPreloader.Injector
             {
                 files.AddRange(Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll"));
             }
+            if (Directory.Exists(Paths.Harmony12XDirectory))
+            {
+                files.AddRange(Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll"));
+            }
 
             // output
             if (Directory.Exists(Paths.AssembliesInjectedDirectory))
@@ -81,7 +85,7 @@ namespace ModTekPreloader.Injector
             var content = files
                 .Select(CacheEntry.FromFile)
                 .OrderBy(x => x)
-                .Aggregate("Generated", (current, entry) => current + "\n" + entry);
+                .Aggregate("Generated:", (current, entry) => current + "\0" + entry);
             return content;
         }
 

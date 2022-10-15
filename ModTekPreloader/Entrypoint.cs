@@ -54,6 +54,7 @@ namespace Doorstop
                 }
                 PreloadAssembliesInjected();
                 PreloadAssembliesOverride();
+                PreloadModTek();
 
                 AppDomain.CurrentDomain.GetAssemblies()
                     .Select(a => a.CodeBase)
@@ -107,6 +108,13 @@ namespace Doorstop
                 Logger.Log($"\t{Path.GetFileName(file)}");
                 Assembly.LoadFile(file);
             }
+        }
+
+        private static void PreloadModTek()
+        {
+            var file = Path.Combine(Paths.ModTekDirectory, "ModTek.dll");
+            Logger.Log($"Preloading ModTek from `{Paths.GetRelativePath(file)}`:");
+            Assembly.LoadFile(file);
         }
     }
 }

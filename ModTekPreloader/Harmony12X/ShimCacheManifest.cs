@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
@@ -16,11 +17,7 @@ namespace ModTekPreloader.Harmony12X
         internal ShimCacheManifest(DynamicShimInjector injector)
         {
             _injector = injector;
-            manifestHeader = Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll")
-                .OrderBy(f => f)
-                .Select(f => File.GetLastWriteTimeUtc(f).ToString("o", System.Globalization.CultureInfo.InvariantCulture) + ":" + Paths.GetRelativePath(f))
-                .Concat(HarmonyVersion.SupportedVersions.Select(x => x.ToString()))
-                .Aggregate("", (prev, item) => prev + ";" + item);
+            manifestHeader = InjectionCacheManifest.GetActualManifestContent();
             Load();
         }
 
@@ -48,6 +45,7 @@ namespace ModTekPreloader.Harmony12X
                         data[entry.OriginalPath] = entry;
                     }
 
+                    Logger.Log("Shimmed cache manifest is up to date.");
                     return;
                 }
             }
