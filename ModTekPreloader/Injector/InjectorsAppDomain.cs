@@ -2,14 +2,13 @@ using System;
 
 namespace ModTekPreloader.Injector
 {
-    internal class InjectorsRunnerWrapper : MarshalByRefObject
+    internal class InjectorsAppDomain : MarshalByRefObject
     {
         internal const string ModTekInjectorsDomainName = "ModTekInjectorsDomain";
 
-        // TODO rewrite InjectorsRunner to be MarshalByRefObject itself, then get rid of this class
         internal static void Run()
         {
-            // this AppDomain allows us to unload all dlls used by the Preloader and Injectors
+            // this AppDomain allows us to unload all dlls used by the Injectors
             // TODO allow Harmony modifications
             // not supporting modifying Harmony assemblies during injection
             // would need to implement different AppDomains to support Harmony1, 2 and X modifications
@@ -18,10 +17,10 @@ namespace ModTekPreloader.Injector
             var domain = AppDomain.CreateDomain(ModTekInjectorsDomainName);
             try
             {
-                var @this = (InjectorsRunnerWrapper)domain.CreateInstance(
-                        typeof(InjectorsRunnerWrapper).Assembly.FullName,
+                var @this = (InjectorsAppDomain)domain.CreateInstance(
+                        typeof(InjectorsAppDomain).Assembly.FullName,
                         // ReSharper disable once AssignNullToNotNullAttribute
-                        typeof(InjectorsRunnerWrapper).FullName
+                        typeof(InjectorsAppDomain).FullName
                     )
                     .Unwrap();
 

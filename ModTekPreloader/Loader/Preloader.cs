@@ -19,7 +19,7 @@ namespace ModTekPreloader.Loader
             Paths.Print();
             SingleInstanceEnforcer.Enforce();
             Cleaner.Clean();
-            InjectorsRunnerWrapper.Run();
+            InjectorsAppDomain.Run();
 
             Logger.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
             if (Config.Instance.Harmony12XEnabled)
