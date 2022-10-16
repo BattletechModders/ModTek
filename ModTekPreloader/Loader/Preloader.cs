@@ -24,12 +24,7 @@ namespace ModTekPreloader.Loader
             Logger.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
             if (Config.Instance.Harmony12XEnabled)
             {
-                // TODO move dynamic shim injector into own AppDomain?
                 DynamicShimInjector.Setup();
-            }
-            else
-            {
-                PreloadAssemblyHarmony();
             }
             PreloadAssembliesInjected();
             PreloadAssembliesOverride();
@@ -40,25 +35,6 @@ namespace ModTekPreloader.Loader
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .Select(Paths.GetRelativePath)
                 .LogAsList("Assemblies loaded:");
-        }
-
-        private static void PreloadAssemblyHarmony()
-        {
-            {
-                var path = Path.Combine(Paths.AssembliesOverrideDirectory, "0Harmony.dll");
-                if (File.Exists(path))
-                {
-                    Logger.Log($"Preloading harmony from {Path.GetFileName(path)}.");
-                    Assembly.LoadFile(path);
-                    return;
-                }
-            }
-
-            {
-                var path = Path.Combine(Paths.ManagedDirectory, "0Harmony.dll");
-                Logger.Log($"Preloading harmony from {Path.GetFileName(path)}.");
-                Assembly.LoadFile(path);
-            }
         }
 
         private static void PreloadAssembliesInjected()
