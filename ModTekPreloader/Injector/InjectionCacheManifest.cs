@@ -77,10 +77,6 @@ namespace ModTekPreloader.Injector
             {
                 files.AddRange(Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll"));
             }
-            if (Directory.Exists(Paths.AssembliesPublicizedDirectory))
-            {
-                files.AddRange(Directory.GetFiles(Paths.AssembliesPublicizedDirectory, "*.dll"));
-            }
 
             var content = files
                 .Select(CacheEntry.FromFile)

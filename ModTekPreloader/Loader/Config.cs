@@ -12,29 +12,6 @@ namespace ModTekPreloader.Loader
         internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
 
         [JsonProperty]
-        internal readonly string AssembliesToMakePublic_Description =
-            $"All listed will be copied to `{Paths.GetRelativePath(Paths.AssembliesPublicizedDirectory)}`." +
-            " The copies will have all their members (classes, methods, properties and fields) made public." +
-            " It should be used to compile against, see the README for more information.";
-
-        [JsonProperty]
-        internal string[] AssembliesToMakePublic =
-        {
-            "Assembly-CSharp",
-            "Assembly-CSharp-firstpass",
-            "BattleTech.Common"
-        };
-
-        [JsonProperty]
-        internal readonly string TypesToNotMakePublic_Description =
-            "Add full names of types not to make public, in case you want to subclass these types and visibility changes would throw errors or crash the game.";
-
-        [JsonProperty]
-        internal string[] TypesToNotMakePublic =
-        {
-        };
-
-        [JsonProperty]
         internal readonly string Harmony12XEnabled_Description =
             "Enables Harmony X and its shims for Harmony 1 and 2, does work pretty well but not perfectly and some mods might need to be updated.";
 

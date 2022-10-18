@@ -23,9 +23,6 @@
     <!-- Optional: Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
     <NoWarn>CS0649</NoWarn>
 
-    <!-- Optional: Allows to use publicized DLLs -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
     <!-- Required: We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
     <AssemblySearchPaths>$(ReferencePath)</AssemblySearchPaths>

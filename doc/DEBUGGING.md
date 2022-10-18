@@ -21,3 +21,23 @@ Steps to get a working debugger setup:
 6. start the game
 7. connect dnSpyEx to Unity (default port etc..)
 8. your breakpoint should be hit as long as no mods patch the method with your breakpoint (see `harmony_summary.log`)
+
+## Profiling
+
+> **Note**
+> TODO finalize
+
+for steam installs: add steam_appid.txt to root dir & start steam in background already
+
+use dottrace for cpu profiling:
+- Unity Application, Path to BattleTech.exe
+- timeline, enable native profiling, collect native allocations, download symbol files
+- Start via dottrace
+- discard/drop/stop collecting until you want to collect
+- start collect
+- take snapshot
+- analyzing/opening snapshot can take longer than actual collecting time
+- select main thread, show system calls or not
+- dont forget to save snapshot so you dont have to collect again
+
+memory profiling, not sure how that works for BT.

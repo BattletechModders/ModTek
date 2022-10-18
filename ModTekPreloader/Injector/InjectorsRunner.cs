@@ -30,7 +30,6 @@ namespace ModTekPreloader.Injector
         internal void SaveToDisk()
         {
             _assemblyCache.SaveAssembliesToDisk();
-            _assemblyCache.MakeAssembliesPublicAndSaveToDisk();
             _injectionCacheManifest.RefreshAndSave();
         }
 

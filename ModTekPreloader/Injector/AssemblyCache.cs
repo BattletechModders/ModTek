@@ -92,12 +92,6 @@ namespace ModTekPreloader.Injector
             }
         }
 
-        internal void MakeAssembliesPublicAndSaveToDisk()
-        {
-            Paths.SetupCleanDirectory(Paths.AssembliesPublicizedDirectory);
-            AssemblyPublicizer.MakePublic(this);
-        }
-
         public void Dispose()
         {
             assemblies.Clear();

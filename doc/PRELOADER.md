@@ -42,17 +42,20 @@
 
 ## Publicized Assemblies
 
-> **Warning**
-> The publicized assemblies feature is still being developed.
-> Inheriting from publicized classes is prone to crashes and produces incompatibility issues with other mods.
-
-> **Note**
-> TODO finalize
-
 - Makes all classes, methods, properties and fields public (with some exceptions) for a select few assemblies.
 - Those assemblies are only for compiling against, these assemblies are not loaded into the game!
 - Avoids the need to write reflection tools or wrappers to access private stuff, leads to cleaner and faster code.
-- Requires that dlls using publicized assemblies are marked as unsafe, to disable runtime access checks. Put into your csproj:
-  > ```<AllowUnsafeBlocks>true</AllowUnsafeBlocks>```
-- Make your mod reference `Mods/.modtek/AssembliesPublicized/`:
-  > ```<AssemblySearchPaths>$(BattleTechGameDir)\Mods\.modtek\AssembliesPublicized\;$(BattleTechGameDir)\BattleTech_Data\Managed\</AssemblySearchPaths>```
+
+Add to your csproj:
+```
+<ItemGroup>
+  <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.3.0" />
+</ItemGroup>
+```
+
+and modify a reference to an assembly to include `Publicize="true"`:
+```
+<Reference Include="Assembly-CSharp" Publicize="true">
+  <Private>False</Private>
+</Reference>
+```
