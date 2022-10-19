@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.UI;
@@ -12,10 +13,11 @@ namespace ModTek.Features.Manifest.Mods
     internal static class ModDefsDatabase
     {
         private static List<string> ModLoadOrder;
+
         private static readonly Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
         internal static readonly Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
         internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
-
+        internal static Dictionary<string, string> existingAssemblies { get; set; } = new Dictionary<string, string>();
         internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
         {
             var sliderText = "Gathering dependencies trees";
@@ -99,7 +101,59 @@ namespace ModTek.Features.Manifest.Mods
                 .Where(modDef => modDef != null)
                 .ToList();
         }
+        private static Assembly ResolveAssembly(System.Object sender, ResolveEventArgs evt)
+        {
+            Assembly res = null;
+            try
+            {
+                MTLogger.Info.Log($"request resolve assembly:{evt.Name}");
+                AssemblyName assemblyName = new AssemblyName(evt.Name);
+                if (existingAssemblies.TryGetValue(assemblyName.Name, out string path))
+                {
+                    MTLogger.Info.Log($" loading registered assembly:{path}");
+                    res = Assembly.LoadFile(path);
+                }
+                else
+                {
+                    MTLogger.Info.Log(" assembly not registered");
+                }
+            }
+            catch (Exception err)
+            {
+                MTLogger.Info.Log(err.ToString());
+            }
+            return res;
+        }
 
+        internal static IEnumerator<ProgressReport> InitAssembliesLoop()
+        {
+            var sliderText = "Gathering assemblies";
+            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveAssembly;
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+
+            string[] assemblies = Directory.GetFiles(FilePaths.ModsDirectory, "*.dll", SearchOption.AllDirectories);
+            yield return new ProgressReport(0, sliderText, "");
+            for (int t=0;t<assemblies.Length;++t)
+            {
+                string name = string.Empty;
+                try
+                {
+                    string assemblyPath = assemblies[t];
+                    name = AssemblyName.GetAssemblyName(assemblyPath).Name;
+                    existingAssemblies[name] = assemblyPath;
+                    MTLogger.Info.Log($"register assembly {name}");
+                }
+                catch(System.BadImageFormatException)
+                {
+                    MTLogger.Info.Log(" not a .NET assembly. skip");
+                }
+                catch (Exception e)
+                {
+                    MTLogger.Error.Log(e.ToString());
+                }
+                yield return new ProgressReport((float)t / (float)assemblies.Length, sliderText, name);
+            }
+        }
         internal static IEnumerator<ProgressReport> InitModsLoop()
         {
             var sliderText = "Initializing Mods";

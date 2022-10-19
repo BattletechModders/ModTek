@@ -136,6 +136,7 @@ namespace ModTek
 
         private static void LoadUsingProgressPanel()
         {
+            ProgressPanel.SubmitWork(ModDefsDatabase.InitAssembliesLoop);
             ProgressPanel.SubmitWork(ModDefsDatabase.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
