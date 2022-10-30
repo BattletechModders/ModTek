@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
   <!-- Required: Check if the BattleTechGameDir variable is correct set  -->
   <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly"/>
+    <Error Text="BattleTechGameDir variable not set properly" />
   </Target>
 
   <PropertyGroup>
@@ -38,6 +38,11 @@
     <Copy SourceFiles="@(OutDirFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
 
+  <!-- Optional: Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
+  <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.3.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Required: Harmony is needed to hook into the game -->
     <Reference Include="0Harmony">
@@ -46,7 +51,8 @@
     </Reference>
 
     <!-- Required: The main game file containing most of the BattleTech game logic -->
-    <Reference Include="Assembly-CSharp">
+    <!-- Publicized Optional: See BepInEx.AssemblyPublicizer.MSBuild above -->
+    <Reference Include="Assembly-CSharp" Publicize="true">
       <Private>False</Private>
     </Reference>
 

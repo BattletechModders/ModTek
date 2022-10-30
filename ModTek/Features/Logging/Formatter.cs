@@ -122,7 +122,7 @@ namespace ModTek.Features.Logging
                 return null;
             }
 
-            var stackTrace = Traverse.Create((DiagnosticsStackTrace)location)?.Field<StackTrace>("stackTrace")?.Value;
+            var stackTrace = ((DiagnosticsStackTrace)location).stackTrace;
             if (stackTrace == null || stackTrace.FrameCount < 1)
             {
                 return null;
