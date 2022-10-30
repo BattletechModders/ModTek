@@ -1,23 +1,15 @@
-﻿using System.Reflection;
-using Harmony;
+﻿using Harmony;
 using HBS.Logging;
 using ModTek.Util;
 
 namespace ModTek.Features.Logging.Patches
 {
-    [HarmonyPatch]
+    [HarmonyPatch(typeof(Logger.LogImpl), nameof(Logger.LogImpl.Level), MethodType.Setter)]
     internal static class LogImpl_set_Level_Patch
     {
         public static bool Prepare()
         {
             return ModTek.Enabled && ModTek.Config.Logging.DebugLogLevelSetters;
-        }
-
-        public static MethodInfo TargetMethod()
-        {
-            var logImpl = AccessTools.Inner(typeof(Logger), "LogImpl");
-            var original = AccessTools.Property(logImpl, "Level").SetMethod;
-            return original;
         }
 
         [HarmonyPriority(Priority.High)]
