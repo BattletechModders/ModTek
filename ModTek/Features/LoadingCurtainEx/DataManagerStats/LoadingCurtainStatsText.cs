@@ -44,6 +44,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 
         internal static void SetText(LoadingCurtain loadingCurtain, string text)
         {
+            if (loadingCurtain == null)
+            {
+                return;
+            }
             var popupContainer = loadingCurtain.popupContainer;
             if (popupContainer == null)
             {
