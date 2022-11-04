@@ -9,7 +9,7 @@ namespace ModTekPreloader.Loader
     internal static class SingleInstanceEnforcer
     {
         private static FileStream LockFileStream;
-        private static string LogPrefix => $"[pid={Process.GetCurrentProcess().Id}]";
+        private static string LogPrefix => $"SingleInstanceEnforcer [pid={Process.GetCurrentProcess().Id}]:";
 
         internal static void Enforce()
         {
@@ -30,13 +30,13 @@ namespace ModTekPreloader.Loader
                             FileOptions.SequentialScan
                         );
                     },
-                    () => Logger.Log($"{LogPrefix} can't open or create, retrying")
+                    () => Logger.Log($"{LogPrefix} Can't open or create, retrying")
                 );
 
                 // this should be supported on every platform
                 Retry(
                     () => LockFileStream.Lock(0, 0),
-                    () => Logger.Log($"{LogPrefix} can't lock, retrying")
+                    () => Logger.Log($"{LogPrefix} Can't lock, retrying")
                 );
 
                 Logger.Log($"{LogPrefix} Locked");
