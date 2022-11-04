@@ -12,6 +12,7 @@
     <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblySearchPaths>
+      {HintPathFromItem};
       $(BattleTechGameDir)\Mods\ModTek\;
       $(BattleTechGameDir)\BattleTech_Data\Managed\
     </AssemblySearchPaths>
