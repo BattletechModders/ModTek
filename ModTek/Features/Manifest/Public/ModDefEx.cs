@@ -54,7 +54,25 @@ namespace ModTek
 
         [DefaultValue(false)]
         public bool Locked { get; set; } = false;
-
+        public class RequestAtBattleStart
+        {
+            public BattleTech.BattleTechResourceType Type { get; set; } = BattleTech.BattleTechResourceType.Prefab;
+            public string Id { get; set; } = string.Empty;
+            public override int GetHashCode()
+            {
+                return Id.GetHashCode()+Type.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                if(obj is RequestAtBattleStart b)
+                {
+                    return (this.Type == b.Type) && (this.Id == b.Id);
+                }
+                return false;
+            }
+        }
+        public HashSet<RequestAtBattleStart> requestAtBattleStarts { get; set; } = new HashSet<RequestAtBattleStart>();
+        public HashSet<string> forceEnableMods { get; set; } = new HashSet<string>();
         // load order and requirements
         public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
         public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();

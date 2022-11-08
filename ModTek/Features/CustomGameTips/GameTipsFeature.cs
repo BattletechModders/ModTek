@@ -1,6 +1,8 @@
-﻿using System.IO;
+using System.IO;
 using BattleTech;
+using Localize;
 using ModTek.Features.CustomResources;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
@@ -13,7 +15,12 @@ namespace ModTek.Features.CustomGameTips
         internal static string GetGameTip(string path)
         {
             var id = Path.GetFileNameWithoutExtension(path);
-            var entry = BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.GameTip.ToString());
+            var entry = BetterBTRL.Instance.EntryByIDAndType(id+"_"+Strings.CurrentCulture.ToString(), InternalCustomResourceType.GameTip.ToString());
+            MTLogger.Info.Log($"GetGameTip {id+"_" + Strings.CurrentCulture.ToString()} {(entry==null?"null": entry.FileName)}");
+            if (entry == null) {
+                entry = BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.GameTip.ToString());
+                MTLogger.Info.Log($"GetGameTip {id} {(entry == null ? "null" : entry.FileName)}");
+            }
             return ModsManifest.GetText(entry);
         }
 

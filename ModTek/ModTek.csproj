@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
   <!-- Required: Check if the BattleTechGameDir variable is correct set  -->
   <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly"/>
+    <Error Text="BattleTechGameDir variable not set properly" />
   </Target>
 
   <PropertyGroup>

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech.Data;
+using ModTek.Features.CustomAssemblies;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
 using ModTek.Features.HarmonyPatching;
@@ -136,10 +137,10 @@ namespace ModTek
 
         private static void LoadUsingProgressPanel()
         {
-            //ProgressPanel.SubmitWork(ModDefsDatabase.InitAssembliesLoop);
             ProgressPanel.SubmitWork(ModDefsDatabase.InitModsLoop);
             ProgressPanel.SubmitWork(ModsManifest.HandleModManifestsLoop);
             ProgressPanel.SubmitWork(SoundBanksFeature.SoundBanksProcessing);
+            ProgressPanel.SubmitWork(CustomAssembliesLoader.AssembliesProcessing);
             ProgressPanel.SubmitWork(ModDefsDatabase.GatherDependencyTreeLoop);
             ProgressPanel.SubmitWork(FinishingLoadingMods);
             ProgressPanel.SubmitWork(HarmonySummaryAndFinish);
