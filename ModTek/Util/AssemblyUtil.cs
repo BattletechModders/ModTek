@@ -171,6 +171,7 @@ namespace ModTek.Util
 
         internal static string GetLocationOrName(Assembly assembly)
         {
+            var name = assembly.GetName().Name;
             try
             {
                 // codebase points to the path of the loaded assembly
@@ -179,38 +180,30 @@ namespace ModTek.Util
                 var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
                 var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
 
-                var name = assembly.GetName().Name;
-
-                if (location == null)
+                var formatted = "";
+                if (location == null || Path.GetFileNameWithoutExtension(location) != name)
                 {
-                    if (codeBase == null)
+                    formatted = name;
+                }
+                if (location != null)
+                {
+                    if (formatted.Length > 0)
                     {
-                        return name;
+                        formatted += " at ";
                     }
-                    return $"{name} ({codeBase})";
+                    formatted += location;
                 }
-
-                // name of dll could be different than name of Assembly in some cases
-                if (name != Path.GetFileNameWithoutExtension(assembly.Location))
+                if (codeBase != null && location != codeBase)
                 {
-                    if (codeBase == null || location == codeBase)
-                    {
-                        return $"{name} at {location}";
-                    }
-                    return $"{name} at {location} ({codeBase})";
+                    formatted += $" ({codeBase})";
                 }
-
-                if (codeBase == null)
-                {
-                    return location;
-                }
-                return $"{location} ({codeBase})";
+                return formatted;
             }
             catch
             {
                 // ignored
             }
-            return assembly.GetName().Name;
+            return name;
         }
     }
 }
