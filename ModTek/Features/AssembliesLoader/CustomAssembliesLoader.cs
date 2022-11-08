@@ -5,27 +5,29 @@ using ModTek.Features.CustomResources;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.UI;
+using ModTek.Util;
 
 namespace ModTek.Features.AssembliesLoader
 {
     internal static class CustomAssembliesLoader
     {
-        private static readonly Dictionary<string, Assembly> registeredAssemblies = new Dictionary<string, Assembly>();
+        private static readonly Dictionary<string, string> registeredAssemblyPaths = new Dictionary<string, string>();
         private static Assembly ResolveAssembly(object sender, ResolveEventArgs evt)
         {
             Assembly res = null;
             try
             {
-                MTLogger.Info.Log($"request resolve assembly:{evt.Name}");
                 var assemblyName = new AssemblyName(evt.Name);
-                if (registeredAssemblies.TryGetValue(assemblyName.Name, out var assembly))
+                MTLogger.Debug.Log($"Request to resolve custom assembly {assemblyName}");
+                if (registeredAssemblyPaths.TryGetValue(assemblyName.Name, out var assemblyPath))
                 {
-                    MTLogger.Info.Log($" loading registered assembly:{assembly.CodeBase}");
+                    var assembly = Assembly.LoadFile(assemblyPath);
+                    MTLogger.Info.Log($"Loaded custom assembly {AssemblyUtil.GetLocationOrName(assembly)}");
                     res = assembly;
                 }
                 else
                 {
-                    MTLogger.Info.Log(" assembly not registered");
+                    MTLogger.Debug.Log($"Assembly {assemblyName} not known to {nameof(CustomAssembliesLoader)}.");
                 }
             }
             catch (Exception e)
@@ -45,8 +47,8 @@ namespace ModTek.Features.AssembliesLoader
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveAssembly;
             AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
 
-            MTLogger.Info.Log($"Processing assemblies");
             var sliderText = "Processing assemblies";
+            MTLogger.Info.Log(sliderText);
             yield return new ProgressReport(0, sliderText, "", true);
 
             for (var t = 0; t < entries.Length; ++t)
@@ -56,8 +58,8 @@ namespace ModTek.Features.AssembliesLoader
                 {
                     var assemblyPath = entries[t].FilePath;
                     name = AssemblyName.GetAssemblyName(assemblyPath).Name;
-                    registeredAssemblies[name] = Assembly.LoadFile(assemblyPath);
-                    MTLogger.Debug.Log($" Registered assembly {name}");
+                    registeredAssemblyPaths[name] = assemblyPath;
+                    MTLogger.Info.Log($"Registered custom assembly {name} at location {assemblyPath}");
                 }
                 catch (BadImageFormatException e)
                 {

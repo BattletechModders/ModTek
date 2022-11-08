@@ -173,12 +173,38 @@ namespace ModTek.Util
         {
             try
             {
-                var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
-                var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
                 // codebase points to the path of the loaded assembly
                 // location points to the path of the original assembly location
                 // if shimmed, this can differ, see preloader fake assembly location setting
-                return codeBase == location ? location : $"{location} ({codeBase})";
+                var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
+                var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
+
+                var name = assembly.GetName().Name;
+
+                if (location == null)
+                {
+                    if (codeBase == null)
+                    {
+                        return name;
+                    }
+                    return $"{name} ({codeBase})";
+                }
+
+                // name of dll could be different than name of Assembly in some cases
+                if (name != Path.GetFileNameWithoutExtension(assembly.Location))
+                {
+                    if (codeBase == null || location == codeBase)
+                    {
+                        return $"{name} at {location}";
+                    }
+                    return $"{name} at {location} ({codeBase})";
+                }
+
+                if (codeBase == null)
+                {
+                    return location;
+                }
+                return $"{location} ({codeBase})";
             }
             catch
             {
