@@ -66,7 +66,7 @@ namespace ModTek
             {
                 if(obj is RequestAtBattleStart b)
                 {
-                    return (this.Type == b.Type) && (this.Id == b.Id);
+                    return Type == b.Type && Id == b.Id;
                 }
                 return false;
             }

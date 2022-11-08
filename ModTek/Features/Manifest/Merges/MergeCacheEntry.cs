@@ -170,7 +170,7 @@ namespace ModTek.Features.Manifest.Merges
                 return true;
             }
 
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
@@ -182,7 +182,7 @@ namespace ModTek.Features.Manifest.Merges
         {
             unchecked
             {
-                var hashCode = (CachedPath != null ? CachedPath.GetHashCode() : 0);
+                var hashCode = CachedPath != null ? CachedPath.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
                 return hashCode;

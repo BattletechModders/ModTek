@@ -101,7 +101,7 @@ namespace ModTek.Features.Manifest
         {
             unchecked
             {
-                var hashCode = (AssetBundleName != null ? AssetBundleName.GetHashCode() : 0);
+                var hashCode = AssetBundleName != null ? AssetBundleName.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (Path != null ? Path.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ UpdatedOn.GetHashCode();
                 return hashCode;

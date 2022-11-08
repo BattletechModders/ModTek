@@ -12,7 +12,7 @@ namespace ModTekPreloader.Loader
         {
             using (var game = ModuleDefinition.ReadModule(path))
             {
-                bool injected = false;
+                var injected = false;
                 if (IsModTekInjected(game))
                 {
                     Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");

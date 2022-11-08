@@ -24,8 +24,10 @@
     <NoWarn>CS0649</NoWarn>
 
     <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
-    <ReferencePath>$(BattleTechGameDir)\BattleTech_Data\Managed\</ReferencePath>
-    <AssemblySearchPaths>$(ReferencePath)</AssemblySearchPaths>
+    <AssemblySearchPaths>
+      {HintPathFromItem};
+      $(BattleTechGameDir)\BattleTech_Data\Managed\
+    </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 

@@ -1,14 +1,14 @@
+using System;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
-using System;
 
-namespace CustAmmoCategories
+namespace ModTek.Features.LoadAtBattleStart.Patches
 {
     [HarmonyPatch(typeof(Contract), "RequestConversations")]
-    public static class Contract_RequestConversations
+    public static class Contract_RequestConversations_Patch
     {
         public static void Postfix(Contract __instance, LoadRequest loadRequest)
         {
@@ -29,11 +29,11 @@ namespace CustAmmoCategories
                         MTLogger.Info.Log($"Requesting {resToRequest.Id}:{resToRequest.Type}");
                         loadRequest.AddBlindLoadRequest(resToRequest.Type, resToRequest.Id);
                     }
-                }                
+                }
             }
             catch(Exception e)
             {
-                MTLogger.Error.Log(e.ToString());
+                MTLogger.Error.Log(e);
             }
         }
     }

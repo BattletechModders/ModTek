@@ -164,7 +164,7 @@ namespace ModTek.Features.Manifest.MDD
             var sliderText = "Building MDDB Cache";
             yield return new ProgressReport(0, sliderText, "", true);
 
-            bool rebuildIndex = false;
+            var rebuildIndex = false;
             var reindexResources = new HashSet<CacheKey>();
 
             // find entries missing in cache

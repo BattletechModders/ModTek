@@ -189,7 +189,7 @@ namespace ModTek.Features.Manifest.Mods
         private static void CreateModDefs(string[] modJsons)
         {
             // create ModDef objects for each mod.json file
-            HashSet<string> forceEnableMods = new HashSet<string>();
+            var forceEnableMods = new HashSet<string>();
             foreach (var modDefPath in modJsons)
             {
                 ModDefEx modDef;
@@ -238,11 +238,11 @@ namespace ModTek.Features.Manifest.Mods
                     continue;
                 }
                 ModDefs.Add(modDef.Name, modDef);
-                foreach (string fe_mod in modDef.forceEnableMods) {
+                foreach (var fe_mod in modDef.forceEnableMods) {
                     forceEnableMods.Add(fe_mod);
                 }
             }
-            foreach(string fe_mod in forceEnableMods)
+            foreach(var fe_mod in forceEnableMods)
             {
                 if(allModDefs.TryGetValue(fe_mod, out var modToEnable))
                 {

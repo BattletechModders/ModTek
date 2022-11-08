@@ -18,7 +18,7 @@ namespace ModTek.Util
 
         internal static string AsTextList(this IEnumerable<string> items, string prefix = "\n - ")
         {
-            return items?.Aggregate("", (current, item) => current + (prefix + item));
+            return items?.Aggregate("", (current, item) => current + prefix + item);
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BattleTech.Data;
-using ModTek.Features.CustomAssemblies;
+using ModTek.Features.AssembliesLoader;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
 using ModTek.Features.HarmonyPatching;
