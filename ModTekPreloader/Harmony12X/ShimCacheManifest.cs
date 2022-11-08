@@ -100,7 +100,7 @@ namespace ModTekPreloader.Harmony12X
                 return;
             }
 
-            var text = $"Loading shimmed assembly {Path.GetFileNameWithoutExtension(absolutePath)} from `{Paths.GetRelativePath(absolutePath)}` instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
+            var text = $"Loading shimmed assembly from `{Paths.GetRelativePath(absolutePath)}` instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
             if (begin != null)
             {
                 text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";

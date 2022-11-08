@@ -41,7 +41,16 @@ namespace ModTekPreloader.Harmony12X
 
             foreach (var path in Directory.GetFiles(directory, "*.dll"))
             {
-                var name = Path.GetFileNameWithoutExtension(path);
+                string name;
+                try
+                {
+                    name = AssemblyName.GetAssemblyName(path).Name;
+                }
+                catch (Exception e)
+                {
+                    Logger.Log($"Error when getting assembly name from {path}: {e}");
+                    continue;
+                }
                 if (AssemblyPaths.TryGetValue(name, out var existingPath))
                 {
                     if (path != existingPath)
