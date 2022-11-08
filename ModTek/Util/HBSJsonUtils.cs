@@ -30,19 +30,13 @@ namespace ModTek.Util
                 // ignored
             }
 
-            var commentsStripped = StripHBSCommentsFromJSON(content);
+            var commentsStripped = JSONSerializationUtility.StripHBSCommentsFromJSON(content);
             MTLogger.Info.LogIf(log, "commentsStripped: " + commentsStripped);
 
             var commasAdded = FixHBSJsonCommas(commentsStripped);
             MTLogger.Info.LogIf(log,"commasAdded: " + commasAdded);
 
             return JObject.Parse(commasAdded);
-        }
-
-        private static readonly MethodBase StripHBSCommentsFromJSONTraverse = AccessTools.Method(typeof(JSONSerializationUtility), "StripHBSCommentsFromJSON");
-        private static string StripHBSCommentsFromJSON(string json)
-        {
-            return (string) StripHBSCommentsFromJSONTraverse.Invoke(null, new object[]{json});
         }
 
         private static string FixHBSJsonCommas(string json)

@@ -1,4 +1,5 @@
 using System.IO;
+using BattleTech.UI;
 using ModTek.Misc;
 using ModTek.Util;
 using TMPro;
@@ -43,7 +44,7 @@ namespace ModTek.Features.LoadingCurtainEx
 
         public static void SetupActive()
         {
-            var parent = LoadingCurtainUtils.GetActive().gameObject;
+            var parent = LoadingCurtain.activeInstance.gameObject;
             if (parent == null || parentLoadingCurtain == parent)
             {
                 return;

@@ -157,7 +157,7 @@ namespace ModTek.UI
         {
             // Reactivate the main menu loading by calling the attached ActivateAndClose behavior on the UnityGameInstance (initializes a handful of different things);
             var activateAfterInit = GameObject.Find("Main").GetComponent<ActivateAfterInit>();
-            Traverse.Create(activateAfterInit).Method("ActivateAndClose").GetValue();
+            activateAfterInit.ActivateAndClose();
         }
     }
 }

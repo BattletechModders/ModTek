@@ -184,7 +184,7 @@ namespace ModTek.Features.Manifest
             {
                 try
                 {
-                    Traverse.Create(dataManager).Method("PrewarmComplete", loadRequest).GetValue();
+                    dataManager.PrewarmComplete(loadRequest);
                 }
                 catch (Exception e)
                 {
@@ -253,7 +253,7 @@ namespace ModTek.Features.Manifest
             {
                 return null;
             }
-            return Traverse.Create(mainMenu).Field("bgVideoPlayer").GetValue<VideoPlayer>();
+            return mainMenu.bgVideoPlayer;
         }
     }
 }

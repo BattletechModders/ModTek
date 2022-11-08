@@ -25,10 +25,9 @@ namespace ModTek.Patches
             //{
             //Log("\t"+ gameObject.name);
             //}
-            var traverse = Traverse.Create(__instance);
-            if (ActivateAfterInit.ActivateAfter.Start.Equals(traverse.Field("activateAfter").GetValue<ActivateAfterInit.ActivateAfter>()))
+            if (ActivateAfterInit.ActivateAfter.Start.Equals(__instance.activateAfter))
             {
-                var gameObjects = traverse.Field("activationSet").GetValue<GameObject[]>();
+                var gameObjects = __instance.activationSet;
                 foreach (var gameObject in gameObjects)
                 {
                     if ("SplashLauncher".Equals(gameObject.name))

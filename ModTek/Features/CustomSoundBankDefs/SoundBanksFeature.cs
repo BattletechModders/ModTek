@@ -34,7 +34,7 @@ namespace ModTek.Features.CustomSoundBankDefs
             var sliderText = "Processing sound banks defs";
             yield return new ProgressReport(0, sliderText, "", true);
 
-            var loadedBanks = Traverse.Create(SceneSingletonBehavior<WwiseManager>.Instance).Field<List<LoadedAudioBank>>("loadedBanks").Value;
+            var loadedBanks = SceneSingletonBehavior<WwiseManager>.Instance.loadedBanks;
             var countCurrent = 0;
             var countMax = (float)entries.Length;
             foreach (var entry in entries)

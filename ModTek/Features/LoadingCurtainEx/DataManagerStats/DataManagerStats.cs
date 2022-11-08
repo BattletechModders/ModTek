@@ -12,11 +12,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
         private static DataManagerStats LastStats = new DataManagerStats();
         internal static bool GetStats(out DataManagerStats stats)
         {
-            var dataManager = UnityGameInstance.BattleTechGame.DataManager;
-            var activeLoadBatches = Traverse
-                .Create(dataManager)
-                .Field("activeLoadBatches")
-                .GetValue<List<LoadRequest>>();
+            var activeLoadBatches = UnityGameInstance.BattleTechGame.DataManager.activeLoadBatches;
 
             if (activeLoadBatches == null)
             {
@@ -65,12 +61,11 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             ActiveLoadRequests = loadRequests;
             foreach (var load in loadRequests)
             {
-                var lrt = new LoadRequestTraverse(load);
                 batches++;
-                active += lrt.GetActiveRequestCount();
-                pending += lrt.GetPendingRequestCount();
-                completed += lrt.GetCompletedRequestCount();
-                failed += lrt.instance.FailedRequests.Count;
+                active += load.GetActiveRequestCount();
+                pending += load.GetPendingRequestCount();
+                completed += load.GetCompletedRequestCount();
+                failed += load.FailedRequests.Count;
             }
         }
         internal void Dump()

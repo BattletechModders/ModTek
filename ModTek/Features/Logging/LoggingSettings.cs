@@ -20,7 +20,7 @@ namespace ModTek.Features.Logging
         internal const string LogUncaughtExceptions_Description = "Logs uncaught exceptions via AppDomain handler.";
 
         [JsonProperty]
-        internal bool LogExceptionInitializations = true;
+        internal bool LogExceptionInitializations;
         [JsonProperty]
         internal const string LogExceptionInitializations_Description = "Logs out any exceptions being initialized, even before they are thrown or ignored.";
 

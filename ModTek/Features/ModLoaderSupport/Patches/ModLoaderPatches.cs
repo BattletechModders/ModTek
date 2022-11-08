@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -10,11 +9,27 @@ using BattleTech.UI.TMProWrapper;
 using Harmony;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Misc;
 using UnityEngine;
 
 namespace ModTek.Features.ModLoaderSupport.Patches
 {
+    [HarmonyPatch(typeof(ModLoader))]
+    [HarmonyPatch(nameof(ModLoader.Init))]
+    [HarmonyPatch(MethodType.Normal)]
+    internal static class ModLoader_Init
+    {
+        public static bool Prepare()
+        {
+            return ModTek.Enabled;
+        }
+
+        public static bool Prefix(Action callback)
+        {
+            callback();
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(ModLoader))]
     [HarmonyPatch("AreModsEnabled")]
     [HarmonyPatch(MethodType.Getter)]

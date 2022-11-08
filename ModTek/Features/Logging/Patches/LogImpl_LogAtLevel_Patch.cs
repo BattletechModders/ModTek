@@ -7,17 +7,23 @@ using HBS.Logging;
 
 namespace ModTek.Features.Logging.Patches
 {
-    [HarmonyPatch]
+    [HarmonyPatch(
+        typeof(Logger.LogImpl),
+        nameof(Logger.LogImpl.LogAtLevel),
+        typeof(LogLevel),
+        typeof(object),
+        typeof(UnityEngine.Object),
+        typeof(Exception),
+        typeof(IStackTrace)
+    )]
     internal static class LogImpl_LogAtLevel_Patch
     {
         public static bool Prepare()
         {
-            return ModTek.Enabled;
-        }
-
-        public static MethodInfo TargetMethod()
-        {
-            var logImpl = AccessTools.Inner(typeof(Logger), "LogImpl");
+            if (!ModTek.Enabled)
+            {
+                return false;
+            }
 
             if (Settings == null)
             {
@@ -26,43 +32,14 @@ namespace ModTek.Features.Logging.Patches
                 {
                     IgnoreSkipForLoggers = Settings.IgnoreSkipForLoggers.ToHashSet();
                 }
-
-                {
-                    var logImplType = AccessTools.Inner(typeof(Logger), "LogImpl");
-                    var LogImplIsEnabledForMethod = AccessTools.Method(logImplType, "IsEnabledFor");
-                    var dm = new DynamicMethod(
-                        "ModTek_IsEnabledFor",
-                        typeof(bool),
-                        new[]
-                        {
-                            typeof(object),
-                            typeof(LogLevel)
-                        },
-                        logImplType
-                    );
-                    var gen = dm.GetILGenerator();
-                    gen.Emit(OpCodes.Ldarg_0);
-                    gen.Emit(OpCodes.Ldarg_1);
-                    gen.Emit(OpCodes.Call, LogImplIsEnabledForMethod);
-                    gen.Emit(OpCodes.Ret);
-                    LogImplIsEnabledFor = (Func<object, LogLevel, bool>) dm.CreateDelegate(typeof(Func<object, LogLevel, bool>));
-                }
             }
 
-            var original = AccessTools.Method(logImpl, "LogAtLevel", new[]
-            {
-                typeof(LogLevel),
-                typeof(object),
-                typeof(UnityEngine.Object),
-                typeof(Exception),
-                typeof(IStackTrace)
-            });
-            return original;
+            return true;
         }
+
         private static LoggingSettings Settings;
         private static HashSet<string> IgnoreSkipForLoggers;
         private static bool SkipOriginalLoggers => IgnoreSkipForLoggers != null;
-        private static Func<object, LogLevel, bool> LogImplIsEnabledFor;
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -82,11 +59,11 @@ namespace ModTek.Features.Logging.Patches
         }
 
         [HarmonyPriority(Priority.High)]
-        public static bool Prefix(object __instance, string ___name, LogLevel level, object message, Exception exception, IStackTrace location)
+        public static bool Prefix(Logger.LogImpl __instance, string ___name, LogLevel level, object message, Exception exception, IStackTrace location)
         {
             try
             {
-                if (Settings.IgnoreLoggerLogLevel || LogImplIsEnabledFor(__instance, level))
+                if (Settings.IgnoreLoggerLogLevel || __instance.IsEnabledFor(level))
                 {
                     LoggingFeature.LogAtLevel(
                         ___name,

@@ -28,8 +28,6 @@ namespace ModTek.Features.CustomVideos.Patches
                 return true;
             }
 
-            var iTraverse = Traverse.Create(__instance);
-
             // some code taken from HBS decompiled code, license does not apply here
             var bink = Bink.Open(
                 videoEntry.FilePath,
@@ -38,7 +36,7 @@ namespace ModTek.Features.CustomVideos.Patches
                 Bink.BufferingTypes.Stream,
                 0UL
             );
-            iTraverse.Field("bink").SetValue(bink);
+            __instance.bink = bink;
 
             if (bink == IntPtr.Zero)
             {
@@ -49,11 +47,11 @@ namespace ModTek.Features.CustomVideos.Patches
             var info = default(Bink.Info);
             Bink.GetInfo(bink, ref info);
 
-            iTraverse.Field("info").SetValue(info);
-            iTraverse.Field("binkw").SetValue(info.Width);
-            iTraverse.Field("binkh").SetValue(info.Height);
+            __instance.info = info;
+            __instance.binkw = info.Width;
+            __instance.binkh = info.Height;
 
-            var loopCount = iTraverse.Field("loopCount").GetValue<int>();
+            var loopCount = __instance.loopCount;
             Bink.Loop(bink, (uint) loopCount);
 
             var bmpTraverse = Traverse.Create(typeof(BinkMediaPlayer));

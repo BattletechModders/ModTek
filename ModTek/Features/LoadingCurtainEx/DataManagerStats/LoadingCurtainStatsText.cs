@@ -44,29 +44,29 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
 
         internal static void SetText(LoadingCurtain loadingCurtain, string text)
         {
-            var traverse = new LoadingCurtainTraverse(loadingCurtain);
+            if (loadingCurtain == null)
             {
-                var popupContainer = traverse.popupContainer;
-                if (popupContainer == null)
-                {
-                    return;
-                }
-                if (popupContainer.activeInHierarchy)
-                {
-                    SetPopupExtraText(popupContainer, text);
-                }
-                else
-                {
-                    SetFullScreenText(traverse.spinnerAndTipWidget, text);
-                }
+                return;
+            }
+            var popupContainer = loadingCurtain.popupContainer;
+            if (popupContainer == null)
+            {
+                return;
+            }
+            if (popupContainer.activeInHierarchy)
+            {
+                SetPopupExtraText(popupContainer, text);
+            }
+            else
+            {
+                SetFullScreenText(loadingCurtain.spinnerAndTipWidget, text);
             }
         }
 
         internal static void Init(LoadingCurtain loadingCurtain)
         {
-            var traverse = new LoadingCurtainTraverse(loadingCurtain);
-            SetupPopupStatsGameObject(traverse.popupLoadingText);
-            SetupFullScreenStatsGameObject(traverse.spinnerAndTipWidget);
+            SetupPopupStatsGameObject(loadingCurtain.popupLoadingText);
+            SetupFullScreenStatsGameObject(loadingCurtain.spinnerAndTipWidget);
         }
 
         private const string PopupGameObjectName = "ModTek_PopupStats";
@@ -164,15 +164,3 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
         }
     }
 }
-
-/*
-LoadingSpinnerAndTip_Widget ___spinnerAndTipWidget;
-if (___spinnerAndTipWidget.isActiveAndEnabled)
-{
-    var tipText = Traverse.Create(___spinnerAndTipWidget).Field("tipText").GetValue<LocalizableText>();
-    if (tipText != null)
-    {
-        tipText.SetText(statsText);
-    }
-}
-*/
