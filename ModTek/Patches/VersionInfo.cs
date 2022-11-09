@@ -20,7 +20,7 @@ namespace ModTek.Patches
         public static void Postfix(ref string __result)
         {
             var old = __result;
-            __result = old + $"\nw/ ModTek v{VersionTools.ShortVersion}";
+            __result = old + $"\nw/ ModTek v{GitVersionInformation.FullSemVer}";
         }
     }
 }

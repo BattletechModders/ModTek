@@ -1,31 +1,38 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading;
-using Harmony;
 using HBS.Logging;
-using ModTek.Util;
 using UnityEngine;
 
 namespace ModTek.Features.Logging
 {
     internal class Formatter
     {
+        private static readonly DateTimeOffset StartupTime;
+        static Formatter()
+        {
+            StartupTime = DateTimeOffset.UtcNow.AddSeconds(-Time.realtimeSinceStartup);
+        }
+
         private readonly FormatterSettings settings;
         public Formatter(FormatterSettings settings)
         {
             this.settings = settings;
         }
 
-        internal LogLine GetFormattedLogLine(string name, LogLevel logLevel, object message, Exception exception, IStackTrace location, Thread thread)
+        internal LogLine GetFormattedLogLine(MTLoggerMessageDto messageDto)
         {
-            var time = GetFormattedTime();
-            var formattedThread = GetFormattedThread(thread);
+            var formattedTime = GetFormattedTime(messageDto.time);
+            var formattedThread = GetFormattedThread(messageDto.thread);
+            var messageString = messageDto.message == null
+                ? string.Empty
+                : MessageSanitizer.Replace(messageDto.message, string.Empty);
             var line = string.Format(settings.FormatLine,
-                name,
-                LogToString(logLevel),
-                message,
-                exception == null ?  GetFormattedLocation(location) : GetFormattedException(exception)
+                messageDto.loggerName,
+                LogToString(messageDto.logLevel),
+                messageString,
+                messageDto.exception == null ?  null : GetFormattedException(messageDto.exception)
             );
 
             if (settings.NormalizeNewLines)
@@ -39,8 +46,11 @@ namespace ModTek.Features.Logging
                 line = line.Replace("\n", "\n\t");
             }
 
-            return new LogLine(time, formattedThread, line);
+            return new LogLine(formattedTime, formattedThread, line);
         }
+
+        // used to remove logging unfriendly characters
+        private static readonly Regex MessageSanitizer = new Regex(@"[\p{C}-[\r\n\t]]+", RegexOptions.Compiled);
 
         internal class LogLine
         {
@@ -61,14 +71,14 @@ namespace ModTek.Features.Logging
             internal string PrefixLine { get; }
         }
 
-        private string GetFormattedTime()
+        private string GetFormattedTime(DateTimeOffset time)
         {
-            return settings.UseAbsoluteTime ? GetFormattedAbsoluteTime() : GetFormattedStartupTime();
+            return settings.UseAbsoluteTime ? GetFormattedAbsoluteTime(time) : GetFormattedStartupTime(time);
         }
 
-        private string GetFormattedStartupTime()
+        private string GetFormattedStartupTime(DateTimeOffset time)
         {
-            var value = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
+            var value = time - StartupTime;
             var formatted = string.Format(
                 settings.FormatStartupTime,
                 value.Hours,
@@ -78,15 +88,15 @@ namespace ModTek.Features.Logging
             return formatted;
         }
 
-        private string GetFormattedAbsoluteTime()
+        private string GetFormattedAbsoluteTime(DateTimeOffset time)
         {
-            var dto = settings.FormatAbsoluteTimeUseUtc ? DateTimeOffset.UtcNow : DateTimeOffset.Now;
+            var dto = settings.FormatAbsoluteTimeUseUtc ? time.ToUniversalTime() : time.ToLocalTime();
             return dto.ToString(settings.FormatAbsoluteTime, CultureInfo.InvariantCulture);
         }
 
         private string GetFormattedThread(Thread thread)
         {
-            if (MTUnityUtils.MainManagedThreadId == thread.ManagedThreadId)
+            if (thread == null)
             {
                 return null;
             }
@@ -113,23 +123,6 @@ namespace ModTek.Features.Logging
         private string GetFormattedException(Exception exception)
         {
             return string.Format(settings.FormatException, exception);
-        }
-
-        private string GetFormattedLocation(IStackTrace location)
-        {
-            if (!HBS.Logging.Logger.IsStackTraceEnabled || location == null || location.FrameCount < 1)
-            {
-                return null;
-            }
-
-            var stackTrace = ((DiagnosticsStackTrace)location).stackTrace;
-            if (stackTrace == null || stackTrace.FrameCount < 1)
-            {
-                return null;
-            }
-            var method = stackTrace.GetFrame(0).GetMethod();
-            var formatted = string.Format(settings.FormatLocation, method.DeclaringType, method.Name);
-            return formatted;
         }
     }
 }

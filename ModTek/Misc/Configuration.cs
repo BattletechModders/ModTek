@@ -114,7 +114,6 @@ namespace ModTek.Misc
                             NullValueHandling = NullValueHandling.Ignore
                         }
                     );
-                    MTLogger.Info.Log($"Loaded config from path: {path}");
                 }
                 catch (Exception e)
                 {

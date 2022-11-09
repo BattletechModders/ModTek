@@ -63,7 +63,6 @@ namespace ModTek
         private static void Start() {
             stopwatch.Start();
 
-            MTUnityUtils.Init();
             Config = Configuration.FromDefaultFile();
             LoggingFeature.Init();
             Config.LogAnyDanglingExceptions();
@@ -73,7 +72,7 @@ namespace ModTek
                 try
                 {
                     SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
-                    SettingsDef.Version = VersionTools.ShortVersion;
+                    SettingsDef.Version = GitVersionInformation.SemVer;
                 }
                 catch (Exception e)
                 {
@@ -91,7 +90,7 @@ namespace ModTek
                     Enabled = true,
                     PendingEnable = true,
                     Name = MODTEK_DEF_NAME,
-                    Version = VersionTools.ShortVersion,
+                    Version = GitVersionInformation.SemVer,
                     Description = "Mod system for HBS's PC game BattleTech.",
                     Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum",
                     Website = "https://github.com/BattletechModders/ModTek"
@@ -102,7 +101,7 @@ namespace ModTek
             }
 
             // load progress bar
-            if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{VersionTools.ShortVersion}"))
+            if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{GitVersionInformation.FullSemVer}"))
             {
                 MTLogger.Error.Log("Failed to load progress bar.  Skipping mod loading completely.");
                 FinishAndCleanup();

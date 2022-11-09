@@ -97,7 +97,7 @@
     <Reference Include="UnityEngine.AssetBundleModule">
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
+    <Reference Include="UnityEngine.CoreModule" Publicize="true">
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">

@@ -3,16 +3,28 @@ using System.Collections.Generic;
 using System.Reflection;
 using Harmony;
 using HBS.Logging;
-using ModTek.Util;
+using UnityEngine;
 
 namespace ModTek.Features.Logging.Patches
 {
     [HarmonyPatch]
     internal static class Exception_ctor_Patch
     {
+        private static bool Setup;
+        private static bool ApplicationIsQuitting;
+
         public static bool Prepare()
         {
-            return ModTek.Enabled && ModTek.Config.Logging.LogExceptionInitializations;
+            if (ModTek.Enabled && ModTek.Config.Logging.LogExceptionInitializations)
+            {
+                if (!Setup)
+                {
+                    Application.quitting += () => ApplicationIsQuitting = true;
+                    Setup = true;
+                }
+                return true;
+            }
+            return false;
         }
 
         internal static IEnumerable<MethodBase> TargetMethods()
@@ -23,7 +35,7 @@ namespace ModTek.Features.Logging.Patches
         public static void Postfix(Exception __instance)
         {
             // fix for "crash during exit"
-            if (MTUnityUtils.ApplicationIsQuitting)
+            if (ApplicationIsQuitting)
             {
                 return;
             }
