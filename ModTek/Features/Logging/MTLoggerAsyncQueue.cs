@@ -48,6 +48,10 @@ namespace ModTek.Features.Logging
                     }
                 }
             }
+            catch (InvalidOperationException)
+            {
+                // ignore
+            }
             finally
             {
                 _queue.Dispose();
