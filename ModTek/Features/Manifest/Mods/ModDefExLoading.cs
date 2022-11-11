@@ -38,35 +38,26 @@ namespace ModTek.Features.Manifest.Mods
 
             if (!File.Exists(dllPath))
             {
-                MTLogger.Info.Log($"\tError: DLL specified ({dllPath}), but it's missing! Aborting load.");
+                MTLogger.Warning.Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
                 return false;
             }
 
             if (modDef.DLLEntryPoint != null)
             {
-                var pos = modDef.DLLEntryPoint.LastIndexOf('.');
-                if (pos == -1)
-                {
-                    methodName = modDef.DLLEntryPoint;
-                }
-                else
-                {
-                    typeName = modDef.DLLEntryPoint.Substring(0, pos);
-                    methodName = modDef.DLLEntryPoint.Substring(pos + 1);
-                }
+                GetTypeAndMethodNames(modDef.DLLEntryPoint, out typeName, out methodName);
             }
 
             var assembly = AssemblyUtil.LoadDLL(dllPath);
             if (assembly == null)
             {
-                MTLogger.Info.Log($"\tError: Failed to load mod assembly at path {dllPath}.");
+                MTLogger.Warning.Log($"\tFailed to load mod assembly at path {dllPath}.");
                 return false;
             }
 
             var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
             if (methods == null || methods.Length == 0)
             {
-                MTLogger.Info.Log($"\t\tError: Could not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                MTLogger.Warning.Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
                 return false;
             }
 
@@ -109,11 +100,11 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Info.Log($"\tError: While invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    MTLogger.Warning.Log($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 
-                MTLogger.Info.Log($"\tError: Could not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                MTLogger.Warning.Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                 return false;
             }
 
@@ -129,13 +120,25 @@ namespace ModTek.Features.Manifest.Mods
 
         internal static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder)
         {
-            var methods = AssemblyUtil.FindMethods(modDef.Assembly, "FinishedLoading");
+            const string methodName = "FinishedLoading";
+            MethodInfo[] methods = null;
+            if (modDef.DLLEntryPoint != null)
+            {
+                if (GetTypeAndMethodNames(modDef.DLLEntryPoint, out var typeName, out _))
+                {
+                    methods = AssemblyUtil.FindMethods(modDef.Assembly, methodName, typeName);
+                }
+            }
+
+            if (methods == null || methods.Length == 0)
+            {
+                methods = AssemblyUtil.FindMethods(modDef.Assembly, methodName);
+            }
 
             if (methods == null || methods.Length == 0)
             {
                 return;
             }
-
             var paramsDictionary = new Dictionary<string, object> { { "loadOrder", new List<string>(ModLoadOrder) } };
 
             if (modDef.CustomResourceTypes.Count > 0)
@@ -151,14 +154,29 @@ namespace ModTek.Features.Manifest.Mods
                     MTLogger.Info.Log($"\tFinishedLoading {modDef.QuotedName}");
                     if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                     {
-                        MTLogger.Info.Log($"\tError: {modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                        MTLogger.Warning.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                     }
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Info.Log($"\tError: {modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+                    MTLogger.Warning.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
                 }
             }
+        }
+
+        private static bool GetTypeAndMethodNames(string dotNotation, out string typeName, out string methodName)
+        {
+            var pos = dotNotation.LastIndexOf('.');
+            if (pos == -1)
+            {
+                typeName = null;
+                methodName = dotNotation;
+                return false;
+            }
+
+            typeName = dotNotation.Substring(0, pos);
+            methodName = dotNotation.Substring(pos + 1);
+            return true;
         }
 
         private static Dictionary<string, Assembly> TryResolveAssemblies = new Dictionary<string, Assembly>();

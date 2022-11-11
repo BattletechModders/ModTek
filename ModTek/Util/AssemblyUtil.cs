@@ -58,14 +58,18 @@ namespace ModTek.Util
                 foreach (var type in types)
                 {
                     var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
-                    methods.Add(method);
+                    if (method != null)
+                    {
+                        methods.Add(method);
+                    }
                 }
 
                 return methods.ToArray();
             }
             catch (Exception e)
             {
-                MTLogger.Warning.Log($"Can't find method(s) with name {methodName} in assembly {assembly.FullName}", e);
+                var typeString = typeName == null ? "in" : $"in type {typeName} of";
+                MTLogger.Warning.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
                 return null;
             }
         }
