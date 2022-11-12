@@ -111,7 +111,7 @@ namespace ModTek.Features.Logging
                 // TODO use message dto fields directly
                 // TODO avoids the need to assemble a prefix line
                 // TODO meaning formatting could be skipped (~50% of logging time is spent during formatting)
-                if (IgnorePrefixesMatcher == null || IgnorePrefixesMatcher.IsMatch(logLine.PrefixLine))
+                if (IgnorePrefixesMatcher == null || !IgnorePrefixesMatcher.IsMatch(logLine.PrefixLine))
                 {
                     btCleanAppender.WriteLine(logLine.FullLine);
                 }
