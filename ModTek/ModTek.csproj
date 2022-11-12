@@ -17,7 +17,6 @@
 
     <!-- Traditional debugging does not work anyway, so no need to have such options available -->
     <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
 
     <!-- Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
