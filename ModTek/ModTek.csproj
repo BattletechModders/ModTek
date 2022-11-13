@@ -120,7 +120,7 @@
   <ItemGroup>
     <Asset Include="modtekassetbundle" CopyToOutputDirectory="PreserveNewest" />
     <Asset Include="$(ProjectDir)\..\README.md" CopyToOutputDirectory="PreserveNewest" />
-    <Asset Include="$(ProjectDir)\..\UNLICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <Asset Include="$(ProjectDir)\..\LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Reference files generated in the game directory for quick access in the IDE -->

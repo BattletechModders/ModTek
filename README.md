@@ -99,7 +99,3 @@ ModTek 0.7.6 or higher can be enabled or disabled from within the in-game mods m
 [Unity DoorStop](https://github.com/NeighTools/UnityDoorstop) provides a set of files that trick Unity into loading ModTek, but without modifying the game files.
 The old way was asking the user to run a `ModTekInjector.exe` manually, which modified the game so it loaded ModTek.
 In cases of updates, the old way required the user to "verify" the game files and re-install mods, but using UnityDoorstop this is not necessary anymore.
-
-## License
-
-ModTek is provided under the [Unlicense](UNLICENSE), which releases the work into the public domain.
