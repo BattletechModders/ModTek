@@ -20,8 +20,7 @@ namespace ModTek.Features.Logging
         {
             var formattedTime = GetFormattedTime(messageDto);
             var formattedThread = GetFormattedThread(messageDto.thread);
-
-            var formattedLogLevel = messageDto.logLevel.ToString().ToUpperInvariant();
+            var formattedLogLevel = LogLevelExtension.LogToString(messageDto.logLevel);
 
             string messageString;
             if (string.IsNullOrEmpty(messageDto.message))
