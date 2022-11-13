@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
-using HBS.Logging;
 
 namespace ModTek.Features.Logging
 {
@@ -22,6 +21,8 @@ namespace ModTek.Features.Logging
             var formattedTime = GetFormattedTime(messageDto);
             var formattedThread = GetFormattedThread(messageDto.thread);
 
+            var formattedLogLevel = messageDto.logLevel.ToString().ToUpperInvariant();
+
             string messageString;
             if (string.IsNullOrEmpty(messageDto.message))
             {
@@ -38,7 +39,7 @@ namespace ModTek.Features.Logging
 
             var exceptionAddition = messageDto.exception == null ? null : $": {messageDto.exception}";
             var threadAddition = formattedThread == null ? null : " " + formattedThread;
-            var line = $"{formattedTime}{threadAddition} {messageDto.loggerName} [{LogToString(messageDto.logLevel)}] {messageString}{exceptionAddition}";
+            var line = $"{formattedTime}{threadAddition} {messageDto.loggerName} [{formattedLogLevel}] {messageString}{exceptionAddition}";
 
             if (_settings.NormalizeNewLines)
             {
@@ -74,23 +75,6 @@ namespace ModTek.Features.Logging
                 return null;
             }
             return "[ThreadId=" + thread.ManagedThreadId + "]";
-        }
-
-        private string LogToString(LogLevel level)
-        {
-            switch (level)
-            {
-                case LogLevel.Debug:
-                    return "DEBUG";
-                case LogLevel.Log:
-                    return "LOG";
-                case LogLevel.Warning:
-                    return "WARNING";
-                case LogLevel.Error:
-                    return "ERROR";
-                default:
-                    return "?????";
-            }
         }
     }
 }
