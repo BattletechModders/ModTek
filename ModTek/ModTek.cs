@@ -55,8 +55,7 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                // Mods/.modtek already exist due to preloader
-                File.WriteAllText(Path.Combine("Mods", ".modtek", "ModTekFatalError.log"), e.ToString());
+                LoggingFeature.WriteExceptionToFatalLog(e);
             }
         }
 

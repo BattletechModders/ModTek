@@ -11,20 +11,30 @@ namespace ModTek.Features.Logging
 
         private long _ticks;
         private long _count;
-        private Tracker _actionTracker;
+        private Tracker _tracker;
 
         internal void Track(Action action)
         {
-            _actionTracker.Begin();
+            Start();
             try
             {
                 action();
             }
             finally
             {
-                var elapsed = _actionTracker.End();
-                AddMeasurement(elapsed);
+                Stop();
             }
+        }
+
+        internal void Start()
+        {
+            _tracker.Begin();
+        }
+
+        internal void Stop()
+        {
+            var elapsed = _tracker.End();
+            AddMeasurement(elapsed);
         }
 
         internal void AddMeasurement(long elapsedTicks, long incrementCount = 1)
@@ -77,6 +87,11 @@ namespace ModTek.Features.Logging
             {
                 return Stopwatch.IsHighResolution ? ticks / (Stopwatch.Frequency / 1000L) : ticks;
             }
+        }
+
+        internal static TimeSpan TimeSpanFromTicks(long elapsedTicks)
+        {
+            return Stopwatch.IsHighResolution ? TimeSpan.FromTicks(elapsedTicks / (Stopwatch.Frequency / 10000000L)) : TimeSpan.FromTicks(elapsedTicks);
         }
     }
 }

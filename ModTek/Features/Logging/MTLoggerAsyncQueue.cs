@@ -25,9 +25,9 @@ namespace ModTek.Features.Logging
             _thread.Start();
         }
 
-        private readonly MTStopwatch _stopwatch = new MTStopwatch
+        private static readonly MTStopwatch _loggingStopwatch = new MTStopwatch
         {
-            Callback = stats => MTLogger.Debug.Log($"Asynchronous logging offloaded {stats.TotalMS} ms from the main thread."),
+            Callback = stats => MTLogger.Debug.Log($"Asynchronous logging offloaded {stats.TotalMS - _queueStopwatch.GetStats().TotalMS} ms from the main thread."),
             CallbackForEveryNumberOfMeasurements = 1000
         };
 
@@ -40,11 +40,11 @@ namespace ModTek.Features.Logging
                     var message = _queue.Take();
                     try
                     {
-                        _stopwatch.Track(() => _processor(message));
+                        _loggingStopwatch.Track(() => _processor(message));
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // ignore
+                        LoggingFeature.WriteExceptionToFatalLog(e);
                     }
                 }
             }
@@ -60,11 +60,12 @@ namespace ModTek.Features.Logging
 
         private bool CurrentThreadIsLoggerThread() => Thread.CurrentThread == _thread;
 
-        private MTStopwatch.Tracker _queueTracker;
+
+        private static readonly MTStopwatch _queueStopwatch = new MTStopwatch();
         // return false only if there was an error or async is not wanted
         internal bool Add(MTLoggerMessageDto messageDto)
         {
-            _queueTracker.Begin();
+            _queueStopwatch.Start();
             try
             {
                 if (!_queue.IsAddingCompleted && !CurrentThreadIsLoggerThread())
@@ -79,8 +80,7 @@ namespace ModTek.Features.Logging
             }
             finally
             {
-                // this removes the wait times
-                _stopwatch.AddMeasurement(-_queueTracker.End(), 0);
+                _queueStopwatch.Stop();
             }
             return false;
         }

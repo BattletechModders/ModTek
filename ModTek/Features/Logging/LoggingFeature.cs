@@ -1,8 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
 
@@ -10,54 +8,23 @@ namespace ModTek.Features.Logging
 {
     internal static class LoggingFeature
     {
-        private static readonly ILog MainLogger = Logger.GetLogger("ModTek");
+        private static readonly ILog ModTekLogger = Logger.GetLogger("ModTek", LogLevel.Debug);
 
         private static LoggingSettings Settings => ModTek.Config.Logging;
-        private static Regex IgnorePrefixesMatcher;
 
-        private static string BTCleanLogFilePath => Path.Combine(FilePaths.TempModTekDirectory, "battletech_log.txt");
-        private static string BTFullLogFilePath => Path.Combine(FilePaths.TempModTekDirectory, "battletech_log_original.txt");
-        private static string MTLogFilePath => FilePaths.LogPath;
+        private static LogAppender _mainLog;
+        private static readonly List<LogAppender> _logsAppenders = new List<LogAppender>();
 
-        private static Formatter btLogFormatter;
-        private static Appender btCleanAppender;
-        private static Appender btFullAppender;
-
-        private static Formatter modTekFormatter;
-        private static Appender modTekAppender;
-
-        private static MTLoggerAsyncQueue queue;
+        private static MTLoggerAsyncQueue _queue;
 
         internal static void Init()
         {
             Directory.CreateDirectory(FilePaths.TempModTekDirectory);
 
-            btLogFormatter = new Formatter(Settings.BattleTechLogFormatting);
-            btCleanAppender = new Appender(BTCleanLogFilePath);
-            btFullAppender = Settings.PreserveFullLog ? new Appender(BTFullLogFilePath) : null;
-
-            modTekFormatter = new Formatter(Settings.ModTekLogFormatting);
-            modTekAppender = new Appender(MTLogFilePath);
-            Logger.SetLoggerLevel(MainLogger.Name, LogLevel.Debug);
-
+            _mainLog = new LogAppender(Settings.MainLogFilePath, Settings.MainLog);
+            foreach (var kv in Settings.Logs)
             {
-                var prefixes = Settings.PrefixesToIgnore;
-                if (prefixes.Any())
-                {
-                    try
-                    {
-                        var trie = Trie.Create(prefixes);
-                        IgnorePrefixesMatcher = trie.CompileRegex();
-                    }
-                    catch (Exception e)
-                    {
-                        btCleanAppender.WriteLine("Issue processing logging ignore prefixes" + e);
-                    }
-                }
-                else
-                {
-                    IgnorePrefixesMatcher = null;
-                }
+                _logsAppenders.Add(new LogAppender(kv.Key, kv.Value));
             }
 
             if (Settings.LogUncaughtExceptions)
@@ -81,20 +48,20 @@ namespace ModTek.Features.Logging
                 };
             }
 
-            queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+            _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
         }
 
         // used for direct logging from ModTek code
         internal static void Log(LogLevel logLevel, string message, Exception e)
         {
-            MainLogger.LogAtLevel(logLevel, message, e);
+            ModTekLogger.LogAtLevel(logLevel, message, e);
         }
 
         // used for intercepting all logging attempts and to log centrally
         internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
         {
             var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception);
-            if (!queue.Add(messageDto))
+            if (!_queue.Add(messageDto))
             {
                 ProcessLoggerMessage(messageDto);
             }
@@ -103,27 +70,16 @@ namespace ModTek.Features.Logging
         // note this can be called sync or async
         private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
         {
+            _mainLog.Append(messageDto);
+            foreach (var logAppender in _logsAppenders)
             {
-                var logLine = btLogFormatter.GetFormattedLogLine(messageDto);
-
-                btFullAppender?.WriteLine(logLine.FullLine);
-
-                // TODO use message dto fields directly
-                // TODO avoids the need to assemble a prefix line
-                // TODO meaning formatting could be skipped (~50% of logging time is spent during formatting)
-                if (IgnorePrefixesMatcher == null || !IgnorePrefixesMatcher.IsMatch(logLine.PrefixLine))
-                {
-                    btCleanAppender.WriteLine(logLine.FullLine);
-                }
+                logAppender.Append(messageDto);
             }
+        }
 
-            // TODO allow to add other loggers and log file paths
-            // TODO multiple logger names incl wildcard + formatter settings => filename to put into .modtek/logs
-            if (messageDto.loggerName == "ModTek")
-            {
-                var logLine = modTekFormatter.GetFormattedLogLine(messageDto);
-                modTekAppender.WriteLine(logLine.FullLine);
-            }
+        internal static void WriteExceptionToFatalLog(Exception exception)
+        {
+            File.WriteAllText(Path.Combine("Mods", ".modtek", "ModTekFatalError.log"), exception.ToString());
         }
     }
 }
