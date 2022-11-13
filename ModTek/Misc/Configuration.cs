@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using System.Reflection;
 using ModTek.Features.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace ModTek.Misc
 {
@@ -85,6 +88,11 @@ namespace ModTek.Misc
         internal const string IgnoreMissingMods_Description = "Ignore the dependency requirement of mods that depend on the listed mods. Useful if e.g. ModTek provides the same functionality as the ignored mods.";
 
         [JsonProperty]
+        internal bool HideDescriptionsInLastConfig = true;
+        [JsonProperty]
+        internal const string HideDescriptionsOnLastConfig_Description = "Hides all _Description fields from the generated `last` config file.";
+
+        [JsonProperty]
         internal LoggingSettings Logging = new LoggingSettings();
 
         [JsonIgnore]
@@ -125,7 +133,7 @@ namespace ModTek.Misc
                 File.WriteAllText(path, "{}");
             }
 
-            config.WriteConfig(ConfigLastPath);
+            config.WriteConfig(ConfigLastPath, config.HideDescriptionsInLastConfig);
 
             return config;
         }
@@ -138,11 +146,37 @@ namespace ModTek.Misc
             }
         }
 
-        private void WriteConfig(string path)
+        private void WriteConfig(string path, bool hideDescriptions = false)
         {
-            File.WriteAllText(path, JsonConvert.SerializeObject(this,
-                Formatting.Indented
-            ));
+            using (var sw = new StreamWriter(path))
+            using (var jw = new JsonTextWriter(sw))
+            {
+                jw.Formatting = Formatting.Indented;
+                jw.IndentChar = ' ';
+                jw.Indentation = 4;
+                var serializer = new JsonSerializer
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                if (hideDescriptions)
+                {
+                    serializer.ContractResolver = ShouldSerializeContractResolver.Instance;
+                }
+                serializer.Converters.Add(new StringEnumConverter());
+                serializer.Serialize(jw, this);
+            }
+        }
+
+        private class ShouldSerializeContractResolver : DefaultContractResolver
+        {
+            public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+
+            protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+            {
+                var property = base.CreateProperty(member, memberSerialization);
+                property.ShouldSerialize = _ => !property.PropertyName.EndsWith("_Description");
+                return property;
+            }
         }
 
         public override string ToString()
