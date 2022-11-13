@@ -20,11 +20,9 @@ However almost no mods use that. In general, transpilers are wrapped successfull
 implementation in Harmony 1 allowed for invalid or broken patching, which would now throw an error during patching due to 
 HarmonyX being more strict and bug free.
 
-With BepInEx 6 they will not support older or alternative harmony versions anymore, so we are stuck to the current versions of harmony.
-Fortunately BepInEx 5 is still supported in LTS mode and does support the harmony shims.
-
-ModTek continues to use Harmony 1.2, which means that it itself requires the BepInEx 5 Harmony shims.
+With BepInEx 6 they will not support older harmony versions anymore, however shimming is still working even with newer HarmonyX.
+Also BepInEx 5 is still supported in LTS mode and does support the harmony shims.
 
 ## How to use it
 
-Reference `Mods/ModTek/Harmony12X/0Harmony.dll` to use the latest HarmonyX version that works with ModTek.
+Reference `Mods/ModTek/Harmony12X/0Harmony.dll` to use the latest HarmonyX version and enable HarmonyX in the `ModTek/config.json`.

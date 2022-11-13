@@ -80,6 +80,8 @@ The launch options should then look something like this:
 - [Manifest Manipulation](doc/MANIFEST.md)
 - [Content Pack Assets](doc/CONTENT_PACK_ASSETS.md)
 - [Preloader and Injectors](doc/PRELOADER.md)
+- [Logging with ModTek](doc/LOGGING.md)
+- [Modern Mod Development with C#](doc/MODERN_MOD_DEVELOPMENT.md)
 
 ## Developing ModTek
 
