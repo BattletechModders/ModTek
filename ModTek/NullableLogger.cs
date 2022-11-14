@@ -12,13 +12,13 @@ internal sealed class NullableLogger
 
     internal static NullableLogger GetLogger(string name, LogLevel? defaultLogLevel = TraceLogLevel)
     {
-        lock (_modLoggers)
+        lock (_loggers)
         {
-            if (!_modLoggers.TryGetValue(name, out var modLogger))
+            if (!_loggers.TryGetValue(name, out var loggers))
             {
-                modLogger = new NullableLogger(name, defaultLogLevel);
+                loggers = new(name, defaultLogLevel);
             }
-            return modLogger;
+            return loggers;
         }
     }
 
@@ -28,7 +28,7 @@ internal sealed class NullableLogger
 
     // tracking (static)
 
-    private static readonly SortedList<string, NullableLogger> _modLoggers = new();
+    private static readonly SortedList<string, NullableLogger> _loggers = new();
     static NullableLogger()
     {
         TrackLoggerLevelChanges();
@@ -39,14 +39,14 @@ internal sealed class NullableLogger
             .Create(typeof(NullableLogger).FullName)
             .Patch(
                 original: typeof(Logger.LogImpl).GetProperty(nameof(Logger.LogImpl.Level))!.SetMethod,
-                postfix: new HarmonyMethod(typeof(NullableLogger), nameof(LogImpl_set_Level_Postfix))
+                postfix: new(typeof(NullableLogger), nameof(LogImpl_set_Level_Postfix))
             );
     }
     private static void LogImpl_set_Level_Postfix()
     {
-        lock (_modLoggers)
+        lock (_loggers)
         {
-            foreach (var modLogger in _modLoggers.Values)
+            foreach (var modLogger in _loggers.Values)
             {
                 modLogger.RefreshLogLevel();
             }
@@ -56,7 +56,7 @@ internal sealed class NullableLogger
     // instantiation
 
     internal Logger.LogImpl Log { get; }
-    private NullableLogger(string name, LogLevel? defaultLogLevel = null)
+    private NullableLogger(string name, LogLevel? defaultLogLevel)
     {
         Log = (Logger.LogImpl)(
             defaultLogLevel == null
@@ -91,9 +91,9 @@ internal sealed class NullableLogger
 
     private bool SyncLevelLogger(bool lowerLevelEnabled, LogLevel logLevel, ref LevelLogger? field)
     {
-        if (lowerLevelEnabled)
+        if (lowerLevelEnabled || Log.IsEnabledFor(logLevel))
         {
-            field ??= new LevelLogger(logLevel, Log);
+            field ??= new(logLevel, Log);
             return true;
         }
         field = null;
