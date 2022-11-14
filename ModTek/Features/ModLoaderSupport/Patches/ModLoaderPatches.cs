@@ -7,7 +7,6 @@ using BattleTech.ModSupport;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
 using UnityEngine;
 
@@ -240,21 +239,21 @@ namespace ModTek.Features.ModLoaderSupport.Patches
 
         public static bool Prefix(Dictionary<string, ModStatusItem> tempLoadedMods)
         {
-            MTLogger.Info.Log("SaveModStatusToFile");
+            Log.Main.Info?.Log("SaveModStatusToFile");
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
-                MTLogger.Info.Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log.Main.Info?.Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
                 if (mod.Value.PendingEnable != mod.Value.Enabled)
                 {
                     try
                     {
                         mod.Value.Enabled = mod.Value.PendingEnable;
                         mod.Value.SaveState();
-                        MTLogger.Info.Log("\t\tsave state:" + mod.Value.Enabled);
+                        Log.Main.Info?.Log("\t\tsave state:" + mod.Value.Enabled);
                     }
                     catch (Exception e)
                     {
-                        MTLogger.Info.Log("Can't save mod state", e);
+                        Log.Main.Info?.Log("Can't save mod state", e);
                     }
                 }
             }
@@ -590,7 +589,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
             }
 
             ;
-            MTLogger.Info.Log("InitializeList");
+            Log.Main.Info?.Log("InitializeList");
             foreach (var mod in ModDefsDatabase.allModDefs)
             {
                 mod.Value.PendingEnable = mod.Value.Enabled;
@@ -599,7 +598,7 @@ namespace ModTek.Features.ModLoaderSupport.Patches
                     ___modsList.Add(mod.Value.ToVanilla());
                 }
 
-                MTLogger.Info.Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
+                Log.Main.Info?.Log("\t" + mod.Value.QuotedName + ":" + mod.Value.Enabled + ":" + mod.Value.PendingEnable + ":" + mod.Value.LoadFail);
             }
 
             __result = true;

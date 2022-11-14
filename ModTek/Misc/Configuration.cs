@@ -141,7 +141,7 @@ namespace ModTek.Misc
         {
             if (ReadConfigurationException != null)
             {
-                MTLogger.Warning.Log("Reading configuration failed, using defaults", ReadConfigurationException);
+                Log.Main.Warning?.Log("Reading configuration failed, using defaults", ReadConfigurationException);
             }
         }
 

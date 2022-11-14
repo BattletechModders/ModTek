@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using Harmony;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -14,7 +13,7 @@ namespace ModTek.Features.Manifest.Mods
     {
         internal static bool LoadMod(ModDefEx modDef, out string reason)
         {
-            MTLogger.Info.Log($"{modDef.QuotedName} {modDef.Version}");
+            Log.Main.Info?.Log($"{modDef.QuotedName} {modDef.Version}");
 
             // although manifest related, CR listings are mostly relevant for the FinishedLoading call
             CustomResourcesFeature.ProcessModDef(modDef);
@@ -38,7 +37,7 @@ namespace ModTek.Features.Manifest.Mods
 
             if (!File.Exists(dllPath))
             {
-                MTLogger.Warning.Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
+                Log.Main.Warning?.Log($"\tDLL specified ({dllPath}), but it's missing! Aborting load.");
                 return false;
             }
 
@@ -50,14 +49,14 @@ namespace ModTek.Features.Manifest.Mods
             var assembly = AssemblyUtil.LoadDLL(dllPath);
             if (assembly == null)
             {
-                MTLogger.Warning.Log($"\tFailed to load mod assembly at path {dllPath}.");
+                Log.Main.Warning?.Log($"\tFailed to load mod assembly at path {dllPath}.");
                 return false;
             }
 
             var methods = AssemblyUtil.FindMethods(assembly, methodName, typeName);
             if (methods == null || methods.Length == 0)
             {
-                MTLogger.Warning.Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
+                Log.Main.Warning?.Log($"\t\tCould not find any methods in assembly with name '{methodName}' and with type '{typeName ?? "not specified"}'");
                 return false;
             }
 
@@ -100,11 +99,11 @@ namespace ModTek.Features.Manifest.Mods
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Warning.Log($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
+                    Log.Main.Warning?.Log($"\tWhile invoking '{method.DeclaringType?.Name}.{method.Name}', an exception occured", e);
                     return false;
                 }
 
-                MTLogger.Warning.Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
+                Log.Main.Warning?.Log($"\tCould not invoke method with name '{method.DeclaringType?.Name}.{method.Name}'");
                 return false;
             }
 
@@ -151,15 +150,15 @@ namespace ModTek.Features.Manifest.Mods
             {
                 try
                 {
-                    MTLogger.Info.Log($"\tFinishedLoading {modDef.QuotedName}");
+                    Log.Main.Info?.Log($"\tFinishedLoading {modDef.QuotedName}");
                     if (!AssemblyUtil.InvokeMethodByParameterNames(method, paramsDictionary))
                     {
-                        MTLogger.Warning.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
+                        Log.Main.Warning?.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', parameter mismatch");
                     }
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Warning.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+                    Log.Main.Warning?.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
                 }
             }
         }

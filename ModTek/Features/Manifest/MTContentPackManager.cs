@@ -2,7 +2,6 @@
 using System.IO;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using UnityEngine;
 
@@ -33,7 +32,7 @@ namespace ModTek.Features.Manifest
             var entry = BetterBTRL.Instance.EntryByID(name, BattleTechResourceType.AssetBundle);
             if (entry == null)
             {
-                MTLogger.Info.Log($"Can't find bundle {name} for loading");
+                Log.Main.Info?.Log($"Can't find bundle {name} for loading");
                 return;
             }
             var bundle = AssetBundle.LoadFromFile(entry.FilePath);
@@ -62,14 +61,14 @@ namespace ModTek.Features.Manifest
         {
             if (!loadedBundles.TryGetValue(bundleName, out var bundle))
             {
-                MTLogger.Info.Log($"Could not find bundle {bundleName}.");
+                Log.Main.Info?.Log($"Could not find bundle {bundleName}.");
                 return null;
             }
 
             var asset = bundle.LoadAsset<TextAsset>(resourceId);
             if (asset == null)
             {
-                MTLogger.Info.Log($"Could not find resource {resourceId} in bundle {bundleName}.");
+                Log.Main.Info?.Log($"Could not find resource {resourceId} in bundle {bundleName}.");
                 return null;
             }
             return asset.text;

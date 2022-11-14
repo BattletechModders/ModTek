@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using BattleTech;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
@@ -18,7 +17,7 @@ namespace ModTek.Features.CustomDebugSettings
         public static string GetDebugSettings()
         {
             var entry = BetterBTRL.Instance.EntryByIDAndType("settings", InternalCustomResourceType.DebugSettings.ToString());
-            MTLogger.Info.Log($"Debug settings: {entry.FilePath}");
+            Log.Main.Info?.Log($"Debug settings: {entry.FilePath}");
             return ModsManifest.GetText(entry);
         }
 

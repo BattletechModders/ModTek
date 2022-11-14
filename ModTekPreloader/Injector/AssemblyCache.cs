@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTekPreloader.Loader;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 

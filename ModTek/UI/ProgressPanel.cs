@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
 using UnityEngine;
@@ -74,7 +72,7 @@ namespace ModTek.UI
                         }
                         catch (Exception e)
                         {
-                            MTLogger.Error.Log("Uncaught ModTek exception!", e);
+                            Log.Main.Error?.Log("Uncaught ModTek exception!", e);
 
                             Slider.value = 1.0f;
                             SliderText.text = "ModTek Died!";
@@ -114,7 +112,7 @@ namespace ModTek.UI
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDirectory, ASSET_BUNDLE_NAME));
             if (assetBundle == null)
             {
-                MTLogger.Error.Log($"Loading asset bundle {ASSET_BUNDLE_NAME}");
+                Log.Main.Error?.Log($"Loading asset bundle {ASSET_BUNDLE_NAME}");
                 return false;
             }
 
@@ -127,7 +125,7 @@ namespace ModTek.UI
 
             if (panelTitleText == null || sliderText == null || loadingText == null || sliderGameObject == null)
             {
-                MTLogger.Error.Log("Loading a GameObject from asset bundle");
+                Log.Main.Error?.Log("Loading a GameObject from asset bundle");
                 return false;
             }
 

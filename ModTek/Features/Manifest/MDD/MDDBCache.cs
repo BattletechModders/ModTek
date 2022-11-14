@@ -6,7 +6,6 @@ using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using ModTek.Features.CustomTags;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.UI;
@@ -48,12 +47,12 @@ namespace ModTek.Features.Manifest.MDD
                     CachedItems = ModTekCacheStorage.ReadFrom<List<CacheKeyValue>>(PersistentFilePath)
                         .ToDictionary(kv => kv.Key, kv => kv.Value);
                     MetadataDatabase.ReloadFromDisk();
-                    MTLogger.Info.Log("MDDBCache: Loaded.");
+                    Log.Main.Info?.Log("MDDBCache: Loaded.");
                     return;
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Info.Log("MDDBCache: Loading db cache failed -- will rebuild it.", e);
+                    Log.Main.Info?.Log("MDDBCache: Loading db cache failed -- will rebuild it.", e);
                 }
             }
 
@@ -68,7 +67,7 @@ namespace ModTek.Features.Manifest.MDD
             File.Copy(MDDBPath, ModMDDBPath);
 
             // create a new one if it doesn't exist or couldn't be added
-            MTLogger.Info.Log("MDDBCache: Copying over DB and rebuilding cache.");
+            Log.Main.Info?.Log("MDDBCache: Copying over DB and rebuilding cache.");
             CachedItems.Clear();
             MetadataDatabase.ReloadFromDisk();
         }
@@ -81,28 +80,28 @@ namespace ModTek.Features.Manifest.MDD
                 saveSW.Restart();
                 if (!hasChanges && !SaveMDDB)
                 {
-                    MTLogger.Info.Log($"MDDBCache: No changes detected, skipping save.");
+                    Log.Main.Info?.Log($"MDDBCache: No changes detected, skipping save.");
                     return;
                 }
 
                 MetadataDatabase.SaveMDDToPath();
-                MTLogger.Info.Log($"MDDBCache: Saved MDD.");
+                Log.Main.Info?.Log($"MDDBCache: Saved MDD.");
 
                 if (hasChanges)
                 {
                     ModTekCacheStorage.WriteTo(CachedItems.ToList(), PersistentFilePath);
-                    MTLogger.Info.Log($"MDDBCache: Saved to {PersistentFilePath}.");
+                    Log.Main.Info?.Log($"MDDBCache: Saved to {PersistentFilePath}.");
                     hasChanges = false;
                 }
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log($"MDDBCache: Couldn't write mddb cache to {PersistentFilePath}", e);
+                Log.Main.Info?.Log($"MDDBCache: Couldn't write mddb cache to {PersistentFilePath}", e);
             }
             finally
             {
                 saveSW.Stop();
-                MTLogger.Info.LogIfSlow(saveSW);
+                Log.Main.Info?.LogIfSlow(saveSW);
             }
         }
 
@@ -117,7 +116,7 @@ namespace ModTek.Features.Manifest.MDD
             var json = ModsManifest.GetText(entry);
             if (json == null)
             {
-                MTLogger.Info.Log($"MDDBCache: Error trying to get json for {entry.ToShortString()}");
+                Log.Main.Info?.Log($"MDDBCache: Error trying to get json for {entry.ToShortString()}");
                 return;
             }
 
@@ -125,15 +124,15 @@ namespace ModTek.Features.Manifest.MDD
             sw.Start();
             try
             {
-                MTLogger.Info.Log($"MDDBCache: Indexing {entry.ToShortString()}");
+                Log.Main.Info?.Log($"MDDBCache: Indexing {entry.ToShortString()}");
                 MDDBIndexer.InstantiateResourceAndUpdateMDDB(entry, json);
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log($"MDDBCache: Exception when indexing {entry.ToShortString()}", e);
+                Log.Main.Info?.Log($"MDDBCache: Exception when indexing {entry.ToShortString()}", e);
             }
             sw.Stop();
-            MTLogger.Info.LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000); // every 10s log total and reset
+            Log.Main.Info?.LogIfSlow(sw, "InstantiateResourceAndUpdateMDDB", 10000); // every 10s log total and reset
             if (!entry.IsVanillaOrDlc())
             {
                 CachedItems[key] = FileVersionTuple.From(entry);
@@ -184,14 +183,14 @@ namespace ModTek.Features.Manifest.MDD
 
                         if (!cachedEntry.Contains(manifestEntry))
                         {
-                            MTLogger.Info.Log($"MDDBCache: {key} outdated in cache.");
+                            Log.Main.Info?.Log($"MDDBCache: {key} outdated in cache.");
                             CachedItems.Remove(key);
                             reindexResources.Add(key);
                         }
                     }
                     else if (!manifestEntry.IsVanillaOrDlc())
                     {
-                        MTLogger.Info.Log($"MDDBCache: {key} missing in cache.");
+                        Log.Main.Info?.Log($"MDDBCache: {key} missing in cache.");
                         reindexResources.Add(key);
                     }
                 }
@@ -202,14 +201,14 @@ namespace ModTek.Features.Manifest.MDD
             {
                 if (!kv.Value.CacheHit)
                 {
-                    MTLogger.Info.Log($"MDDBCache: {kv.Key} left over in cache.");
+                    Log.Main.Info?.Log($"MDDBCache: {kv.Key} left over in cache.");
                     rebuildIndex = true;
                 }
             }
 
             if (rebuildIndex)
             {
-                MTLogger.Info.Log($"MDDBCache: Rebuilding.");
+                Log.Main.Info?.Log($"MDDBCache: Rebuilding.");
                 Reset();
                 reindexResources.Clear();
                 foreach (var type in BTConstants.MDDBTypes)

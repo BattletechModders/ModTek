@@ -8,8 +8,6 @@ namespace ModTek.Features.Logging
 {
     internal static class LoggingFeature
     {
-        private static readonly ILog ModTekLogger = Logger.GetLogger("ModTek", LogLevel.Debug);
-
         private static LoggingSettings Settings => ModTek.Config.Logging;
 
         private static LogAppender _mainLog;
@@ -49,12 +47,6 @@ namespace ModTek.Features.Logging
             }
 
             _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
-        }
-
-        // used for direct logging from ModTek code
-        internal static void Log(LogLevel logLevel, string message, Exception e)
-        {
-            ModTekLogger.LogAtLevel(logLevel, message, e);
         }
 
         // used for intercepting all logging attempts and to log centrally

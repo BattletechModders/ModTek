@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using BattleTech.Data;
-using ModTek.Features.Logging;
 using ModTek.Util;
 
 namespace ModTek.Features.Manifest.BTRL
@@ -23,7 +22,7 @@ namespace ModTek.Features.Manifest.BTRL
             AllContentPacksOwned = AllContentPacksLoaded && packIndex.AreContactPacksOwned(packIndex.GetAllLoadedContentPackIds());
             if (AllContentPacksLoaded)
             {
-                MTLogger.Info.LogIf(OwnedContentPacks.Count > 0, "Owned content packs: " + OwnedContentPacks.AsTextList());
+                Log.Main.Info?.LogIf(OwnedContentPacks.Count > 0, "Owned content packs: " + OwnedContentPacks.AsTextList());
             }
         }
 
@@ -68,7 +67,7 @@ namespace ModTek.Features.Manifest.BTRL
         {
             var sw = new Stopwatch();
             sw.Start();
-            MTLogger.Debug.Log("PatchMDD for content pack items added by mods.");
+            Log.Main.Debug?.Log("PatchMDD for content pack items added by mods.");
             foreach (var kv in ModsResourceMap)
             {
                 var resourceId = kv.Key;
@@ -84,7 +83,7 @@ namespace ModTek.Features.Manifest.BTRL
                 MetadataDatabase.Instance.UpdateContentPackItem(resourceType, resourceId, contentPackName);
             }
             sw.Stop();
-            MTLogger.Debug.LogIfSlow(sw, "BetterCPI.PatchMDD");
+            Log.Main.Debug?.LogIfSlow(sw, "BetterCPI.PatchMDD");
         }
     }
 }

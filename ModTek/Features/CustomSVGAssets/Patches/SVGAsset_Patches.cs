@@ -8,7 +8,6 @@ using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
 using Harmony;
-using ModTek.Features.Logging;
 using SVGImporter;
 using static BattleTech.Data.DataManager;
 
@@ -32,7 +31,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
 
         public static void Postfix(ApplicationConstants __instance)
         {
-            MTLogger.Info.Log("ApplicationConstants.FromJSON. PrewarmRequests:");
+            Log.Main.Info?.Log("ApplicationConstants.FromJSON. PrewarmRequests:");
             try
             {
                 var prewarmRequests = new List<PrewarmRequest>();
@@ -91,12 +90,12 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                     );
                 foreach (var preq in __instance.PrewarmRequests)
                 {
-                    MTLogger.Info.Log("\t" + preq.ResourceType + ":" + preq.ResourceID);
+                    Log.Main.Info?.Log("\t" + preq.ResourceType + ":" + preq.ResourceID);
                 }
             }
             catch (Exception e)
             {
-                MTLogger.Error.Log(e: e);
+                Log.Main.Error?.Log(e);
             }
         }
     }
@@ -115,7 +114,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
 
         public static void Postfix(DataManager __instance)
         {
-            MTLogger.Info.Log("DataManager.PrewarmComplete");
+            Log.Main.Info?.Log("DataManager.PrewarmComplete");
             dataManager = __instance;
             if (UIManager.HasInstance)
             {
@@ -131,14 +130,14 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                     var result = dataManager.GetObjectOfType<SVGAsset>("UILookAndColorConstants." + field.Name, BattleTechResourceType.SVGAsset);
                     if (result != null)
                     {
-                        MTLogger.Info.Log("\tUpdating icon " + field.Name);
+                        Log.Main.Info?.Log("\tUpdating icon " + field.Name);
                         field.SetValue(UIManager.Instance.UILookAndColorConstants, result);
                     }
                 }
             }
             else
             {
-                MTLogger.Warning.Log("\tUIManager have no instance");
+                Log.Main.Warning?.Log("\tUIManager have no instance");
             }
         }
     }
@@ -298,7 +297,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                 gen.Emit(OpCodes.Ret);
                 ResourceLoadRequest_Load = (Action<ResourceLoadRequest<SVGAsset>>) dm.CreateDelegate(typeof(Action<ResourceLoadRequest<SVGAsset>>));
                 var fields = typeof(UILookAndColorConstants).GetFields();
-                MTLogger.Info.Log("UILookAndColorConstants fields:" + fields.Length);
+                Log.Main.Info?.Log("UILookAndColorConstants fields:" + fields.Length);
                 foreach (var field in fields)
                 {
                     //RLog.M.WL(1, field.Name+":"+field.FieldType);
@@ -312,7 +311,7 @@ namespace ModTek.Features.CustomSVGAssets.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Error.Log(e: e);
+                Log.Main.Error?.Log(e);
             }
         }
 
@@ -376,11 +375,11 @@ namespace ModTek.Features.CustomSVGAssets.Patches
                                     resource
                                 }
                             );
-                        MTLogger.Info.Log("\tLoaded from external file:" + __instance.ManifestEntry.FilePath);
+                        Log.Main.Info?.Log("\tLoaded from external file:" + __instance.ManifestEntry.FilePath);
                     }
                     catch (Exception e)
                     {
-                        MTLogger.Error.Log("Failed to load external file:" + __instance.ManifestEntry.FilePath, e);
+                        Log.Main.Error?.Log("Failed to load external file:" + __instance.ManifestEntry.FilePath, e);
                         throw new ArgumentNullException("THIS IS !NOT! I REPEAT, !NOT! MODTEK ERROR. YOUR SVG FILE FAIL TO LOAD! More info in ModTek_runtime_log.txt");
                     }
 

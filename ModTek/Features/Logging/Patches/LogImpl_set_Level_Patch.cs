@@ -9,7 +9,7 @@ namespace ModTek.Features.Logging.Patches
     {
         public static bool Prepare()
         {
-            return ModTek.Enabled && ModTek.Config.Logging.DebugLogLevelSetters;
+            return ModTek.Enabled;
         }
 
         [HarmonyPriority(Priority.High)]
@@ -23,9 +23,11 @@ namespace ModTek.Features.Logging.Patches
         {
             if (___level != __state)
             {
-                MTLogger.Debug.Log(
-                    $"Log Level changed, logger name={___name} (old)level={__state} (new)level={___level}\n"
-                    + DebugUtils.GetStackTraceWithoutPatch()
+                var debugText = ModTek.Config.Logging.DebugLogLevelSetters
+                    ? "\n" + DebugUtils.GetStackTraceWithoutPatch()
+                    : "";
+                Log.Main.Trace?.Log(
+                    $"Log Level of logger name={___name} changed from level={__state} to level={___level}{debugText}"
                 );
             }
         }

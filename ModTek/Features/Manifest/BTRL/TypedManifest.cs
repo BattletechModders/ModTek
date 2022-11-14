@@ -5,7 +5,6 @@ using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
-using ModTek.Features.Logging;
 using ModTek.Misc;
 using ModTek.Util;
 using TypedDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
@@ -140,11 +139,11 @@ namespace ModTek.Features.Manifest.BTRL
             try
             {
                 ModTekCacheStorage.CSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
-                MTLogger.Info.Log($"Manifest: Saved to {ManifestDumpPath}.");
+                Log.Main.Info?.Log($"Manifest: Saved to {ManifestDumpPath}.");
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log($"Manifest: Failed to save to {ManifestDumpPath}", e);
+                Log.Main.Info?.Log($"Manifest: Failed to save to {ManifestDumpPath}", e);
             }
         }
     }

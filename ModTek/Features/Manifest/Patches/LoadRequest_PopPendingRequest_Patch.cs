@@ -1,7 +1,6 @@
 ﻿using System;
 using BattleTech.Data;
 using Harmony;
-using ModTek.Features.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.Manifest.Patches
@@ -27,14 +26,14 @@ namespace ModTek.Features.Manifest.Patches
 
                 if (deltaInSecondsCurrent >= deltaInSecondsMax) {
                     // logging just takes space and time
-                    // MTLogger.Info.Log($"LoadRequest unfreeze delta {deltaInSecondsCurrent:0.##}/{deltaInSecondsMax:0.##}");
+                    // Logging.Info?.Log($"LoadRequest unfreeze delta {deltaInSecondsCurrent:0.##}/{deltaInSecondsMax:0.##}");
                     __result = null;
                     return false;
                 }
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log("Error running prefix", e);
+                Log.Main.Info?.Log("Error running prefix", e);
             }
 
             return true;

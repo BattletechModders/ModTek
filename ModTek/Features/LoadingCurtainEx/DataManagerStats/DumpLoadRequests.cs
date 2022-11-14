@@ -4,7 +4,6 @@ using System.Linq;
 using BattleTech;
 using BattleTech.Data;
 using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.MDD;
 
@@ -14,7 +13,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
     {
         internal static void DumpProcessing(DataManagerStats stats)
         {
-            MTLogger.Info.Log($"Dumping DataManager stats: {stats}");
+            Log.Main.Info?.Log($"Dumping DataManager stats: {stats}");
             var dumper = new DumpLoadRequests();
             dumper.Analyze(stats.ActiveLoadRequests);
             dumper.LogSummary();
@@ -48,10 +47,10 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
             {
                 return;
             }
-            MTLogger.Info.Log($"Which resource are blocking:");
+            Log.Main.Info?.Log($"Which resource are blocking:");
             foreach (var kv in incoming.OrderByDescending(x => x.Value))
             {
-                MTLogger.Info.Log($"\t{kv.Key} {kv.Value}");
+                Log.Main.Info?.Log($"\t{kv.Key} {kv.Value}");
             }
         }
 
@@ -122,7 +121,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                     }
                 }
 
-                MTLogger.Info.Log(message);
+                Log.Main.Info?.Log(message);
 
                 if (dependency != null)
                 {

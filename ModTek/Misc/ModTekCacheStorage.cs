@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using HBS.Util;
-using ModTek.Features.Logging;
 using Newtonsoft.Json;
 
 namespace ModTek.Misc

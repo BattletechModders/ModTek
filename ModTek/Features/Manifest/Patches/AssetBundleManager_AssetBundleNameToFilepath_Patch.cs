@@ -3,7 +3,6 @@ using System.IO;
 using BattleTech;
 using BattleTech.Assetbundles;
 using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 
@@ -27,7 +26,7 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Info.Log("Error running prefix", e);
+                Log.Main.Info?.Log("Error running prefix", e);
             }
             return true;
         }

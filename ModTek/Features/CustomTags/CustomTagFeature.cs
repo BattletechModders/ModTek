@@ -3,7 +3,6 @@ using System.Linq;
 using BattleTech.Data;
 using HBS.Collections;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using Newtonsoft.Json;
 
@@ -14,14 +13,14 @@ namespace ModTek.Features.CustomTags
         internal static void ProcessTags()
         {
             var customTags = BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.CustomTag.ToString());
-            MTLogger.Info.LogIf(customTags.Length > 0, "Processing CustomTags:");
+            Log.Main.Info?.LogIf(customTags.Length > 0, "Processing CustomTags:");
             foreach (var entry in customTags)
             {
                 AddOrUpdateTag(entry.FilePath);
             }
 
             var customTagSets = BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.CustomTagSet.ToString());
-            MTLogger.Info.LogIf(customTagSets.Length > 0, "Processing CustomTagSets:");
+            Log.Main.Info?.LogIf(customTagSets.Length > 0, "Processing CustomTagSets:");
             foreach (var entry in customTagSets)
             {
                 AddOrUpdateTagSet(entry.FilePath);
@@ -55,7 +54,7 @@ namespace ModTek.Features.CustomTags
             if (tagSet_MDD == null)
             {
                 // Insert
-                MTLogger.Info.Log($"Creating new tagset: {customTagSet.ID} with tags: {string.Join(",", customTagSet.Tags)}");
+                Log.Main.Info?.Log($"Creating new tagset: {customTagSet.ID} with tags: {string.Join(",", customTagSet.Tags)}");
 
                 // TODO: If tagset is empty, use the other method
                 MetadataDatabase.Instance.GetOrCreateTagSet(customTagSet.ID, tagSet, tagSetType);
@@ -63,7 +62,7 @@ namespace ModTek.Features.CustomTags
             else
             {
                 // Update
-                MTLogger.Info.Log($"Updating tagset: {customTagSet.ID} to type: {(TagSetType) customTagSet.TypeID} and tags: {string.Join(",", customTagSet.Tags)}");
+                Log.Main.Info?.Log($"Updating tagset: {customTagSet.ID} to type: {(TagSetType) customTagSet.TypeID} and tags: {string.Join(",", customTagSet.Tags)}");
                 MetadataDatabase.Instance.UpdateTagSet(customTagSet.ID, tagSet);
             }
         }

@@ -27,7 +27,7 @@ namespace ModTek.Features.Logging
 
         private static readonly MTStopwatch _loggingStopwatch = new MTStopwatch
         {
-            Callback = stats => MTLogger.Debug.Log($"Asynchronous logging offloaded {stats.TotalMS - _queueStopwatch.GetStats().TotalMS} ms from the main thread."),
+            Callback = stats => Log.Main.Debug?.Log($"Asynchronous logging offloaded {stats.TotalMS - _queueStopwatch.GetStats().TotalMS} ms from the main thread."),
             CallbackForEveryNumberOfMeasurements = 1000
         };
 

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
-using Harmony;
-using ModTek.Features.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
@@ -33,7 +31,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
                 stats = LastStats;
                 if (!stats.dumped && Time.realtimeSinceStartup - stats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
                 {
-                    MTLogger.Info.Log("Detected stuck DataManager.");
+                    Log.Main.Info?.Log("Detected stuck DataManager.");
                     stats.dumped = true;
                     stats.Dump();
                 }

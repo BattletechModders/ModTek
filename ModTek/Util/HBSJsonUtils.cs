@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Harmony;
 using HBS.Util;
-using ModTek.Features.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace ModTek.Util
@@ -19,7 +16,7 @@ namespace ModTek.Util
 
         internal static JObject ParseGameJSON(string content, bool log = false)
         {
-            MTLogger.Info.LogIf(log,"content: " + content);
+            Log.Main.Info?.LogIf(log,"content: " + content);
 
             try
             {
@@ -31,10 +28,10 @@ namespace ModTek.Util
             }
 
             var commentsStripped = JSONSerializationUtility.StripHBSCommentsFromJSON(content);
-            MTLogger.Info.LogIf(log, "commentsStripped: " + commentsStripped);
+            Log.Main.Info?.LogIf(log, "commentsStripped: " + commentsStripped);
 
             var commasAdded = FixHBSJsonCommas(commentsStripped);
-            MTLogger.Info.LogIf(log,"commasAdded: " + commasAdded);
+            Log.Main.Info?.LogIf(log,"commasAdded: " + commasAdded);
 
             return JObject.Parse(commasAdded);
         }

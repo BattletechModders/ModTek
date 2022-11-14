@@ -12,8 +12,8 @@
     <!-- The last BattleTech game version uses .NET Framework 4.7.2, newer target frameworks won't work -->
     <TargetFramework>net472</TargetFramework>
 
-    <!-- By default "7.3" to allow older VS, but can be set to "Latest" or even "11"-->
-    <LangVersion>7.3</LangVersion>
+    <!-- Set to a modern version -->
+    <LangVersion>10</LangVersion>
 
     <!-- Traditional debugging does not work anyway, so no need to have such options available -->
     <DebugType>none</DebugType>

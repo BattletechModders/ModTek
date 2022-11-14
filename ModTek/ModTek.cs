@@ -75,7 +75,7 @@ namespace ModTek
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Error.Log($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
+                    Log.Main.Error?.Log($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
                     FinishAndCleanup();
                     return;
                 }
@@ -83,7 +83,7 @@ namespace ModTek
 
             if (SettingsDef == null)
             {
-                MTLogger.Info.Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
+                Log.Main.Info?.Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
                 SettingsDef = new ModDefEx
                 {
                     Enabled = true,
@@ -102,7 +102,7 @@ namespace ModTek
             // load progress bar
             if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{GitVersionInformation.FullSemVer}"))
             {
-                MTLogger.Error.Log("Failed to load progress bar.  Skipping mod loading completely.");
+                Log.Main.Error?.Log("Failed to load progress bar.  Skipping mod loading completely.");
                 FinishAndCleanup();
             }
 
@@ -112,13 +112,13 @@ namespace ModTek
             }
             catch (Exception e)
             {
-                MTLogger.Error.Log("PATCHING FAILED!", e);
+                Log.Main.Error?.Log("PATCHING FAILED!", e);
                 return;
             }
 
             if (Enabled == false)
             {
-                MTLogger.Info.Log("ModTek not enabled");
+                Log.Main.Info?.Log("ModTek not enabled");
                 FinishAndCleanup();
                 return;
             }
@@ -127,7 +127,7 @@ namespace ModTek
 
             {
                 var version = MetadataDatabase.Instance.ExecuteScalar<string>("select sqlite_version();");
-                MTLogger.Info.Log("SQLite version "+ version);
+                Log.Main.Info?.Log("SQLite version "+ version);
             }
 
             LoadUsingProgressPanel();
@@ -150,7 +150,7 @@ namespace ModTek
 
             var sliderText = "Finishing Loading Mods";
             yield return new ProgressReport(1, sliderText, "", true);
-            MTLogger.Info.Log(sliderText);
+            Log.Main.Info?.Log(sliderText);
             ModDefsDatabase.FinishedLoadingMods();
         }
 
@@ -158,7 +158,7 @@ namespace ModTek
         {
             var sliderText = "Saving Harmony Summary";
             yield return new ProgressReport(1, sliderText, "", true);
-            MTLogger.Info.Log(sliderText);
+            Log.Main.Info?.Log(sliderText);
             HarmonyUtils.PrintHarmonySummary();
 
             File.WriteAllText(
@@ -178,7 +178,7 @@ namespace ModTek
             HasLoaded = true;
 
             stopwatch.Stop();
-            MTLogger.Info.Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
+            Log.Main.Info?.Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
             stopwatch = null;
         }
     }

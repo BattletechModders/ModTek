@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using HBS.Logging;
 using Newtonsoft.Json;
 
 namespace ModTek.Features.Logging
@@ -32,7 +31,7 @@ namespace ModTek.Features.Logging
         internal bool IgnoreLoggerLogLevel;
 
         [JsonProperty]
-        internal const string DebugLogLevelSetters_Description = "Log if a loggers log level changed and by whom.";
+        internal const string DebugLogLevelSetters_Description = "Log who changed a log level changed.";
         [JsonProperty]
         internal bool DebugLogLevelSetters;
 

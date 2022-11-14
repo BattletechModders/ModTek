@@ -4,9 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -135,7 +133,7 @@ namespace ModTek
             var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
             var state = new ModState();
             state.Enabled = Enabled;
-            MTLogger.Info.Log("\t\twriting to FS:" + QuotedName + "->" + state.Enabled);
+            Log.Main.Info?.Log("\t\twriting to FS:" + QuotedName + "->" + state.Enabled);
             state.SaveToPath(modStatePath);
         }
 

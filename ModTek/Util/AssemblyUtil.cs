@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ModTek.Features.Logging;
 
 namespace ModTek.Util
 {
@@ -17,19 +16,19 @@ namespace ModTek.Util
 
             if (!File.Exists(path))
             {
-                MTLogger.Warning.Log($"\tFailed to load {fileName} at path {path}, because it doesn't exist at that path.");
+                Log.Main.Warning?.Log($"\tFailed to load {fileName} at path {path}, because it doesn't exist at that path.");
                 return null;
             }
 
             try
             {
                 var assembly = Assembly.LoadFrom(path);
-                MTLogger.Info.Log($"\tLoaded assembly {assembly.GetName().Name} (v{assembly.GetName().Version})");
+                Log.Main.Info?.Log($"\tLoaded assembly {assembly.GetName().Name} (v{assembly.GetName().Version})");
                 return assembly;
             }
             catch (Exception e)
             {
-                MTLogger.Warning.Log($"\t{fileName}: While loading a .dll, an exception occured", e);
+                Log.Main.Warning?.Log($"\t{fileName}: While loading a .dll, an exception occured", e);
                 return null;
             }
         }
@@ -69,7 +68,7 @@ namespace ModTek.Util
             catch (Exception e)
             {
                 var typeString = typeName == null ? "in" : $"in type {typeName} of";
-                MTLogger.Warning.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
+                Log.Main.Warning?.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
                 return null;
             }
         }
@@ -81,7 +80,7 @@ namespace ModTek.Util
 
             if (methodParameters.Length == 0)
             {
-                MTLogger.Info.Log($"\tInvoking '{GetFullName(method)}()' using parameter dictionary");
+                Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter dictionary");
                 method.Invoke(null, null);
                 return true;
             }
@@ -100,7 +99,7 @@ namespace ModTek.Util
             }
 
             var parametersString = string.Join(", ", parametersStrings.ToArray());
-            MTLogger.Info.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter dictionary");
+            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter dictionary");
             method.Invoke(null, parameterList.ToArray());
             return true;
         }
@@ -116,7 +115,7 @@ namespace ModTek.Util
                     return false;
                 }
 
-                MTLogger.Info.Log($"\tInvoking '{GetFullName(method)}()' using parameter type");
+                Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter type");
                 method.Invoke(null, null);
                 return true;
             }
@@ -138,7 +137,7 @@ namespace ModTek.Util
             }
 
             var parametersString = string.Join(", ", parametersStrings.ToArray());
-            MTLogger.Info.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter type");
+            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter type");
             method.Invoke(null, parameters);
             return true;
         }
@@ -157,7 +156,7 @@ namespace ModTek.Util
                     {
                         continue;
                     }
-                    MTLogger.Error.Log($"\tCouldn't get all Types from {assembly.GetName()}", le);
+                    Log.Main.Error?.Log($"\tCouldn't get all Types from {assembly.GetName()}", le);
                 }
                 return e.Types.Where(x => x != null);
             }

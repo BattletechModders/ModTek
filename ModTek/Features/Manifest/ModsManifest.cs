@@ -9,7 +9,6 @@ using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
 using ModTek.Features.CustomSVGAssets;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Features.Manifest.Merges;
@@ -32,7 +31,7 @@ namespace ModTek.Features.Manifest
             var sw = new Stopwatch();
             sw.Restart();
             bundleManager.LoadAllContentPacks();
-            MTLogger.Debug.LogIfSlow(sw, "LoadAllContentPacks");
+            Log.Main.Debug?.LogIfSlow(sw, "LoadAllContentPacks");
             // lets assume we own everything during merging and indexing
             BetterBTRL.Instance.PackIndex.AllContentPacksOwned = true;
 
@@ -43,7 +42,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Debug.LogIfSlow(sw, "BuildModdedBTRL");
+            Log.Main.Debug?.LogIfSlow(sw, "BuildModdedBTRL");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -52,7 +51,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Debug.LogIfSlow(sw, "BuildMergeCache");
+            Log.Main.Debug?.LogIfSlow(sw, "BuildMergeCache");
 
             BetterBTRL.Instance.RefreshTypedEntries();
 
@@ -61,7 +60,7 @@ namespace ModTek.Features.Manifest
             {
                 yield return p;
             }
-            MTLogger.Debug.LogIfSlow(sw, "BuildMDDBCache");
+            Log.Main.Debug?.LogIfSlow(sw, "BuildMDDBCache");
 
             BetterBTRL.Instance.PackIndex.AllContentPacksOwned = false;
             bundleManager.UnloadAll();
@@ -75,7 +74,7 @@ namespace ModTek.Features.Manifest
             yield return new ProgressReport(0, sliderText, "", true);
 
             var mods = ModDefsDatabase.ModsInLoadOrder();
-            MTLogger.Info.LogIf(mods.Count > 0, "Processing Mod Manifests...");
+            Log.Main.Info?.LogIf(mods.Count > 0, "Processing Mod Manifests...");
 
             var countCurrent = 0;
             var countMax = (float) mods.Count;
@@ -86,7 +85,7 @@ namespace ModTek.Features.Manifest
 
                 AddImplicitManifest(modDef);
 
-                MTLogger.Info.LogIf(modDef.Manifest.Count > 0, $"{modDef.QuotedName} Manifest:");
+                Log.Main.Info?.LogIf(modDef.Manifest.Count > 0, $"{modDef.QuotedName} Manifest:");
                 foreach (var modEntry in modDef.Manifest)
                 {
                     NormalizeAndExpandAndAddModEntries(modDef, modEntry);
@@ -145,7 +144,7 @@ namespace ModTek.Features.Manifest
             }
             else
             {
-                MTLogger.Warning.Log($"\tCould not find path {entry.RelativePathToMods}.");
+                Log.Main.Warning?.Log($"\tCould not find path {entry.RelativePathToMods}.");
             }
         }
 
@@ -205,7 +204,7 @@ namespace ModTek.Features.Manifest
                 return;
             }
 
-            MTLogger.Warning.Log($"\tType of entry unknown: {entry}.");
+            Log.Main.Warning?.Log($"\tType of entry unknown: {entry}.");
         }
 
         private static bool FixMissingIdAndType(ModEntry entry)
@@ -237,12 +236,12 @@ namespace ModTek.Features.Manifest
 
             if (entriesById.Count == 0)
             {
-                MTLogger.Warning.Log($"\t\tCan't resolve type, no types found for id and extension, either an issue with mod order or typo (case sensitivity): {entry}");
+                Log.Main.Warning?.Log($"\t\tCan't resolve type, no types found for id and extension, either an issue with mod order or typo (case sensitivity): {entry}");
                 return false;
             }
             if (entriesById.Count > 1)
             {
-                MTLogger.Warning.Log($"\t\tCan't resolve type, more than one type found for id and extension, please specify manually: {entry}");
+                Log.Main.Warning?.Log($"\t\tCan't resolve type, more than one type found for id and extension, please specify manually: {entry}");
                 return false;
             }
             entry.Type = entriesById[0].Type;
@@ -351,7 +350,7 @@ namespace ModTek.Features.Manifest
             var types = BetterBTRL.Instance.EntriesByID(entry.Id);
             if (types.Length > 0)
             {
-                MTLogger.Warning.Log($"Detected existing entry with same resource id ({entry.Id}), ignoring specified {nameof(ModEntry.RequiredContentPack)}.");
+                Log.Main.Warning?.Log($"Detected existing entry with same resource id ({entry.Id}), ignoring specified {nameof(ModEntry.RequiredContentPack)}.");
                 return;
             }
 
@@ -360,7 +359,7 @@ namespace ModTek.Features.Manifest
 
         private static void LogModEntryAction(string action, ModEntry entry)
         {
-            MTLogger.Info.Log($"\t{action}: {entry}");
+            Log.Main.Info?.Log($"\t{action}: {entry}");
         }
 
         private static void AddToDbIfApplicable(ModEntry entry)
@@ -368,7 +367,7 @@ namespace ModTek.Features.Manifest
             if (!entry.AddToDB)
             {
                 mddbCache.AddToNotIndexable(entry);
-                MTLogger.Info.Log($"\t\tNot indexing to MDDB.");
+                Log.Main.Info?.Log($"\t\tNot indexing to MDDB.");
             }
         }
 
@@ -376,7 +375,7 @@ namespace ModTek.Features.Manifest
         {
             if (entry.RequiredContentPack != null)
             {
-                MTLogger.Warning.Log($"\t\tSpecified {nameof(entry.RequiredContentPack)} is being ignored.");
+                Log.Main.Warning?.Log($"\t\tSpecified {nameof(entry.RequiredContentPack)} is being ignored.");
                 entry.RequiredContentPack = null;
             }
         }
@@ -385,7 +384,7 @@ namespace ModTek.Features.Manifest
         {
             if (!entry.AddToDB)
             {
-                MTLogger.Warning.Log($"\t\t{nameof(entry.AddToDB)}={entry.AddToDB} is being ignored");
+                Log.Main.Warning?.Log($"\t\t{nameof(entry.AddToDB)}={entry.AddToDB} is being ignored");
             }
         }
 
@@ -402,7 +401,7 @@ namespace ModTek.Features.Manifest
             }
             catch (Exception e)
             {
-                MTLogger.Warning.Log($"\t\tCan't read file at path {entry.FilePath}", e);
+                Log.Main.Warning?.Log($"\t\tCan't read file at path {entry.FilePath}", e);
                 return null;
             }
         }
@@ -413,7 +412,7 @@ namespace ModTek.Features.Manifest
             // so the HoldForIntroVideo + OnCinematicEnd pattern can be used later
             if (LazySingletonBehavior<UIManager>.Instance.GetFirstModule<MainMenu>() == null)
             {
-                MTLogger.Info.Log("MainMenu module not yet loaded, delaying VerifyCaches");
+                Log.Main.Info?.Log("MainMenu module not yet loaded, delaying VerifyCaches");
                 UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
                     MessageCenterMessageType.OnEnterMainMenu,
                     _ =>
@@ -428,7 +427,7 @@ namespace ModTek.Features.Manifest
             // if cinematic launcher is playing or wants to play video, let's wait
             if (IntroCinematicLauncher.HoldForIntroVideo)
             {
-                MTLogger.Info.Log("HoldForIntroVideo, delaying VerifyCaches");
+                Log.Main.Info?.Log("HoldForIntroVideo, delaying VerifyCaches");
                 UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
                     MessageCenterMessageType.OnCinematicEnd,
                     _ =>

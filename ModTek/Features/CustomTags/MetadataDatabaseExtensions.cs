@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using BattleTech.Data;
-using ModTek.Features.Logging;
 
 namespace ModTek.Features.CustomTags
 {
@@ -33,12 +32,12 @@ namespace ModTek.Features.CustomTags
                             TagDescription = tag.Description
                         }
                     );
-                    MTLogger.Info.Log($"Inserted tag: {tag.Name} into MDDB");
+                    Log.Main.Info?.Log($"Inserted tag: {tag.Name} into MDDB");
                     success = true;
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Info.Log($"Failed to insert tag: {tag.Name} into MDD due to: {e}");
+                    Log.Main.Info?.Log($"Failed to insert tag: {tag.Name} into MDD due to: {e}");
                     return false;
                 }
             }
@@ -59,12 +58,12 @@ namespace ModTek.Features.CustomTags
                             TagDescription = tag.Description
                         }
                     );
-                    MTLogger.Info.Log($"Updated tag: {tag.Name} in MDDB");
+                    Log.Main.Info?.Log($"Updated tag: {tag.Name} in MDDB");
                     success = true;
                 }
                 catch (Exception e)
                 {
-                    MTLogger.Warning.Log($"Failed to update tag: {tag.Name} in MDD due to: {e}");
+                    Log.Main.Warning?.Log($"Failed to update tag: {tag.Name} in MDD due to: {e}");
                     return false;
                 }
             }

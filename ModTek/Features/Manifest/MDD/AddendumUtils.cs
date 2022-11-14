@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using BattleTech;
 using BattleTech.Data;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
 using UnityEngine;
 
@@ -15,19 +14,19 @@ namespace ModTek.Features.Manifest.MDD
         {
             foreach (var modDef in ModDefsDatabase.ModsInLoadOrder())
             {
-                MTLogger.Info.LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.QuotedName} DataAddendum:");
+                Log.Main.Info?.LogIf(modDef.DataAddendumEntries.Count > 0, $"{modDef.QuotedName} DataAddendum:");
                 foreach (var dataAddendumEntry in modDef.DataAddendumEntries)
                 {
                     try
                     {
-                        MTLogger.Info.Log($"\tLoading DataAddendum {dataAddendumEntry.Name}");
+                        Log.Main.Info?.Log($"\tLoading DataAddendum {dataAddendumEntry.Name}");
                         var filePath = Path.Combine(modDef.Directory, dataAddendumEntry.Path);
                         LoadDataAddendum(dataAddendumEntry.Name, filePath, ref MDDBCache.SaveMDDB);
-                        MTLogger.Info.Log($"\tSuccessfully loaded DataAddendum {dataAddendumEntry.Name}");
+                        Log.Main.Info?.Log($"\tSuccessfully loaded DataAddendum {dataAddendumEntry.Name}");
                     }
                     catch (Exception ex)
                     {
-                        MTLogger.Error.Log($"\tException caught while processing DataAddendum: {dataAddendumEntry.Name}", ex);
+                        Log.Main.Error?.Log($"\tException caught while processing DataAddendum: {dataAddendumEntry.Name}", ex);
                     }
                 }
             }
@@ -37,13 +36,13 @@ namespace ModTek.Features.Manifest.MDD
         {
             var wrapper = new DataAddendumWrapper(enumName);
 
-            MTLogger.Info.Log($"\tCurrent values");
+            Log.Main.Info?.Log($"\tCurrent values");
             var maxIndex = 0;
             var names = new Dictionary<string, int>();
             var ids = new Dictionary<int, string>();
             foreach (var val in wrapper.GetCachedEnumerationValueList())
             {
-                MTLogger.Info.Log($"\t\t{val.Name} ({val.ID})");
+                Log.Main.Info?.Log($"\t\t{val.Name} ({val.ID})");
                 names[val.Name] = val.ID;
                 ids[val.ID] = val.Name;
                 maxIndex = Mathf.Max(maxIndex, val.ID);
@@ -53,7 +52,7 @@ namespace ModTek.Features.Manifest.MDD
             wrapper.FromJSON(fileData);
 
             var needFlush = false;
-            MTLogger.Info.Log($"\tLoading values");
+            Log.Main.Info?.Log($"\tLoading values");
             foreach (var val in wrapper.GetCachedEnumerationValueList())
             {
                 // we merge based on the name
@@ -71,7 +70,7 @@ namespace ModTek.Features.Manifest.MDD
                     }
                     else if (ids.ContainsKey(val.ID))
                     {
-                        MTLogger.Warning.Log($"\tValue with same id:{val.ID} but different name {ids[val.ID]} already exist. Value: {val.Name} will not be added");
+                        Log.Main.Warning?.Log($"\tValue with same id:{val.ID} but different name {ids[val.ID]} already exist. Value: {val.Name} will not be added");
                         continue;
                     }
 
@@ -93,10 +92,10 @@ namespace ModTek.Features.Manifest.MDD
 
             hasMddbChanges = true;
             wrapper.RefreshStaticData();
-            MTLogger.Info.Log($"\tUpdated values [{enumName}]");
+            Log.Main.Info?.Log($"\tUpdated values [{enumName}]");
             foreach (var val in wrapper.GetCachedEnumerationValueList())
             {
-                MTLogger.Info.Log($"\t\t{val.Name} ({val.ID})");
+                Log.Main.Info?.Log($"\t\t{val.Name} ({val.ID})");
             }
         }
 
@@ -123,10 +122,10 @@ namespace ModTek.Features.Manifest.MDD
                     MetadataDatabase.Instance.InsertOrUpdateWeaponCategoryValue(wcv);
                     break;
                 default:
-                    MTLogger.Warning.Log($"\t\tEnumValue type {val.GetType().Name} not known to be in MDDB");
+                    Log.Main.Warning?.Log($"\t\tEnumValue type {val.GetType().Name} not known to be in MDDB");
                     return false;
             }
-            MTLogger.Info.Log($"\t\tAdded or updated enum value: {val.Name} ({val.ID})");
+            Log.Main.Info?.Log($"\t\tAdded or updated enum value: {val.Name} ({val.ID})");
             return true;
         }
     }

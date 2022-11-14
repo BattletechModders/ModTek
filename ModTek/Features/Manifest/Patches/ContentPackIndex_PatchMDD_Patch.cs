@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using BattleTech.Data;
 using Harmony;
-using ModTek.Features.Logging;
 using ModTek.Features.Manifest.BTRL;
 
 namespace ModTek.Features.Manifest.Patches
@@ -31,10 +30,10 @@ namespace ModTek.Features.Manifest.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Error.Log("Error running postfix", e);
+                Log.Main.Error?.Log("Error running postfix", e);
             }
 
-            MTLogger.Debug.LogIfSlow(__state, "ContentPackIndex.PatchMDD");
+            Log.Main.Debug?.LogIfSlow(__state, "ContentPackIndex.PatchMDD");
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ModTek.Features.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -27,7 +26,7 @@ namespace ModTek.Features.AdvJSONMerge
             }
             catch (Exception e)
             {
-                MTLogger.Warning.Log($"\tCould not read AdvancedJSONMerge in path: {path}", e);
+                Log.Main.Warning?.Log($"\tCould not read AdvancedJSONMerge in path: {path}", e);
                 return null;
             }
         }

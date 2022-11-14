@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using BattleTech;
 using Harmony;
-using ModTek.Features.Logging;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -37,7 +36,7 @@ namespace ModTek.Features.CustomDebugSettings.Patches
             }
             catch (Exception e)
             {
-                MTLogger.Error.Log("Failed trying to read custom debug settings", e);
+                Log.Main.Error?.Log("Failed trying to read custom debug settings", e);
                 return reader.ReadToEnd();
             }
         }
