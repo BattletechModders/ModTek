@@ -10,7 +10,7 @@ internal sealed class NullableLogger
 {
     // instantiation
 
-    internal static NullableLogger GetLogger(string name, LogLevel? defaultLogLevel = TraceLogLevel)
+    internal static NullableLogger GetLogger(string name, LogLevel? defaultLogLevel = null)
     {
         lock (_loggers)
         {

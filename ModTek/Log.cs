@@ -5,7 +5,7 @@ namespace ModTek
 {
     internal static class Log
     {
-        internal static readonly NullableLogger Main = NullableLogger.GetLogger(typeof(Log).Assembly.GetName().Name);
+        internal static readonly NullableLogger Main = NullableLogger.GetLogger(typeof(Log).Assembly.GetName().Name, NullableLogger.TraceLogLevel);
 
         internal static void LogIf(this NullableLogger.ILevel @this, bool condition, string message)
         {
