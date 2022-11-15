@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using ModTekPreloader.Injector;
@@ -161,7 +162,7 @@ internal class ShimCacheManifest
 
         public static string GetTimeFromFile(string file)
         {
-            return File.GetLastWriteTimeUtc(file).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+            return File.GetLastWriteTimeUtc(file).ToString("o", CultureInfo.InvariantCulture);
         }
     }
 }

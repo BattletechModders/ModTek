@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using ModTekPreloader.Injector;
 
@@ -21,6 +22,6 @@ internal static class Logger
 
     private static string GetTime()
     {
-        return DateTime.Now.ToString("HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
+        return DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
     }
 }

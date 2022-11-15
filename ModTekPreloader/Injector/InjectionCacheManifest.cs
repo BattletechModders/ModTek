@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using ModTekPreloader.Logging;
@@ -113,7 +114,7 @@ internal class InjectionCacheManifest
 
         public static CacheEntry FromFile(string absolutePath)
         {
-            var time = File.GetLastWriteTimeUtc(absolutePath).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+            var time = File.GetLastWriteTimeUtc(absolutePath).ToString("o", CultureInfo.InvariantCulture);
             var path = Paths.GetRelativePath(absolutePath);
             return new CacheEntry(time, path);
         }

@@ -1,5 +1,6 @@
 ﻿using HBS.Logging;
 using UnityEngine;
+using Logger = HBS.Logging.Logger;
 
 namespace ModTek.Features.Logging;
 
@@ -8,7 +9,7 @@ internal class UnityLogHandler
     internal static void Setup()
     {
         Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
-        Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
+        Application.logMessageReceived -= Logger.HandleUnityLog;
     }
     private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
     {

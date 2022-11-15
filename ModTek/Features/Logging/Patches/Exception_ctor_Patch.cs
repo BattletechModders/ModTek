@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Harmony;
 using HBS.Logging;
@@ -41,7 +42,7 @@ internal static class Exception_ctor_Patch
         }
 
         var ex = __instance;
-        var st = new System.Diagnostics.StackTrace(1).ToString();
+        var st = new StackTrace(1).ToString();
         LoggingFeature.LogAtLevel(
             "Debugger",
             LogLevel.Debug,

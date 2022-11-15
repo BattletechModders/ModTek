@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using Harmony;
 using HBS.Logging;
+using Object = UnityEngine.Object;
 
 namespace ModTek.Features.Logging.Patches;
 
@@ -11,7 +12,7 @@ namespace ModTek.Features.Logging.Patches;
     nameof(Logger.LogImpl.LogAtLevel),
     typeof(LogLevel),
     typeof(object),
-    typeof(UnityEngine.Object),
+    typeof(Object),
     typeof(Exception),
     typeof(IStackTrace)
 )]

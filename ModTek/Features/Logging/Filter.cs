@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using HBS.Logging;
 
 namespace ModTek.Features.Logging;
 
 internal class Filter
 {
     private readonly HashSet<string> _loggerNames;
-    private readonly HashSet<HBS.Logging.LogLevel> _logLevels;
+    private readonly HashSet<LogLevel> _logLevels;
     private readonly Regex _messagePrefixesMatcher;
 
     internal Filter(FilterSettings settings)
@@ -18,7 +19,7 @@ internal class Filter
         }
         if (settings.LogLevels != null)
         {
-            _logLevels = new HashSet<HBS.Logging.LogLevel>(settings.LogLevels);
+            _logLevels = new HashSet<LogLevel>(settings.LogLevels);
         }
 
         if (settings.MessagePrefixes != null)

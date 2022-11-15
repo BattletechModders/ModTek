@@ -1,9 +1,10 @@
 ﻿using Harmony;
+using HBS.Logging;
 using ModTek.Util;
 
 namespace ModTek.Features.Logging.Patches;
 
-[HarmonyPatch(typeof(HBS.Logging.Logger), "CaptureUnityLogs")]
+[HarmonyPatch(typeof(Logger), "CaptureUnityLogs")]
 internal static class Logger_CaptureUnityLogs_Patch
 {
     public static bool Prepare()

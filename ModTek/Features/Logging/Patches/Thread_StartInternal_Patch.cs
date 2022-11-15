@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Diagnostics;
+using System.Threading;
 using Harmony;
 using HBS.Logging;
 
@@ -14,7 +15,7 @@ internal static class Thread_StartInternal_Patch
 
     public static void Postfix(Thread __instance)
     {
-        var st = new System.Diagnostics.StackTrace(4).ToString();
+        var st = new StackTrace(4).ToString();
         LoggingFeature.LogAtLevel(
             "Debugger",
             LogLevel.Debug,

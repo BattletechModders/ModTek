@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BattleTech;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Util;
 using Newtonsoft.Json;
@@ -54,7 +55,7 @@ public class ModDefEx : IEquatable<ModDefEx>
     public bool Locked { get; set; } = false;
     public class RequestAtBattleStart
     {
-        public BattleTech.BattleTechResourceType Type { get; set; } = BattleTech.BattleTechResourceType.Prefab;
+        public BattleTechResourceType Type { get; set; } = BattleTechResourceType.Prefab;
         public string Id { get; set; } = string.Empty;
         public override int GetHashCode()
         {

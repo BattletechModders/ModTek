@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Harmony;
 using HBS.Logging;
 using Mono.Data.Sqlite;
@@ -16,7 +17,7 @@ internal static class SqliteCommand_CommandText_Setter_Patch
     public static void Postfix(SqliteCommand __instance)
     {
         var cmd = __instance;
-        var st = new System.Diagnostics.StackTrace(1).ToString();
+        var st = new StackTrace(1).ToString();
         LoggingFeature.LogAtLevel(
             "Debugger",
             LogLevel.Debug,
