@@ -4,74 +4,73 @@ using System.IO;
 using HBS.Logging;
 using ModTek.Misc;
 
-namespace ModTek.Features.Logging
+namespace ModTek.Features.Logging;
+
+internal static class LoggingFeature
 {
-    internal static class LoggingFeature
+    private static LoggingSettings Settings => ModTek.Config.Logging;
+
+    private static LogAppender _mainLog;
+    private static readonly List<LogAppender> _logsAppenders = new List<LogAppender>();
+
+    private static MTLoggerAsyncQueue _queue;
+
+    internal static void Init()
     {
-        private static LoggingSettings Settings => ModTek.Config.Logging;
+        Directory.CreateDirectory(FilePaths.TempModTekDirectory);
 
-        private static LogAppender _mainLog;
-        private static readonly List<LogAppender> _logsAppenders = new List<LogAppender>();
-
-        private static MTLoggerAsyncQueue _queue;
-
-        internal static void Init()
+        _mainLog = new LogAppender(Settings.MainLogFilePath, Settings.MainLog);
+        foreach (var kv in Settings.Logs)
         {
-            Directory.CreateDirectory(FilePaths.TempModTekDirectory);
+            _logsAppenders.Add(new LogAppender(kv.Key, kv.Value));
+        }
 
-            _mainLog = new LogAppender(Settings.MainLogFilePath, Settings.MainLog);
-            foreach (var kv in Settings.Logs)
+        if (Settings.LogUncaughtExceptions)
+        {
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
-                _logsAppenders.Add(new LogAppender(kv.Key, kv.Value));
-            }
-
-            if (Settings.LogUncaughtExceptions)
-            {
-                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                var message = "UnhandledException";
+                if (!(e.ExceptionObject is Exception ex))
                 {
-                    var message = "UnhandledException";
-                    if (!(e.ExceptionObject is Exception ex))
-                    {
-                        ex = null;
-                        message += " " + e.ExceptionObject;
-                    }
+                    ex = null;
+                    message += " " + e.ExceptionObject;
+                }
 
-                    LogAtLevel(
-                        "AppDomain",
-                        LogLevel.Debug,
-                        message,
-                        ex,
-                        null
-                    );
-                };
-            }
-
-            _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+                LogAtLevel(
+                    "AppDomain",
+                    LogLevel.Debug,
+                    message,
+                    ex,
+                    null
+                );
+            };
         }
 
-        // used for intercepting all logging attempts and to log centrally
-        internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
+        _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+    }
+
+    // used for intercepting all logging attempts and to log centrally
+    internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
+    {
+        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception);
+        if (!_queue.Add(messageDto))
         {
-            var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception);
-            if (!_queue.Add(messageDto))
-            {
-                ProcessLoggerMessage(messageDto);
-            }
+            ProcessLoggerMessage(messageDto);
         }
+    }
 
-        // note this can be called sync or async
-        private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
+    // note this can be called sync or async
+    private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
+    {
+        _mainLog.Append(messageDto);
+        foreach (var logAppender in _logsAppenders)
         {
-            _mainLog.Append(messageDto);
-            foreach (var logAppender in _logsAppenders)
-            {
-                logAppender.Append(messageDto);
-            }
+            logAppender.Append(messageDto);
         }
+    }
 
-        internal static void WriteExceptionToFatalLog(Exception exception)
-        {
-            File.WriteAllText(Path.Combine("Mods", ".modtek", "ModTekFatalError.log"), exception.ToString());
-        }
+    internal static void WriteExceptionToFatalLog(Exception exception)
+    {
+        File.WriteAllText(Path.Combine("Mods", ".modtek", "ModTekFatalError.log"), exception.ToString());
     }
 }

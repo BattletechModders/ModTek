@@ -4,50 +4,49 @@ using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
 
-namespace ModTek.Features.Manifest
+namespace ModTek.Features.Manifest;
+
+internal static class BTConstants
 {
-    internal static class BTConstants
-    {
-        internal static readonly string[] PREDEFINED_TYPES =
-            Enum.GetNames(typeof(BattleTechResourceType))
+    internal static readonly string[] PREDEFINED_TYPES =
+        Enum.GetNames(typeof(BattleTechResourceType))
             .Concat(Enum.GetNames(typeof(InternalCustomResourceType)))
             .Concat(Enum.GetNames(typeof(CustomType)))
             .ToArray();
 
-        internal static readonly BattleTechResourceType[] VanillaMDDBTypes =
-        {
-            BattleTechResourceType.ContractOverride,
-            BattleTechResourceType.LanceDef,
-            BattleTechResourceType.PilotDef,
-            BattleTechResourceType.SimGameEventDef,
-            BattleTechResourceType.MechDef,
-            BattleTechResourceType.WeaponDef,
-            BattleTechResourceType.TurretDef,
-            BattleTechResourceType.VehicleDef,
-            BattleTechResourceType.UpgradeDef
-        };
+    internal static readonly BattleTechResourceType[] VanillaMDDBTypes =
+    {
+        BattleTechResourceType.ContractOverride,
+        BattleTechResourceType.LanceDef,
+        BattleTechResourceType.PilotDef,
+        BattleTechResourceType.SimGameEventDef,
+        BattleTechResourceType.MechDef,
+        BattleTechResourceType.WeaponDef,
+        BattleTechResourceType.TurretDef,
+        BattleTechResourceType.VehicleDef,
+        BattleTechResourceType.UpgradeDef
+    };
 
-        internal static readonly HashSet<string> MDDBTypes =
-            VanillaMDDBTypes.Select(x => x.ToString())
-                .Union(new[]
-                {
-                    InternalCustomResourceType.EncounterLayer.ToString()
-                })
-                .ToHashSet();
+    internal static readonly HashSet<string> MDDBTypes =
+        VanillaMDDBTypes.Select(x => x.ToString())
+            .Union(new[]
+            {
+                InternalCustomResourceType.EncounterLayer.ToString()
+            })
+            .ToHashSet();
 
-        internal static bool BTResourceType(string Type, out BattleTechResourceType type)
-        {
-            return Enum.TryParse(Type, out type);
-        }
+    internal static bool BTResourceType(string Type, out BattleTechResourceType type)
+    {
+        return Enum.TryParse(Type, out type);
+    }
 
-        internal static bool ICResourceType(string Type, out InternalCustomResourceType type)
-        {
-            return Enum.TryParse(Type, out type);
-        }
+    internal static bool ICResourceType(string Type, out InternalCustomResourceType type)
+    {
+        return Enum.TryParse(Type, out type);
+    }
 
-        internal static bool CType(string Type, out CustomType type)
-        {
-            return Enum.TryParse(Type, out type);
-        }
+    internal static bool CType(string Type, out CustomType type)
+    {
+        return Enum.TryParse(Type, out type);
     }
 }

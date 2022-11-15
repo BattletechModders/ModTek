@@ -4,100 +4,99 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
-namespace ModTek.Features.AdvJSONMerge
+namespace ModTek.Features.AdvJSONMerge;
+
+internal class Instruction
 {
-    internal class Instruction
+    [JsonProperty(Required = Required.Always)]
+    [JsonConverter(typeof(StringEnumConverter))]
+    internal MergeAction Action;
+
+    [JsonProperty(Required = Required.Always)]
+    public string JSONPath;
+
+    [JsonProperty]
+    public JToken Value;
+
+    public bool Process(JObject root)
     {
-        [JsonProperty(Required = Required.Always)]
-        [JsonConverter(typeof(StringEnumConverter))]
-        internal MergeAction Action;
+        var jTokens = root.SelectTokens(JSONPath).ToList();
 
-        [JsonProperty(Required = Required.Always)]
-        public string JSONPath;
-
-        [JsonProperty]
-        public JToken Value;
-
-        public bool Process(JObject root)
+        if (jTokens.Count == 0)
         {
-            var jTokens = root.SelectTokens(JSONPath).ToList();
+            return false;
+        }
 
-            if (jTokens.Count == 0)
+        foreach (var jToken in jTokens)
+        {
+            switch (Action)
             {
-                return false;
-            }
-
-            foreach (var jToken in jTokens)
-            {
-                switch (Action)
+                case MergeAction.Remove:
                 {
-                    case MergeAction.Remove:
+                    if (jToken.Parent is JProperty)
                     {
-                        if (jToken.Parent is JProperty)
-                        {
-                            jToken.Parent.Remove();
-                        }
-                        else
-                        {
-                            jToken.Remove();
-                        }
+                        jToken.Parent.Remove();
+                    }
+                    else
+                    {
+                        jToken.Remove();
+                    }
 
-                        break;
-                    }
-                    case MergeAction.Replace:
+                    break;
+                }
+                case MergeAction.Replace:
+                {
+                    jToken.Replace(Value);
+                    break;
+                }
+                case MergeAction.ArrayAdd:
+                {
+                    if (!(jToken is JArray jArray))
                     {
-                        jToken.Replace(Value);
-                        break;
+                        throw new Exception("JSONPath needs to point an array");
                     }
-                    case MergeAction.ArrayAdd:
-                    {
-                        if (!(jToken is JArray jArray))
-                        {
-                            throw new Exception("JSONPath needs to point an array");
-                        }
 
-                        jArray.Add(Value);
-                        break;
-                    }
-                    case MergeAction.ArrayAddAfter:
+                    jArray.Add(Value);
+                    break;
+                }
+                case MergeAction.ArrayAddAfter:
+                {
+                    jToken.AddAfterSelf(Value);
+                    break;
+                }
+                case MergeAction.ArrayAddBefore:
+                {
+                    jToken.AddBeforeSelf(Value);
+                    break;
+                }
+                case MergeAction.ObjectMerge:
+                {
+                    if (!(jToken is JObject jObject1) || !(Value is JObject jObject2))
                     {
-                        jToken.AddAfterSelf(Value);
-                        break;
+                        throw new Exception("JSONPath has to point to an object and Value has to be an object");
                     }
-                    case MergeAction.ArrayAddBefore:
-                    {
-                        jToken.AddBeforeSelf(Value);
-                        break;
-                    }
-                    case MergeAction.ObjectMerge:
-                    {
-                        if (!(jToken is JObject jObject1) || !(Value is JObject jObject2))
-                        {
-                            throw new Exception("JSONPath has to point to an object and Value has to be an object");
-                        }
 
-                        // same behavior as partial json merging
-                        jObject1.Merge(jObject2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
-                        break;
-                    }
-                    case MergeAction.ArrayConcat:
+                    // same behavior as partial json merging
+                    jObject1.Merge(jObject2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+                    break;
+                }
+                case MergeAction.ArrayConcat:
+                {
+                    if (!(jToken is JArray jArray1) || !(Value is JArray jArray2))
                     {
-                        if (!(jToken is JArray jArray1) || !(Value is JArray jArray2))
-                        {
-                            throw new Exception("JSONPath has to point to an array and Value has to be an array");
-                        }
+                        throw new Exception("JSONPath has to point to an array and Value has to be an array");
+                    }
 
-                        jArray1.Merge(jArray2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
-                        break;
-                    }
-                    default:
-                    {
-                        throw new Exception("Unhandled action in Process");
-                    }
+                    jArray1.Merge(jArray2, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Concat });
+                    break;
+                }
+                default:
+                {
+                    throw new Exception("Unhandled action in Process");
                 }
             }
-
-            return true;
         }
+
+        return true;
     }
 }

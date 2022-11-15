@@ -4,70 +4,69 @@ using System.IO;
 using System.Reflection;
 using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Harmony12X
+namespace ModTekPreloader.Harmony12X;
+
+// workaround for shimmed assemblies being loaded from another directory
+internal static class AssemblyOriginalPathTracker
 {
-    // workaround for shimmed assemblies being loaded from another directory
-    internal static class AssemblyOriginalPathTracker
+    // name to path
+    private static readonly Dictionary<string, string> AssemblyPaths = new Dictionary<string, string>();
+
+    internal static void SetupAssemblyResolve()
     {
-        // name to path
-        private static readonly Dictionary<string, string> AssemblyPaths = new Dictionary<string, string>();
-
-        internal static void SetupAssemblyResolve()
+        AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            var resolvingName = new AssemblyName(args.Name);
+            if (AssemblyPaths.TryGetValue(resolvingName.Name, out var assemblyPath))
             {
-                var resolvingName = new AssemblyName(args.Name);
-                if (AssemblyPaths.TryGetValue(resolvingName.Name, out var assemblyPath))
-                {
-                    Logger.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
-                    return Assembly.LoadFile(assemblyPath);
-                }
-                return null;
-            };
+                Logger.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
+                return Assembly.LoadFile(assemblyPath);
+            }
+            return null;
+        };
+    }
+
+    private static readonly HashSet<string> ProcessedDirectories = new HashSet<string>();
+    internal static void AddAssemblyPathsInSameDirectory(string assemblyFile)
+    {
+        var directory = Path.GetDirectoryName(assemblyFile);
+        if (!ProcessedDirectories.Add(directory))
+        {
+            return;
+        }
+        if (!Directory.Exists(directory))
+        {
+            return;
         }
 
-        private static readonly HashSet<string> ProcessedDirectories = new HashSet<string>();
-        internal static void AddAssemblyPathsInSameDirectory(string assemblyFile)
+        foreach (var path in Directory.GetFiles(directory, "*.dll"))
         {
-            var directory = Path.GetDirectoryName(assemblyFile);
-            if (!ProcessedDirectories.Add(directory))
+            string name;
+            try
             {
-                return;
+                name = AssemblyName.GetAssemblyName(path).Name;
             }
-            if (!Directory.Exists(directory))
+            catch (Exception e)
             {
-                return;
+                Logger.Log($"Error when getting assembly name from {path}: {e}");
+                continue;
             }
-
-            foreach (var path in Directory.GetFiles(directory, "*.dll"))
+            if (AssemblyPaths.TryGetValue(name, out var existingPath))
             {
-                string name;
-                try
+                if (path != existingPath)
                 {
-                    name = AssemblyName.GetAssemblyName(path).Name;
+                    Logger.Log($"Warning: Assembly {name} found at {existingPath} and at {path}.");
                 }
-                catch (Exception e)
-                {
-                    Logger.Log($"Error when getting assembly name from {path}: {e}");
-                    continue;
-                }
-                if (AssemblyPaths.TryGetValue(name, out var existingPath))
-                {
-                    if (path != existingPath)
-                    {
-                        Logger.Log($"Warning: Assembly {name} found at {existingPath} and at {path}.");
-                    }
-                }
-                else
-                {
-                    AssemblyPaths.Add(name, path);
-                }
+            }
+            else
+            {
+                AssemblyPaths.Add(name, path);
             }
         }
+    }
 
-        internal static bool TryGetLocation(string assemblyName, out string path)
-        {
-            return AssemblyPaths.TryGetValue(assemblyName, out path);
-        }
+    internal static bool TryGetLocation(string assemblyName, out string path)
+    {
+        return AssemblyPaths.TryGetValue(assemblyName, out path);
     }
 }

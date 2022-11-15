@@ -3,27 +3,26 @@ using BattleTech.Data;
 using Harmony;
 using ModTek.Features.Manifest.BTRL;
 
-namespace ModTek.Features.Manifest.Patches
-{
-    [HarmonyPatch(typeof(ContentPackIndex), nameof(ContentPackIndex.IsResourceOwned))]
-    public static class ContentPackIndex_IsResourceOwned_Patch
-    {
-        public static bool Prepare()
-        {
-            return ModTek.Enabled;
-        }
+namespace ModTek.Features.Manifest.Patches;
 
-        public static bool Prefix(ContentPackIndex __instance, string resourceId, ref bool __result)
+[HarmonyPatch(typeof(ContentPackIndex), nameof(ContentPackIndex.IsResourceOwned))]
+public static class ContentPackIndex_IsResourceOwned_Patch
+{
+    public static bool Prepare()
+    {
+        return ModTek.Enabled;
+    }
+
+    public static bool Prefix(ContentPackIndex __instance, string resourceId, ref bool __result)
+    {
+        try
         {
-            try
-            {
-                __result = BetterBTRL.Instance.PackIndex.IsResourceOwned(resourceId);
-            }
-            catch (Exception e)
-            {
-                Log.Main.Info?.Log("Error running prefix", e);
-            }
-            return false;
+            __result = BetterBTRL.Instance.PackIndex.IsResourceOwned(resourceId);
         }
+        catch (Exception e)
+        {
+            Log.Main.Info?.Log("Error running prefix", e);
+        }
+        return false;
     }
 }

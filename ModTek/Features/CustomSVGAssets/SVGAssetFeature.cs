@@ -1,23 +1,22 @@
 ﻿using System.Collections.Generic;
 using BattleTech.UI;
 
-namespace ModTek.Features.CustomSVGAssets
+namespace ModTek.Features.CustomSVGAssets;
+
+internal static class SVGAssetFeature
 {
-    internal static class SVGAssetFeature
+    private static HashSet<string> systemIcons = new HashSet<string>();
+
+    internal static bool isInSystemIcons(string id)
     {
-        private static HashSet<string> systemIcons = new HashSet<string>();
+        return systemIcons.Contains(id);
+    }
 
-        internal static bool isInSystemIcons(string id)
+    public static void OnAddSVGEntry(ModEntry entry)
+    {
+        if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
         {
-            return systemIcons.Contains(id);
-        }
-
-        public static void OnAddSVGEntry(ModEntry entry)
-        {
-            if (entry.Id.StartsWith(nameof(UILookAndColorConstants)))
-            {
-                systemIcons.Add(entry.Id);
-            }
+            systemIcons.Add(entry.Id);
         }
     }
 }

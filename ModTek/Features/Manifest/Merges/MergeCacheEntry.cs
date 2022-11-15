@@ -9,184 +9,183 @@ using ModTek.Misc;
 using ModTek.Util;
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Manifest.Merges
+namespace ModTek.Features.Manifest.Merges;
+
+internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
 {
-    internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
+    [JsonProperty(Required = Required.Always)]
+    public string CachedPath { get; private set; }
+
+    [JsonProperty(Required = Required.Always)]
+    public DateTime CachedUpdatedOn { get; set; } // set when cache was updated, needed by MDDB indexer
+
+    [JsonProperty(Required = Required.Always)]
+    public DateTime? OriginalUpdatedOn { get; private set; }
+
+    [JsonProperty(Required = Required.Always)]
+    public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
+
+    [JsonIgnore]
+    public bool CacheHit { get; set; } // used during cleanup
+
+    internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
+    private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
+    private bool IsCsvAppend => FileUtils.IsCsv(CachedPath);
+
+    // used by newtonsoft?
+    internal MergeCacheEntry()
     {
-        [JsonProperty(Required = Required.Always)]
-        public string CachedPath { get; private set; }
+    }
 
-        [JsonProperty(Required = Required.Always)]
-        public DateTime CachedUpdatedOn { get; set; } // set when cache was updated, needed by MDDB indexer
+    internal MergeCacheEntry(VersionManifestEntry entry)
+    {
+        var extension = Path.GetExtension(entry.FileName);
+        CachedPath = Path.Combine(entry.Type, entry.Id + extension);
+        OriginalUpdatedOn = entry.GetUpdatedOnForTracking();
+    }
 
-        [JsonProperty(Required = Required.Always)]
-        public DateTime? OriginalUpdatedOn { get; private set; }
+    internal void Add(ModEntry modEntry)
+    {
+        var merge = FileVersionTuple.From(modEntry);
+        Merges.Add(merge);
+    }
 
-        [JsonProperty(Required = Required.Always)]
-        public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
+    internal void Merge(string originalContent)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(CachedAbsolutePath) ?? throw new InvalidOperationException());
 
-        [JsonIgnore]
-        public bool CacheHit { get; set; } // used during cleanup
-
-        internal string CachedAbsolutePath => Path.Combine(FilePaths.MergeCacheDirectory, CachedPath);
-        private bool IsJsonMerge => FileUtils.IsJson(CachedPath);
-        private bool IsCsvAppend => FileUtils.IsCsv(CachedPath);
-
-        // used by newtonsoft?
-        internal MergeCacheEntry()
+        if (IsJsonMerge)
         {
+            JsonMerge(originalContent);
+        }
+        else if (IsCsvAppend && ModTek.Config.NormalizeCsvIfAppending)
+        {
+            CsvAppend(originalContent);
+        }
+        else
+        {
+            TextAppend(originalContent);
         }
 
-        internal MergeCacheEntry(VersionManifestEntry entry)
+        CachedUpdatedOn = DateTime.Now;
+        CacheHit = true;
+    }
+
+    private void JsonMerge(string originalContent)
+    {
+        var target = HBSJsonUtils.ParseGameJSON(originalContent);
+        foreach (var entry in Merges)
         {
-            var extension = Path.GetExtension(entry.FileName);
-            CachedPath = Path.Combine(entry.Type, entry.Id + extension);
-            OriginalUpdatedOn = entry.GetUpdatedOnForTracking();
+            var merge = HBSJsonUtils.ParseGameJSONFile(entry.AbsolutePath);
+            AdvJSONMergeFeature.MergeIntoTarget(target, merge);
         }
 
-        internal void Add(ModEntry modEntry)
+        var mergedContent = target.ToString(Formatting.Indented);
+        File.WriteAllText(CachedAbsolutePath, mergedContent);
+    }
+
+    private void CsvAppend(string originalContent)
+    {
+        using (var writer = new StreamWriter(CachedAbsolutePath))
         {
-            var merge = FileVersionTuple.From(modEntry);
-            Merges.Add(merge);
-        }
+            string titleLine = null;
 
-        internal void Merge(string originalContent)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(CachedAbsolutePath) ?? throw new InvalidOperationException());
-
-            if (IsJsonMerge)
+            void process(StreamReader reader)
             {
-                JsonMerge(originalContent);
-            }
-            else if (IsCsvAppend && ModTek.Config.NormalizeCsvIfAppending)
-            {
-                CsvAppend(originalContent);
-            }
-            else
-            {
-                TextAppend(originalContent);
-            }
-
-            CachedUpdatedOn = DateTime.Now;
-            CacheHit = true;
-        }
-
-        private void JsonMerge(string originalContent)
-        {
-            var target = HBSJsonUtils.ParseGameJSON(originalContent);
-            foreach (var entry in Merges)
-            {
-                var merge = HBSJsonUtils.ParseGameJSONFile(entry.AbsolutePath);
-                AdvJSONMergeFeature.MergeIntoTarget(target, merge);
-            }
-
-            var mergedContent = target.ToString(Formatting.Indented);
-            File.WriteAllText(CachedAbsolutePath, mergedContent);
-        }
-
-        private void CsvAppend(string originalContent)
-        {
-            using (var writer = new StreamWriter(CachedAbsolutePath))
-            {
-                string titleLine = null;
-
-                void process(StreamReader reader)
+                var checkTitle = true;
+                while (!reader.EndOfStream)
                 {
-                    var checkTitle = true;
-                    while (!reader.EndOfStream)
+                    var line = reader.ReadLine();
+                    if (string.IsNullOrWhiteSpace(line))
                     {
-                        var line = reader.ReadLine();
-                        if (string.IsNullOrWhiteSpace(line))
+                        continue;
+                    }
+                    if (checkTitle)
+                    {
+                        checkTitle = false;
+                        if (titleLine == null) // very first valid line is assumed to be the title
+                        {
+                            titleLine = line;
+                        }
+                        else if (titleLine == line) // any duplication of a detected title will be removed
                         {
                             continue;
                         }
-                        if (checkTitle)
-                        {
-                            checkTitle = false;
-                            if (titleLine == null) // very first valid line is assumed to be the title
-                            {
-                                titleLine = line;
-                            }
-                            else if (titleLine == line) // any duplication of a detected title will be removed
-                            {
-                                continue;
-                            }
-                        }
-                        writer.WriteLine(line);
                     }
+                    writer.WriteLine(line);
                 }
+            }
 
-                using (var reader = FileUtils.StreamReaderFromString(originalContent))
+            using (var reader = FileUtils.StreamReaderFromString(originalContent))
+            {
+                process(reader);
+            }
+
+            foreach (var path in Merges.Select(x => x.AbsolutePath))
+            {
+                using (var reader = new StreamReader(path))
                 {
                     process(reader);
                 }
-
-                foreach (var path in Merges.Select(x => x.AbsolutePath))
-                {
-                    using (var reader = new StreamReader(path))
-                    {
-                        process(reader);
-                    }
-                }
             }
         }
+    }
 
-        private void TextAppend(string originalContent)
+    private void TextAppend(string originalContent)
+    {
+        var mergedContent = Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
+        File.WriteAllText(CachedAbsolutePath, mergedContent);
+    }
+
+    public override string ToString()
+    {
+        return CachedAbsolutePath;
+    }
+
+    // GENERATED CODE BELOW, used Rider IDE for that, Merges have to be done using SequenceEqual (rider uses Equals)
+    public bool Equals(MergeCacheEntry other)
+    {
+        if (ReferenceEquals(null, other))
         {
-            var mergedContent = Merges.Aggregate(originalContent, (current, entry) => current + File.ReadAllText(entry.AbsolutePath));
-            File.WriteAllText(CachedAbsolutePath, mergedContent);
+            return false;
         }
 
-        public override string ToString()
+        if (ReferenceEquals(this, other))
         {
-            return CachedAbsolutePath;
+            return true;
         }
 
-        // GENERATED CODE BELOW, used Rider IDE for that, Merges have to be done using SequenceEqual (rider uses Equals)
-        public bool Equals(MergeCacheEntry other)
+        return CachedPath == other.CachedPath && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Merges.SequenceEqual(other.Merges);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return CachedPath == other.CachedPath && OriginalUpdatedOn.Equals(other.OriginalUpdatedOn) && Merges.SequenceEqual(other.Merges);
+            return false;
         }
 
-        public override bool Equals(object obj)
+        if (ReferenceEquals(this, obj))
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((MergeCacheEntry) obj);
+            return true;
         }
 
-        public override int GetHashCode()
+        if (obj.GetType() != GetType())
         {
-            unchecked
-            {
-                var hashCode = CachedPath != null ? CachedPath.GetHashCode() : 0;
-                hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
-                return hashCode;
-            }
+            return false;
+        }
+
+        return Equals((MergeCacheEntry) obj);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hashCode = CachedPath != null ? CachedPath.GetHashCode() : 0;
+            hashCode = (hashCode * 397) ^ OriginalUpdatedOn.GetHashCode();
+            hashCode = (hashCode * 397) ^ (Merges != null ? Merges.GetHashCode() : 0);
+            return hashCode;
         }
     }
 }

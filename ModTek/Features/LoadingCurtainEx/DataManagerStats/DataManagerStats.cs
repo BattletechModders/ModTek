@@ -3,131 +3,130 @@ using BattleTech;
 using BattleTech.Data;
 using UnityEngine;
 
-namespace ModTek.Features.LoadingCurtainEx.DataManagerStats
+namespace ModTek.Features.LoadingCurtainEx.DataManagerStats;
+
+internal class DataManagerStats
 {
-    internal class DataManagerStats
+    private static DataManagerStats LastStats = new DataManagerStats();
+    internal static bool GetStats(out DataManagerStats stats)
     {
-        private static DataManagerStats LastStats = new DataManagerStats();
-        internal static bool GetStats(out DataManagerStats stats)
+        var activeLoadBatches = UnityGameInstance.BattleTechGame.DataManager.activeLoadBatches;
+
+        if (activeLoadBatches == null)
         {
-            var activeLoadBatches = UnityGameInstance.BattleTechGame.DataManager.activeLoadBatches;
+            stats = null;
+            return false;
+        }
 
-            if (activeLoadBatches == null)
+        stats = new DataManagerStats(activeLoadBatches);
+
+        if (!stats.HasStats())
+        {
+            LastStats = null;
+            return false;
+        }
+
+        if (stats.IsEqualTo(LastStats))
+        {
+            stats = LastStats;
+            if (!stats.dumped && Time.realtimeSinceStartup - stats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
             {
-                stats = null;
-                return false;
+                Log.Main.Info?.Log("Detected stuck DataManager.");
+                stats.dumped = true;
+                stats.Dump();
             }
+            return false;
+        }
 
-            stats = new DataManagerStats(activeLoadBatches);
+        LastStats = stats;
+        return true;
+    }
 
-            if (!stats.HasStats())
-            {
-                LastStats = null;
-                return false;
-            }
+    internal readonly int batches;
+    internal readonly int active;
+    internal readonly int pending;
+    internal readonly int completed;
+    internal readonly int failed;
+    internal readonly float time = Time.realtimeSinceStartup;
+    internal readonly List<LoadRequest> ActiveLoadRequests;
+    internal bool dumped;
 
-            if (stats.IsEqualTo(LastStats))
-            {
-                stats = LastStats;
-                if (!stats.dumped && Time.realtimeSinceStartup - stats.time > ModTek.Config.DataManagerEverSpinnyDetectionTimespan)
-                {
-                    Log.Main.Info?.Log("Detected stuck DataManager.");
-                    stats.dumped = true;
-                    stats.Dump();
-                }
-                return false;
-            }
+    internal DataManagerStats()
+    {
+    }
+    internal DataManagerStats(List<LoadRequest> loadRequests)
+    {
+        ActiveLoadRequests = loadRequests;
+        foreach (var load in loadRequests)
+        {
+            batches++;
+            active += load.GetActiveRequestCount();
+            pending += load.GetPendingRequestCount();
+            completed += load.GetCompletedRequestCount();
+            failed += load.FailedRequests.Count;
+        }
+    }
+    internal void Dump()
+    {
+        DumpLoadRequests.DumpProcessing(this);
+    }
 
-            LastStats = stats;
+    internal bool HasStats()
+    {
+        return batches > 0 || active > 0 || pending > 0 || completed > 0 || failed > 0;
+    }
+
+    public override string ToString()
+    {
+        return $"batches={batches} active={active} pending={pending} completed={completed} failed={failed}";
+    }
+
+    internal string GetStatsTextForCurtain()
+    {
+        var text = $"Batches: {batches}";
+        text += $"\nPending: {pending}";
+        text += $"\nProcessing: {active}";
+        text += $"\nCompleted: {completed}";
+        if (failed > 0)
+        {
+            text += $"\nFailed: {failed}";
+        }
+        if (dumped)
+        {
+            text += $"\nEverspinny detected, dumped processing to log.";
+        }
+        return text;
+    }
+
+    public bool IsEqualTo(DataManagerStats other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
             return true;
         }
 
-        internal readonly int batches;
-        internal readonly int active;
-        internal readonly int pending;
-        internal readonly int completed;
-        internal readonly int failed;
-        internal readonly float time = Time.realtimeSinceStartup;
-        internal readonly List<LoadRequest> ActiveLoadRequests;
-        internal bool dumped;
-
-        internal DataManagerStats()
+        if (
+            ActiveLoadRequests != null
+            && ActiveLoadRequests.Count > 0
+            && ActiveLoadRequests[0] != null
+            && other.ActiveLoadRequests != null
+            && other.ActiveLoadRequests.Count > 0
+            && other.ActiveLoadRequests[0] != null
+            && ActiveLoadRequests[0].GetHashCode() != other.ActiveLoadRequests[0].GetHashCode()
+        )
         {
-        }
-        internal DataManagerStats(List<LoadRequest> loadRequests)
-        {
-            ActiveLoadRequests = loadRequests;
-            foreach (var load in loadRequests)
-            {
-                batches++;
-                active += load.GetActiveRequestCount();
-                pending += load.GetPendingRequestCount();
-                completed += load.GetCompletedRequestCount();
-                failed += load.FailedRequests.Count;
-            }
-        }
-        internal void Dump()
-        {
-            DumpLoadRequests.DumpProcessing(this);
+            return false;
         }
 
-        internal bool HasStats()
-        {
-            return batches > 0 || active > 0 || pending > 0 || completed > 0 || failed > 0;
-        }
-
-        public override string ToString()
-        {
-            return $"batches={batches} active={active} pending={pending} completed={completed} failed={failed}";
-        }
-
-        internal string GetStatsTextForCurtain()
-        {
-            var text = $"Batches: {batches}";
-            text += $"\nPending: {pending}";
-            text += $"\nProcessing: {active}";
-            text += $"\nCompleted: {completed}";
-            if (failed > 0)
-            {
-                text += $"\nFailed: {failed}";
-            }
-            if (dumped)
-            {
-                text += $"\nEverspinny detected, dumped processing to log.";
-            }
-            return text;
-        }
-
-        public bool IsEqualTo(DataManagerStats other)
-        {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            if (
-                ActiveLoadRequests != null
-                && ActiveLoadRequests.Count > 0
-                && ActiveLoadRequests[0] != null
-                && other.ActiveLoadRequests != null
-                && other.ActiveLoadRequests.Count > 0
-                && other.ActiveLoadRequests[0] != null
-                && ActiveLoadRequests[0].GetHashCode() != other.ActiveLoadRequests[0].GetHashCode()
-                )
-            {
-                return false;
-            }
-
-            return active == other.active
-                && pending == other.pending
-                && completed == other.completed
-                && failed == other.failed
-                ;
-        }
+        return active == other.active
+            && pending == other.pending
+            && completed == other.completed
+            && failed == other.failed
+            ;
     }
 }

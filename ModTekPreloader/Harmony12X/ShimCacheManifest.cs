@@ -6,163 +6,162 @@ using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
-namespace ModTekPreloader.Harmony12X
+namespace ModTekPreloader.Harmony12X;
+
+internal class ShimCacheManifest
 {
-    internal class ShimCacheManifest
+    private readonly SortedDictionary<string, CacheEntry> data = new SortedDictionary<string, CacheEntry>();
+    private readonly DynamicShimInjector _injector;
+    private readonly string manifestHeader;
+
+    internal ShimCacheManifest(DynamicShimInjector injector)
     {
-        private readonly SortedDictionary<string, CacheEntry> data = new SortedDictionary<string, CacheEntry>();
-        private readonly DynamicShimInjector _injector;
-        private readonly string manifestHeader;
+        _injector = injector;
+        manifestHeader = InjectionCacheManifest.GetActualManifestContent();
+        Load();
+    }
 
-        internal ShimCacheManifest(DynamicShimInjector injector)
+    private void Load()
+    {
+        try
         {
-            _injector = injector;
-            manifestHeader = InjectionCacheManifest.GetActualManifestContent();
-            Load();
-        }
-
-        private void Load()
-        {
-            try
+            if (File.Exists(Paths.ShimmedCacheManifestFile))
             {
-                if (File.Exists(Paths.ShimmedCacheManifestFile))
+                var headerProcessed = false;
+                foreach (var line in File.ReadAllLines(Paths.ShimmedCacheManifestFile))
                 {
-                    var headerProcessed = false;
-                    foreach (var line in File.ReadAllLines(Paths.ShimmedCacheManifestFile))
+                    if (!headerProcessed)
                     {
-                        if (!headerProcessed)
+                        if (manifestHeader != line)
                         {
-                            if (manifestHeader != line)
-                            {
-                                throw new CacheInvalidatedException();
-                            }
-
-                            headerProcessed = true;
-                            continue;
+                            throw new CacheInvalidatedException();
                         }
 
-                        var entry = new CacheEntry(line);
-                        data[entry.OriginalPath] = entry;
+                        headerProcessed = true;
+                        continue;
                     }
 
-                    Logger.Log("Shimmed cache manifest is up to date.");
-                    return;
+                    var entry = new CacheEntry(line);
+                    data[entry.OriginalPath] = entry;
                 }
-            }
-            catch (CacheInvalidatedException)
-            {
-                Logger.Log("Shimmed cache manifest is outdated.");
-            }
-            catch (Exception e)
-            {
-                Logger.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
-                File.Delete(Paths.ShimmedCacheManifestFile);
-            }
-            Paths.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
-        }
 
-        private class CacheInvalidatedException : Exception
-        {
-        }
-
-        private void Save()
-        {
-            File.WriteAllLines(Paths.ShimmedCacheManifestFile, data.Values.Select(x => x.ToString()).Prepend(manifestHeader));
-        }
-
-        internal string GetPathToShimmedAssembly(string originalAbsolutePath)
-        {
-            var time = CacheEntry.GetTimeFromFile(originalAbsolutePath);
-            var originalPath = Paths.GetRelativePath(originalAbsolutePath);
-
-            if (data.TryGetValue(originalPath, out var entry))
-            {
-                if (time.Equals(entry.Time) && File.Exists(entry.AbsolutePath))
-                {
-                    LogLoading(originalAbsolutePath, entry.AbsolutePath);
-                    return entry.AbsolutePath;
-                }
-            }
-
-            var begin = DateTime.Now;
-            var shimmedPath = DetectAndPatchHarmony(originalAbsolutePath);
-            var absolutePath = shimmedPath ?? originalAbsolutePath;
-            data[originalPath] = new CacheEntry(time, originalPath, absolutePath);
-            Save();
-            LogLoading(originalAbsolutePath, absolutePath, begin);
-            return absolutePath;
-        }
-
-        private static void LogLoading(string originalAbsolutePath, string absolutePath, DateTime? begin = null)
-        {
-            if (originalAbsolutePath == absolutePath)
-            {
+                Logger.Log("Shimmed cache manifest is up to date.");
                 return;
             }
+        }
+        catch (CacheInvalidatedException)
+        {
+            Logger.Log("Shimmed cache manifest is outdated.");
+        }
+        catch (Exception e)
+        {
+            Logger.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
+            File.Delete(Paths.ShimmedCacheManifestFile);
+        }
+        Paths.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
+    }
 
-            var text = $"Loading shimmed assembly from `{Paths.GetRelativePath(absolutePath)}` instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
-            if (begin != null)
+    private class CacheInvalidatedException : Exception
+    {
+    }
+
+    private void Save()
+    {
+        File.WriteAllLines(Paths.ShimmedCacheManifestFile, data.Values.Select(x => x.ToString()).Prepend(manifestHeader));
+    }
+
+    internal string GetPathToShimmedAssembly(string originalAbsolutePath)
+    {
+        var time = CacheEntry.GetTimeFromFile(originalAbsolutePath);
+        var originalPath = Paths.GetRelativePath(originalAbsolutePath);
+
+        if (data.TryGetValue(originalPath, out var entry))
+        {
+            if (time.Equals(entry.Time) && File.Exists(entry.AbsolutePath))
             {
-                text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";
+                LogLoading(originalAbsolutePath, entry.AbsolutePath);
+                return entry.AbsolutePath;
             }
-            text += ".";
-            Logger.Log(text);
         }
 
-        private string DetectAndPatchHarmony(string originalPath)
-        {
-            var assemblyDefinition = AssemblyDefinition.ReadAssembly(originalPath);
-            if (!_injector.DetectAndPatchHarmony(assemblyDefinition))
-            {
-                return null;
-            }
+        var begin = DateTime.Now;
+        var shimmedPath = DetectAndPatchHarmony(originalAbsolutePath);
+        var absolutePath = shimmedPath ?? originalAbsolutePath;
+        data[originalPath] = new CacheEntry(time, originalPath, absolutePath);
+        Save();
+        LogLoading(originalAbsolutePath, absolutePath, begin);
+        return absolutePath;
+    }
 
-            var path = Path.Combine(Paths.AssembliesShimmedDirectory, $"{assemblyDefinition.Name.Name}.dll");
-            Logger.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
-            assemblyDefinition.Write(path);
-            return path;
+    private static void LogLoading(string originalAbsolutePath, string absolutePath, DateTime? begin = null)
+    {
+        if (originalAbsolutePath == absolutePath)
+        {
+            return;
         }
 
-        private class CacheEntry : IComparable<CacheEntry>, IEquatable<CacheEntry>
+        var text = $"Loading shimmed assembly from `{Paths.GetRelativePath(absolutePath)}` instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
+        if (begin != null)
         {
-            internal readonly string Time;
-            internal readonly string OriginalPath;
-            internal readonly string AbsolutePath;
+            text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";
+        }
+        text += ".";
+        Logger.Log(text);
+    }
 
-            internal CacheEntry(string time, string originalPath, string absolutePath)
-            {
-                Time = time;
-                OriginalPath = originalPath;
-                AbsolutePath = absolutePath;
-            }
+    private string DetectAndPatchHarmony(string originalPath)
+    {
+        var assemblyDefinition = AssemblyDefinition.ReadAssembly(originalPath);
+        if (!_injector.DetectAndPatchHarmony(assemblyDefinition))
+        {
+            return null;
+        }
 
-            internal CacheEntry(string line)
-            {
-                var cols = line.Split('\0');
-                Time = cols[0];
-                OriginalPath = cols[1];
-                AbsolutePath = cols[2];
-            }
+        var path = Path.Combine(Paths.AssembliesShimmedDirectory, $"{assemblyDefinition.Name.Name}.dll");
+        Logger.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
+        assemblyDefinition.Write(path);
+        return path;
+    }
 
-            public int CompareTo(CacheEntry other)
-            {
-                return string.CompareOrdinal(OriginalPath, other.OriginalPath);
-            }
+    private class CacheEntry : IComparable<CacheEntry>, IEquatable<CacheEntry>
+    {
+        internal readonly string Time;
+        internal readonly string OriginalPath;
+        internal readonly string AbsolutePath;
 
-            public bool Equals(CacheEntry other)
-            {
-                return other != null && CompareTo(other) == 0;
-            }
+        internal CacheEntry(string time, string originalPath, string absolutePath)
+        {
+            Time = time;
+            OriginalPath = originalPath;
+            AbsolutePath = absolutePath;
+        }
 
-            public override string ToString()
-            {
-                return $"{Time}\0{OriginalPath}\0{AbsolutePath}";
-            }
+        internal CacheEntry(string line)
+        {
+            var cols = line.Split('\0');
+            Time = cols[0];
+            OriginalPath = cols[1];
+            AbsolutePath = cols[2];
+        }
 
-            public static string GetTimeFromFile(string file)
-            {
-                return File.GetLastWriteTimeUtc(file).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
-            }
+        public int CompareTo(CacheEntry other)
+        {
+            return string.CompareOrdinal(OriginalPath, other.OriginalPath);
+        }
+
+        public bool Equals(CacheEntry other)
+        {
+            return other != null && CompareTo(other) == 0;
+        }
+
+        public override string ToString()
+        {
+            return $"{Time}\0{OriginalPath}\0{AbsolutePath}";
+        }
+
+        public static string GetTimeFromFile(string file)
+        {
+            return File.GetLastWriteTimeUtc(file).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }

@@ -2,86 +2,85 @@
 using BattleTech;
 using Newtonsoft.Json;
 
-namespace ModTek.Features.Manifest
+namespace ModTek.Features.Manifest;
+
+public class CacheKey : IEquatable<CacheKey>
 {
-    public class CacheKey : IEquatable<CacheKey>
+    [JsonProperty(Required = Required.Always)]
+    internal readonly string Type;
+    [JsonProperty(Required = Required.Always)]
+    internal readonly string Id;
+
+    [JsonConstructor]
+    private CacheKey()
     {
-        [JsonProperty(Required = Required.Always)]
-        internal readonly string Type;
-        [JsonProperty(Required = Required.Always)]
-        internal readonly string Id;
+    }
 
-        [JsonConstructor]
-        private CacheKey()
+    internal CacheKey(string type, string id)
+    {
+        Type = type;
+        Id = id;
+    }
+
+    internal CacheKey(VersionManifestEntry entry)
+    {
+        Type = entry.Type;
+        Id = entry.Id;
+    }
+
+    internal CacheKey(ModEntry entry)
+    {
+        Type = entry.Type;
+        Id = entry.Id;
+    }
+
+    public override string ToString()
+    {
+        return $"{Id} ({Type})";
+    }
+
+    // GENERATED CODE BELOW
+
+    public bool Equals(CacheKey other)
+    {
+        if (ReferenceEquals(null, other))
         {
+            return false;
         }
 
-        internal CacheKey(string type, string id)
+        if (ReferenceEquals(this, other))
         {
-            Type = type;
-            Id = id;
+            return true;
         }
 
-        internal CacheKey(VersionManifestEntry entry)
+        return Type == other.Type && Id == other.Id;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            Type = entry.Type;
-            Id = entry.Id;
+            return false;
         }
 
-        internal CacheKey(ModEntry entry)
+        if (ReferenceEquals(this, obj))
         {
-            Type = entry.Type;
-            Id = entry.Id;
+            return true;
         }
 
-        public override string ToString()
+        if (obj.GetType() != GetType())
         {
-            return $"{Id} ({Type})";
+            return false;
         }
 
-        // GENERATED CODE BELOW
+        return Equals((CacheKey) obj);
+    }
 
-        public bool Equals(CacheKey other)
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return Type == other.Type && Id == other.Id;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((CacheKey) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Id != null ? Id.GetHashCode() : 0);
-            }
+            return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Id != null ? Id.GetHashCode() : 0);
         }
     }
 }

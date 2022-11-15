@@ -1,7 +1,6 @@
-﻿namespace ModTek.Features.Manifest
+﻿namespace ModTek.Features.Manifest;
+
+internal enum CustomType
 {
-    internal enum CustomType
-    {
-        AdvancedJSONMerge,
-    }
+    AdvancedJSONMerge,
 }

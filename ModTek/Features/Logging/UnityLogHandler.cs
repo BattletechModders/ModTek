@@ -1,53 +1,52 @@
 ﻿using HBS.Logging;
 using UnityEngine;
 
-namespace ModTek.Features.Logging
+namespace ModTek.Features.Logging;
+
+internal class UnityLogHandler
 {
-    internal class UnityLogHandler
+    internal static void Setup()
     {
-        internal static void Setup()
-        {
-            Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
-            Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
-        }
-        private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
-        {
-            LoggingFeature.LogAtLevel(
-                "Unity",
-                UnityLogTypeToHBSLogLevel(type),
-                logString,
-                null,
-                GetLocation(stackTrace)
-            );
-        }
+        Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
+        Application.logMessageReceived -= HBS.Logging.Logger.HandleUnityLog;
+    }
+    private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
+    {
+        LoggingFeature.LogAtLevel(
+            "Unity",
+            UnityLogTypeToHBSLogLevel(type),
+            logString,
+            null,
+            GetLocation(stackTrace)
+        );
+    }
 
-        private static IStackTrace GetLocation(string stackTrace)
+    private static IStackTrace GetLocation(string stackTrace)
+    {
+        if (string.IsNullOrEmpty(stackTrace))
         {
-            if (string.IsNullOrEmpty(stackTrace))
-            {
-                return null;
-            }
-            if (stackTrace.StartsWith("UnityEngine.Debug:Log"))
-            {
-                return new UnityStackTrace(stackTrace, 1);
-            }
-            return new UnityStackTrace(stackTrace, 0);
+            return null;
         }
-
-        private static LogLevel UnityLogTypeToHBSLogLevel(LogType unity)
+        if (stackTrace.StartsWith("UnityEngine.Debug:Log"))
         {
-            switch (unity)
-            {
-                case LogType.Assert:
-                case LogType.Error:
-                case LogType.Exception:
-                    return LogLevel.Error;
-                case LogType.Warning:
-                    return LogLevel.Warning;
-                case LogType.Log:
-                default:
-                    return LogLevel.Log;
-            }
+            return new UnityStackTrace(stackTrace, 1);
+        }
+        return new UnityStackTrace(stackTrace, 0);
+    }
+
+    private static LogLevel UnityLogTypeToHBSLogLevel(LogType unity)
+    {
+        switch (unity)
+        {
+            case LogType.Assert:
+            case LogType.Error:
+            case LogType.Exception:
+                return LogLevel.Error;
+            case LogType.Warning:
+                return LogLevel.Warning;
+            case LogType.Log:
+            default:
+                return LogLevel.Log;
         }
     }
 }

@@ -4,209 +4,208 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace ModTek.Util
+namespace ModTek.Util;
+
+internal static class AssemblyUtil
 {
-    internal static class AssemblyUtil
+    private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
+
+    internal static Assembly LoadDLL(string path)
     {
-        private const BindingFlags PUBLIC_STATIC_BINDING_FLAGS = BindingFlags.Public | BindingFlags.Static;
+        var fileName = Path.GetFileName(path);
 
-        internal static Assembly LoadDLL(string path)
+        if (!File.Exists(path))
         {
-            var fileName = Path.GetFileName(path);
-
-            if (!File.Exists(path))
-            {
-                Log.Main.Warning?.Log($"\tFailed to load {fileName} at path {path}, because it doesn't exist at that path.");
-                return null;
-            }
-
-            try
-            {
-                var assembly = Assembly.LoadFrom(path);
-                Log.Main.Info?.Log($"\tLoaded assembly {assembly.GetName().Name} (v{assembly.GetName().Version})");
-                return assembly;
-            }
-            catch (Exception e)
-            {
-                Log.Main.Warning?.Log($"\t{fileName}: While loading a .dll, an exception occured", e);
-                return null;
-            }
+            Log.Main.Warning?.Log($"\tFailed to load {fileName} at path {path}, because it doesn't exist at that path.");
+            return null;
         }
 
-        internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
+        try
         {
-            // find types with our method on them
-            try
+            var assembly = Assembly.LoadFrom(path);
+            Log.Main.Info?.Log($"\tLoaded assembly {assembly.GetName().Name} (v{assembly.GetName().Version})");
+            return assembly;
+        }
+        catch (Exception e)
+        {
+            Log.Main.Warning?.Log($"\t{fileName}: While loading a .dll, an exception occured", e);
+            return null;
+        }
+    }
+
+    internal static MethodInfo[] FindMethods(Assembly assembly, string methodName, string typeName = null)
+    {
+        // find types with our method on them
+        try
+        {
+            var types = new List<Type>();
+            if (typeName == null)
             {
-                var types = new List<Type>();
-                if (typeName == null)
-                {
-                    types.AddRange(GetTypesSafe(assembly).Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
-                }
-                else
-                {
-                    types.Add(assembly.GetType(typeName));
-                }
-
-                if (types.Count == 0)
-                {
-                    return null;
-                }
-
-                var methods = new List<MethodInfo>();
-                foreach (var type in types)
-                {
-                    var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
-                    if (method != null)
-                    {
-                        methods.Add(method);
-                    }
-                }
-
-                return methods.ToArray();
+                types.AddRange(GetTypesSafe(assembly).Where(x => x.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS) != null));
             }
-            catch (Exception e)
+            else
             {
-                var typeString = typeName == null ? "in" : $"in type {typeName} of";
-                Log.Main.Warning?.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
+                types.Add(assembly.GetType(typeName));
+            }
+
+            if (types.Count == 0)
+            {
                 return null;
             }
-        }
 
-        internal static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)
-        {
-            var parameterList = new List<object>();
-            var methodParameters = method.GetParameters();
-
-            if (methodParameters.Length == 0)
+            var methods = new List<MethodInfo>();
+            foreach (var type in types)
             {
-                Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter dictionary");
-                method.Invoke(null, null);
-                return true;
-            }
-
-            var parametersStrings = new List<string>();
-            foreach (var parameter in methodParameters)
-            {
-                var name = parameter.Name;
-                if (!paramsDictionary.ContainsKey(name) || paramsDictionary[name].GetType() != parameter.ParameterType)
+                var method = type.GetMethod(methodName, PUBLIC_STATIC_BINDING_FLAGS);
+                if (method != null)
                 {
-                    return false;
+                    methods.Add(method);
                 }
-
-                parameterList.Add(paramsDictionary[name]);
-                parametersStrings.Add($"{parameter.ParameterType.Name} {name}");
             }
 
-            var parametersString = string.Join(", ", parametersStrings.ToArray());
-            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter dictionary");
-            method.Invoke(null, parameterList.ToArray());
+            return methods.ToArray();
+        }
+        catch (Exception e)
+        {
+            var typeString = typeName == null ? "in" : $"in type {typeName} of";
+            Log.Main.Warning?.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
+            return null;
+        }
+    }
+
+    internal static bool InvokeMethodByParameterNames(MethodInfo method, Dictionary<string, object> paramsDictionary)
+    {
+        var parameterList = new List<object>();
+        var methodParameters = method.GetParameters();
+
+        if (methodParameters.Length == 0)
+        {
+            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter dictionary");
+            method.Invoke(null, null);
             return true;
         }
 
-        internal static bool InvokeMethodByParameterTypes(MethodInfo method, object[] parameters)
+        var parametersStrings = new List<string>();
+        foreach (var parameter in methodParameters)
         {
-            var methodParameters = method.GetParameters();
-
-            if (parameters == null)
-            {
-                if (methodParameters.Length != 0)
-                {
-                    return false;
-                }
-
-                Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter type");
-                method.Invoke(null, null);
-                return true;
-            }
-
-            if (parameters.Length != methodParameters.Length)
+            var name = parameter.Name;
+            if (!paramsDictionary.ContainsKey(name) || paramsDictionary[name].GetType() != parameter.ParameterType)
             {
                 return false;
             }
 
-            var parametersStrings = new List<string>();
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                if (parameters[i].GetType() != methodParameters[i].ParameterType)
-                {
-                    return false;
-                }
+            parameterList.Add(paramsDictionary[name]);
+            parametersStrings.Add($"{parameter.ParameterType.Name} {name}");
+        }
 
-                parametersStrings.Add($"{methodParameters[i].ParameterType.Name} {methodParameters[i].Name}");
+        var parametersString = string.Join(", ", parametersStrings.ToArray());
+        Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter dictionary");
+        method.Invoke(null, parameterList.ToArray());
+        return true;
+    }
+
+    internal static bool InvokeMethodByParameterTypes(MethodInfo method, object[] parameters)
+    {
+        var methodParameters = method.GetParameters();
+
+        if (parameters == null)
+        {
+            if (methodParameters.Length != 0)
+            {
+                return false;
             }
 
-            var parametersString = string.Join(", ", parametersStrings.ToArray());
-            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter type");
-            method.Invoke(null, parameters);
+            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter type");
+            method.Invoke(null, null);
             return true;
         }
 
-        internal static IEnumerable<Type> GetTypesSafe(Assembly assembly)
+        if (parameters.Length != methodParameters.Length)
         {
-            try
-            {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException e)
-            {
-                foreach (var le in e.LoaderExceptions)
-                {
-                    if (le == null)
-                    {
-                        continue;
-                    }
-                    Log.Main.Error?.Log($"\tCouldn't get all Types from {assembly.GetName()}", le);
-                }
-                return e.Types.Where(x => x != null);
-            }
+            return false;
         }
 
-        internal static string GetAssemblyName(this MemberInfo Method)
+        var parametersStrings = new List<string>();
+        for (var i = 0; i < parameters.Length; i++)
         {
-            return Method.DeclaringType?.Assembly.GetName().Name;
-        }
-
-        internal static string GetFullName(this MemberInfo Method)
-        {
-            return Method.DeclaringType?.FullName + "." + Method.Name;
-        }
-
-        internal static string GetLocationOrName(Assembly assembly)
-        {
-            var name = assembly.GetName().Name;
-            try
+            if (parameters[i].GetType() != methodParameters[i].ParameterType)
             {
-                // codebase points to the path of the loaded assembly
-                // location points to the path of the original assembly location
-                // if shimmed, this can differ, see preloader fake assembly location setting
-                var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
-                var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
+                return false;
+            }
 
-                var formatted = "";
-                if (location == null || Path.GetFileNameWithoutExtension(location) != name)
-                {
-                    formatted = name;
-                }
-                if (location != null)
-                {
-                    if (formatted.Length > 0)
-                    {
-                        formatted += " at ";
-                    }
-                    formatted += location;
-                }
-                if (codeBase != null && location != codeBase)
-                {
-                    formatted += $" ({codeBase})";
-                }
-                return formatted;
-            }
-            catch
-            {
-                // ignored
-            }
-            return name;
+            parametersStrings.Add($"{methodParameters[i].ParameterType.Name} {methodParameters[i].Name}");
         }
+
+        var parametersString = string.Join(", ", parametersStrings.ToArray());
+        Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter type");
+        method.Invoke(null, parameters);
+        return true;
+    }
+
+    internal static IEnumerable<Type> GetTypesSafe(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException e)
+        {
+            foreach (var le in e.LoaderExceptions)
+            {
+                if (le == null)
+                {
+                    continue;
+                }
+                Log.Main.Error?.Log($"\tCouldn't get all Types from {assembly.GetName()}", le);
+            }
+            return e.Types.Where(x => x != null);
+        }
+    }
+
+    internal static string GetAssemblyName(this MemberInfo Method)
+    {
+        return Method.DeclaringType?.Assembly.GetName().Name;
+    }
+
+    internal static string GetFullName(this MemberInfo Method)
+    {
+        return Method.DeclaringType?.FullName + "." + Method.Name;
+    }
+
+    internal static string GetLocationOrName(Assembly assembly)
+    {
+        var name = assembly.GetName().Name;
+        try
+        {
+            // codebase points to the path of the loaded assembly
+            // location points to the path of the original assembly location
+            // if shimmed, this can differ, see preloader fake assembly location setting
+            var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
+            var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
+
+            var formatted = "";
+            if (location == null || Path.GetFileNameWithoutExtension(location) != name)
+            {
+                formatted = name;
+            }
+            if (location != null)
+            {
+                if (formatted.Length > 0)
+                {
+                    formatted += " at ";
+                }
+                formatted += location;
+            }
+            if (codeBase != null && location != codeBase)
+            {
+                formatted += $" ({codeBase})";
+            }
+            return formatted;
+        }
+        catch
+        {
+            // ignored
+        }
+        return name;
     }
 }

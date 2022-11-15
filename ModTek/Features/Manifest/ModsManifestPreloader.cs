@@ -11,247 +11,246 @@ using ModTek.Features.Manifest.Patches;
 using UnityEngine.Video;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
-namespace ModTek.Features.Manifest
+namespace ModTek.Features.Manifest;
+
+internal class ModsManifestPreloader
 {
-    internal class ModsManifestPreloader
+    internal static int finishedChecksAndPreloadsCounter;
+    private static readonly Stopwatch preloadSW = new Stopwatch();
+    internal static bool HasPreloader => preloader != null;
+    private static ModsManifestPreloader preloader;
+
+    internal static void PrewarmResourcesIfEnabled()
     {
-        internal static int finishedChecksAndPreloadsCounter;
-        private static readonly Stopwatch preloadSW = new Stopwatch();
-        internal static bool HasPreloader => preloader != null;
-        private static ModsManifestPreloader preloader;
-
-        internal static void PrewarmResourcesIfEnabled()
+        if (preloader != null)
         {
-            if (preloader != null)
+            Log.Main.Info?.Log("ERROR: Can't start prewarming, prewarm load request exists already");
+            return;
+        }
+
+        if (!ModTek.Config.DelayPrewarmToMainMenu)
+        {
+            Log.Main.Info?.Log("Prewarm delay disabled.");
+            return;
+        }
+
+        var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
+        if (prewarmRequests.Count == 0)
+        {
+            Log.Main.Info?.Log("Nothing to prewarm.");
+            return;
+        }
+
+        Log.Main.Info?.Log("Prewarming resources.");
+
+        preloadSW.Start();
+        preloader = new ModsManifestPreloader(prewarmRequests);
+        preloader.ShowCurtain();
+    }
+
+    private static void FinalizePrewarm()
+    {
+        finishedChecksAndPreloadsCounter++;
+        preloader = null;
+        preloadSW.Stop();
+        Log.Main.Info?.LogIfSlow(preloadSW, "Prewarming");
+    }
+
+    private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
+    private readonly List<PrewarmRequest> prewarmRequests;
+
+    private ModsManifestPreloader(List<PrewarmRequest> prewarmRequests)
+    {
+        this.prewarmRequests = prewarmRequests;
+    }
+
+    private void ShowCurtain()
+    {
+        LoadingCurtain.ExecuteWhenVisible(StartWaiting);
+        ShowLoadingCurtainOnMainMenu();
+    }
+
+    // make sure other loads are finished
+    // dataManager has issues resolving dependencies if they are loaded across different loadRequests
+    // e.g. if dependencies were already finished loading in another request, the new requests will be stuck waiting for dependencies forever
+    private void StartWaiting()
+    {
+        RunActionWhenDataManagerIsOrBecomesIdle(
+            StartPrewarm,
+            () =>
             {
-                Log.Main.Info?.Log("ERROR: Can't start prewarming, prewarm load request exists already");
-                return;
+                Log.Main.Info?.Log("Ongoing DataManager activity, waiting to finish before prewarm phase");
+                DataManagerStats.GetStats(out var stats);
+                stats.Dump();
             }
+        );
+    }
 
-            if (!ModTek.Config.DelayPrewarmToMainMenu)
-            {
-                Log.Main.Info?.Log("Prewarm delay disabled.");
-                return;
-            }
-
-            var prewarmRequests = DataManager_ProcessPrewarmRequests_Patch.GetAndClearPrewarmRequests();
-            if (prewarmRequests.Count == 0)
-            {
-                Log.Main.Info?.Log("Nothing to prewarm.");
-                return;
-            }
-
-            Log.Main.Info?.Log("Prewarming resources.");
-
-            preloadSW.Start();
-            preloader = new ModsManifestPreloader(prewarmRequests);
-            preloader.ShowCurtain();
-        }
-
-        private static void FinalizePrewarm()
+    private static void RunActionWhenDataManagerIsOrBecomesIdle(Action idleAction, Action stillLoadingAction = null)
+    {
+        var dataManager = UnityGameInstance.BattleTechGame.DataManager;
+        if (dataManager.IsLoading)
         {
-            finishedChecksAndPreloadsCounter++;
-            preloader = null;
-            preloadSW.Stop();
-            Log.Main.Info?.LogIfSlow(preloadSW, "Prewarming");
-        }
-
-        private readonly DataManager dataManager = UnityGameInstance.BattleTechGame.DataManager;
-        private readonly List<PrewarmRequest> prewarmRequests;
-
-        private ModsManifestPreloader(List<PrewarmRequest> prewarmRequests)
-        {
-            this.prewarmRequests = prewarmRequests;
-        }
-
-        private void ShowCurtain()
-        {
-            LoadingCurtain.ExecuteWhenVisible(StartWaiting);
-            ShowLoadingCurtainOnMainMenu();
-        }
-
-        // make sure other loads are finished
-        // dataManager has issues resolving dependencies if they are loaded across different loadRequests
-        // e.g. if dependencies were already finished loading in another request, the new requests will be stuck waiting for dependencies forever
-        private void StartWaiting()
-        {
-            RunActionWhenDataManagerIsOrBecomesIdle(
-                StartPrewarm,
-                () =>
+            stillLoadingAction?.Invoke();
+            UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
+                MessageCenterMessageType.DataManagerLoadCompleteMessage,
+                _ =>
                 {
-                    Log.Main.Info?.Log("Ongoing DataManager activity, waiting to finish before prewarm phase");
-                    DataManagerStats.GetStats(out var stats);
-                    stats.Dump();
+                    if (dataManager.IsLoading)
+                    {
+                        stillLoadingAction?.Invoke();
+                        return false;
+                    }
+                    idleAction();
+                    return true;
                 }
             );
         }
-
-        private static void RunActionWhenDataManagerIsOrBecomesIdle(Action idleAction, Action stillLoadingAction = null)
+        else
         {
-            var dataManager = UnityGameInstance.BattleTechGame.DataManager;
-            if (dataManager.IsLoading)
+            idleAction();
+        }
+    }
+
+    private void StartPrewarm()
+    {
+        try
+        {
+            AddPrewarmRequestsToQueue();
             {
-                stillLoadingAction?.Invoke();
-                UnityGameInstance.BattleTechGame.MessageCenter.AddFiniteSubscriber(
-                    MessageCenterMessageType.DataManagerLoadCompleteMessage,
-                    _ =>
+                var loadRequest = dataManager.CreateLoadRequest(PrewarmComplete);
+                foreach (var entry in loadingResourcesQueue)
+                {
+                    if (BTConstants.BTResourceType(entry.Type, out var resourceType))
                     {
-                        if (dataManager.IsLoading)
-                        {
-                            stillLoadingAction?.Invoke();
-                            return false;
-                        }
-                        idleAction();
-                        return true;
+                        loadRequest.AddBlindLoadRequest(resourceType, entry.Id, true);
                     }
-                );
+                }
+                loadRequest.ProcessRequests();
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Main.Info?.Log("ERROR: Couldn't start loading via preload", e);
+        }
+    }
+
+    private void AddPrewarmRequestsToQueue()
+    {
+        Log.Main.Info?.Log("Prewarming resources during preload.");
+        foreach (var prewarm in prewarmRequests)
+        {
+            if (prewarm.PrewarmAllOfType)
+            {
+                Log.Main.Info?.Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
+                foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(prewarm.ResourceType, true))
+                {
+                    QueueLoadingResource(entry);
+                }
             }
             else
             {
-                idleAction();
+                var entry = BetterBTRL.Instance.EntryByID(prewarm.ResourceID, prewarm.ResourceType, true);
+                if (entry != null)
+                {
+                    Log.Main.Info?.Log($"\tPrewarming resource {entry.ToShortString()}.");
+                    QueueLoadingResource(entry);
+                }
             }
         }
+    }
 
-        private void StartPrewarm()
+    private readonly HashSet<CacheKey> loadingResourcesIndex = new HashSet<CacheKey>();
+    private readonly List<VersionManifestEntry> loadingResourcesQueue = new List<VersionManifestEntry>();
+    private void QueueLoadingResource(VersionManifestEntry entry)
+    {
+        if (entry.IsTemplate)
+        {
+            return;
+        }
+
+        var key = new CacheKey(entry);
+        if (loadingResourcesIndex.Add(key))
+        {
+            loadingResourcesQueue.Add(entry);
+        }
+    }
+
+    private void PrewarmComplete(LoadRequest loadRequest)
+    {
+        try
         {
             try
             {
-                AddPrewarmRequestsToQueue();
-                {
-                    var loadRequest = dataManager.CreateLoadRequest(PrewarmComplete);
-                    foreach (var entry in loadingResourcesQueue)
-                    {
-                        if (BTConstants.BTResourceType(entry.Type, out var resourceType))
-                        {
-                            loadRequest.AddBlindLoadRequest(resourceType, entry.Id, true);
-                        }
-                    }
-                    loadRequest.ProcessRequests();
-                }
+                dataManager.PrewarmComplete(loadRequest);
             }
             catch (Exception e)
             {
-                Log.Main.Info?.Log("ERROR: Couldn't start loading via preload", e);
+                Log.Main.Info?.Log("ERROR execute PrewarmComplete", e);
             }
-        }
 
-        private void AddPrewarmRequestsToQueue()
+            FinalizePrewarm();
+        }
+        catch (Exception e)
         {
-            Log.Main.Info?.Log("Prewarming resources during preload.");
-            foreach (var prewarm in prewarmRequests)
-            {
-                if (prewarm.PrewarmAllOfType)
-                {
-                    Log.Main.Info?.Log($"\tPrewarming resources of type {prewarm.ResourceType}.");
-                    foreach (var entry in BetterBTRL.Instance.AllEntriesOfResource(prewarm.ResourceType, true))
-                    {
-                        QueueLoadingResource(entry);
-                    }
-                }
-                else
-                {
-                    var entry = BetterBTRL.Instance.EntryByID(prewarm.ResourceID, prewarm.ResourceType, true);
-                    if (entry != null)
-                    {
-                        Log.Main.Info?.Log($"\tPrewarming resource {entry.ToShortString()}.");
-                        QueueLoadingResource(entry);
-                    }
-                }
-            }
+            Log.Main.Info?.Log("ERROR can't fully finish preload", e);
         }
+    }
 
-        private readonly HashSet<CacheKey> loadingResourcesIndex = new HashSet<CacheKey>();
-        private readonly List<VersionManifestEntry> loadingResourcesQueue = new List<VersionManifestEntry>();
-        private void QueueLoadingResource(VersionManifestEntry entry)
+    private static void ShowLoadingCurtainOnMainMenu()
+    {
+        Log.Main.Info?.Log("Showing LoadingCurtain on Main Menu.");
+        LoadingCurtain.ShowPopupUntil(
+            PopupClosureConditionalCheck,
+            "Prewarming game resources.\nGame can temporarily freeze."
+        );
+    }
+
+    private static bool PopupClosureConditionalCheck()
+    {
+        try
         {
-            if (entry.IsTemplate)
+            var condition = !HasPreloader;
+
+            var videoPlayer = GetMainMenuBGVideoPlayer();
+            if (videoPlayer == null)
             {
-                return;
+                return condition;
             }
 
-            var key = new CacheKey(entry);
-            if (loadingResourcesIndex.Add(key))
+            if (condition)
             {
-                loadingResourcesQueue.Add(entry);
+                if (videoPlayer.isPaused)
+                {
+                    Log.Main.Debug?.Log("Resuming MainMenu background video.");
+                    videoPlayer.Play();
+                }
+                return true;
+            }
+            else
+            {
+                if (videoPlayer.isPlaying)
+                {
+                    Log.Main.Debug?.Log("Pausing MainMenu background video.");
+                    videoPlayer.Pause();
+                }
+                return false;
             }
         }
-
-        private void PrewarmComplete(LoadRequest loadRequest)
+        catch (Exception e)
         {
-            try
-            {
-                try
-                {
-                    dataManager.PrewarmComplete(loadRequest);
-                }
-                catch (Exception e)
-                {
-                    Log.Main.Info?.Log("ERROR execute PrewarmComplete", e);
-                }
-
-                FinalizePrewarm();
-            }
-            catch (Exception e)
-            {
-                Log.Main.Info?.Log("ERROR can't fully finish preload", e);
-            }
+            Log.Main.Warning?.Log("Can't properly check if popup can be closed", e);
         }
+        return false;
+    }
 
-        private static void ShowLoadingCurtainOnMainMenu()
+    private static VideoPlayer GetMainMenuBGVideoPlayer()
+    {
+        var mainMenu = LazySingletonBehavior<UIManager>.Instance.GetFirstModule<MainMenu>();
+        if (mainMenu == null)
         {
-            Log.Main.Info?.Log("Showing LoadingCurtain on Main Menu.");
-            LoadingCurtain.ShowPopupUntil(
-                PopupClosureConditionalCheck,
-                "Prewarming game resources.\nGame can temporarily freeze."
-            );
+            return null;
         }
-
-        private static bool PopupClosureConditionalCheck()
-        {
-            try
-            {
-                var condition = !HasPreloader;
-
-                var videoPlayer = GetMainMenuBGVideoPlayer();
-                if (videoPlayer == null)
-                {
-                    return condition;
-                }
-
-                if (condition)
-                {
-                    if (videoPlayer.isPaused)
-                    {
-                        Log.Main.Debug?.Log("Resuming MainMenu background video.");
-                        videoPlayer.Play();
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (videoPlayer.isPlaying)
-                    {
-                        Log.Main.Debug?.Log("Pausing MainMenu background video.");
-                        videoPlayer.Pause();
-                    }
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Main.Warning?.Log("Can't properly check if popup can be closed", e);
-            }
-            return false;
-        }
-
-        private static VideoPlayer GetMainMenuBGVideoPlayer()
-        {
-            var mainMenu = LazySingletonBehavior<UIManager>.Instance.GetFirstModule<MainMenu>();
-            if (mainMenu == null)
-            {
-                return null;
-            }
-            return mainMenu.bgVideoPlayer;
-        }
+        return mainMenu.bgVideoPlayer;
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace ModTek.Public
+﻿namespace ModTek.Public;
+
+public static class FilePaths
 {
-    public static class FilePaths
-    {
-        public static string TempModTekDirectory => Misc.FilePaths.TempModTekDirectory;
-    }
+    public static string TempModTekDirectory => Misc.FilePaths.TempModTekDirectory;
 }

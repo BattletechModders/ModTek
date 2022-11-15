@@ -6,39 +6,38 @@ using Harmony;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 
-namespace ModTek.Features.Manifest.Patches
+namespace ModTek.Features.Manifest.Patches;
+
+[HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
+internal static class AssetBundleManager_AssetBundleNameToFilepath_Patch
 {
-    [HarmonyPatch(typeof(AssetBundleManager), "AssetBundleNameToFilepath")]
-    internal static class AssetBundleManager_AssetBundleNameToFilepath_Patch
+    public static bool Prepare()
     {
-        public static bool Prepare()
-        {
-            return ModTek.Enabled;
-        }
+        return ModTek.Enabled;
+    }
 
-        public static bool Prefix(string assetBundleName, ref string __result)
+    public static bool Prefix(string assetBundleName, ref string __result)
+    {
+        try
         {
-            try
-            {
-                var filePath = AssetBundleNameToFilepath(assetBundleName);
-                __result = filePath;
-                return false;
-            }
-            catch (Exception e)
-            {
-                Log.Main.Info?.Log("Error running prefix", e);
-            }
-            return true;
+            var filePath = AssetBundleNameToFilepath(assetBundleName);
+            __result = filePath;
+            return false;
         }
+        catch (Exception e)
+        {
+            Log.Main.Info?.Log("Error running prefix", e);
+        }
+        return true;
+    }
 
-        internal static string AssetBundleNameToFilepath(string assetBundleName)
+    internal static string AssetBundleNameToFilepath(string assetBundleName)
+    {
+        var entry = BetterBTRL.Instance.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
+        if (entry == null)
         {
-            var entry = BetterBTRL.Instance.EntryByID(assetBundleName, BattleTechResourceType.AssetBundle);
-            if (entry == null)
-            {
-                return Path.Combine(FilePaths.AssetBundlesDirectory, assetBundleName);
-            }
-            return Path.Combine(FilePaths.StreamingAssetsDirectory, entry.FilePath);
+            return Path.Combine(FilePaths.AssetBundlesDirectory, assetBundleName);
         }
+        return Path.Combine(FilePaths.StreamingAssetsDirectory, entry.FilePath);
     }
 }

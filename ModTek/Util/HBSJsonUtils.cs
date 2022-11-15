@@ -4,43 +4,42 @@ using System.Text.RegularExpressions;
 using HBS.Util;
 using Newtonsoft.Json.Linq;
 
-namespace ModTek.Util
+namespace ModTek.Util;
+
+internal static class HBSJsonUtils
 {
-    internal static class HBSJsonUtils
+    internal static JObject ParseGameJSONFile(string path, bool log = false)
     {
-        internal static JObject ParseGameJSONFile(string path, bool log = false)
+        var content = File.ReadAllText(path);
+        return ParseGameJSON(content, log);
+    }
+
+    internal static JObject ParseGameJSON(string content, bool log = false)
+    {
+        Log.Main.Info?.LogIf(log,"content: " + content);
+
+        try
         {
-            var content = File.ReadAllText(path);
-            return ParseGameJSON(content, log);
+            return JObject.Parse(content);
+        }
+        catch (Exception)
+        {
+            // ignored
         }
 
-        internal static JObject ParseGameJSON(string content, bool log = false)
-        {
-            Log.Main.Info?.LogIf(log,"content: " + content);
+        var commentsStripped = JSONSerializationUtility.StripHBSCommentsFromJSON(content);
+        Log.Main.Info?.LogIf(log, "commentsStripped: " + commentsStripped);
 
-            try
-            {
-                return JObject.Parse(content);
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
+        var commasAdded = FixHBSJsonCommas(commentsStripped);
+        Log.Main.Info?.LogIf(log,"commasAdded: " + commasAdded);
 
-            var commentsStripped = JSONSerializationUtility.StripHBSCommentsFromJSON(content);
-            Log.Main.Info?.LogIf(log, "commentsStripped: " + commentsStripped);
+        return JObject.Parse(commasAdded);
+    }
 
-            var commasAdded = FixHBSJsonCommas(commentsStripped);
-            Log.Main.Info?.LogIf(log,"commasAdded: " + commasAdded);
-
-            return JObject.Parse(commasAdded);
-        }
-
-        private static string FixHBSJsonCommas(string json)
-        {
-            // add missing commas, this only fixes if there is a newline
-            var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
-            return rgx.Replace(json, "$1,\n$2");
-        }
+    private static string FixHBSJsonCommas(string json)
+    {
+        // add missing commas, this only fixes if there is a newline
+        var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
+        return rgx.Replace(json, "$1,\n$2");
     }
 }

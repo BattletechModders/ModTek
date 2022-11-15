@@ -1,10 +1,9 @@
-﻿namespace ModTek.Util
+﻿namespace ModTek.Util;
+
+internal static class DebugUtils
 {
-    internal static class DebugUtils
+    internal static string GetStackTraceWithoutPatch()
     {
-        internal static string GetStackTraceWithoutPatch()
-        {
-            return new System.Diagnostics.StackTrace(4).ToString();
-        }
+        return new System.Diagnostics.StackTrace(4).ToString();
     }
 }

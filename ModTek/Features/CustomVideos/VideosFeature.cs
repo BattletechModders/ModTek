@@ -4,14 +4,13 @@ using BattleTech;
 using ModTek.Features.CustomResources;
 using ModTek.Features.Manifest.BTRL;
 
-namespace ModTek.Features.CustomVideos
+namespace ModTek.Features.CustomVideos;
+
+internal static class VideosFeature
 {
-    internal static class VideosFeature
+    internal static VersionManifestEntry GetVideo(string videoName)
     {
-        internal static VersionManifestEntry GetVideo(string videoName)
-        {
-            return BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.Video.ToString())
-                .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
-        }
+        return BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.Video.ToString())
+            .LastOrDefault(entry => entry.Id == videoName || entry.Id == Path.GetFileNameWithoutExtension(videoName));
     }
 }

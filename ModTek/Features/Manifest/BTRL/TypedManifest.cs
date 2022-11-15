@@ -9,142 +9,141 @@ using ModTek.Misc;
 using ModTek.Util;
 using TypedDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
-namespace ModTek.Features.Manifest.BTRL
+namespace ModTek.Features.Manifest.BTRL;
+
+internal class TypedManifest
 {
-    internal class TypedManifest
+    private readonly TypedDict manifest = new TypedDict();
+    private readonly Dictionary<string, HashSet<string>> idToTypes = new Dictionary<string, HashSet<string>>();
+    private readonly BetterCPI packIndex;
+    private readonly Dictionary<string, VersionManifestAddendum> addendums = new Dictionary<string, VersionManifestAddendum>();
+
+    private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
+    private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();
+
+    public TypedManifest(BetterCPI packIndex)
     {
-        private readonly TypedDict manifest = new TypedDict();
-        private readonly Dictionary<string, HashSet<string>> idToTypes = new Dictionary<string, HashSet<string>>();
-        private readonly BetterCPI packIndex;
-        private readonly Dictionary<string, VersionManifestAddendum> addendums = new Dictionary<string, VersionManifestAddendum>();
+        this.packIndex = packIndex;
+    }
 
-        private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
-        private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();
+    public void Reset(IEnumerable<VersionManifestEntry> defaultEntries)
+    {
+        manifest.Clear();
+        idToTypes.Clear();
+        addendums.Clear();
+        SetEntries(defaultEntries);
+        SetEntries(DebugSettingsFeature.DefaulManifestEntries);
+        SetEntries(GameTipsFeature.DefaulManifestEntries);
+    }
 
-        public TypedManifest(BetterCPI packIndex)
+    private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable, bool filterByOwnership)
+    {
+        if (!filterByOwnership || packIndex.AllContentPacksOwned)
         {
-            this.packIndex = packIndex;
+            return iterable;
+        }
+        return FilterUnowned(iterable);
+    }
+
+    private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable)
+    {
+        return iterable.Where(entry => packIndex.IsResourceOwned(entry.Id));
+    }
+
+    public void AddAddendum(VersionManifestAddendum addendum)
+    {
+        addendums[addendum.Name] = addendum;
+        SetEntries(addendum.Entries);
+    }
+
+    public VersionManifestAddendum GetAddendumByName(string name)
+    {
+        return addendums.TryGetValue(name, out var addendum) ? addendum : null;
+    }
+
+    public VersionManifestEntry[] AllEntries(bool filterByOwnership)
+    {
+        return FilterUnowned(manifest.Values.SelectMany(x => x.Values), filterByOwnership).ToArray();
+    }
+
+    public VersionManifestEntry[] AllEntriesOfType(string type)
+    {
+        if (manifest.TryGetValue(type, out var dict))
+        {
+            return dict.Values.ToArray();
         }
 
-        public void Reset(IEnumerable<VersionManifestEntry> defaultEntries)
+        return emptyArray;
+    }
+
+    public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership)
+    {
+        if (manifest.TryGetValue(type.ToString(), out var dict))
         {
-            manifest.Clear();
-            idToTypes.Clear();
-            addendums.Clear();
-            SetEntries(defaultEntries);
-            SetEntries(DebugSettingsFeature.DefaulManifestEntries);
-            SetEntries(GameTipsFeature.DefaulManifestEntries);
+            return FilterUnowned(dict.Values, filterByOwnership).ToArray();
         }
 
-        private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable, bool filterByOwnership)
+        return emptyArray;
+    }
+
+    public VersionManifestEntry EntryByIDAndType(string id, string type)
+    {
+        if (manifest.TryGetValue(type, out var dict) && dict.TryGetValue(id, out var entry))
         {
-            if (!filterByOwnership || packIndex.AllContentPacksOwned)
-            {
-                return iterable;
-            }
-            return FilterUnowned(iterable);
+            return entry;
         }
 
-        private IEnumerable<VersionManifestEntry> FilterUnowned(IEnumerable<VersionManifestEntry> iterable)
+        return default;
+    }
+
+    public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership)
+    {
+        if (manifest.TryGetValue(type.ToString(), out var dict) && dict.TryGetValue(id, out var entry))
         {
-            return iterable.Where(entry => packIndex.IsResourceOwned(entry.Id));
-        }
-
-        public void AddAddendum(VersionManifestAddendum addendum)
-        {
-            addendums[addendum.Name] = addendum;
-            SetEntries(addendum.Entries);
-        }
-
-        public VersionManifestAddendum GetAddendumByName(string name)
-        {
-            return addendums.TryGetValue(name, out var addendum) ? addendum : null;
-        }
-
-        public VersionManifestEntry[] AllEntries(bool filterByOwnership)
-        {
-            return FilterUnowned(manifest.Values.SelectMany(x => x.Values), filterByOwnership).ToArray();
-        }
-
-        public VersionManifestEntry[] AllEntriesOfType(string type)
-        {
-            if (manifest.TryGetValue(type, out var dict))
-            {
-                return dict.Values.ToArray();
-            }
-
-            return emptyArray;
-        }
-
-        public VersionManifestEntry[] AllEntriesOfResource(BattleTechResourceType type, bool filterByOwnership)
-        {
-            if (manifest.TryGetValue(type.ToString(), out var dict))
-            {
-                return FilterUnowned(dict.Values, filterByOwnership).ToArray();
-            }
-
-            return emptyArray;
-        }
-
-        public VersionManifestEntry EntryByIDAndType(string id, string type)
-        {
-            if (manifest.TryGetValue(type, out var dict) && dict.TryGetValue(id, out var entry))
+            if (!filterByOwnership || packIndex.IsResourceOwned(entry.Id))
             {
                 return entry;
             }
-
-            return default;
         }
 
-        public VersionManifestEntry EntryByID(string id, BattleTechResourceType type, bool filterByOwnership)
-        {
-            if (manifest.TryGetValue(type.ToString(), out var dict) && dict.TryGetValue(id, out var entry))
-            {
-                if (!filterByOwnership || packIndex.IsResourceOwned(entry.Id))
-                {
-                    return entry;
-                }
-            }
+        return default;
+    }
 
-            return default;
+    internal VersionManifestEntry[] EntriesByID(string id)
+    {
+        if (idToTypes.TryGetValue(id, out var set))
+        {
+            return set.Select(type => EntryByIDAndType(id, type)).ToArray();
         }
+        return emptyArray;
+    }
 
-        internal VersionManifestEntry[] EntriesByID(string id)
+    private void SetEntries(IEnumerable<VersionManifestEntry> entries)
+    {
+        foreach (var entry in entries)
         {
-            if (idToTypes.TryGetValue(id, out var set))
-            {
-                return set.Select(type => EntryByIDAndType(id, type)).ToArray();
-            }
-            return emptyArray;
+            SetEntry(entry);
         }
+    }
 
-        private void SetEntries(IEnumerable<VersionManifestEntry> entries)
+    internal void SetEntry(VersionManifestEntry entry)
+    {
+        var dict = manifest.GetOrCreate(entry.Type);
+        dict[entry.Id] = entry;
+
+        idToTypes.GetOrCreate(entry.Id).Add(entry.Type);
+    }
+
+    internal void DumpToDisk()
+    {
+        try
         {
-            foreach (var entry in entries)
-            {
-                SetEntry(entry);
-            }
+            ModTekCacheStorage.CSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
+            Log.Main.Info?.Log($"Manifest: Saved to {ManifestDumpPath}.");
         }
-
-        internal void SetEntry(VersionManifestEntry entry)
+        catch (Exception e)
         {
-            var dict = manifest.GetOrCreate(entry.Type);
-            dict[entry.Id] = entry;
-
-            idToTypes.GetOrCreate(entry.Id).Add(entry.Type);
-        }
-
-        internal void DumpToDisk()
-        {
-            try
-            {
-                ModTekCacheStorage.CSVWriteTo(ManifestDumpPath, manifest.Values.SelectMany(x => x.Values));
-                Log.Main.Info?.Log($"Manifest: Saved to {ManifestDumpPath}.");
-            }
-            catch (Exception e)
-            {
-                Log.Main.Info?.Log($"Manifest: Failed to save to {ManifestDumpPath}", e);
-            }
+            Log.Main.Info?.Log($"Manifest: Failed to save to {ManifestDumpPath}", e);
         }
     }
 }
