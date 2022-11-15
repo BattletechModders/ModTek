@@ -68,11 +68,11 @@ jobs:
           generateReleaseNotes: true
           allowUpdates: true
           name: "Latest (unstable)"
-          artifacts: "{{ env.DIST_DIR }}/*.zip"
+          artifacts: "dist/*.zip"
       - name: Release Tag
         if: startsWith(github.ref, 'refs/tags')
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           body: "${{ inputs.release-notes }}"
-          artifacts: "{{ env.DIST_DIR }}/*.zip"
+          artifacts: "dist/*.zip"
