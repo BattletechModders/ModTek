@@ -1,0 +1,28 @@
+﻿on: push
+name: CI
+
+jobs:
+  build:
+    uses: ./.github/workflows/mod-builder.yml
+    with:
+      checkout-directory: 'ModTek'
+      build-script: |
+        dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$BATTLETECH_DIR/"
+        rm -fr "$BATTLETECH_DIR/BattleTech_Data/"
+        cd "$BATTLETECH_DIR/"
+        find . -type f -printf "%m:%p\n"
+        # set permissions and also check if files exist
+        chmod 755 run.sh
+        chmod 644 winhttp.dll
+        chmod 644 Mods/ModTek/ModTekPreloader.dll
+        chmod 644 Mods/ModTek/ModTek.dll
+        chmod 644 Mods/ModTek/Injectors/ModTekInjector.dll
+        7z a -tzip -mx9 "${DIST_DIR}/ModTek.zip" -ir!.
+      release-notes: |
+        > **Note**
+        > **ModTekInjector.exe was replaced by [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop)**.
+        > Injectors must not be run manually, that is now done by the `ModTekPreloader` automatically during the games startup.
+        
+        ModTek.zip contains the ModTek tools. Unzip the contents into your game's location, so that `winhttp.dll` appears in the same folder as `BattleTech.exe`.
+        See [Changes](https://github.com/BattletechModders/ModTek/blob/master/CHANGES.md) and [Readme](https://github.com/BattletechModders/ModTek/blob/master/README.md).
+    secrets: inherit

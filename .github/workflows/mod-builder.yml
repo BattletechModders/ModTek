@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-dotnet@master
         with:
           dotnet-version: "${{ inputs.dotnet-version }}"
-          include-prerelease: true
       - name: Download Dependencies
         env:
           MANAGED_ARCHIVE_PW: "${{ secrets.MANAGED_ARCHIVE_PW }}"
