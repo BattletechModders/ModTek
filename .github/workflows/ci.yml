@@ -7,17 +7,17 @@ jobs:
     with:
       checkout-directory: 'ModTek'
       build-script: |
-        dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$BATTLETECH_DIR/"
-        rm -fr "$BATTLETECH_DIR/BattleTech_Data/"
-        cd "$BATTLETECH_DIR/"
+        dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$BATTLETECH_DIR"
+        cd "$BATTLETECH_DIR"
+        rm -fr "BattleTech_Data/"
         find . -type f -printf "%m:%p\n"
-        # set permissions and also check if files exist
+        # set permissions and also check if files exist (chmod 644)
         chmod 755 run.sh
         chmod 644 winhttp.dll
         chmod 644 Mods/ModTek/ModTekPreloader.dll
         chmod 644 Mods/ModTek/ModTek.dll
         chmod 644 Mods/ModTek/Injectors/ModTekInjector.dll
-        7z a -tzip -mx9 "${DIST_DIR}/ModTek.zip" -ir!.
+        7z a -tzip -mx9 "$DIST_DIR/ModTek.zip" -ir!.
       release-notes: |
         > **Note**
         > **ModTekInjector.exe was replaced by [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop)**.

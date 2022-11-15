@@ -2,24 +2,16 @@
   workflow_call:
     inputs:
       checkout-directory:
-        description: 'The name of the directory the repository will be extracted to`.'
-        default: 'BATTLETECH/Mods/MyMod'
-        type: string
-      release-notes:
-        description: 'Only used for tagged releases.'
-        default: 'Latest stable version'
+        description: 'The directory the repository will reside in.'
+        required: true
         type: string
       build-script:
-        description: 'The script that runs with the checkout directory as working directory.'
-        default: './release.sh'
+        description: 'The script that builds the mod, runs within the checkout directory.'
+        required: true
         type: string
-      runner-environment:
-        description: 'Please use the default. Linux can build dotnet libraries just fine and on GitHub is way faster than Windows.'
-        default: 'ubuntu-latest'
-        type: string
-      dotnet-version:
-        description: 'Please use the default. Will be set to the latest and greatest at some point in time.'
-        default: '6.0'
+      release-notes:
+        description: 'The release notes to use for tagged releases.'
+        default: 'Latest stable version'
         type: string
     secrets:
       MANAGED_ARCHIVE_PW:
@@ -29,50 +21,45 @@
 
 jobs:
   mod-builder:
-    runs-on: ${{ inputs.runner-environment }}
+    runs-on: ubuntu-latest
     env:
-      MOD_DIR: "${{ github.workspace }}/${{ inputs.checkout-directory }}"
       BATTLETECH_DIR: ${{ github.workspace }}/BATTLETECH
       MODS_DIR: ${{ github.workspace }}/BATTLETECH/Mods
+      MANAGED_DIR: ${{ github.workspace }}/BATTLETECH/BattleTech_Data/Managed
       DIST_DIR: ${{ github.workspace }}/dist
     steps:
       - name: Setup dotnet
         uses: actions/setup-dotnet@master
         with:
-          dotnet-version: "${{ inputs.dotnet-version }}"
-      - name: Download Dependencies
-        env:
-          MANAGED_ARCHIVE_PW: "${{ secrets.MANAGED_ARCHIVE_PW }}"
-          MANAGED_ARCHIVE_URL: "${{ secrets.MANAGED_ARCHIVE_URL }}"
+          dotnet-version: 7
+          dotnet-quality: preview
+      - name: Prepare BATTLETECH
         run: |
-          curl -L -o "$GITHUB_WORKSPACE/Managed.7z" "$MANAGED_ARCHIVE_URL"
-          MANAGED_DIR="$BATTLETECH_DIR/BattleTech_Data/Managed"
-          mkdir -p "$MANAGED_DIR"
-          7z e -p"$MANAGED_ARCHIVE_PW" -o"$MANAGED_DIR" "$GITHUB_WORKSPACE/Managed.7z"
+          curl -L -o Managed.7z  ${{ secrets.MANAGED_ARCHIVE_URL }}
+          mkdir -p "${{ env.MANAGED_DIR }}"
+          7z e -p${{ secrets.MANAGED_ARCHIVE_PW }} -o"${{ env.MANAGED_DIR }}" Managed.7z
+          rm Managed.7z
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
         with:
-          path: "${{ env.MOD_DIR }}"
-      - name: Fetch Branches and Tags
-        run: git fetch --prune --unshallow
-        working-directory: "${{ env.MOD_DIR }}"
+          path: ${{ inputs.checkout-directory }}
+          fetch-depth: 0 # tags for GitVersion
+          submodules: true
       - name: Build Mod
-        run: "${{ inputs.build-script }}"
-        working-directory: "${{ env.MOD_DIR }}"
+        run: ${{ inputs.build-script }}
+        working-directory: ${{ inputs.checkout-directory }}
       - name: Release Latest
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-        uses: ncipollo/release-action@v1
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          tag: latest
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: "latest"
           prerelease: true
-          generateReleaseNotes: true
-          allowUpdates: true
-          name: "Latest (unstable)"
-          artifacts: "dist/*.zip"
+          title: "Latest (unstable)"
+          files: ${{ env.DIST_DIR }}/*
       - name: Release Tag
-        if: startsWith(github.ref, 'refs/tags')
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          allowUpdates: true
-          body: "${{ inputs.release-notes }}"
-          artifacts: "dist/*.zip"
+          body: ${{ inputs.release-notes }}
+          files: ${{ env.DIST_DIR }}/*
