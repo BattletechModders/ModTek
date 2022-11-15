@@ -10,11 +10,11 @@
         default: 'Latest stable version'
         type: string
       build-script:
-        description: 'Please use the default. The script to run relative to the checkout directory.'
+        description: 'The script that runs with the checkout directory as working directory.'
         default: './release.sh'
         type: string
       runner-environment:
-        description: 'Please use the default. Linux can build just fine and is way faster on GitHub.'
+        description: 'Please use the default. Linux can build dotnet libraries just fine and on GitHub is way faster than Windows.'
         default: 'ubuntu-latest'
         type: string
       dotnet-version:
