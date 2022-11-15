@@ -44,5 +44,15 @@ namespace ModTek.Features.Logging
         internal const string AbsoluteTimeUseUtc_Description = "Use UTC instead of local time.";
         [JsonProperty]
         internal bool AbsoluteTimeUseUtc = true;
+
+        [JsonProperty]
+        internal const string FormatTimeAbsolute_Description = "Runs through `DateTimeOffset.ToString`.";
+        [JsonProperty]
+        internal string FormatTimeAbsolute = "HH:mm:ss.fffffff";
+
+        [JsonProperty]
+        internal const string FormatTimeStartup_Description = "Runs through `TimeSpan.ToString`.";
+        [JsonProperty]
+        internal string FormatTimeStartup = "hh':'mm':'ss'.'fffffff";
     }
 }

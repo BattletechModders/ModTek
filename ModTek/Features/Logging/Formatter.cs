@@ -60,11 +60,11 @@ namespace ModTek.Features.Logging
             {
                 var dtoUtc = messageDto.GetDateTimeOffsetUtc();
                 var dto = _settings.AbsoluteTimeUseUtc ? dtoUtc : dtoUtc.ToLocalTime();
-                return dto.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
+                return dto.ToString(_settings.FormatTimeAbsolute, CultureInfo.InvariantCulture);
             }
 
             var ts = messageDto.StartupTime();
-            return ts.ToString("hh':'mm':'ss'.'fffffff");
+            return ts.ToString(_settings.FormatTimeStartup);
         }
 
         private string GetFormattedThread(Thread thread)
