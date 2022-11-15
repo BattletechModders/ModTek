@@ -89,6 +89,6 @@
     <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="HarmonyX" Version="2.10.0" />
+    <PackageReference Include="HarmonyX" Version="2.10.1" />
   </ItemGroup>
 </Project>
