@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
-using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace ModTek.Features.Logging;
 
