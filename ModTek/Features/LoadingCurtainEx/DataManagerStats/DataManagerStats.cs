@@ -93,7 +93,7 @@ internal class DataManagerStats
         }
         if (dumped)
         {
-            text += $"\nEverspinny detected, dumped processing to log.";
+            text += "\nEverspinny detected, dumped processing to log.";
         }
         return text;
     }

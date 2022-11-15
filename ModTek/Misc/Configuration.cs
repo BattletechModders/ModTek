@@ -57,12 +57,12 @@ internal class Configuration
     internal bool NormalizeCsvIfAppending = true;
 
     [JsonProperty]
-    internal readonly string DataManagerUnfreezeDelta_Description = $"How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
+    internal readonly string DataManagerUnfreezeDelta_Description = "How often to refresh the UI during loading. Does this by skipping loads every specified amount of seconds.";
     [JsonProperty]
     internal float DataManagerUnfreezeDelta = 2f;
 
     [JsonProperty]
-    internal readonly string DataManagerEverSpinnyDetectionTimespan_Description = $"How long data is not being further processed until it is assumed to be stuck for good. Upon detection it dumps lots of data into the log, but nothing more.";
+    internal readonly string DataManagerEverSpinnyDetectionTimespan_Description = "How long data is not being further processed until it is assumed to be stuck for good. Upon detection it dumps lots of data into the log, but nothing more.";
     [JsonProperty]
     internal float DataManagerEverSpinnyDetectionTimespan = 30f;
 

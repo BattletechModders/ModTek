@@ -68,7 +68,7 @@ internal static class CustomAssembliesLoader
             {
                 Log.Main.Error?.Log(e);
             }
-            yield return new ProgressReport((float)t / (float)entries.Length, sliderText, name);
+            yield return new ProgressReport(t / (float)entries.Length, sliderText, name);
         }
     }
 }

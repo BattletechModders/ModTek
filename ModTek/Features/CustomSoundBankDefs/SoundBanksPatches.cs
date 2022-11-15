@@ -15,7 +15,7 @@ namespace ModTek.Features.CustomSoundBankDefs;
 
 internal static class CustomSoundHelper
 {
-    private static FieldInfo f_guidIdMap = typeof(WwiseManager).GetField("guidIdMap", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo f_guidIdMap = typeof(WwiseManager).GetField("guidIdMap", BindingFlags.Instance | BindingFlags.NonPublic);
 
     private static Dictionary<string, uint> guidIdMap(this WwiseManager manager)
     {

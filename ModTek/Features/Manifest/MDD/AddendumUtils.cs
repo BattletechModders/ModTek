@@ -36,7 +36,7 @@ internal static class AddendumUtils
     {
         var wrapper = new DataAddendumWrapper(enumName);
 
-        Log.Main.Info?.Log($"\tCurrent values");
+        Log.Main.Info?.Log("\tCurrent values");
         var maxIndex = 0;
         var names = new Dictionary<string, int>();
         var ids = new Dictionary<int, string>();
@@ -52,7 +52,7 @@ internal static class AddendumUtils
         wrapper.FromJSON(fileData);
 
         var needFlush = false;
-        Log.Main.Info?.Log($"\tLoading values");
+        Log.Main.Info?.Log("\tLoading values");
         foreach (var val in wrapper.GetCachedEnumerationValueList())
         {
             // we merge based on the name

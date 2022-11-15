@@ -9,7 +9,7 @@ namespace ModTek.Features.Manifest;
 
 internal class MTContentPackManager
 {
-    private Dictionary<string, AssetBundle> loadedBundles = new();
+    private readonly Dictionary<string, AssetBundle> loadedBundles = new();
 
     internal void LoadAllContentPacks()
     {

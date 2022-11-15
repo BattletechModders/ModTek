@@ -32,7 +32,7 @@ internal class UnityLogHandler
         {
             return new UnityStackTrace(stackTrace, 1);
         }
-        return new UnityStackTrace(stackTrace, 0);
+        return new UnityStackTrace(stackTrace);
     }
 
     private static LogLevel UnityLogTypeToHBSLogLevel(LogType unity)

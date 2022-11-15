@@ -194,7 +194,7 @@ internal static class WeaponCategoryValue_GetIcon
 
 internal static class SVGAssetLoadRequest_Load
 {
-    private static HashSet<string> UILookAndColorConstantsIcons = new();
+    private static readonly HashSet<string> UILookAndColorConstantsIcons = new();
 
     public static bool isBuildinIcon(this AmmoCategoryValue ammoCat)
     {
@@ -208,11 +208,11 @@ internal static class SVGAssetLoadRequest_Load
 
     private static Action<ResourceLoadRequest<SVGAsset>> ResourceLoadRequest_Load;
     private static Type SVGAssetLoadRequest;
-    private static MethodInfo m_StateSet = typeof(FileLoadRequest).GetProperty("State", BindingFlags.Instance | BindingFlags.Public).GetSetMethod(true);
-    private static FieldInfo f_dataManager = typeof(FileLoadRequest).GetField("dataManager", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static FieldInfo f_manifestEntry = typeof(FileLoadRequest).GetField("manifestEntry", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static MethodInfo m_AssetBundleManagerGet = typeof(DataManager).GetProperty("AssetBundleManager", BindingFlags.Instance | BindingFlags.NonPublic).GetGetMethod(true);
-    private static MethodInfo m_RequestResourcesLoad_SVGAsset = typeof(DataManager).GetMethod("RequestResourcesLoad", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(typeof(SVGAsset));
+    private static readonly MethodInfo m_StateSet = typeof(FileLoadRequest).GetProperty("State", BindingFlags.Instance | BindingFlags.Public).GetSetMethod(true);
+    private static readonly FieldInfo f_dataManager = typeof(FileLoadRequest).GetField("dataManager", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo f_manifestEntry = typeof(FileLoadRequest).GetField("manifestEntry", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly MethodInfo m_AssetBundleManagerGet = typeof(DataManager).GetProperty("AssetBundleManager", BindingFlags.Instance | BindingFlags.NonPublic).GetGetMethod(true);
+    private static readonly MethodInfo m_RequestResourcesLoad_SVGAsset = typeof(DataManager).GetMethod("RequestResourcesLoad", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(typeof(SVGAsset));
 
     private static void RequestResourcesLoad_SVGAsset(this DataManager dataManager, string path, Action<SVGAsset> onComplete)
     {

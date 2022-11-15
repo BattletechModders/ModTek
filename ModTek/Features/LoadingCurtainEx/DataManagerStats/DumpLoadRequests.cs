@@ -19,19 +19,19 @@ internal class DumpLoadRequests
         dumper.LogSummary();
     }
 
-    private HashSet<CacheKey> waiting = new();
+    private readonly HashSet<CacheKey> waiting = new();
     private void AddWaiting(CacheKey key)
     {
         waiting.Add(key);
     }
 
-    private HashSet<CacheKey> processing = new();
+    private readonly HashSet<CacheKey> processing = new();
     private void AddProcessing(CacheKey key)
     {
         processing.Add(key);
     }
 
-    private Dictionary<CacheKey, int> incoming = new();
+    private readonly Dictionary<CacheKey, int> incoming = new();
     private void AddIncoming(CacheKey key)
     {
         if (!incoming.TryGetValue(key, out var counter))
@@ -47,7 +47,7 @@ internal class DumpLoadRequests
         {
             return;
         }
-        Log.Main.Info?.Log($"Which resource are blocking:");
+        Log.Main.Info?.Log("Which resource are blocking:");
         foreach (var kv in incoming.OrderByDescending(x => x.Value))
         {
             Log.Main.Info?.Log($"\t{kv.Key} {kv.Value}");

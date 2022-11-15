@@ -80,12 +80,12 @@ internal class MDDBCache
             saveSW.Restart();
             if (!hasChanges && !SaveMDDB)
             {
-                Log.Main.Info?.Log($"MDDBCache: No changes detected, skipping save.");
+                Log.Main.Info?.Log("MDDBCache: No changes detected, skipping save.");
                 return;
             }
 
             MetadataDatabase.SaveMDDToPath();
-            Log.Main.Info?.Log($"MDDBCache: Saved MDD.");
+            Log.Main.Info?.Log("MDDBCache: Saved MDD.");
 
             if (hasChanges)
             {
@@ -208,7 +208,7 @@ internal class MDDBCache
 
         if (rebuildIndex)
         {
-            Log.Main.Info?.Log($"MDDBCache: Rebuilding.");
+            Log.Main.Info?.Log("MDDBCache: Rebuilding.");
             Reset();
             reindexResources.Clear();
             foreach (var type in BTConstants.MDDBTypes)
@@ -235,7 +235,7 @@ internal class MDDBCache
             CacheUpdate(entry);
         }
 
-        yield return new ProgressReport(1, sliderText, $"Saving cache index", true);
+        yield return new ProgressReport(1, sliderText, "Saving cache index", true);
         Save();
     }
 }

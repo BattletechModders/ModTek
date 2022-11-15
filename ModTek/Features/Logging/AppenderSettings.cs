@@ -7,17 +7,17 @@ internal class AppenderSettings
     [JsonProperty]
     internal const string Includes_Description = "If set, matching log statements matching are written to the log. Exclusion has precedence over inclusion.";
     [JsonProperty]
-    internal FilterSettings[] Includes = null;
+    internal FilterSettings[] Includes;
 
     [JsonProperty]
     internal const string Excludes_Description = "If set, matching log statements are ignored. Exclusion has precedence over inclusion.";
     [JsonProperty]
-    internal FilterSettings[] Excludes = null;
+    internal FilterSettings[] Excludes;
 
     [JsonProperty]
     internal readonly string PrefixesToIgnore_Description = $"Ignore any lines starting with any of the listed prefixes, internally will be converted to {nameof(Excludes)}.";
     [JsonProperty]
-    internal string[] PrefixesToIgnore = null;
+    internal string[] PrefixesToIgnore;
 
     [JsonProperty]
     internal const string IndentNewLines_Description = "If a log message with newlines inside is being logged, prefix every line with a tab character.";
@@ -30,7 +30,7 @@ internal class AppenderSettings
     internal bool NormalizeNewLines = true;
 
     [JsonProperty]
-    internal readonly string MessageSanitizerRegex_Description = $"The characters to remove from the log message before writing to the disk.";
+    internal readonly string MessageSanitizerRegex_Description = "The characters to remove from the log message before writing to the disk.";
     [JsonProperty]
     internal string MessageSanitizerRegex = @"[\p{C}-[\r\n\t]]+";
 

@@ -21,32 +21,32 @@ internal class DataAddendumWrapper
         var type = typeof(FactionEnumeration).Assembly.GetType(enumerationTypeByName);
         if (type == null)
         {
-            throw new Exception($"Could not find DataAddendum class");
+            throw new Exception("Could not find DataAddendum class");
         }
 
         var pInstance = type.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty);
         if (pInstance == null)
         {
-            throw new Exception($"Could not find static method [Instance]");
+            throw new Exception("Could not find static method [Instance]");
         }
 
         // ReSharper disable once PossibleNullReferenceException
         pCachedEnumerationValueList = type.BaseType.GetProperty("CachedEnumerationValueList");
         if (pCachedEnumerationValueList == null)
         {
-            throw new Exception($"Class does not implement property CachedEnumerationValueList property");
+            throw new Exception("Class does not implement property CachedEnumerationValueList property");
         }
 
         fEnumerationValueList = type.BaseType.GetField("enumerationValueList", BindingFlags.Instance | BindingFlags.NonPublic);
         if (fEnumerationValueList == null)
         {
-            throw new Exception($"Class does not implement field enumerationValueList");
+            throw new Exception("Class does not implement field enumerationValueList");
         }
 
         mRefreshStaticData = type.GetMethod("RefreshStaticData");
         if (mRefreshStaticData == null)
         {
-            throw new Exception($"Class does not implement method pRefreshStaticData property");
+            throw new Exception("Class does not implement method pRefreshStaticData property");
         }
 
         enumeration = pInstance.GetValue(null);
@@ -54,7 +54,7 @@ internal class DataAddendumWrapper
         enumerationAsIJsonTemplated = enumeration as IJsonTemplated;
         if (enumerationAsIJsonTemplated == null)
         {
-            throw new Exception($"Not IJsonTemplated");
+            throw new Exception("Not IJsonTemplated");
         }
     }
 
@@ -79,7 +79,7 @@ internal class DataAddendumWrapper
         enumerationAsIJsonTemplated.FromJSON(json);
         if (GetCachedEnumerationValueList() == null)
         {
-            throw new Exception($"enumerationValueList is not set after loading JSON");
+            throw new Exception("enumerationValueList is not set after loading JSON");
         }
     }
 }

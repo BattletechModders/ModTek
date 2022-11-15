@@ -227,15 +227,13 @@ internal class ModsManifestPreloader
                 }
                 return true;
             }
-            else
+
+            if (videoPlayer.isPlaying)
             {
-                if (videoPlayer.isPlaying)
-                {
-                    Log.Main.Debug?.Log("Pausing MainMenu background video.");
-                    videoPlayer.Pause();
-                }
-                return false;
+                Log.Main.Debug?.Log("Pausing MainMenu background video.");
+                videoPlayer.Pause();
             }
+            return false;
         }
         catch (Exception e)
         {

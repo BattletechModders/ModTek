@@ -155,8 +155,8 @@ internal class BetterBTRL
 
     // this region is copy pasted from original and kept same except for some calls to Manifest and BTRL itself
 
-    private Dictionary<string, VersionManifestMemoryStore> memoryStores = new();
-    private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new();
+    private readonly Dictionary<string, VersionManifestMemoryStore> memoryStores = new();
+    private readonly Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new();
 
     public void ApplyMemoryStore(VersionManifestMemoryStore memoryStore)
     {
@@ -285,7 +285,7 @@ internal class BetterBTRL
         }
     }
 
-    private Stopwatch sw = new();
+    private readonly Stopwatch sw = new();
     internal void RefreshTypedEntries() // this is called way too often in vanilla cases, but not sure what depends on this
     {
         if (!HasChanges) // it changes all the time anyway

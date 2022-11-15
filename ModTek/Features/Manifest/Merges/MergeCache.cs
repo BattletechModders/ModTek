@@ -65,7 +65,7 @@ internal class MergeCache
             saveSW.Restart();
             if (!hasChanges)
             {
-                Log.Main.Info?.Log($"MergeCache: No changes detected, skipping save.");
+                Log.Main.Info?.Log("MergeCache: No changes detected, skipping save.");
                 return;
             }
 
@@ -188,7 +188,7 @@ internal class MergeCache
             }
         }
 
-        yield return new ProgressReport(1, sliderText, $"Cleaning up", true);
+        yield return new ProgressReport(1, sliderText, "Cleaning up", true);
 
         // find entries that shouldn't be in cache (anymore)
         foreach (var kv in CachedMerges.ToList())
@@ -204,7 +204,7 @@ internal class MergeCache
             CacheRemove(kv.Key, kv.Value);
         }
 
-        yield return new ProgressReport(1, sliderText, $"Saving cache index", true);
+        yield return new ProgressReport(1, sliderText, "Saving cache index", true);
         Save();
 
         // add merges to the manifest, always only overriding entries that are loaded by the game

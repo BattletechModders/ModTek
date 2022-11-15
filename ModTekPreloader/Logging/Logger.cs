@@ -7,7 +7,7 @@ namespace ModTekPreloader.Logging;
 
 internal static class Logger
 {
-    private static readonly string Prefix = AppDomain.CurrentDomain.FriendlyName == InjectorsAppDomain.ModTekInjectorsDomainName ? $" [Injectors]" : "" ;
+    private static readonly string Prefix = AppDomain.CurrentDomain.FriendlyName == InjectorsAppDomain.ModTekInjectorsDomainName ? " [Injectors]" : "" ;
     internal static void Setup()
     {
         Paths.CreateDirectoryForFile(Paths.LogFile);

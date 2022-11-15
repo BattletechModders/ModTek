@@ -22,7 +22,7 @@ internal static class SoundBanksFeature
             yield break;
         }
 
-        Log.Main.Info?.Log($"Processing sound banks defs");
+        Log.Main.Info?.Log("Processing sound banks defs");
         if (SceneSingletonBehavior<WwiseManager>.HasInstance == false)
         {
             Log.Main.Warning?.Log("\tWWise manager not inited");

@@ -178,7 +178,7 @@ internal static class ModDefExLoading
         return true;
     }
 
-    private static Dictionary<string, Assembly> TryResolveAssemblies = new();
+    private static readonly Dictionary<string, Assembly> TryResolveAssemblies = new();
 
     internal static void Setup()
     {

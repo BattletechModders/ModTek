@@ -14,8 +14,8 @@ internal static class GameTipsFeature
     internal static string GetGameTip(string path)
     {
         var id = Path.GetFileNameWithoutExtension(path);
-        var entry = BetterBTRL.Instance.EntryByIDAndType(id+"_"+Strings.CurrentCulture.ToString(), InternalCustomResourceType.GameTip.ToString());
-        Log.Main.Info?.Log($"GetGameTip {id+"_" + Strings.CurrentCulture.ToString()} {(entry==null?"null": entry.FileName)}");
+        var entry = BetterBTRL.Instance.EntryByIDAndType(id+"_"+Strings.CurrentCulture, InternalCustomResourceType.GameTip.ToString());
+        Log.Main.Info?.Log($"GetGameTip {id+"_" + Strings.CurrentCulture} {(entry==null?"null": entry.FileName)}");
         if (entry == null) {
             entry = BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.GameTip.ToString());
             Log.Main.Info?.Log($"GetGameTip {id} {(entry == null ? "null" : entry.FileName)}");

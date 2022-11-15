@@ -367,7 +367,7 @@ internal static class ModsManifest
         if (!entry.AddToDB)
         {
             mddbCache.AddToNotIndexable(entry);
-            Log.Main.Info?.Log($"\t\tNot indexing to MDDB.");
+            Log.Main.Info?.Log("\t\tNot indexing to MDDB.");
         }
     }
 
