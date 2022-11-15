@@ -10,7 +10,7 @@ namespace ModTekPreloader.Harmony12X;
 internal static class AssemblyOriginalPathTracker
 {
     // name to path
-    private static readonly Dictionary<string, string> AssemblyPaths = new Dictionary<string, string>();
+    private static readonly Dictionary<string, string> AssemblyPaths = new();
 
     internal static void SetupAssemblyResolve()
     {
@@ -26,7 +26,7 @@ internal static class AssemblyOriginalPathTracker
         };
     }
 
-    private static readonly HashSet<string> ProcessedDirectories = new HashSet<string>();
+    private static readonly HashSet<string> ProcessedDirectories = new();
     internal static void AddAssemblyPathsInSameDirectory(string assemblyFile)
     {
         var directory = Path.GetDirectoryName(assemblyFile);

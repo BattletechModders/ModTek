@@ -64,7 +64,7 @@ internal class MTStopwatch
         }
     }
 
-    internal Stats GetStats() => new Stats(this);
+    internal Stats GetStats() => new(this);
     internal readonly struct Stats
     {
         internal long Ticks { get; }

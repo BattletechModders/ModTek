@@ -182,7 +182,7 @@ internal class Trie
         }
     }
 
-    private readonly Node root = new Node
+    private readonly Node root = new()
     {
         children = new List<Node>()
     };

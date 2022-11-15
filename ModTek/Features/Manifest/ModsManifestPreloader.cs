@@ -16,7 +16,7 @@ namespace ModTek.Features.Manifest;
 internal class ModsManifestPreloader
 {
     internal static int finishedChecksAndPreloadsCounter;
-    private static readonly Stopwatch preloadSW = new Stopwatch();
+    private static readonly Stopwatch preloadSW = new();
     internal static bool HasPreloader => preloader != null;
     private static ModsManifestPreloader preloader;
 
@@ -160,8 +160,8 @@ internal class ModsManifestPreloader
         }
     }
 
-    private readonly HashSet<CacheKey> loadingResourcesIndex = new HashSet<CacheKey>();
-    private readonly List<VersionManifestEntry> loadingResourcesQueue = new List<VersionManifestEntry>();
+    private readonly HashSet<CacheKey> loadingResourcesIndex = new();
+    private readonly List<VersionManifestEntry> loadingResourcesQueue = new();
     private void QueueLoadingResource(VersionManifestEntry entry)
     {
         if (entry.IsTemplate)

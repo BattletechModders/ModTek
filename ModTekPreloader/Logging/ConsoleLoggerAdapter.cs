@@ -8,7 +8,7 @@ internal class ConsoleLoggerAdapter : TextWriter
     public string Prefix { get; set; } = string.Empty;
     public override Encoding Encoding => Encoding.UTF8;
 
-    private readonly StringBuilder buffer = new StringBuilder();
+    private readonly StringBuilder buffer = new();
 
     public override void Write(char value)
     {

@@ -12,9 +12,9 @@ internal static class ModDefsDatabase
 {
     private static List<string> ModLoadOrder;
 
-    internal static readonly Dictionary<string, ModDefEx> ModDefs = new Dictionary<string, ModDefEx>();
-    internal static readonly Dictionary<string, ModDefEx> allModDefs = new Dictionary<string, ModDefEx>();
-    internal static HashSet<string> FailedToLoadMods { get; } = new HashSet<string>();
+    internal static readonly Dictionary<string, ModDefEx> ModDefs = new();
+    internal static readonly Dictionary<string, ModDefEx> allModDefs = new();
+    internal static HashSet<string> FailedToLoadMods { get; } = new();
     //internal static Dictionary<string, string> existingAssemblies { get; set; } = new Dictionary<string, string>();
     internal static IEnumerator<ProgressReport> GatherDependencyTreeLoop()
     {

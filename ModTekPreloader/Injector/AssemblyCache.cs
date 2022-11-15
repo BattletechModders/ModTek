@@ -9,7 +9,7 @@ namespace ModTekPreloader.Injector;
 
 internal class AssemblyCache : IAssemblyResolver
 {
-    private readonly Dictionary<string, AssemblyBag> assemblies = new Dictionary<string, AssemblyBag>();
+    private readonly Dictionary<string, AssemblyBag> assemblies = new();
     private readonly List<string> searchDirectories;
 
     internal AssemblyCache()

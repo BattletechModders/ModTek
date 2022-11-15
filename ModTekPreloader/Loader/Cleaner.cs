@@ -7,7 +7,7 @@ namespace ModTekPreloader.Loader;
 
 internal class Cleaner
 {
-    private static readonly List<string> OBSOLETE_FILES = new List<string>
+    private static readonly List<string> OBSOLETE_FILES = new()
     {
         "(Managed)/BattleTechModLoader.dll",
         "(Managed)/BattleTechModLoaderInjector.exe",

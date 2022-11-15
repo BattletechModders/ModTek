@@ -26,7 +26,7 @@ internal class Config
     internal bool Harmony12XFakeAssemblyLocationEnabled = true;
 #pragma warning restore CS0649
 
-    internal static Config Instance = new Config();
+    internal static Config Instance = new();
 
     private Config()
     {

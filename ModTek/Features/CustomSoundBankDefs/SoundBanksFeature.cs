@@ -12,7 +12,7 @@ namespace ModTek.Features.CustomSoundBankDefs;
 
 internal static class SoundBanksFeature
 {
-    internal static readonly Dictionary<string, SoundBankDef> soundBanks = new Dictionary<string, SoundBankDef>();
+    internal static readonly Dictionary<string, SoundBankDef> soundBanks = new();
 
     internal static IEnumerator<ProgressReport> SoundBanksProcessing()
     {

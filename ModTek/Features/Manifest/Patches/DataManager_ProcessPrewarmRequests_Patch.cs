@@ -19,7 +19,7 @@ public static class DataManager_ProcessPrewarmRequests_Patch
         PrewarmRequests.Clear();
         return copy;
     }
-    private static List<PrewarmRequest> PrewarmRequests = new List<PrewarmRequest>();
+    private static List<PrewarmRequest> PrewarmRequests = new();
     public static bool Prefix(IEnumerable<PrewarmRequest> toPrewarm)
     {
         if (toPrewarm != null)

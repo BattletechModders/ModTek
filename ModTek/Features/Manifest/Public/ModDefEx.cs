@@ -69,21 +69,21 @@ public class ModDefEx : IEquatable<ModDefEx>
             return false;
         }
     }
-    public HashSet<RequestAtBattleStart> requestAtBattleStarts { get; set; } = new HashSet<RequestAtBattleStart>();
-    public HashSet<string> forceEnableMods { get; set; } = new HashSet<string>();
+    public HashSet<RequestAtBattleStart> requestAtBattleStarts { get; set; } = new();
+    public HashSet<string> forceEnableMods { get; set; } = new();
     // load order and requirements
-    public HashSet<string> DependsOn { get; set; } = new HashSet<string>();
-    public HashSet<string> ConflictsWith { get; set; } = new HashSet<string>();
-    public HashSet<string> OptionallyDependsOn { get; set; } = new HashSet<string>();
+    public HashSet<string> DependsOn { get; set; } = new();
+    public HashSet<string> ConflictsWith { get; set; } = new();
+    public HashSet<string> OptionallyDependsOn { get; set; } = new();
 
     [JsonIgnore]
-    public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new Dictionary<ModDefEx, bool>();
+    public Dictionary<ModDefEx, bool> AffectingOnline { get; set; } = new();
 
     [JsonIgnore]
-    public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new Dictionary<ModDefEx, bool>();
+    public Dictionary<ModDefEx, bool> AffectingOffline { get; set; } = new();
 
     [JsonIgnore]
-    public HashSet<ModDefEx> DependsOnMe { get; set; } = new HashSet<ModDefEx>();
+    public HashSet<ModDefEx> DependsOnMe { get; set; } = new();
 
     [DefaultValue(false)]
     public bool IgnoreLoadFailure { get; set; }
@@ -103,21 +103,21 @@ public class ModDefEx : IEquatable<ModDefEx>
     public bool LoadImplicitManifest { get; set; } = true;
 
     // custom resources types that will be passed into FinishedLoading method
-    public HashSet<string> CustomResourceTypes { get; set; } = new HashSet<string>();
+    public HashSet<string> CustomResourceTypes { get; set; } = new();
 
     // palce for add enum files
-    public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new List<DataAddendumEntry>();
+    public List<DataAddendumEntry> DataAddendumEntries { get; set; } = new();
 
     // manifest, for including any kind of things to add to the game's manifest
-    public List<ModEntry> Manifest { get; set; } = new List<ModEntry>();
+    public List<ModEntry> Manifest { get; set; } = new();
 
     // remove these entries by ID from the game
     [Obsolete] // MDD is preloaded, you can't remove them!
-    public List<string> RemoveManifestEntries { get; set; } = new List<string>();
+    public List<string> RemoveManifestEntries { get; set; } = new();
 
     // a settings file to be nice to our users and have a known place for settings
     // these will be different depending on the mod obviously
-    public JObject Settings { get; set; } = new JObject();
+    public JObject Settings { get; set; } = new();
 
     [JsonIgnore]
     public bool LoadFail { get; set; }

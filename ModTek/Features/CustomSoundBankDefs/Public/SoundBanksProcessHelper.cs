@@ -6,7 +6,7 @@ namespace ModTek;
 
 public static class SoundBanksProcessHelper
 {
-    private static Dictionary<string, ProcessParameters> procParams = new Dictionary<string, ProcessParameters>();
+    private static Dictionary<string, ProcessParameters> procParams = new();
 
     public static void RegisterProcessParams(string soundbank, string param1, string param2)
     {

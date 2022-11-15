@@ -194,7 +194,7 @@ internal static class WeaponCategoryValue_GetIcon
 
 internal static class SVGAssetLoadRequest_Load
 {
-    private static HashSet<string> UILookAndColorConstantsIcons = new HashSet<string>();
+    private static HashSet<string> UILookAndColorConstantsIcons = new();
 
     public static bool isBuildinIcon(this AmmoCategoryValue ammoCat)
     {

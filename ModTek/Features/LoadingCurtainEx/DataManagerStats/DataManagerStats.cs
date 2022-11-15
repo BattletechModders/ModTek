@@ -7,7 +7,7 @@ namespace ModTek.Features.LoadingCurtainEx.DataManagerStats;
 
 internal class DataManagerStats
 {
-    private static DataManagerStats LastStats = new DataManagerStats();
+    private static DataManagerStats LastStats = new();
     internal static bool GetStats(out DataManagerStats stats)
     {
         var activeLoadBatches = UnityGameInstance.BattleTechGame.DataManager.activeLoadBatches;

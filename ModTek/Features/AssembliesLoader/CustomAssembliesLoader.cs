@@ -10,7 +10,7 @@ namespace ModTek.Features.AssembliesLoader;
 
 internal static class CustomAssembliesLoader
 {
-    private static readonly Dictionary<string, string> registeredAssemblyPaths = new Dictionary<string, string>();
+    private static readonly Dictionary<string, string> registeredAssemblyPaths = new();
     private static Assembly ResolveAssembly(object sender, ResolveEventArgs evt)
     {
         Assembly res = null;

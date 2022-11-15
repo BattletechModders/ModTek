@@ -23,7 +23,7 @@ internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
     public DateTime? OriginalUpdatedOn { get; private set; }
 
     [JsonProperty(Required = Required.Always)]
-    public List<FileVersionTuple> Merges { get; private set; } = new List<FileVersionTuple>();
+    public List<FileVersionTuple> Merges { get; private set; } = new();
 
     [JsonIgnore]
     public bool CacheHit { get; set; } // used during cleanup

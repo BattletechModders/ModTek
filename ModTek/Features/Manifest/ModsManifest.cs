@@ -22,9 +22,9 @@ namespace ModTek.Features.Manifest;
 
 internal static class ModsManifest
 {
-    private static readonly MergeCache mergeCache = new MergeCache();
-    private static readonly MDDBCache mddbCache = new MDDBCache();
-    internal static readonly MTContentPackManager bundleManager = new MTContentPackManager();
+    private static readonly MergeCache mergeCache = new();
+    private static readonly MDDBCache mddbCache = new();
+    internal static readonly MTContentPackManager bundleManager = new();
 
     internal static IEnumerator<ProgressReport> HandleModManifestsLoop()
     {

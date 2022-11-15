@@ -23,7 +23,7 @@ internal static class DebugSettingsFeature
 
     internal static readonly VersionManifestEntry[] DefaulManifestEntries =
     {
-        new VersionManifestEntry(
+        new(
             "settings",
             Path.Combine(Path.Combine("data", "debug"), "settings.json"),
             InternalCustomResourceType.DebugSettings.ToString(),

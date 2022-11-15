@@ -43,7 +43,7 @@ internal static class ProgressPanel
         public Slider Slider { get; set; }
         public Action FinishAction { get; set; }
 
-        private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new LinkedList<Func<IEnumerator<ProgressReport>>>();
+        private LinkedList<Func<IEnumerator<ProgressReport>>> WorkList = new();
 
         private void Start()
         {

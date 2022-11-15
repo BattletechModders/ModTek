@@ -19,19 +19,19 @@ internal class DumpLoadRequests
         dumper.LogSummary();
     }
 
-    private HashSet<CacheKey> waiting = new HashSet<CacheKey>();
+    private HashSet<CacheKey> waiting = new();
     private void AddWaiting(CacheKey key)
     {
         waiting.Add(key);
     }
 
-    private HashSet<CacheKey> processing = new HashSet<CacheKey>();
+    private HashSet<CacheKey> processing = new();
     private void AddProcessing(CacheKey key)
     {
         processing.Add(key);
     }
 
-    private Dictionary<CacheKey, int> incoming = new Dictionary<CacheKey, int>();
+    private Dictionary<CacheKey, int> incoming = new();
     private void AddIncoming(CacheKey key)
     {
         if (!incoming.TryGetValue(key, out var counter))

@@ -5,7 +5,7 @@ namespace ModTek.Features.CustomSVGAssets;
 
 internal static class SVGAssetFeature
 {
-    private static HashSet<string> systemIcons = new HashSet<string>();
+    private static HashSet<string> systemIcons = new();
 
     internal static bool isInSystemIcons(string id)
     {

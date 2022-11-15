@@ -25,28 +25,28 @@ internal static class GameTipsFeature
 
     internal static readonly VersionManifestEntry[] DefaulManifestEntries =
     {
-        new VersionManifestEntry(
+        new(
             "general",
             Path.Combine("GameTips", "general.txt"),
             InternalCustomResourceType.GameTip.ToString(),
             VersionManifestEntryExtensions.UpdatedOnLazyTracking,
             "1"
         ),
-        new VersionManifestEntry(
+        new(
             "combat",
             Path.Combine("GameTips", "combat.txt"),
             InternalCustomResourceType.GameTip.ToString(),
             VersionManifestEntryExtensions.UpdatedOnLazyTracking,
             "1"
         ),
-        new VersionManifestEntry(
+        new(
             "lore",
             Path.Combine("GameTips", "lore.txt"),
             InternalCustomResourceType.GameTip.ToString(),
             VersionManifestEntryExtensions.UpdatedOnLazyTracking,
             "1"
         ),
-        new VersionManifestEntry(
+        new(
             "sim",
             Path.Combine("GameTips", "sim.txt"),
             InternalCustomResourceType.GameTip.ToString(),

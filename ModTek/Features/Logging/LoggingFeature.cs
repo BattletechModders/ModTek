@@ -11,7 +11,7 @@ internal static class LoggingFeature
     private static LoggingSettings Settings => ModTek.Config.Logging;
 
     private static LogAppender _mainLog;
-    private static readonly List<LogAppender> _logsAppenders = new List<LogAppender>();
+    private static readonly List<LogAppender> _logsAppenders = new();
 
     private static MTLoggerAsyncQueue _queue;
 

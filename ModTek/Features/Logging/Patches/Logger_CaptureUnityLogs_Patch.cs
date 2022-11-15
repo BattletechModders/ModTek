@@ -11,7 +11,7 @@ internal static class Logger_CaptureUnityLogs_Patch
         return ModTek.Enabled;
     }
 
-    private static readonly RunOnlyOnceHandler CleanupHandler = new RunOnlyOnceHandler();
+    private static readonly RunOnlyOnceHandler CleanupHandler = new();
     public static void Cleanup()
     {
         CleanupHandler.Run(UnityLogHandler.Setup);

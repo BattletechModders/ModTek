@@ -48,14 +48,14 @@ internal class LoggingSettings
     [JsonProperty]
     internal const string MainLog_Description = "The main log.";
     [JsonProperty(Required = Required.Always)]
-    internal AppenderSettings MainLog = new AppenderSettings();
+    internal AppenderSettings MainLog = new();
     [JsonProperty(Required = Required.Always)]
     internal string MainLogFilePath = "battletech_log.txt";
 
     [JsonProperty]
     internal const string Logs_Description = "Allows to define logs, the `key` specifies the log file path relative to `.modtek`.";
     [JsonProperty(Required = Required.Always)]
-    internal Dictionary<string, AppenderSettings> Logs = new Dictionary<string, AppenderSettings>
+    internal Dictionary<string, AppenderSettings> Logs = new()
     {
         {
             "ModTek.log",

@@ -28,7 +28,7 @@ internal class HarmonyVersion
     }
 
     // a list of supported version and the respective shim assembly names
-    internal static readonly List<HarmonyVersion> SupportedVersions = new List<HarmonyVersion>
+    internal static readonly List<HarmonyVersion> SupportedVersions = new()
     {
         // older harmony, only used by few mods
         new HarmonyVersion("0Harmony109", new Version(1, 0), new Version(1, 1)),

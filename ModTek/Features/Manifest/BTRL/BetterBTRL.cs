@@ -11,16 +11,16 @@ namespace ModTek.Features.Manifest.BTRL;
 
 internal class BetterBTRL
 {
-    public static readonly BetterBTRL Instance = new BetterBTRL();
+    public static readonly BetterBTRL Instance = new();
 
     internal readonly BetterCPI PackIndex;
     private readonly TypedManifest currentManifest;
 
     private readonly VersionManifest defaultManifest;
-    private readonly List<VersionManifestAddendum> addendums = new List<VersionManifestAddendum>();
-    private readonly VersionManifestAddendum modsManifest = new VersionManifestAddendum("ModTekModsManifestAddendum");
-    private readonly VersionManifestAddendum mergeAddendum = new VersionManifestAddendum("ModTekMergeCacheAddendum");
-    private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new Dictionary<string, List<VersionManifestEntry>>();
+    private readonly List<VersionManifestAddendum> addendums = new();
+    private readonly VersionManifestAddendum modsManifest = new("ModTekModsManifestAddendum");
+    private readonly VersionManifestAddendum mergeAddendum = new("ModTekMergeCacheAddendum");
+    private readonly Dictionary<string, List<VersionManifestEntry>> addendumEntryOverrides = new();
 
     private bool HasChanges;
 
@@ -155,8 +155,8 @@ internal class BetterBTRL
 
     // this region is copy pasted from original and kept same except for some calls to Manifest and BTRL itself
 
-    private Dictionary<string, VersionManifestMemoryStore> memoryStores = new Dictionary<string, VersionManifestMemoryStore>();
-    private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>>();
+    private Dictionary<string, VersionManifestMemoryStore> memoryStores = new();
+    private Dictionary<BattleTechResourceType, Dictionary<string, List<VersionManifestMemoryStore>>> memoryStoreResourceIndex = new();
 
     public void ApplyMemoryStore(VersionManifestMemoryStore memoryStore)
     {
@@ -285,7 +285,7 @@ internal class BetterBTRL
         }
     }
 
-    private Stopwatch sw = new Stopwatch();
+    private Stopwatch sw = new();
     internal void RefreshTypedEntries() // this is called way too often in vanilla cases, but not sure what depends on this
     {
         if (!HasChanges) // it changes all the time anyway

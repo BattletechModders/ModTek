@@ -10,7 +10,7 @@ namespace ModTekPreloader.Harmony12X;
 
 internal class ShimCacheManifest
 {
-    private readonly SortedDictionary<string, CacheEntry> data = new SortedDictionary<string, CacheEntry>();
+    private readonly SortedDictionary<string, CacheEntry> data = new();
     private readonly DynamicShimInjector _injector;
     private readonly string manifestHeader;
 

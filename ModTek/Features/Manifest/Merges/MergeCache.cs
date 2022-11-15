@@ -19,7 +19,7 @@ internal class MergeCache
     private readonly string PersistentFilePath;
 
     private readonly CacheDB CachedMerges; // stuff in here was merged
-    private readonly CacheDB QueuedMerges = new CacheDB(); // stuff in here has merges queued
+    private readonly CacheDB QueuedMerges = new(); // stuff in here has merges queued
 
     private bool hasChanges;
     private void SetHasChangedAndRemoveIndex()
@@ -57,7 +57,7 @@ internal class MergeCache
         CachedMerges = new CacheDB();
     }
 
-    private readonly Stopwatch saveSW = new Stopwatch();
+    private readonly Stopwatch saveSW = new();
     internal void Save()
     {
         try

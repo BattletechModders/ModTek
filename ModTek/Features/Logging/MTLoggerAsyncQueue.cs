@@ -25,7 +25,7 @@ internal class MTLoggerAsyncQueue
         _thread.Start();
     }
 
-    private static readonly MTStopwatch _loggingStopwatch = new MTStopwatch
+    private static readonly MTStopwatch _loggingStopwatch = new()
     {
         Callback = stats => Log.Main.Debug?.Log($"Asynchronous logging offloaded {stats.TotalMS - _queueStopwatch.GetStats().TotalMS} ms from the main thread."),
         CallbackForEveryNumberOfMeasurements = 1000
@@ -61,7 +61,7 @@ internal class MTLoggerAsyncQueue
     private bool CurrentThreadIsLoggerThread() => Thread.CurrentThread == _thread;
 
 
-    private static readonly MTStopwatch _queueStopwatch = new MTStopwatch();
+    private static readonly MTStopwatch _queueStopwatch = new();
     // return false only if there was an error or async is not wanted
     internal bool Add(MTLoggerMessageDto messageDto)
     {

@@ -7,10 +7,10 @@ namespace ModTek.Features.Manifest.BTRL;
 
 internal class BetterCPI
 {
-    private List<string> OwnedContentPacks = new List<string>();
-    private Dictionary<string, string> BaseResourceMap = new Dictionary<string, string>();
-    private readonly Dictionary<string, string> ModsResourceMap = new Dictionary<string, string>(); // resourceId, contentPackName
-    private readonly Dictionary<string, string> ModsTypeMap = new Dictionary<string, string>(); // resourceId, resourceType
+    private List<string> OwnedContentPacks = new();
+    private Dictionary<string, string> BaseResourceMap = new();
+    private readonly Dictionary<string, string> ModsResourceMap = new(); // resourceId, contentPackName
+    private readonly Dictionary<string, string> ModsTypeMap = new(); // resourceId, resourceType
     internal bool AllContentPacksOwned; // used to speed up checks and helps during merging/indexing
 
     // called on ownership changes

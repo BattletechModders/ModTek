@@ -72,7 +72,7 @@ internal class MDDBCache
         MetadataDatabase.ReloadFromDisk();
     }
 
-    private readonly Stopwatch saveSW = new Stopwatch();
+    private readonly Stopwatch saveSW = new();
     internal void Save()
     {
         try
@@ -105,7 +105,7 @@ internal class MDDBCache
         }
     }
 
-    private readonly Stopwatch sw = new Stopwatch();
+    private readonly Stopwatch sw = new();
     internal void CacheUpdate(VersionManifestEntry entry)
     {
         if (IsIgnored(entry, out var key))
@@ -139,7 +139,7 @@ internal class MDDBCache
         }
     }
 
-    private readonly HashSet<CacheKey> IgnoredItems = new HashSet<CacheKey>();
+    private readonly HashSet<CacheKey> IgnoredItems = new();
 
     internal void AddToNotIndexable(ModEntry entry)
     {

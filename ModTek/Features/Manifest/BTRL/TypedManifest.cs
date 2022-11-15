@@ -13,10 +13,10 @@ namespace ModTek.Features.Manifest.BTRL;
 
 internal class TypedManifest
 {
-    private readonly TypedDict manifest = new TypedDict();
-    private readonly Dictionary<string, HashSet<string>> idToTypes = new Dictionary<string, HashSet<string>>();
+    private readonly TypedDict manifest = new();
+    private readonly Dictionary<string, HashSet<string>> idToTypes = new();
     private readonly BetterCPI packIndex;
-    private readonly Dictionary<string, VersionManifestAddendum> addendums = new Dictionary<string, VersionManifestAddendum>();
+    private readonly Dictionary<string, VersionManifestAddendum> addendums = new();
 
     private static readonly string ManifestDumpPath = Path.Combine(FilePaths.TempModTekDirectory, "Manifest.csv");
     private static readonly VersionManifestEntry[] emptyArray = Array.Empty<VersionManifestEntry>();

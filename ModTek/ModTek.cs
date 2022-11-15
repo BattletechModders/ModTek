@@ -34,7 +34,7 @@ public static partial class ModTek
     internal const string MODTEK_DEF_NAME = "ModTek";
     internal const string MOD_STATE_JSON_NAME = "modstate.json";
 
-    private static Stopwatch stopwatch = new Stopwatch();
+    private static Stopwatch stopwatch = new();
 
     // Called by assembly modified with ModTekPreloader via Doorstop
     public static void Init()

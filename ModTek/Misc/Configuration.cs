@@ -92,7 +92,7 @@ internal class Configuration
     internal bool MinimalLastConfig = true;
 
     [JsonProperty]
-    internal LoggingSettings Logging = new LoggingSettings();
+    internal LoggingSettings Logging = new();
 
     [JsonIgnore]
     private Exception ReadConfigurationException;
@@ -168,7 +168,7 @@ internal class Configuration
 
     private class ShouldSerializeContractResolver : DefaultContractResolver
     {
-        public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+        public static readonly ShouldSerializeContractResolver Instance = new();
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
