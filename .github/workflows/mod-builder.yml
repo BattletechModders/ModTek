@@ -1,0 +1,79 @@
+﻿on:
+  workflow_call:
+    inputs:
+      checkout-directory:
+        description: 'The name of the directory the repository will be extracted to`.'
+        default: 'BATTLETECH/Mods/MyMod'
+        type: string
+      release-notes:
+        description: 'Only used for tagged releases.'
+        default: 'Latest stable version'
+        type: string
+      build-script:
+        description: 'Please use the default. The script to run relative to the checkout directory.'
+        default: './release.sh'
+        type: string
+      runner-environment:
+        description: 'Please use the default. Linux can build just fine and is way faster on GitHub.'
+        default: 'ubuntu-latest'
+        type: string
+      dotnet-version:
+        description: 'Please use the default. Will be set to the latest and greatest at some point in time.'
+        default: '6.0'
+        type: string
+    secrets:
+      MANAGED_ARCHIVE_PW:
+        required: true
+      MANAGED_ARCHIVE_URL:
+        required: true
+
+jobs:
+  mod-builder:
+    runs-on: ${{ inputs.runner-environment }}
+    env:
+      MOD_DIR: "${{ github.workspace }}/${{ inputs.checkout-directory }}"
+      BATTLETECH_DIR: ${{ github.workspace }}/BATTLETECH
+      MODS_DIR: ${{ github.workspace }}/BATTLETECH/Mods
+      DIST_DIR: ${{ github.workspace }}/dist
+    steps:
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@master
+        with:
+          dotnet-version: "${{ inputs.dotnet-version }}"
+          include-prerelease: true
+      - name: Download Dependencies
+        env:
+          MANAGED_ARCHIVE_PW: "${{ secrets.MANAGED_ARCHIVE_PW }}"
+          MANAGED_ARCHIVE_URL: "${{ secrets.MANAGED_ARCHIVE_URL }}"
+        run: |
+          curl -L -o "$GITHUB_WORKSPACE/Managed.7z" "$MANAGED_ARCHIVE_URL"
+          MANAGED_DIR="$BATTLETECH_DIR/BattleTech_Data/Managed"
+          mkdir -p "$MANAGED_DIR"
+          7z e -p"$MANAGED_ARCHIVE_PW" -o"$MANAGED_DIR" "$GITHUB_WORKSPACE/Managed.7z"
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: "${{ env.MOD_DIR }}"
+      - name: Fetch Branches and Tags
+        run: git fetch --prune --unshallow
+        working-directory: "${{ env.MOD_DIR }}"
+      - name: Build Mod
+        run: "${{ inputs.build-script }}"
+        working-directory: "${{ env.MOD_DIR }}"
+      - name: Release Latest
+        if: github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: Latest
+          prerelease: true
+          generateReleaseNotes: true
+          allowUpdates: true
+          name: "Latest (unstable)"
+          artifacts: "{{ env.DIST_DIR }}/*.zip"
+      - name: Release Tag
+        if: startsWith(github.ref, 'refs/tags')
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          body: "${{ inputs.release-notes }}"
+          artifacts: "{{ env.DIST_DIR }}/*.zip"
