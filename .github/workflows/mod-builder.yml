@@ -60,7 +60,7 @@ jobs:
         run: "${{ inputs.build-script }}"
         working-directory: "${{ env.MOD_DIR }}"
       - name: Release Latest
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           tag: latest
