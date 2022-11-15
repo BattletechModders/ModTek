@@ -13,7 +13,7 @@
     <TargetFramework>net472</TargetFramework>
 
     <!-- Set to a modern version -->
-    <LangVersion>10</LangVersion>
+    <LangVersion>11</LangVersion>
 
     <!-- Traditional debugging does not work anyway, so no need to have such options available -->
     <DebugType>none</DebugType>

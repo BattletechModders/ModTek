@@ -6,7 +6,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <LangVersion>10</LangVersion>
+    <LangVersion>11</LangVersion>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <AssemblySearchPaths>
