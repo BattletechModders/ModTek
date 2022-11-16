@@ -119,7 +119,7 @@
   <!-- Reference static files to be copied -->
   <ItemGroup>
     <Asset Include="modtekassetbundle" CopyToOutputDirectory="PreserveNewest" />
-    <Asset Include="$(ProjectDir)\..\README.md" CopyToOutputDirectory="PreserveNewest" />
+    <Asset Include="$(ProjectDir)\..\INSTALL.md" CopyToOutputDirectory="PreserveNewest" />
     <Asset Include="$(ProjectDir)\..\LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -1,5 +1,8 @@
 This will be a guide for writing a fairly simple mod -- making the Leopard have a 300 ton drop-limit while playing the campaign/simgame.
 
+> **Note**
+> This guide is not up-to-date and does not reflect current best practices, see [Development Guide](DEVELOPMENT_GUIDE.md)
+
 ## Getting Started
 
 The easiest way to change how the game works is to see if you can do it by editing the game's JSON and writing a ModTek JSON mod -- some examples are [here](Writing-ModTek-JSON-mods.md). You should only spend your time and effort if that time and effort is required to get your project working. HBS has provided a lot of tweaks to the way that the game works in JSON files and it's not uncommon that they've got something already in place. In this case however, there are none used by the game so we'll just have to make it.
@@ -142,8 +145,3 @@ if (DropLimit.Settings.OnlyInSimGame && !__instance.IsSimGame)
 if (lanceTonnage <= DropLimit.Settings.MaxTonnage)
     return;
 ```
-
-## Building on github
-
-ModTek itself is build on github using github workflows,
-see [ci-release-build.yml](.github/workflows/ci-release-build.yml) which you can copy and adjust to your mod.

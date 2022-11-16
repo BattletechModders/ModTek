@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
-## 3.1 - CptMoore
+## 3.1 - CptMoore / kMiSSioN
 
 For users:
 - The Linux `run.sh` script was updated to fix a compatibility issue with Steam.
@@ -18,6 +18,7 @@ For users:
 For modders:
 - HarmonyX support is now enabled by default, see [Harmony12X](doc/HARMONY12X.md).
 - Improved logging support via HBS Logger, see [Logging](doc/LOGGING.md).
+- Added `Assembly` CustomResource, allows resolving third-party .NET dlls without writing resolve handlers in mods.
 
 ## 3.0 - CptMoore
 
