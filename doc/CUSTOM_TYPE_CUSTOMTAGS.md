@@ -37,11 +37,10 @@ Each CustomTagSet needs to be defined in a .json file with the following structu
 
 As with CustomTags, you can update HBS defined TagSets by using the same ID for your  CustomTag. Any existing tags will be removed, and replaced with the tags you defined instead. You **must** include all tags you want in the updated TagSet in your CustomTag definition.
 
-Note that the TypeID is an enumeration type, that unfortunately was never upgraded to a data-driven enum. Thus you are limited to the following enum types, as defined in the Assembly-CSharp.dll. You **must not** use a TypeID that's not defined below, or you will experience erratic behaviors. If the internal logic cannot cast your specified value to the defined enum it will likely fail without printing any error message.
-
+Note that the TypeID is an enumeration type, that unfortunately was never upgraded to a data-driven enum. Thus you are limited to the following enum types, as defined in the `Assembly-CSharp.dll`. You **must not** use a TypeID that's not defined below, or you will experience erratic behaviors. If the internal logic cannot cast your specified value to the defined enum it will likely fail without printing any error message.
 
 | TagSetType | TypeID |
-| -- | -- |
+| ---------- | ------ |
 | UNDEFINED | 1 |
 | Map | 2 |
 | Encounter | 3 |
