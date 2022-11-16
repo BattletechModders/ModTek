@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Known Issues
+
+- Injected assemblies (dlls) are saved to disk during startup, virus scanners could trigger or block this process.
+- Some mods expect the managed assemblies location to be in the `Managed` directory,
+  however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
+- HarmonyX works pretty well, as ModTek itself and most mods can work with the provided shims.
+
+## 3.1 - CptMoore
+
+For modders:
+- HarmonyX support is now enabled by default, see [Harmony12X](doc/HARMONY12X.md).
+- Improved logging support via HBS Logger, see [Logging](doc/LOGGING.md).
+
 ## 3.0 - CptMoore
 
 > **Note**
@@ -16,13 +29,6 @@ For modders:
 - UnityDoorstop also makes it easy to override or add assemblies by putting them into `Mods/ModTek/AssembliesOverride/`.
 - ModTek has support for HarmonyX with shims for Harmony 1.2 and 2. See [Harmony12X](doc/HARMONY12X.md).
 - The experimental profiler was removed, it wasn't very good and its heavy use of Harmony made it incompatible with the HarmonyX support.
-
-Known issues:
-- Injected assemblies (dlls) are saved to disk during startup, virus scanners could trigger or block this process.
-- Some mods expect the managed assemblies location to be in the `Managed` directory,
-  however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
-- HarmonyX works pretty well, as ModTek itself and most mods can work with the provided shims.
-  The feature is disabled by default and it is recommended to stick with Harmony 1.2 for now to keep compatible with other unmaintained mods.
 
 ## 2.0 - CptMoore
 

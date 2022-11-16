@@ -5,7 +5,7 @@ ModTek logging has the following features:
 - Improves the performance by offloading the formatting and writing of log statements onto a thread away from the main Unity thread.
 - Provides filter options to determine what does or does not get into the log.
 - Formats a log message so that it includes a logger name, nicely formatted time, thread id if not on main thread, log message and possibly an exception.
-- Uses a high precision timer, to allow sub-microsecond precision for the time stamps. Standard is just milliseconds. Thats 10000 times more precision!
+- Uses a high precision timer, to allow 1/10 of microsecond precision (10^-7) for time stamps instead of milliseconds (10^-3).
 - Supports adding additional log files. (TODO allow mods to define the log files directly in mod.json, right now only possible via `ModTek/config.json`)
 - Added more log levels, use "200" for Trace logging and "250" for Fatal logging. In C# enums are ints, so casting a integer to HBS' LogLevel is valid, `(LogLevel)200`.
 - Log rotation per game start. Logs are rotated to survive at least one other start, logs that end with `.1` are from a previous application start.
@@ -43,7 +43,7 @@ Afterwards the log statements should appear in `.modtek/battletech_log.txt`.
 ### Trace Logging
 
 Trace logging is just a log level. Meaning if you can work with the existing log levels, there is no need to require trace logging.
-Some mods exhaust the existing log levels easily, and require a differentiation between log stuff that helps with debugging (DEBUG), and log everything (TRACE/200).
+Some mods exhaust the existing log levels easily, and require a differentiation between log statements that helps with debugging (DEBUG), and log everything (TRACE/200).
 
 Trace logging is used as follows:
 ```csharp
@@ -94,18 +94,18 @@ var logger = Logger.GetLogger("YourMod");
 var nullableLogger = logger.IsDebugEnabled ? logger : null;
 
 // somewhere in code
-nullableLogger?.ExpensiveOperationToCreateAString();
+nullableLogger?.Log(ExpensiveOperationToCreateAString());
 ```
 
 Behind the scenes, C# actually translates that to:
 ```csharp
-// somewhere in code
+// somewhere in code (alternative view)
 if (nullableLogger != null)
 {
-    nullableLogger.ExpensiveOperationToCreateAString();
+    nullableLogger.Log(ExpensiveOperationToCreateAString());
 }
 ```
 
 There is a caveat, the game changes log levels after the mods have initialized, so in order to keep up there is a Harmony patch required and some boilerplate code.
 
-See `Logging.cs` in e.g. MechEngineer or CustomFilters to snag class that works out of the box.
+For the boilerplate code, see [NullableLogger.cs](../ModTek/NullableLogger.cs) and [Log.cs](../ModTek/Log.cs) as used by ModTek itself.
