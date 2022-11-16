@@ -7,7 +7,7 @@ using ModTek.Features.Manifest.Mods;
 namespace ModTek.Features.LoadAtBattleStart.Patches;
 
 [HarmonyPatch(typeof(Contract), "RequestConversations")]
-public static class Contract_RequestConversations_Patch
+internal static class Contract_RequestConversations_Patch
 {
     public static void Postfix(Contract __instance, LoadRequest loadRequest)
     {

@@ -11,7 +11,7 @@ namespace ModTek.Features.Manifest.Patches;
 
 // fix constructor being called
 [HarmonyPatch(typeof(BattleTechResourceLocator), "RefreshTypedEntries")]
-public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
+internal static class BattleTechResourceLocator_RefreshTypedEntries_Patch
 {
     public static bool Prepare()
     {
@@ -42,7 +42,7 @@ public static class BattleTechResourceLocator_RefreshTypedEntries_Patch
 // redirect all public methods to new class
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.SetContentPackIndex))]
-public static class BattleTechResourceLocator_SetContentPackIndex_Patch
+internal static class BattleTechResourceLocator_SetContentPackIndex_Patch
 {
     public static bool Prepare()
     {
@@ -64,7 +64,7 @@ public static class BattleTechResourceLocator_SetContentPackIndex_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.ApplyAddendum))]
-public static class BattleTechResourceLocator_ApplyAddendum_Patch
+internal static class BattleTechResourceLocator_ApplyAddendum_Patch
 {
     public static bool Prepare()
     {
@@ -86,7 +86,7 @@ public static class BattleTechResourceLocator_ApplyAddendum_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveAddendum))]
-public static class BattleTechResourceLocator_RemoveAddendum_Patch
+internal static class BattleTechResourceLocator_RemoveAddendum_Patch
 {
     public static bool Prepare()
     {
@@ -108,7 +108,7 @@ public static class BattleTechResourceLocator_RemoveAddendum_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetAddendumByName))]
-public static class BattleTechResourceLocator_GetAddendumByName_Patch
+internal static class BattleTechResourceLocator_GetAddendumByName_Patch
 {
     public static bool Prepare()
     {
@@ -130,7 +130,7 @@ public static class BattleTechResourceLocator_GetAddendumByName_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.ApplyMemoryStore))]
-public static class BattleTechResourceLocator_ApplyMemoryStore_Patch
+internal static class BattleTechResourceLocator_ApplyMemoryStore_Patch
 {
     public static bool Prepare()
     {
@@ -152,7 +152,7 @@ public static class BattleTechResourceLocator_ApplyMemoryStore_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveMemoryStore))]
-public static class BattleTechResourceLocator_RemoveMemoryStore_Patch
+internal static class BattleTechResourceLocator_RemoveMemoryStore_Patch
 {
     public static bool Prepare()
     {
@@ -174,7 +174,7 @@ public static class BattleTechResourceLocator_RemoveMemoryStore_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetMemoryStoresContainingEntry))]
-public static class BattleTechResourceLocator_GetMemoryStoresContainingEntry_Patch
+internal static class BattleTechResourceLocator_GetMemoryStoresContainingEntry_Patch
 {
     public static bool Prepare()
     {
@@ -196,7 +196,7 @@ public static class BattleTechResourceLocator_GetMemoryStoresContainingEntry_Pat
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.GetMemoryStoreByName))]
-public static class BattleTechResourceLocator_GetMemoryStoreByName_Patch
+internal static class BattleTechResourceLocator_GetMemoryStoreByName_Patch
 {
     public static bool Prepare()
     {
@@ -218,7 +218,7 @@ public static class BattleTechResourceLocator_GetMemoryStoreByName_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntries))]
-public static class BattleTechResourceLocator_AllEntries_Patch
+internal static class BattleTechResourceLocator_AllEntries_Patch
 {
     public static bool Prepare()
     {
@@ -240,7 +240,7 @@ public static class BattleTechResourceLocator_AllEntries_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntriesOfResource))]
-public static class BattleTechResourceLocator_AllEntriesOfResource_Patch
+internal static class BattleTechResourceLocator_AllEntriesOfResource_Patch
 {
     public static bool Prepare()
     {
@@ -262,7 +262,7 @@ public static class BattleTechResourceLocator_AllEntriesOfResource_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.AllEntriesOfResourceFromAddendum))]
-public static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_Patch
+internal static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_Patch
 {
     public static bool Prepare()
     {
@@ -284,7 +284,7 @@ public static class BattleTechResourceLocator_AllEntriesOfResourceFromAddendum_P
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.EntryByID))]
-public static class BattleTechResourceLocator_EntryByID_Patch
+internal static class BattleTechResourceLocator_EntryByID_Patch
 {
     public static bool Prepare()
     {
@@ -306,7 +306,7 @@ public static class BattleTechResourceLocator_EntryByID_Patch
 }
 
 [HarmonyPatch(typeof(BattleTechResourceLocator), nameof(BattleTechResourceLocator.RemoveEntry))]
-public static class BattleTechResourceLocator_RemoveEntry_Patch
+internal static class BattleTechResourceLocator_RemoveEntry_Patch
 {
     public static bool Prepare()
     {

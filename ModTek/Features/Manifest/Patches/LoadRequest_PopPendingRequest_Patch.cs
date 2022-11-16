@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ModTek.Features.Manifest.Patches;
 
 [HarmonyPatch(typeof(LoadRequest), "PopPendingRequest")]
-public static class LoadRequest_PopPendingRequest_Patch
+internal static class LoadRequest_PopPendingRequest_Patch
 {
     public static bool Prepare()
     {

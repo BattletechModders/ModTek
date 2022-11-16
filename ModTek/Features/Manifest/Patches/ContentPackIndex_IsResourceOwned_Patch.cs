@@ -6,7 +6,7 @@ using ModTek.Features.Manifest.BTRL;
 namespace ModTek.Features.Manifest.Patches;
 
 [HarmonyPatch(typeof(ContentPackIndex), nameof(ContentPackIndex.IsResourceOwned))]
-public static class ContentPackIndex_IsResourceOwned_Patch
+internal static class ContentPackIndex_IsResourceOwned_Patch
 {
     public static bool Prepare()
     {

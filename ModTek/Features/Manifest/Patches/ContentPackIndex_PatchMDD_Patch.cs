@@ -7,7 +7,7 @@ using ModTek.Features.Manifest.BTRL;
 namespace ModTek.Features.Manifest.Patches;
 
 [HarmonyPatch(typeof(ContentPackIndex), "PatchMDD")]
-public static class ContentPackIndex_PatchMDD_Patch
+internal static class ContentPackIndex_PatchMDD_Patch
 {
     public static bool Prepare()
     {
