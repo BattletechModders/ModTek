@@ -8,9 +8,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Injected assemblies (dlls) are saved to disk during startup, virus scanners could trigger or block this process.
 - Some mods expect the managed assemblies location to be in the `Managed` directory,
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
-- HarmonyX works pretty well, as ModTek itself and most mods can work with the provided shims.
+- The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
 ## 3.1 - CptMoore
+
+For users:
+- The Linux `run.sh` script was updated to fix a compatibility issue with Steam.
 
 For modders:
 - HarmonyX support is now enabled by default, see [Harmony12X](doc/HARMONY12X.md).
@@ -27,7 +30,7 @@ For users:
 For modders:
 - ModTek now has a preloader that runs injectors to modify assemblies on-the-fly with Mono Cecil. See [Preloader](doc/PRELOADER.md).
 - UnityDoorstop also makes it easy to override or add assemblies by putting them into `Mods/ModTek/AssembliesOverride/`.
-- ModTek has support for HarmonyX with shims for Harmony 1.2 and 2. See [Harmony12X](doc/HARMONY12X.md).
+- ModTek has support for HarmonyX with shims for Harmony 1.2 and 2. Disabled by default. See [Harmony12X](doc/HARMONY12X.md).
 - The experimental profiler was removed, it wasn't very good and its heavy use of Harmony made it incompatible with the HarmonyX support.
 
 ## 2.0 - CptMoore
