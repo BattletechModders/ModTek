@@ -1,9 +1,13 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BattleTech;
 using BattleTech.ModSupport;
+using BattleTech.Save;
+using BattleTech.Save.SaveGameStructure;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;
@@ -17,13 +21,40 @@ namespace ModTek.Features.ModLoaderSupport.Patches;
 [HarmonyPatch(MethodType.Normal)]
 internal static class ModLoader_Init
 {
+    internal class ModLoader_Init_CallbackDelay
+    {
+        public UnityGameInstance instance { get; set; } = null;
+        public Action callback { get; set; } = null;
+        public ModLoader_Init_CallbackDelay(UnityGameInstance instance, Action callback)
+        {
+            this.instance = instance;
+            this.callback = callback;
+        }
+        public IEnumerator waitforSettings()
+        {
+            if (ActiveOrDefaultSettings.userSettings == null) { yield return null; }
+            if (ActiveOrDefaultSettings.userSettings.activeLoadRequests > 0) { yield return null; }
+            this.callback();
+            yield break;
+        }
+    }
     public static bool Prepare()
     {
         return ModTek.Enabled;
     }
 
-    public static bool Prefix(Action callback)
-    {
+    public static bool Prefix(UnityGameInstance __instance, Action callback)
+    {        
+        if (ActiveOrDefaultSettings.userSettings == null)
+        {
+            UnityGameInstance.Instance.StartCoroutine(new ModLoader_Init_CallbackDelay(__instance, callback).waitforSettings());
+            return false;
+        }
+        if (ActiveOrDefaultSettings.userSettings.activeLoadRequests > 0)
+        {
+            UnityGameInstance.Instance.StartCoroutine(new ModLoader_Init_CallbackDelay(__instance, callback).waitforSettings());
+            return false;
+        }
         callback();
         return false;
     }
