@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Harmony;
-using HBS.Logging;
 using UnityEngine;
 
 namespace ModTek.Features.Logging.Patches;
@@ -42,13 +41,6 @@ internal static class Exception_ctor_Patch
         }
 
         var ex = __instance;
-        var st = new StackTrace(1).ToString();
-        LoggingFeature.LogAtLevel(
-            "Debugger",
-            LogLevel.Debug,
-            "An exception was initialized: " + ex.GetType().Name + ": " + ex.Message + Environment.NewLine + st,
-            null,
-            null
-        );
+        Log.Debugger.Debug?.Log("An exception was initialized: " + ex.GetType().Name + ": " + ex.Message + Environment.NewLine + new StackTrace(1));
     }
 }

@@ -32,7 +32,7 @@ internal class TypedManifest
         idToTypes.Clear();
         addendums.Clear();
         SetEntries(defaultEntries);
-        SetEntries(DebugSettingsFeature.DefaulManifestEntries);
+        SetEntries(DebugSettingsFeature.DefaultManifestEntries);
         SetEntries(GameTipsFeature.DefaulManifestEntries);
     }
 

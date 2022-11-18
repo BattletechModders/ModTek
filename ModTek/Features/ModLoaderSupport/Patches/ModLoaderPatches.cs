@@ -7,7 +7,6 @@ using System.Text;
 using BattleTech;
 using BattleTech.ModSupport;
 using BattleTech.Save;
-using BattleTech.Save.SaveGameStructure;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
 using Harmony;

@@ -1,9 +1,10 @@
 ﻿using System.IO;
+using System.Linq;
 using BattleTech;
 using ModTek.Features.CustomResources;
-using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Features.Manifest.MDD;
+using ModTek.Misc;
 
 namespace ModTek.Features.CustomDebugSettings;
 
@@ -14,23 +15,23 @@ internal static class DebugSettingsFeature
         DebugBridge.LoadDefaultSettings();
     }
 
-    public static string GetDebugSettings()
+    internal static readonly VersionManifestEntry[] DefaultManifestEntries;
+    static DebugSettingsFeature()
     {
-        var entry = BetterBTRL.Instance.EntryByIDAndType("settings", InternalCustomResourceType.DebugSettings.ToString());
-        Log.Main.Info?.Log($"Debug settings: {entry.FilePath}");
-        return ModsManifest.GetText(entry);
+        var baseDir = Path.Combine("data", "debug");
+        var files = Directory.GetFiles(Path.Combine(FilePaths.StreamingAssetsDirectory, baseDir), "*.json");
+        DefaultManifestEntries = files
+            .Select(file =>
+                new VersionManifestEntry(
+                    Path.GetFileNameWithoutExtension(file),
+                    Path.Combine(baseDir, file),
+                    InternalCustomResourceType.DebugSettings.ToString(),
+                    VersionManifestEntryExtensions.UpdatedOnLazyTracking,
+                    "1"
+                )
+            )
+            .ToArray();
     }
-
-    internal static readonly VersionManifestEntry[] DefaulManifestEntries =
-    {
-        new(
-            "settings",
-            Path.Combine(Path.Combine("data", "debug"), "settings.json"),
-            InternalCustomResourceType.DebugSettings.ToString(),
-            VersionManifestEntryExtensions.UpdatedOnLazyTracking,
-            "1"
-        )
-    };
 
     internal static bool FindAndSetMatchingType(ModEntry entry)
     {
@@ -42,5 +43,18 @@ internal static class DebugSettingsFeature
         }
 
         return false;
+    }
+
+    internal static bool TryGetSettingsPath(string id, out string path)
+    {
+        var entry = BetterBTRL.Instance.EntryByIDAndType(id, InternalCustomResourceType.DebugSettings.ToString());
+        if (entry == null)
+        {
+            path = default;
+            return false;
+        }
+        Log.Main.Info?.Log($"Debug settings: {entry.FilePath}");
+        path = entry.FilePath;
+        return true;
     }
 }

@@ -13,26 +13,10 @@ internal class UnityLogHandler
     }
     private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
     {
-        LoggingFeature.LogAtLevel(
-            "Unity",
+        Log.Unity.Log.LogAtLevel(
             UnityLogTypeToHBSLogLevel(type),
-            logString,
-            null,
-            GetLocation(stackTrace)
+            logString + (string.IsNullOrWhiteSpace(stackTrace) ? "" : $": {stackTrace}")
         );
-    }
-
-    private static IStackTrace GetLocation(string stackTrace)
-    {
-        if (string.IsNullOrEmpty(stackTrace))
-        {
-            return null;
-        }
-        if (stackTrace.StartsWith("UnityEngine.Debug:Log"))
-        {
-            return new UnityStackTrace(stackTrace, 1);
-        }
-        return new UnityStackTrace(stackTrace);
     }
 
     private static LogLevel UnityLogTypeToHBSLogLevel(LogType unity)

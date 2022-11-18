@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using HBS.Logging;
 using Newtonsoft.Json;
+using NullableLogging;
 
 namespace ModTek.Features.Logging;
 
@@ -24,6 +26,16 @@ internal class LoggingSettings
     internal bool LogThreadStarts = true;
     [JsonProperty]
     internal const string LogThreadStarts_Description = "Logs who starts threads.";
+
+    [JsonProperty]
+    internal const string OverrideLoggerLevels_Description = "Overrides the log levels for the given loggers.";
+    [JsonProperty]
+    internal Dictionary<string, LogLevel> OverrideLoggerLevels = new()
+    {
+        { nameof(Log.Unity), LogLevel.Debug },
+        { nameof(Log.Debugger), LogLevel.Debug },
+        { nameof(ModTek), NullableLogger.TraceLogLevel }
+    };
 
     [JsonProperty]
     internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored to a certain extend. Set to true for FYLS behavior, not recommended though.";
