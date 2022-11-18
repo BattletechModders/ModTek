@@ -10,11 +10,9 @@ internal static class LogLevelExtension
         return eLogLevel.ToString().ToUpperInvariant();
     }
 
-    internal static bool IsLogLevelEnabled(LogLevel level)
+    internal static bool IsLogLevelEnabled(LogLevel effectiveLevel, LogLevel level)
     {
-        var effLevel = Convert(level);
-        var queriedLevel = Convert(level);
-        return queriedLevel <= effLevel && effLevel != ELogLevels.OFF;
+        return Convert(level) <= Convert(effectiveLevel);
     }
 
     private static ELogLevels Convert(LogLevel level)
