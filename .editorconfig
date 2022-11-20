@@ -1,0 +1,70 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+root = true
+
+[*]
+end_of_line = lf
+indent_style = space
+indent_size = 4
+
+[*.{yaml,yml}]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+
+[*.csproj]
+indent_size = 2
+
+[*.json]
+charset = utf-8
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+
+# See https://github.com/dotnet/roslyn/blob/master/src/Workspaces/CSharp/Portable/Formatting/CSharpFormattingOptions.cs
+# includes older, alternative and compatibility declarations (to be cleaned up) possibly used by non-roslyn editors
+[*.{cs,cshtml}]
+charset = utf-8
+trim_trailing_whitespace = true
+indent_brace_style = Allman
+curly_bracket_next_line = true
+continuation_indent_size = 4
+
+csharp_new_lines_for_braces_in_types = true
+csharp_new_lines_for_braces_in_methods = true
+csharp_new_lines_for_braces_in_properties = true
+csharp_new_lines_for_braces_in_accessors = true
+csharp_new_lines_for_braces_in_anonymous_methods = true
+csharp_new_lines_for_braces_in_control_blocks = true
+csharp_new_lines_for_braces_in_object_collection_array_initializers = true
+csharp_new_lines_for_braces_in_lambda_expression_body = true
+
+csharp_new_line_for_else = true
+csharp_new_line_before_else = true
+
+csharp_new_line_for_catch = true
+csharp_new_line_before_catch = true
+
+csharp_new_line_for_finally = true
+csharp_new_line_before_finally = true
+
+csharp_new_line_for_members_in_object_init = true
+csharp_new_line_before_members_in_object_init = true
+csharp_new_line_before_members_in_object_initializers = true
+
+csharp_new_lines_for_braces_in_anonymous_types = true
+csharp_new_line_for_members_in_anonymous_types = true
+csharp_new_line_before_members_in_anonymous_types = true
+
+csharp_new_line_for_clauses_in_query = true
+csharp_new_line_before_clauses_in_query = true
+
+csharp_new_line_for_open_brace = all
+csharp_new_line_before_open_brace = all
+
+csharp_indent_switch_labels = true
+csharp_indent_case_contents = true
+csharp_label_positioning = noIndent
+
