@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using HarmonyLib;
+using HarmonyLib.Tools;
 using MonoMod.Utils;
 
 namespace HarmonyXInterop;
@@ -9,23 +12,39 @@ namespace HarmonyXInterop;
 internal static class PrefixInterop
 {
     private static readonly Dictionary<MethodInfo, MethodInfo> Wrappers = new();
+    private static readonly MethodInfo LogTextMethod = AccessTools.Method(typeof(Logger), "LogText");
 
-    public static MethodInfo WrapInterop(MethodInfo method)
+    private static void LogText(Logger.LogChannel channel, string message)
     {
-        if (method.ReturnType != typeof(bool))
-        {
-            return method;
-        }
+        LogTextMethod.Invoke(null, new object[] { channel, message, false });
+    }
 
-        lock (Wrappers)
+    public static MethodInfo WrapInterop(MethodInfo original)
+    {
+        try
         {
-            if (!Wrappers.TryGetValue(method, out var wrapper))
+            // due to PrefixWrapper, Harmony can't pass __state since HarmonyX passes state via DeclaredType.FullName
+            if (original.GetParameters().Any(x => x.Name == "__state"))
             {
-                wrapper = CreatePrefixWrapper(method);
-                Wrappers[method] = wrapper;
+                LogText(Logger.LogChannel.Warn, $"Prefix contains __state, Harmony 1 prefix skip behavior is not possible for {original.GetID(simple: true)}");
+                return original;
             }
-            return wrapper;
+
+            lock (Wrappers)
+            {
+                if (!Wrappers.TryGetValue(original, out var wrapper))
+                {
+                    wrapper = CreatePrefixWrapper(original);
+                    Wrappers[original] = wrapper;
+                }
+                return wrapper;
+            }
         }
+        catch (Exception e)
+        {
+            LogText(Logger.LogChannel.Error, $"Error creating prefix wrapper: {e}");
+        }
+        return original;
     }
 
     private static MethodInfo CreatePrefixWrapper(MethodInfo original)
@@ -59,11 +78,14 @@ internal static class PrefixInterop
             wrapperArgumentsTypes[wrapperArgumentsIndex] = typeof(bool).MakeByRefType();
         }
 
+        var canSkipPrefixes = original.ReturnType == typeof(bool);
+
         using var dmd = new DynamicMethodDefinition(
             $"PrefixWrapper<{original.GetID(simple: true)}>",
-            null,
+            canSkipPrefixes ? typeof(bool) : null,
             wrapperArgumentsTypes
         );
+
         {
             var parameters = dmd.Definition.Parameters;
             for (var i = 0; i < wrapperArgumentsNames.Length; i++)
@@ -75,35 +97,70 @@ internal static class PrefixInterop
         var il = dmd.GetILGenerator();
         var labelToReturn = il.DefineLabel();
 
-        il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
-        il.Emit(OpCodes.Ldind_U1);
-        il.Emit(OpCodes.Brfalse_S, labelToReturn);
-        il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
-        for (var i = 0; i < wrapperArgumentsRunOriginalIndex; i++)
+        if (canSkipPrefixes)
         {
-            il.Emit(OpCodes.Ldarg, i);
+            il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
+            il.Emit(OpCodes.Ldind_U1);
+            il.Emit(OpCodes.Brfalse_S, labelToReturn);
+            il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
+            for (var i = 0; i < wrapperArgumentsRunOriginalIndex; i++)
+            {
+                il.Emit(OpCodes.Ldarg, i);
+            }
+            il.Emit(OpCodes.Call, original);
+            il.Emit(OpCodes.Stind_I1);
+            il.MarkLabel(labelToReturn);
+            il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
+            il.Emit(OpCodes.Ldind_U1);
+            il.Emit(OpCodes.Ret);
         }
-        il.Emit(OpCodes.Call, original);
-        il.Emit(OpCodes.Stind_I1);
-        il.MarkLabel(labelToReturn);
-        il.Emit(OpCodes.Ret);
+        else
+        {
+            il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
+            il.Emit(OpCodes.Ldind_U1);
+            il.Emit(OpCodes.Brfalse_S, labelToReturn);
+            for (var i = 0; i < wrapperArgumentsRunOriginalIndex; i++)
+            {
+                il.Emit(OpCodes.Ldarg, i);
+            }
+            il.Emit(OpCodes.Call, original);
+            il.MarkLabel(labelToReturn);
+            il.Emit(OpCodes.Ret);
+        }
 
         return dmd.GenerateWith<DMDCecilGenerator>();
     }
 
-    // use IL viewer on the method below to figure out the IL used above
+    // use IL viewer on the methods below to figure out the IL used above
+
     // ReSharper disable once UnusedMember.Local
     // ReSharper disable once InconsistentNaming
-    private static void PrefixWrapper(int a, long b, string c, ref bool __runOriginal)
+    private static bool PrefixWrapperWithReturn(int a, ref long b, ref bool __runOriginal)
     {
         if (__runOriginal)
         {
-            __runOriginal = PrefixOriginal(a, b, c);
+            // Harmony 2 claims its readonly, HarmonyX claims it can be set
+            __runOriginal = PrefixOriginalWithReturn(a, ref b);
+        }
+        return __runOriginal;
+    }
+
+    // ReSharper disable once UnusedMember.Local
+    // ReSharper disable once InconsistentNaming
+    private static void PrefixWrapperWithoutReturn(int a, ref long b, ref bool __runOriginal)
+    {
+        if (__runOriginal)
+        {
+            PrefixOriginalWithoutReturn(a, ref b);
         }
     }
 
-    private static bool PrefixOriginal(int a, long b, string c)
+    private static bool PrefixOriginalWithReturn(int a, ref long b)
     {
-        return c == null;
+        return true;
+    }
+
+    private static void PrefixOriginalWithoutReturn(int a, ref long b)
+    {
     }
 }
