@@ -58,6 +58,11 @@ internal class LoggingSettings
     internal string[] IgnoreSkipForLoggers = {};
 
     [JsonProperty]
+    internal const string AsynchronousLoggingEnabled_Description = "Uses another thread to format and log messages off the main thread.";
+    [JsonProperty]
+    internal bool AsynchronousLoggingEnabled = true;
+
+    [JsonProperty]
     internal const string MainLog_Description = "The main log.";
     [JsonProperty(Required = Required.Always)]
     internal AppenderSettings MainLog = new();

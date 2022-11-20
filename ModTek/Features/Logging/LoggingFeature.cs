@@ -46,14 +46,17 @@ internal static class LoggingFeature
             };
         }
 
-        _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+        if (Settings.AsynchronousLoggingEnabled)
+        {
+            _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+        }
     }
 
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
         var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception);
-        if (!_queue.Add(messageDto))
+        if (_queue == null || !_queue.Add(messageDto))
         {
             ProcessLoggerMessage(messageDto);
         }
