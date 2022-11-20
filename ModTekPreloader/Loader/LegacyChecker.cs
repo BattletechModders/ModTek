@@ -10,30 +10,28 @@ internal static class LegacyChecker
 {
     internal static bool IsInjected(string path)
     {
-        using (var game = ModuleDefinition.ReadModule(path))
+        using var game = ModuleDefinition.ReadModule(path);
+        var injected = false;
+        if (IsModTekInjected(game))
         {
-            var injected = false;
-            if (IsModTekInjected(game))
-            {
-                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");
-                injected = true;
-            }
-            if (IsBTMLInjected(game))
-            {
-                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by BTML.");
-                injected = true;
-            }
-            if (IsRogueTechPerfFixInjected(game))
-            {
-                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by RogueTechPerfFix.");
-                injected = true;
-            }
-            if (!injected)
-            {
-                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` contains no known injections.");
-            }
-            return injected;
+            Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");
+            injected = true;
         }
+        if (IsBTMLInjected(game))
+        {
+            Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by BTML.");
+            injected = true;
+        }
+        if (IsRogueTechPerfFixInjected(game))
+        {
+            Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by RogueTechPerfFix.");
+            injected = true;
+        }
+        if (!injected)
+        {
+            Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` contains no known injections.");
+        }
+        return injected;
     }
 
     private static bool IsModTekInjected(ModuleDefinition game)

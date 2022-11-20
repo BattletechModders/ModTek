@@ -34,15 +34,13 @@ internal class InjectorsAppDomain : MarshalByRefObject
 
     private void RunInjectors()
     {
-        using (var injectorsRunner = new InjectorsRunner())
+        using var injectorsRunner = new InjectorsRunner();
+        if (injectorsRunner.IsUpToDate)
         {
-            if (injectorsRunner.IsUpToDate)
-            {
-                return;
-            }
-
-            injectorsRunner.RunInjectors();
-            injectorsRunner.SaveToDisk();
+            return;
         }
+
+        injectorsRunner.RunInjectors();
+        injectorsRunner.SaveToDisk();
     }
 }

@@ -147,23 +147,21 @@ internal class Configuration
 
     private void WriteConfig(string path, bool minimal = false)
     {
-        using (var sw = new StreamWriter(path))
-        using (var jw = new JsonTextWriter(sw))
+        using var sw = new StreamWriter(path);
+        using var jw = new JsonTextWriter(sw);
+        jw.Formatting = Formatting.Indented;
+        jw.IndentChar = ' ';
+        jw.Indentation = 4;
+        var serializer = new JsonSerializer
         {
-            jw.Formatting = Formatting.Indented;
-            jw.IndentChar = ' ';
-            jw.Indentation = 4;
-            var serializer = new JsonSerializer
-            {
-                NullValueHandling = minimal ? NullValueHandling.Ignore : NullValueHandling.Include
-            };
-            if (minimal)
-            {
-                serializer.ContractResolver = ShouldSerializeContractResolver.Instance;
-            }
-            serializer.Converters.Add(new StringEnumConverter());
-            serializer.Serialize(jw, this);
+            NullValueHandling = minimal ? NullValueHandling.Ignore : NullValueHandling.Include
+        };
+        if (minimal)
+        {
+            serializer.ContractResolver = ShouldSerializeContractResolver.Instance;
         }
+        serializer.Converters.Add(new StringEnumConverter());
+        serializer.Serialize(jw, this);
     }
 
     private class ShouldSerializeContractResolver : DefaultContractResolver

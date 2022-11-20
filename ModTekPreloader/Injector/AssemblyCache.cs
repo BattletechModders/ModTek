@@ -146,11 +146,9 @@ internal class AssemblyCache : IAssemblyResolver
 
         private static byte[] Serialize(AssemblyDefinition definition)
         {
-            using (var stream = new MemoryStream())
-            {
-                definition.Write(stream);
-                return stream.ToArray();
-            }
+            using var stream = new MemoryStream();
+            definition.Write(stream);
+            return stream.ToArray();
         }
     }
 

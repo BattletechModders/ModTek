@@ -26,32 +26,26 @@ internal static class ModTekCacheStorage
             }
         }
 
-        using(var c = new CSVWriter(path))
-        {
-            process(c);
-        }
+        using var c = new CSVWriter(path);
+        process(c);
     }
 
     internal static void WriteTo(object obj, string path)
     {
-        using (var f = new FileStream(path, FileMode.Create))
-        using (var s = new StreamWriter(f))
-        using (var j = new JsonTextWriter(s))
-        {
-            var ser = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-            ser.Serialize(j, obj);
-            j.Flush();
-        }
+        using var f = new FileStream(path, FileMode.Create);
+        using var s = new StreamWriter(f);
+        using var j = new JsonTextWriter(s);
+        var ser = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+        ser.Serialize(j, obj);
+        j.Flush();
     }
 
     internal static T ReadFrom<T>(string path)
     {
-        using (var f = new FileStream(path, FileMode.Open))
-        using (var s = new StreamReader(f))
-        using (var j = new JsonTextReader(s))
-        {
-            var ser = new JsonSerializer();
-            return ser.Deserialize<T>(j);
-        }
+        using var f = new FileStream(path, FileMode.Open);
+        using var s = new StreamReader(f);
+        using var j = new JsonTextReader(s);
+        var ser = new JsonSerializer();
+        return ser.Deserialize<T>(j);
     }
 }

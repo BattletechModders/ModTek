@@ -52,22 +52,21 @@ internal class InjectorsRunner : IDisposable
 
     private void InvokeInjector(string name, MethodInfo injectMethod)
     {
-        using (var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " })
-        using (var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " })
+        using var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " };
+        using var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " };
+
+        var originalConsoleOut = Console.Out;
+        var originalConsoleError = Console.Error;
+        Console.SetOut(infoLogger);
+        Console.SetError(errorLogger);
+        try
         {
-            var originalConsoleOut = Console.Out;
-            var originalConsoleError = Console.Error;
-            Console.SetOut(infoLogger);
-            Console.SetError(errorLogger);
-            try
-            {
-                injectMethod.Invoke(null, new object[] { _assemblyCache });
-            }
-            finally
-            {
-                Console.SetOut(originalConsoleOut);
-                Console.SetError(originalConsoleError);
-            }
+            injectMethod.Invoke(null, new object[] { _assemblyCache });
+        }
+        finally
+        {
+            Console.SetOut(originalConsoleOut);
+            Console.SetError(originalConsoleError);
         }
     }
 

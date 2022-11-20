@@ -86,48 +86,44 @@ internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
 
     private void CsvAppend(string originalContent)
     {
-        using (var writer = new StreamWriter(CachedAbsolutePath))
-        {
-            string titleLine = null;
+        using var writer = new StreamWriter(CachedAbsolutePath);
 
-            void process(StreamReader reader)
+        string titleLine = null;
+        void process(StreamReader reader)
+        {
+            var checkTitle = true;
+            while (!reader.EndOfStream)
             {
-                var checkTitle = true;
-                while (!reader.EndOfStream)
+                var line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line))
                 {
-                    var line = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(line))
+                    continue;
+                }
+                if (checkTitle)
+                {
+                    checkTitle = false;
+                    if (titleLine == null) // very first valid line is assumed to be the title
+                    {
+                        titleLine = line;
+                    }
+                    else if (titleLine == line) // any duplication of a detected title will be removed
                     {
                         continue;
                     }
-                    if (checkTitle)
-                    {
-                        checkTitle = false;
-                        if (titleLine == null) // very first valid line is assumed to be the title
-                        {
-                            titleLine = line;
-                        }
-                        else if (titleLine == line) // any duplication of a detected title will be removed
-                        {
-                            continue;
-                        }
-                    }
-                    writer.WriteLine(line);
                 }
+                writer.WriteLine(line);
             }
+        }
 
-            using (var reader = FileUtils.StreamReaderFromString(originalContent))
-            {
-                process(reader);
-            }
+        using (var reader = FileUtils.StreamReaderFromString(originalContent))
+        {
+            process(reader);
+        }
 
-            foreach (var path in Merges.Select(x => x.AbsolutePath))
-            {
-                using (var reader = new StreamReader(path))
-                {
-                    process(reader);
-                }
-            }
+        foreach (var path in Merges.Select(x => x.AbsolutePath))
+        {
+            using var reader = new StreamReader(path);
+            process(reader);
         }
     }
 
