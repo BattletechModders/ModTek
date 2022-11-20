@@ -61,7 +61,7 @@ internal static class PrefixInterop
 
         using var dmd = new DynamicMethodDefinition(
             $"PrefixWrapper<{original.GetID(simple: true)}>",
-            original.ReturnType,
+            null,
             wrapperArgumentsTypes
         );
         {
@@ -73,23 +73,37 @@ internal static class PrefixInterop
         }
 
         var il = dmd.GetILGenerator();
-        var labelToOriginalMethodCall = il.DefineLabel();
+        var labelToReturn = il.DefineLabel();
 
         il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
         il.Emit(OpCodes.Ldind_U1);
-        il.Emit(OpCodes.Brtrue_S, labelToOriginalMethodCall);
-        il.Emit(OpCodes.Ldc_I4_0);
-        il.Emit(OpCodes.Ret);
-
-        il.MarkLabel(labelToOriginalMethodCall);
+        il.Emit(OpCodes.Brfalse_S, labelToReturn);
+        il.Emit(OpCodes.Ldarg, wrapperArgumentsRunOriginalIndex);
         for (var i = 0; i < wrapperArgumentsRunOriginalIndex; i++)
         {
             il.Emit(OpCodes.Ldarg, i);
         }
-
         il.Emit(OpCodes.Call, original);
+        il.Emit(OpCodes.Stind_I1);
+        il.MarkLabel(labelToReturn);
         il.Emit(OpCodes.Ret);
 
         return dmd.GenerateWith<DMDCecilGenerator>();
+    }
+
+    // use IL viewer on the method below to figure out the IL used above
+    // ReSharper disable once UnusedMember.Local
+    // ReSharper disable once InconsistentNaming
+    private static void PrefixWrapper(int a, long b, string c, ref bool __runOriginal)
+    {
+        if (__runOriginal)
+        {
+            __runOriginal = PrefixOriginal(a, b, c);
+        }
+    }
+
+    private static bool PrefixOriginal(int a, long b, string c)
+    {
+        return c == null;
     }
 }
