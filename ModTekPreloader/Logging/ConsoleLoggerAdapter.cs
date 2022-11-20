@@ -28,7 +28,7 @@ internal class ConsoleLoggerAdapter : TextWriter
 
     public override void Flush()
     {
-        Logger.Log(Prefix + buffer);
+        Logger.Main.Log(Prefix + buffer);
         buffer.Clear();
     }
 

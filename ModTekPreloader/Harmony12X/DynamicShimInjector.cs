@@ -23,17 +23,17 @@ internal class DynamicShimInjector
 
     private DynamicShimInjector()
     {
-        Logger.Log("Setting up HarmonyX interoperability");
+        Logger.Main.Log("Setting up HarmonyX interoperability");
         if (!Directory.Exists(Paths.Harmony12XDirectory))
         {
             throw new Exception($"HarmonyX can't be loaded, directory `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` missing.");
         }
 
-        Logger.Log($"Preloading supported Harmony12X assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
+        Logger.Main.Log($"Preloading supported Harmony12X assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
         foreach (var harmonyVersion in HarmonyVersion.SupportedVersions)
         {
             var file = Path.Combine(Paths.Harmony12XDirectory, $"{harmonyVersion.Name}.dll");
-            Logger.Log($"\t{Path.GetFileName(file)}");
+            Logger.Main.Log($"\t{Path.GetFileName(file)}");
             var assembly = Assembly.LoadFile(file);
             if (!harmonyVersion.IsMatch(assembly.GetName().Version))
             {
@@ -59,7 +59,7 @@ internal class DynamicShimInjector
         var compatibleHarmonyAssembly = HarmonyVersion.SupportedVersions.FirstOrDefault(h => h.IsMatch(harmonyReference.Version));
         if (compatibleHarmonyAssembly == null)
         {
-            Logger.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to for harmony {harmonyReference.Version}.");
+            Logger.Main.Log($"Assembly {assemblyDefinition.Name.Name} has no compatible shim to be relinked to for harmony {harmonyReference.Version}.");
             return false;
         }
 
@@ -70,7 +70,7 @@ internal class DynamicShimInjector
         }
 
         // replace ref
-        Logger.Log($"Assembly {assemblyDefinition.Name.Name} using 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
+        Logger.Main.Log($"Assembly {assemblyDefinition.Name.Name} using 0Harmony@{harmonyReference.Version} is being relinked to {compatibleHarmonyAssembly.Name}.");
         harmonyReference.Name = compatibleHarmonyAssembly.Name;
         return true;
     }
@@ -83,7 +83,7 @@ internal class DynamicShimInjector
         }
         catch (Exception e)
         {
-            Logger.Log("Error preparing assembly load for shim: " + e);
+            Logger.Main.Log("Error preparing assembly load for shim: " + e);
         }
     }
 
@@ -115,7 +115,7 @@ internal class DynamicShimInjector
             var text = $"Loading shimmed assembly {name} from memory";
             text += $", shimming took {(DateTime.Now-begin).TotalSeconds:#0.000}s";
             text += ".";
-            Logger.Log(text);
+            Logger.Main.Log(text);
         }
     }
 }

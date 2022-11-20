@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using HarmonyLib;
 using ModTekPreloader.Loader;
-using Logger = ModTekPreloader.Logging.Logger;
+using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Harmony12X;
 
@@ -16,15 +16,15 @@ internal static class ShimInjectorPatches
 
         {
             var filter = Config.Instance.Harmony12XLogChannelFilter;
-            Logger.Log($"HarmonyX channel filter(s): {HarmonyLib.Tools.Logger.ChannelFilter}");
+            Logger.Main.Log($"HarmonyX channel filter(s): {HarmonyLib.Tools.Logger.ChannelFilter}");
             if (filter > 0)
             {
                 HarmonyLib.Tools.Logger.ChannelFilter = (HarmonyLib.Tools.Logger.LogChannel)filter;
-                var writer = new StreamWriter(File.Create(Path.GetFullPath(Paths.HarmonyLogFile)));
+                var logger = new Logger(Paths.HarmonyLogFile);
+                logger.Rotate();
                 HarmonyLib.Tools.Logger.MessageReceived += (_, args) =>
                 {
-                    writer.WriteLine($"{Logger.GetTime()} [{args.LogChannel}] {args.Message}");
-                    writer.Flush();
+                    logger.Log($"[{args.LogChannel}] {args.Message}");
                 };
             }
         }
@@ -63,7 +63,7 @@ internal static class ShimInjectorPatches
             }
             catch (Exception e)
             {
-                Logger.Log("Exception injecting shim: " + e);
+                Logger.Main.Log("Exception injecting shim: " + e);
             }
         }
 
@@ -71,7 +71,7 @@ internal static class ShimInjectorPatches
         [HarmonyPrefix]
         private static bool LoadAssembly_Prefix(ref string assemblyRef)
         {
-            Logger.Log("Warning: LoadAssembly_Prefix: " + assemblyRef);
+            Logger.Main.Log("Warning: LoadAssembly_Prefix: " + assemblyRef);
             return true;
         }
 
@@ -85,7 +85,7 @@ internal static class ShimInjectorPatches
             }
             catch (Exception e)
             {
-                Logger.Log("Exception injecting shim: " + e);
+                Logger.Main.Log("Exception injecting shim: " + e);
             }
         }
     }

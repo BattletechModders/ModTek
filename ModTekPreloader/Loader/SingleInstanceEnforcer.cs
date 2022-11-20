@@ -16,7 +16,7 @@ internal static class SingleInstanceEnforcer
         Paths.CreateDirectoryForFile(Paths.LockFile);
         try
         {
-            Logger.Log($"{LogPrefix} Locking");
+            Logger.Main.Log($"{LogPrefix} Locking");
 
             Retry(
                 () =>
@@ -30,29 +30,29 @@ internal static class SingleInstanceEnforcer
                         FileOptions.SequentialScan
                     );
                 },
-                () => Logger.Log($"{LogPrefix} Can't open or create, retrying")
+                () => Logger.Main.Log($"{LogPrefix} Can't open or create, retrying")
             );
 
             // this should be supported on every platform
             Retry(
                 () => LockFileStream.Lock(0, 0),
-                () => Logger.Log($"{LogPrefix} Can't lock, retrying")
+                () => Logger.Main.Log($"{LogPrefix} Can't lock, retrying")
             );
 
-            Logger.Log($"{LogPrefix} Locked");
+            Logger.Main.Log($"{LogPrefix} Locked");
 
             // unlocks the lock file hopefully a bit earlier to avoid steam re-launch issues
             AppDomain.CurrentDomain.ProcessExit += (s, args) =>
             {
-                Logger.Log($"{LogPrefix} Unlocking");
+                Logger.Main.Log($"{LogPrefix} Unlocking");
                 LockFileStream.Close();
                 LockFileStream = null;
-                Logger.Log($"{LogPrefix} Unlocked");
+                Logger.Main.Log($"{LogPrefix} Unlocked");
             };
         }
         catch
         {
-            Logger.Log($"{LogPrefix} Another BattleTech process is locking {Paths.LockFile}");
+            Logger.Main.Log($"{LogPrefix} Another BattleTech process is locking {Paths.LockFile}");
             throw;
         }
     }

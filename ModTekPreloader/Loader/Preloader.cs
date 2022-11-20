@@ -12,16 +12,15 @@ internal static class Preloader
 {
     internal static void Run()
     {
+        Logger.Main.Rotate();
 
-        Logger.Setup();
-
-        Logger.Log("Preloader starting");
+        Logger.Main.Log("Preloader starting");
         Paths.Print();
         SingleInstanceEnforcer.Enforce();
         Cleaner.Clean();
         InjectorsAppDomain.Run();
 
-        Logger.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
+        Logger.Main.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
         if (Config.Instance.Harmony12XEnabled)
         {
             DynamicShimInjector.Setup();
@@ -39,20 +38,20 @@ internal static class Preloader
 
     private static void PreloadAssembliesInjected()
     {
-        Logger.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
+        Logger.Main.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
         foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
         {
-            Logger.Log($"\t{Path.GetFileName(file)}");
+            Logger.Main.Log($"\t{Path.GetFileName(file)}");
             Assembly.LoadFile(file);
         }
     }
 
     private static void PreloadAssembliesOverride()
     {
-        Logger.Log($"Preloading override assemblies from `{Paths.GetRelativePath(Paths.AssembliesOverrideDirectory)}`:");
+        Logger.Main.Log($"Preloading override assemblies from `{Paths.GetRelativePath(Paths.AssembliesOverrideDirectory)}`:");
         foreach (var file in Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll").OrderBy(p => p))
         {
-            Logger.Log($"\t{Path.GetFileName(file)}");
+            Logger.Main.Log($"\t{Path.GetFileName(file)}");
             Assembly.LoadFile(file);
         }
     }
@@ -60,7 +59,7 @@ internal static class Preloader
     private static void PreloadModTek()
     {
         var file = Path.Combine(Paths.ModTekDirectory, "ModTek.dll");
-        Logger.Log($"Preloading ModTek from `{Paths.GetRelativePath(file)}`:");
+        Logger.Main.Log($"Preloading ModTek from `{Paths.GetRelativePath(file)}`:");
         Assembly.LoadFile(file);
     }
 }

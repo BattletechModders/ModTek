@@ -19,7 +19,7 @@ class Entrypoint
         {
             var message = "Exiting the game, preloader failed: " + e;
             try { Console.Error.WriteLine(message); } catch { /* ignored */ }
-            try { Logger.Log(message); } catch { /* ignored */ }
+            try { Logger.Main.Log(message); } catch { /* ignored */ }
             Environment.Exit(0);
         }
     }

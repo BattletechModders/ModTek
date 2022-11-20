@@ -57,7 +57,7 @@ internal class Config
             }
             catch (Exception e)
             {
-                Logger.Log($"Could not read config at {Paths.PreloaderConfigFile}: {e}");
+                Logger.Main.Log($"Could not read config at {Paths.PreloaderConfigFile}: {e}");
             }
         }
         else

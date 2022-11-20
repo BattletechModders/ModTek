@@ -19,7 +19,7 @@ internal static class AssemblyOriginalPathTracker
             var resolvingName = new AssemblyName(args.Name);
             if (AssemblyPaths.TryGetValue(resolvingName.Name, out var assemblyPath))
             {
-                Logger.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
+                Logger.Main.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
                 return Assembly.LoadFile(assemblyPath);
             }
             return null;
@@ -48,14 +48,14 @@ internal static class AssemblyOriginalPathTracker
             }
             catch (Exception e)
             {
-                Logger.Log($"Error when getting assembly name from {path}: {e}");
+                Logger.Main.Log($"Error when getting assembly name from {path}: {e}");
                 continue;
             }
             if (AssemblyPaths.TryGetValue(name, out var existingPath))
             {
                 if (path != existingPath)
                 {
-                    Logger.Log($"Warning: Assembly {name} found at {existingPath} and at {path}.");
+                    Logger.Main.Log($"Warning: Assembly {name} found at {existingPath} and at {path}.");
                 }
             }
             else

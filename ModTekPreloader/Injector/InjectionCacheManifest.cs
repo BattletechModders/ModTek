@@ -20,11 +20,11 @@ internal class InjectionCacheManifest
         IsUpToDate = string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
         if (IsUpToDate)
         {
-            Logger.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
+            Logger.Main.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
         }
         else
         {
-            Logger.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is outdated.");
+            Logger.Main.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is outdated.");
         }
     }
 
@@ -45,7 +45,7 @@ internal class InjectionCacheManifest
         }
         catch (Exception e)
         {
-            Logger.Log($"Error reading cache {Paths.InjectionCacheManifestFile}: {e}");
+            Logger.Main.Log($"Error reading cache {Paths.InjectionCacheManifestFile}: {e}");
             File.Delete(Paths.InjectionCacheManifestFile);
         }
         return null;

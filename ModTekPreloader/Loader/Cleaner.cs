@@ -28,7 +28,7 @@ internal class Cleaner
 
     private static void RestoreFromBackupAndDeleteBackup()
     {
-        Logger.Log("Find backups, restore assemblies and remove backups.");
+        Logger.Main.Log("Find backups, restore assemblies and remove backups.");
 
         var gameDLLModTekBackupPath = Paths.GameMainAssemblyFile + ".orig";
         var gameDLLPerFixBackupPath = Paths.GameMainAssemblyFile + ".PerfFix.orig";
@@ -52,13 +52,13 @@ internal class Cleaner
         }
 
         File.Copy(backupPath, Paths.GameMainAssemblyFile, true);
-        Logger.Log($"{Paths.GetRelativePath(Paths.GameMainAssemblyFile)} restored from {Paths.GetRelativePath(backupPath)} .");
+        Logger.Main.Log($"{Paths.GetRelativePath(Paths.GameMainAssemblyFile)} restored from {Paths.GetRelativePath(backupPath)} .");
         return true;
     }
 
     private static void CleanupObsoleteFiles()
     {
-        Logger.Log("Cleaning up obsolete files.");
+        Logger.Main.Log("Cleaning up obsolete files.");
         foreach (var relativePathWithPlaceholder in OBSOLETE_FILES)
         {
             var path = relativePathWithPlaceholder

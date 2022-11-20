@@ -87,7 +87,7 @@ internal class Paths
 
     internal static void Print()
     {
-        Logger.Log($"{nameof(GameMainAssemblyFile)}: {GameMainAssemblyFile}");
-        Logger.Log($"{nameof(ModTekDirectory)}: {ModTekDirectory}");
+        Logger.Main.Log($"{nameof(GameMainAssemblyFile)}: {GameMainAssemblyFile}");
+        Logger.Main.Log($"{nameof(ModTekDirectory)}: {ModTekDirectory}");
     }
 }

@@ -20,7 +20,7 @@ internal class InjectorsRunner : IDisposable
 
     internal void RunInjectors()
     {
-        Logger.Log($"Searching injector assemblies in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
+        Logger.Main.Log($"Searching injector assemblies in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
         foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
         {
             SearchInjectorEntrypointAndInvoke(injectorPath);
@@ -35,7 +35,7 @@ internal class InjectorsRunner : IDisposable
 
     private void SearchInjectorEntrypointAndInvoke(string injectorPath)
     {
-        Logger.Log($"\t{Path.GetFileName(injectorPath)}");
+        Logger.Main.Log($"\t{Path.GetFileName(injectorPath)}");
         var injector = Assembly.LoadFile(injectorPath);
         foreach (var injectMethod in injector
                      .GetTypes()

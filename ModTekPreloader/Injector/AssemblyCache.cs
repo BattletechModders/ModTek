@@ -70,7 +70,7 @@ internal class AssemblyCache : IAssemblyResolver
     internal void SaveAssembliesToDisk()
     {
         Paths.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
-        Logger.Log($"Assemblies modified by injectors and saved to `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
+        Logger.Main.Log($"Assemblies modified by injectors and saved to `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
         foreach (var kv in assemblies.OrderBy(kv => kv.Key))
         {
             var name = kv.Key;
@@ -82,11 +82,11 @@ internal class AssemblyCache : IAssemblyResolver
             // TODO allow Harmony modifications
             if (name.StartsWith("OHarmony"))
             {
-                Logger.Log($"\t {name} not saved. Modifying harmony assemblies is not supported.");
+                Logger.Main.Log($"\t {name} not saved. Modifying harmony assemblies is not supported.");
                 return;
             }
             var path = Path.Combine(Paths.AssembliesInjectedDirectory, $"{name}.dll");
-            Logger.Log($"\t{Path.GetFileName(path)}");
+            Logger.Main.Log($"\t{Path.GetFileName(path)}");
             File.WriteAllBytes(path, serialized);
         }
     }

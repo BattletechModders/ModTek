@@ -46,17 +46,17 @@ internal class ShimCacheManifest
                     data[entry.OriginalPath] = entry;
                 }
 
-                Logger.Log("Shimmed cache manifest is up to date.");
+                Logger.Main.Log("Shimmed cache manifest is up to date.");
                 return;
             }
         }
         catch (CacheInvalidatedException)
         {
-            Logger.Log("Shimmed cache manifest is outdated.");
+            Logger.Main.Log("Shimmed cache manifest is outdated.");
         }
         catch (Exception e)
         {
-            Logger.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
+            Logger.Main.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
             File.Delete(Paths.ShimmedCacheManifestFile);
         }
         Paths.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
@@ -107,7 +107,7 @@ internal class ShimCacheManifest
             text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";
         }
         text += ".";
-        Logger.Log(text);
+        Logger.Main.Log(text);
     }
 
     private string DetectAndPatchHarmony(string originalPath)
@@ -119,7 +119,7 @@ internal class ShimCacheManifest
         }
 
         var path = Path.Combine(Paths.AssembliesShimmedDirectory, $"{assemblyDefinition.Name.Name}.dll");
-        Logger.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
+        Logger.Main.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
         assemblyDefinition.Write(path);
         return path;
     }

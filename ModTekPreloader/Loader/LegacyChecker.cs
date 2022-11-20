@@ -15,22 +15,22 @@ internal static class LegacyChecker
             var injected = false;
             if (IsModTekInjected(game))
             {
-                Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");
+                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by ModTek.");
                 injected = true;
             }
             if (IsBTMLInjected(game))
             {
-                Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by BTML.");
+                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by BTML.");
                 injected = true;
             }
             if (IsRogueTechPerfFixInjected(game))
             {
-                Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by RogueTechPerfFix.");
+                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` was modified by RogueTechPerfFix.");
                 injected = true;
             }
             if (!injected)
             {
-                Logger.Log($"Assembly `{Paths.GetRelativePath(path)}` contains no known injections.");
+                Logger.Main.Log($"Assembly `{Paths.GetRelativePath(path)}` contains no known injections.");
             }
             return injected;
         }
