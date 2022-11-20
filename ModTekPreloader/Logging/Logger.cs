@@ -20,7 +20,7 @@ internal static class Logger
         File.AppendAllText(Paths.LogFile, $"{GetTime()}{Prefix} {obj}{Environment.NewLine}");
     }
 
-    private static string GetTime()
+    internal static string GetTime()
     {
         return DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
     }

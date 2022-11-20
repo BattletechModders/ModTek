@@ -14,14 +14,18 @@ internal class Config
     [JsonProperty]
     internal readonly string Harmony12XEnabled_Description =
         "Enables Harmony X and its shims for Harmony 1 and 2, does work pretty well but not perfectly and some mods might need to be updated.";
-
     [JsonProperty]
     internal bool Harmony12XEnabled = true;
 
     [JsonProperty]
+    internal readonly string Harmony12XLogChannelFilter_Description
+        = $"The channels to log into `{Paths.GetRelativePath(Paths.HarmonyLogFile)}`: None=0 Info=2 IL=4 Warn=8 Error=16 Debug=32 All=62";
+    [JsonProperty]
+    internal int Harmony12XLogChannelFilter = 26;
+
+    [JsonProperty]
     internal readonly string Harmony12XFakeAssemblyLocationEnabled_Description =
         "Make Assembly.Location return the path of the original non-shimmed assembly and not the path to the shimmed assembly. Workaround to some mods expecting their assembly to be in their respective mod directory.";
-
     [JsonProperty]
     internal bool Harmony12XFakeAssemblyLocationEnabled = true;
 #pragma warning restore CS0649

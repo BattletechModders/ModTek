@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using HarmonyLib;
 using ModTekPreloader.Loader;
-using ModTekPreloader.Logging;
+using Logger = ModTekPreloader.Logging.Logger;
 
 namespace ModTekPreloader.Harmony12X;
 
@@ -14,10 +14,20 @@ internal static class ShimInjectorPatches
     {
         _shimInjector = shimInjector;
 
-        // TODO move to ModTek once ModTek itself was migrated to HarmonyX
-        // TODO GetTypes() on all assemblies (e.g. in BattleTechPerformanceFix) will crash
-        // HarmonyLib.Tools.Logger.MessageReceived += (sender, args) => Logger.Log($"HarmonyX: {args.LogChannel}: {args.Message}");
-        // HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.Warn | HarmonyLib.Tools.Logger.LogChannel.Error;
+        {
+            var filter = Config.Instance.Harmony12XLogChannelFilter;
+            Logger.Log($"HarmonyX channel filter(s): {HarmonyLib.Tools.Logger.ChannelFilter}");
+            if (filter > 0)
+            {
+                HarmonyLib.Tools.Logger.ChannelFilter = (HarmonyLib.Tools.Logger.LogChannel)filter;
+                var writer = new StreamWriter(File.Create(Path.GetFullPath(Paths.HarmonyLogFile)));
+                HarmonyLib.Tools.Logger.MessageReceived += (_, args) =>
+                {
+                    writer.WriteLine($"{Logger.GetTime()} [{args.LogChannel}] {args.Message}");
+                    writer.Flush();
+                };
+            }
+        }
 
         var harmony = new Harmony("ModTekPreloader.Harmony12X");
         harmony.PatchAll(typeof(AssemblyLoadPatches));

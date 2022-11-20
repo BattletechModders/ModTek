@@ -23,6 +23,7 @@ internal class Paths
     internal static readonly string Harmony12XDirectory = Path.Combine(ModTekDirectory, "Harmony12X");
 
     private static readonly string DotModTekDirectory = Path.Combine(ModsDirectory, ".modtek");
+    internal static readonly string HarmonyLogFile = Path.Combine(DotModTekDirectory, "HarmonyFileLog.log");
     internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");
     internal static readonly string LockFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.lock");
     internal static readonly string AssembliesInjectedDirectory = Path.Combine(DotModTekDirectory, "AssembliesInjected");
