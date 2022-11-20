@@ -1,0 +1,19 @@
+﻿on: push
+name: CI
+
+jobs:
+  build:
+    uses: BattletechModders/ModTek/.github/workflows/mod-builder.yml@master
+    with:
+      checkout-directory: 'HarmonyXInterop'
+      build-script: |
+        (
+          dotnet build -c Release -p:BattleTechGameDir="$BATTLETECH_DIR/"
+        )
+        (
+          cd "$BATTLETECH_DIR/Mods/ModTek/Harmony12X"
+          7z a -tzip -mx9 "$DIST_DIR/HarmonyXInterop.zip" .
+        )
+      release-notes: |
+        HarmonyXInterop.zip contains the interop dll and shims to map Harmony 1.x to HarmonyX
+    secrets: inherit
