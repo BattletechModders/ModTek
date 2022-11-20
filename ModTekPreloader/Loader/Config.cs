@@ -15,7 +15,7 @@ internal class Config
     internal readonly string Harmony12XEnabled_Description =
         "Enables Harmony X and its shims for Harmony 1 and 2, does work pretty well but not perfectly and some mods might need to be updated.";
     [JsonProperty]
-    internal bool Harmony12XEnabled = false;
+    internal bool Harmony12XEnabled = true;
 
     [JsonProperty]
     internal readonly string Harmony12XLogChannelFilter_Description
