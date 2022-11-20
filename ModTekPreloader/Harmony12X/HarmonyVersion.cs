@@ -34,8 +34,6 @@ internal class HarmonyVersion
         new HarmonyVersion("0Harmony109", new Version(1, 0), new Version(1, 1)),
         // current harmony as provided by HBS and ModTek by default
         new HarmonyVersion("0Harmony12", new Version(1, 1), new Version(1, 3)),
-        // HarmonyX 2.0 was not yet compatible with Harmony 2.0, though Harmony 2.0 or X 2.0 was never used in the ModTek community
-        new HarmonyVersion("0Harmony20", new Version(2, 0), new Version(2, 1)),
         // newer HarmonyX versions are highly compatible with older HarmonyX versions, shimming would be mostly unnecessary
         new HarmonyVersion("0Harmony", new Version(2, 1), new Version(2, 99)),
     };
