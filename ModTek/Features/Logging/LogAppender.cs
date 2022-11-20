@@ -20,7 +20,7 @@ internal class LogAppender : IDisposable
         var path =  Path.Combine(FilePaths.TempModTekDirectory, filePath);
 
         FileUtils.CreateParentOfPath(path);
-        FileUtils.RotatePath(path, 1);
+        FileUtils.RotatePath(path, settings.LogRotationCount);
         _writer = new StreamWriter(path) { AutoFlush = true };
         _writer.WriteLine($"ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
         _writer.WriteLine(DateTimeOffset.Now.ToString("o", CultureInfo.InvariantCulture));

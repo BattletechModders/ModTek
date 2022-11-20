@@ -5,6 +5,11 @@ namespace ModTek.Features.Logging;
 internal class AppenderSettings
 {
     [JsonProperty]
+    internal const string LogRotationCount_Description = "How many log file to backups between application starts.";
+    [JsonProperty]
+    internal int LogRotationCount = 1;
+
+    [JsonProperty]
     internal const string Includes_Description = "If set, matching log statements matching are written to the log. Exclusion has precedence over inclusion.";
     [JsonProperty]
     internal FilterSettings[] Includes;
