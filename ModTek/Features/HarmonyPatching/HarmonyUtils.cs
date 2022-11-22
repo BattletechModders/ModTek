@@ -76,8 +76,6 @@ internal static class HarmonyUtils
             .ThenBy(m => m.DeclaringType.FullName)
             .ThenBy(m => m.Name);
 
-        var IsHarmony12XShim = typeof(HarmonyInstance).Assembly.GetName().Name == "0Harmony12";
-
         foreach (var method in methodsIter)
         {
             var info = harmony.GetPatchInfo(method);
@@ -97,19 +95,11 @@ internal static class HarmonyUtils
                     writer.WriteLine($"\t{title}:");
                 }
 
-                var hasSkipper = !checkSkip;
                 foreach (var patch in patches.OrderBy(x => x))
                 {
                     var assemblyName = patch.patch.GetAssemblyName();
                     var methodName = patch.patch.GetFullName();
-                    var noSkip = IsHarmony12XShim && checkSkip && hasSkipper && patch.patch.GetParameters().Any(p => p.Name == "__state");
-                    if (noSkip)
-                    {
-                        Log.Main.Warning?.Log($"Prefix {methodName} in {assemblyName} has __state and is behind a bool Prefix. In HarmonyX it won't be skipped as it would in Harmony 1.");
-                    }
-                    var noSkipPrefix = noSkip ? "NOSKIP: " : "";
-                    writer.WriteLine($"\t\t{noSkipPrefix}{assemblyName} ({patch.owner}) {methodName}");
-                    hasSkipper = hasSkipper || patch.patch.ReturnType == typeof(bool);
+                    writer.WriteLine($"\t\t{assemblyName} ({patch.owner}) {methodName}");
                 }
             }
 
