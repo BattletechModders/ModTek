@@ -30,13 +30,15 @@ internal class MTLoggerMessageDto
     internal readonly string loggerName;
     internal readonly LogLevel logLevel;
     internal readonly Exception exception;
+    internal readonly IStackTrace location;
 
-    internal MTLoggerMessageDto(string loggerName, LogLevel logLevel, object message, Exception exception)
+    internal MTLoggerMessageDto(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
         this.loggerName = loggerName;
         this.logLevel = logLevel;
         this.message = message?.ToString(); // message as object might not be thread-safe
         this.exception = exception;
+        this.location = location;
     }
 
     internal TimeSpan StartupTime()

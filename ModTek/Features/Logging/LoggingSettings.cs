@@ -23,9 +23,19 @@ internal class LoggingSettings
     internal bool LogSqlQueryInitializations;
 
     [JsonProperty]
-    internal bool LogThreadStarts = true;
-    [JsonProperty]
     internal const string LogThreadStarts_Description = "Logs who starts threads.";
+    [JsonProperty]
+    internal bool LogThreadStarts = true;
+
+    [JsonProperty]
+    internal const string LogStackTraces_Description = "Logs environment stack traces for every log statement, produces large amount of text.";
+    [JsonProperty]
+    internal bool LogStackTraces;
+
+    [JsonProperty]
+    internal const string LogStackTracesOnExceptions_Description = "Logs environment stack traces in addition to exception stack traces.";
+    [JsonProperty]
+    internal bool LogStackTracesOnExceptions = true;
 
     [JsonProperty]
     internal const string OverrideLoggerLevels_Description = "Overrides the log levels for the given loggers.";
@@ -34,6 +44,7 @@ internal class LoggingSettings
     {
         { nameof(Log.Unity), LogLevel.Debug },
         { nameof(Log.Debugger), LogLevel.Debug },
+        { nameof(Log.AppDomain), LogLevel.Debug },
         { nameof(ModTek), NullableLogger.TraceLogLevel }
     };
 

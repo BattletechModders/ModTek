@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace ModTek.Features.Logging;
 
@@ -18,27 +18,55 @@ internal class Formatter
 
     internal string GetFormattedLogLine(MTLoggerMessageDto messageDto)
     {
-        var formattedTime = GetFormattedTime(messageDto);
-        var formattedThread = GetFormattedThread(messageDto.thread);
-        var formattedLogLevel = LogLevelExtension.LogToString(messageDto.logLevel);
+        var sb = new StringBuilder();
 
-        string messageString;
-        if (string.IsNullOrEmpty(messageDto.message))
+        sb.Append(GetFormattedTime(messageDto));
+
+        if (messageDto.thread != null)
         {
-            messageString = string.Empty;
-        }
-        else if (_sanitizerRegex != null)
-        {
-            messageString = _sanitizerRegex.Replace(messageDto.message, string.Empty);
-        }
-        else
-        {
-            messageString = messageDto.message;
+            sb.Append(" [ThreadId=");
+            sb.Append(messageDto.thread.ManagedThreadId);
+            sb.Append("]");
         }
 
-        var exceptionAddition = messageDto.exception == null ? null : $": {messageDto.exception}";
-        var threadAddition = formattedThread == null ? null : " " + formattedThread;
-        var line = $"{formattedTime}{threadAddition} {messageDto.loggerName} [{formattedLogLevel}] {messageString}{exceptionAddition}";
+        sb.Append(" ");
+        sb.Append(messageDto.loggerName);
+
+        sb.Append(" [");
+        sb.Append(LogLevelExtension.LogToString(messageDto.logLevel));
+        sb.Append("]");
+
+        var prefix = " ";
+        if (!string.IsNullOrEmpty(messageDto.message))
+        {
+            sb.Append(prefix);
+            if (_sanitizerRegex == null)
+            {
+                sb.Append(messageDto.message);
+            }
+            else
+            {
+                sb.Append(_sanitizerRegex.Replace(messageDto.message, string.Empty));
+            }
+            prefix = Environment.NewLine;
+        }
+
+        if (messageDto.exception != null)
+        {
+            sb.Append(prefix);
+            sb.Append(messageDto.exception);
+            prefix = Environment.NewLine;
+        }
+
+        if (messageDto.location != null)
+        {
+            sb.Append(prefix);
+            sb.Append("Location Trace");
+            sb.Append(Environment.NewLine);
+            sb.Append(messageDto.location.ToString());
+        }
+
+        var line = sb.ToString();
 
         if (_settings.NormalizeNewLines)
         {
@@ -65,14 +93,5 @@ internal class Formatter
 
         var ts = messageDto.StartupTime();
         return ts.ToString(_settings.FormatTimeStartup);
-    }
-
-    private string GetFormattedThread(Thread thread)
-    {
-        if (thread == null)
-        {
-            return null;
-        }
-        return "[ThreadId=" + thread.ManagedThreadId + "]";
     }
 }

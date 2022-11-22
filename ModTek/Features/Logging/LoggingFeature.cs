@@ -29,20 +29,15 @@ internal static class LoggingFeature
         {
             AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
-                var message = "UnhandledException";
-                if (!(e.ExceptionObject is Exception ex))
+                const string message = "UnhandledException";
+                if (e.ExceptionObject is Exception ex)
                 {
-                    ex = null;
-                    message += " " + e.ExceptionObject;
+                    Log.AppDomain.Debug?.Log(message, ex);
                 }
-
-                LogAtLevel(
-                    "AppDomain",
-                    LogLevel.Debug,
-                    message,
-                    ex,
-                    null
-                );
+                else
+                {
+                    Log.AppDomain.Debug?.Log($"{message} {e.ExceptionObject} {Environment.StackTrace}");
+                }
             };
         }
 
@@ -55,11 +50,35 @@ internal static class LoggingFeature
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
-        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception);
+        if (location == null && (Settings.LogStackTraces || (Settings.LogStackTracesOnExceptions && exception != null)))
+        {
+            location = GrabStackTrace();
+        }
+
+        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception, location);
         if (_queue == null || !_queue.Add(messageDto))
         {
             ProcessLoggerMessage(messageDto);
         }
+    }
+
+    private static DiagnosticsStackTrace GrabStackTrace()
+    {
+        // HBS original
+        // (3) Log, LogError, LogAtLevel x (official logging api)
+        // (2) LogAtLevel x y z (internal logging api)
+        // (1) GrabStackTrace
+
+        // new
+        // (7) Log(msg) / Log(ex) / Log(msg,ex)
+        // (6) LogAtLevel x (official logging api)
+        // (5) LogAtLevel x y z wrapper (internal logging api)
+        // (4) ?
+        // (3) LogAtLevel prefix patch
+        // (2) GrabStackTrace
+        // (1) DiagnosticsStackTrace
+
+        return new DiagnosticsStackTrace(6, false);
     }
 
     // note this can be called sync or async
