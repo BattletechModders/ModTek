@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +15,7 @@ public static class HarmonyInterop
             AccessTools.Method(typeof(HarmonyManipulator).Assembly.GetType("HarmonyLib.PatchFunctions"),
                 "UpdateWrapper"));
 
+    private static readonly HashSet<MethodBase> PrefixesWrapped = new();
     private static readonly Stopwatch OverheadTracking = new();
     public static void ApplyPatch(MethodBase target, PatchInfoWrapper add, PatchInfoWrapper remove)
     {
@@ -26,11 +28,31 @@ public static class HarmonyInterop
                 pInfo = target.ToPatchInfo();
                 lock (pInfo)
                 {
-                    pInfo.prefixes = Sync(
-                        WrapMethods(add.prefixes, PrefixInterop.WrapInterop),
-                        WrapMethods(remove.prefixes, PrefixInterop.WrapInterop),
-                        pInfo.prefixes
-                    );
+                    if (PrefixesWrapped.Contains(target))
+                    {
+                        pInfo.prefixes = Sync(
+                            WrapMethods(add.prefixes, PrefixInterop.WrapInterop),
+                            WrapMethods(remove.prefixes, PrefixInterop.WrapInterop),
+                            pInfo.prefixes
+                        );
+                    }
+                    else if (
+                        (add.prefixes.Any(p => p.method.ReturnType == typeof(bool)) && pInfo.prefixes.Any())
+                        ||
+                        (add.prefixes.Any() && pInfo.prefixes.Any(p => p.PatchMethod.ReturnType == typeof(bool)))
+                    ) {
+                        Logging.Info($"Detected a mix of skippable and skipping prefixes, wrapping for harmony 1 interoperability");
+                        PrefixesWrapped.Add(target);
+                        pInfo.prefixes = Sync(add.prefixes, remove.prefixes, pInfo.prefixes);
+                        foreach (var patch in pInfo.prefixes)
+                        {
+                            patch.PatchMethod = PrefixInterop.WrapInterop(patch.PatchMethod);
+                        }
+                    }
+                    else
+                    {
+                        pInfo.prefixes = Sync(add.prefixes, remove.prefixes, pInfo.prefixes);
+                    }
                     pInfo.postfixes = Sync(add.postfixes, remove.postfixes, pInfo.postfixes);
                     pInfo.transpilers = Sync(
                         WrapMethods(add.transpilers, TranspilerInterop.WrapInterop),
@@ -50,7 +72,8 @@ public static class HarmonyInterop
         }
         catch (Exception e)
         {
-            Logging.Error($"Could not patch: {e}");
+            Logging.Error($"Could not patch: {e.Message}{new StackTrace(e, true)}{Environment.NewLine}{new StackTrace(1, true)}");
+            throw;
         }
     }
 

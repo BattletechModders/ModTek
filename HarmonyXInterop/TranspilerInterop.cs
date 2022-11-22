@@ -90,7 +90,7 @@ namespace HarmonyXInterop
                 il.Emit(OpCodes.Call, ApplyTranspilerMethod);
                 il.Emit(OpCodes.Ret);
 
-                var generatedWrapper = dmd.GenerateWith<DMDCecilGenerator>();
+                var generatedWrapper = DMDGenerator<DMDCecilGenerator>.Generate(dmd);
 
                 lock (Wrappers)
                 {
