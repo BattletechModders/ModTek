@@ -40,10 +40,9 @@ internal class AppenderSettings
     internal string MessageSanitizerRegex = @"[\p{C}-[\r\n\t]]+";
 
     [JsonProperty]
-    internal const string UseAbsoluteTime_Description = "Use the absolute time format instead of the relative time format." +
-        " Absolute time is useful when using mods that do not use HBS logging and use absolute time for their logging.";
+    internal const string AbsoluteTimeEnabled_Description = "Adds the clock time.";
     [JsonProperty]
-    internal bool UseAbsoluteTime;
+    internal bool AbsoluteTimeEnabled = true;
 
     [JsonProperty]
     internal const string AbsoluteTimeUseUtc_Description = "Use UTC instead of local time.";
@@ -51,12 +50,17 @@ internal class AppenderSettings
     internal bool AbsoluteTimeUseUtc = true;
 
     [JsonProperty]
-    internal const string FormatTimeAbsolute_Description = "Runs through `DateTimeOffset.ToString`.";
+    internal const string AbsoluteFormat_Description = "Runs through `DateTimeOffset.ToString`.";
     [JsonProperty]
-    internal string FormatTimeAbsolute = "HH:mm:ss.fffffff";
+    internal string AbsoluteFormat = "HH:mm:ss.fffffff";
 
     [JsonProperty]
-    internal const string FormatTimeStartup_Description = "Runs through `TimeSpan.ToString`.";
+    internal const string StartupTimeEnabled_Description = "Adds the time since startup.";
     [JsonProperty]
-    internal string FormatTimeStartup = "hh':'mm':'ss'.'fffffff";
+    internal bool StartupTimeEnabled;
+
+    [JsonProperty]
+    internal const string StartupTimeFormat_Description = "Runs through `TimeSpan.ToString`.";
+    [JsonProperty]
+    internal string StartupTimeFormat = "hh':'mm':'ss'.'fffffff";
 }

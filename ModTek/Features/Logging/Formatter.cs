@@ -20,19 +20,32 @@ internal class Formatter
     {
         var sb = new StringBuilder();
 
-        sb.Append(GetFormattedTime(messageDto));
+        if (_settings.AbsoluteTimeEnabled)
+        {
+            var dtoUtc = messageDto.GetDateTimeOffsetUtc();
+            var dto = _settings.AbsoluteTimeUseUtc ? dtoUtc : dtoUtc.ToLocalTime();
+            sb.Append(dto.ToString(_settings.AbsoluteFormat, CultureInfo.InvariantCulture));
+            sb.Append(" ");
+        }
+
+        if (_settings.StartupTimeEnabled)
+        {
+            var ts = messageDto.StartupTime();
+            sb.Append(ts.ToString(_settings.StartupTimeFormat));
+            sb.Append(" ");
+        }
 
         if (messageDto.thread != null)
         {
-            sb.Append(" [ThreadId=");
+            sb.Append("[ThreadId=");
             sb.Append(messageDto.thread.ManagedThreadId);
-            sb.Append("]");
+            sb.Append("] ");
         }
 
-        sb.Append(" ");
         sb.Append(messageDto.loggerName);
+        sb.Append(" ");
 
-        sb.Append(" [");
+        sb.Append("[");
         sb.Append(LogLevelExtension.LogToString(messageDto.logLevel));
         sb.Append("]");
 
@@ -80,18 +93,5 @@ internal class Formatter
         }
 
         return line;
-    }
-
-    private string GetFormattedTime(MTLoggerMessageDto messageDto)
-    {
-        if (_settings.UseAbsoluteTime)
-        {
-            var dtoUtc = messageDto.GetDateTimeOffsetUtc();
-            var dto = _settings.AbsoluteTimeUseUtc ? dtoUtc : dtoUtc.ToLocalTime();
-            return dto.ToString(_settings.FormatTimeAbsolute, CultureInfo.InvariantCulture);
-        }
-
-        var ts = messageDto.StartupTime();
-        return ts.ToString(_settings.FormatTimeStartup);
     }
 }
