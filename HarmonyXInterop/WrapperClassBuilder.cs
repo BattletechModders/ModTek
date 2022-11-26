@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Security;
-using HarmonyLib;
 using MonoMod.Utils;
 using MethodAttributes = System.Reflection.MethodAttributes;
 using MethodImplAttributes = System.Reflection.MethodImplAttributes;
@@ -24,7 +23,6 @@ internal class WrapperClassBuilder
         dynClass.AddMethod(originalMethod);
         var type = dynClass.Build();
         var method = type.GetMethod(originalMethod.Name, BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
-        Logging.Info($"PrefixWrapper created: {method.FullDescription()}");
         return method;
     }
 
@@ -59,12 +57,47 @@ internal class WrapperClassBuilder
         assembly.SetCustomAttribute(new(UnverifiableCodeAttributeConstructorInfo, Array.Empty<object>()));
         assembly.SetCustomAttribute(new(IgnoresAccessChecksToAttributeConstructorInfo, new object[] { assemblyName} ));
 
-        // original namespace + name required to keep __state working
-        _type = module.DefineType(
-            $"{originalType.Namespace}.{originalType.Name}",
-            TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed,
-            typeof(object)
-        );
+        TypeBuilder typeBuilder = null;
+        { // replicate nested structure as __state is based on method.DeclaredType.FullName
+            var types = new List<Type>();
+            {
+                var candidate = originalType;
+                while (true)
+                {
+                    if (candidate == null)
+                    {
+                        break;
+                    }
+                    types.Add(candidate);
+                    if (!candidate.IsNested)
+                    {
+                        break;
+                    }
+                    candidate = candidate.DeclaringType;
+                }
+                types.Reverse();
+            }
+
+            foreach (var type in types)
+            {
+                if (typeBuilder == null)
+                {
+                    typeBuilder = module.DefineType(
+                        type.FullName!,
+                        TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed
+                    );
+                }
+                else
+                {
+                    typeBuilder = typeBuilder.DefineNestedType(
+                        type.Name,
+                        TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed
+                    );
+                }
+            }
+        }
+
+        _type = typeBuilder;
     }
     private void AddMethod(MethodInfo originalMethod)
     {

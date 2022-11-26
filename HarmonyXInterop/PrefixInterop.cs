@@ -29,7 +29,9 @@ internal static class PrefixInterop
             {
                 if (!Wrappers.TryGetValue(original, out var wrapper))
                 {
+                    Logging.Info($"PrefixWrapper being created for: {GetDescription(original)}");
                     wrapper = WrapperClassBuilder.CreatePrefixWrapper(original);
+                    Logging.Info($"PrefixWrapper created: {GetDescription(wrapper)}");
                     Wrappers[original] = wrapper;
                 }
                 return wrapper;
@@ -40,5 +42,10 @@ internal static class PrefixInterop
             Logging.Error($"Error creating prefix wrapper: {e}");
         }
         return original;
+    }
+
+    private static string GetDescription(MethodInfo method)
+    {
+        return $"{method.DeclaringType!.Assembly.GetName().Name}::{method.DeclaringType.FullName}::{method.Name}";
     }
 }
