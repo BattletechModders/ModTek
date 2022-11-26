@@ -63,7 +63,7 @@
 
   <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="!Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony12.dll')">
     <PropertyGroup>
-      <Harmony12XUrl>https://github.com/BattletechModders/HarmonyXInterop/releases/download/latest/HarmonyXInterop.zip</Harmony12XUrl>
+      <Harmony12XUrl>https://github.com/BattletechModders/HarmonyXInterop/releases/download/v1.1.0/HarmonyXInterop.zip</Harmony12XUrl>
       <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony12x</Harmony12XIntDir>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(Harmony12XUrl)" DestinationFolder="$(Harmony12XIntDir)" />
