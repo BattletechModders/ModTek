@@ -1,24 +1,31 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Security;
-using Mono.Cecil;
+using HarmonyLib;
 using MonoMod.Utils;
-using MonoMod.Utils.Cil;
-using ParameterAttributes = Mono.Cecil.ParameterAttributes;
+using MethodAttributes = System.Reflection.MethodAttributes;
+using MethodImplAttributes = System.Reflection.MethodImplAttributes;
+using TypeAttributes = System.Reflection.TypeAttributes;
 
 namespace HarmonyXInterop;
 
-internal class WrapperClassBuilder : IDisposable
+// assemblies created through here are in theory garbage collectible
+//  to make it gc, requires changes in SetMonoCorlibInternal and PrefixInterop.Wrappers
+//  chances are that with SetMonoCorlibInternal or just mono it might not work anyway
+internal class WrapperClassBuilder
 {
     internal static MethodInfo CreatePrefixWrapper(MethodInfo originalMethod)
     {
-        using var dynClass = new WrapperClassBuilder(originalMethod.DeclaringType);
-        var md = dynClass.AddMethod(originalMethod);
-        return dynClass.Build().GetMethod(md.Name, BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        var dynClass = new WrapperClassBuilder(originalMethod.DeclaringType);
+        dynClass.AddMethod(originalMethod);
+        var type = dynClass.Build();
+        var method = type.GetMethod(originalMethod.Name, BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
+        Logging.Info($"PrefixWrapper created: {method.FullDescription()}");
+        return method;
     }
 
     private static readonly ConstructorInfo UnverifiableCodeAttributeConstructorInfo = typeof(UnverifiableCodeAttribute).GetConstructor(Type.EmptyTypes);
@@ -26,8 +33,7 @@ internal class WrapperClassBuilder : IDisposable
     private static readonly Type BoolRefType = typeof(bool).MakeByRefType();
     private static readonly Dictionary<string, int> UniqueCounter = new();
 
-    private readonly ModuleDefinition _module;
-    private readonly TypeDefinition _type;
+    private readonly TypeBuilder _type;
     private WrapperClassBuilder(Type originalType)
     {
         if (!originalType.IsClass)
@@ -47,100 +53,61 @@ internal class WrapperClassBuilder : IDisposable
             moduleName = $"HXI︳{uniqueKey}︳{counter}";
         }
 
-        _module = ModuleDefinition.CreateModule(
-            moduleName,
-            new ModuleParameters
-            {
-                Kind = ModuleKind.Dll,
-                ReflectionImporterProvider = MMReflectionImporter.ProviderNoDefault
-            }
-        );
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(new(moduleName), AssemblyBuilderAccess.RunAndCollect);
+        var module = assembly.DefineDynamicModule(moduleName);
 
-        _module.Assembly.CustomAttributes.Add(new(_module.ImportReference(UnverifiableCodeAttributeConstructorInfo)));
-        _module.Assembly.CustomAttributes.Add(new(_module.ImportReference(IgnoresAccessChecksToAttributeConstructorInfo))
-        {
-            ConstructorArguments = {
-                new CustomAttributeArgument(_module.ImportReference(typeof(DebuggableAttribute.DebuggingModes)), assemblyName)
-            }
-        });
+        assembly.SetCustomAttribute(new(UnverifiableCodeAttributeConstructorInfo, Array.Empty<object>()));
+        assembly.SetCustomAttribute(new(IgnoresAccessChecksToAttributeConstructorInfo, new object[] { assemblyName} ));
 
         // original namespace + name required to keep __state working
-        _type = new(
-            originalType.Namespace,
-            originalType.Name,
-            Mono.Cecil.TypeAttributes.Public | Mono.Cecil.TypeAttributes.Abstract | Mono.Cecil.TypeAttributes.Sealed
-        )
-        {
-            BaseType = _module.TypeSystem.Object
-        };
-        _module.Types.Add(_type);
+        _type = module.DefineType(
+            $"{originalType.Namespace}.{originalType.Name}",
+            TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed,
+            typeof(object)
+        );
     }
-    private MethodDefinition AddMethod(MethodInfo originalMethod)
+    private void AddMethod(MethodInfo originalMethod)
     {
-        var originalMethodReference = _module.ImportReference(originalMethod);
+        var originalParameters = originalMethod.GetParameters();
 
-        var methodDefinition = new MethodDefinition(
-            originalMethodReference.Name,
-            Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.Static | Mono.Cecil.MethodAttributes.HideBySig,
-            _module.ImportReference(originalMethodReference.ReturnType)
-        )
-        {
-            ImplAttributes = Mono.Cecil.MethodImplAttributes.IL | Mono.Cecil.MethodImplAttributes.Managed,
-            DeclaringType = _type,
-            NoInlining = true
-        };
+        var methodBuilder = _type.DefineMethod(
+            originalMethod.Name,
+            MethodAttributes.Public | MethodAttributes.Static,
+            CallingConventions.Standard,
+            originalMethod.ReturnType,
+            originalParameters.Select(pi => pi.ParameterType).Append(BoolRefType).ToArray());
 
-        foreach (var parameterDefinition in originalMethodReference.Parameters)
+        methodBuilder.SetImplementationFlags(MethodImplAttributes.NoInlining);
+
+        for (var index = 0; index < originalParameters.Length; index++)
         {
-            methodDefinition.Parameters.Add(
-                new(
-                    parameterDefinition.Name,
-                    ParameterAttributes.None,
-                    _module.ImportReference(parameterDefinition.ParameterType)
-                )
-            );
+            var originalParameterInfo = originalParameters[index];
+            var parameterBuilder = methodBuilder.DefineParameter(1 + index, originalParameterInfo.Attributes, originalParameterInfo.Name);
+            foreach (var customAttributeData in originalParameterInfo.CustomAttributes)
+            {
+                parameterBuilder.SetCustomAttribute(new(
+                    customAttributeData.Constructor,
+                    customAttributeData.ConstructorArguments.Cast<object>().ToArray()));
+            }
         }
 
-        { // allow skipping
-            methodDefinition.Parameters.Add(
-                new(
-                    "__runOriginal",
-                    0,
-                    _module.ImportReference(BoolRefType)
-                )
-            );
-        }
+        var runOriginalIndex = originalParameters.Length;
+        methodBuilder.DefineParameter(1 + runOriginalIndex, 0, "__runOriginal");
 
-        AddIL(methodDefinition, originalMethod);
-
-        _type.Methods.Add(methodDefinition);
-
-        return methodDefinition;
+        AddIL(methodBuilder, originalMethod, runOriginalIndex);
     }
     private Type Build()
     {
-        // Directory.CreateDirectory("Mods/.modtek/dlls");
-        // var invalidChars = Regex.Escape(new(Path.GetInvalidFileNameChars()));
-        // var filename = Regex.Replace(_module.Name, $@"[{invalidChars}]+", "_");
-        // _module.Write($"Mods/.modtek/dlls/{filename}.dll");
-
-        var asm = ReflectionHelper.Load(_module);
-        asm.SetMonoCorlibInternal(true);
-        var type = asm.GetType(_type.FullName.Replace("+", "\\+"), false, false);
+        var type = _type.CreateType();
+        type.Assembly.SetMonoCorlibInternal(true); // mono alternative for IgnoresAccessChecksToAttribute
         return type;
     }
 
-    public void Dispose()
+    private static void AddIL(MethodBuilder methodBuilder, MethodInfo originalMethod, int runOriginalIndex)
     {
-        _module?.Dispose();
-    }
-
-    private static void AddIL(MethodDefinition methodDefinition, MethodInfo originalMethod)
-    {
-        var il = new CecilILGenerator(methodDefinition.Body.GetILProcessor());
+        var il = methodBuilder.GetILGenerator();
         var labelToReturn = il.DefineLabel();
 
-        var runOriginalIndex = methodDefinition.Parameters.Count - 1;
         if (originalMethod.ReturnType == typeof(bool))
         {
             il.Emit(OpCodes.Ldarg, runOriginalIndex);
