@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.Threading;
 using MonoMod.Utils;
 using MethodAttributes = System.Reflection.MethodAttributes;
 using MethodImplAttributes = System.Reflection.MethodImplAttributes;
@@ -29,7 +30,7 @@ internal class WrapperClassBuilder
     private static readonly ConstructorInfo UnverifiableCodeAttributeConstructorInfo = typeof(UnverifiableCodeAttribute).GetConstructor(Type.EmptyTypes);
     private static readonly ConstructorInfo IgnoresAccessChecksToAttributeConstructorInfo = typeof (IgnoresAccessChecksToAttribute).GetConstructor(new[] { typeof (string) });
     private static readonly Type BoolRefType = typeof(bool).MakeByRefType();
-    private static readonly Dictionary<string, int> UniqueCounter = new();
+    private static long uniqueCounter;
 
     private readonly TypeBuilder _type;
     private WrapperClassBuilder(Type originalType)
@@ -42,13 +43,8 @@ internal class WrapperClassBuilder
         var assemblyName = originalType.Assembly.GetName().Name;
         string moduleName;
         {
-            var uniqueKey = assemblyName;
-            if (!UniqueCounter.TryGetValue(uniqueKey, out var counter))
-            {
-                counter = 0;
-            }
-            UniqueCounter[uniqueKey] = ++counter;
-            moduleName = $"HXI︳{uniqueKey}︳{counter}";
+            var counter = Interlocked.Increment(ref uniqueCounter);
+            moduleName = $"HXI︳{counter}︳";
         }
 
         var assembly = AssemblyBuilder.DefineDynamicAssembly(new(moduleName), AssemblyBuilderAccess.RunAndCollect);
