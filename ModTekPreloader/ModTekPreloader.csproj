@@ -48,32 +48,6 @@
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_verbose\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)\doorstop\verbose" />
   </Target>
 
-  <Target Name="FastHarmonyFetch" BeforeTargets="PrepareForBuild" Condition="!Exists('$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride\0Harmony.dll')">
-    <PropertyGroup>
-      <FastHarmonyUrl>https://github.com/BattletechModders/ModTek/files/9563721/0Harmony.zip</FastHarmonyUrl>
-      <FastHarmonyIntDir>$(MSBuildProjectExtensionsPath)\fastharmony</FastHarmonyIntDir>
-    </PropertyGroup>
-    <DownloadFile SourceUrl="$(FastHarmonyUrl)" DestinationFolder="$(FastHarmonyIntDir)" />
-    <Unzip SourceFiles="$(FastHarmonyIntDir)\0Harmony.zip" DestinationFolder="$(FastHarmonyIntDir)" />
-    <ItemGroup>
-      <FastHarmonyFiles Include="$(FastHarmonyIntDir)\*.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(FastHarmonyFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" />
-  </Target>
-
-  <Target Name="Harmony12XFetch" BeforeTargets="PrepareForBuild" Condition="!Exists('$(BattleTechGameDir)\Mods\ModTek\Harmony12X\0Harmony12.dll')">
-    <PropertyGroup>
-      <Harmony12XUrl>https://github.com/BattletechModders/HarmonyXInterop/releases/download/v1.1.0/HarmonyXInterop.zip</Harmony12XUrl>
-      <Harmony12XIntDir>$(MSBuildProjectExtensionsPath)\harmony12x</Harmony12XIntDir>
-    </PropertyGroup>
-    <DownloadFile SourceUrl="$(Harmony12XUrl)" DestinationFolder="$(Harmony12XIntDir)" />
-    <Unzip SourceFiles="$(Harmony12XIntDir)\HarmonyXInterop.zip" DestinationFolder="$(Harmony12XIntDir)" />
-    <ItemGroup>
-      <Harmony12XFiles Include="$(Harmony12XIntDir)\*.dll;$(Harmony12XIntDir)\*.txt" />
-    </ItemGroup>
-    <Copy SourceFiles="@(Harmony12XFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X" />
-  </Target>
-
   <ItemGroup>
     <Reference Include="System">
       <Private>False</Private>

@@ -6,11 +6,23 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek", "ModTek\ModTek.csproj", "{8D955C2C-D75B-453C-99D1-B337BBF82CCA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekPreloader", "ModTekPreloader\ModTekPreloader.csproj", "{35BBAEB2-0461-46BB-BC45-B9A39FD83DFF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{183EB195-CC72-4667-AA2F-FECA210F776F} = {183EB195-CC72-4667-AA2F-FECA210F776F}
+		{415D6122-8F17-40C2-8304-6A878467C06D} = {415D6122-8F17-40C2-8304-6A878467C06D}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTekInjector", "ModTekInjector\ModTekInjector.csproj", "{4AC287C0-84D3-49A7-9BA5-87BBFAFE4496}"
 	ProjectSection(ProjectDependencies) = postProject
 		{35BBAEB2-0461-46BB-BC45-B9A39FD83DFF} = {35BBAEB2-0461-46BB-BC45-B9A39FD83DFF}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarmonyXInterop", "HarmonyXInterop\HarmonyXInterop\HarmonyXInterop.csproj", "{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Harmony109Interop", "HarmonyXInterop\Harmony109Interop\Harmony109Interop.csproj", "{415D6122-8F17-40C2-8304-6A878467C06D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HarmonyXInterop", "HarmonyXInterop", "{2095443E-5ECB-4187-878D-E4DDD3ABF9D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Harmony12Interop", "HarmonyXInterop\Harmony12Interop\Harmony12Interop.csproj", "{183EB195-CC72-4667-AA2F-FECA210F776F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +42,18 @@ Global
 		{4AC287C0-84D3-49A7-9BA5-87BBFAFE4496}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AC287C0-84D3-49A7-9BA5-87BBFAFE4496}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AC287C0-84D3-49A7-9BA5-87BBFAFE4496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{415D6122-8F17-40C2-8304-6A878467C06D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{415D6122-8F17-40C2-8304-6A878467C06D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{415D6122-8F17-40C2-8304-6A878467C06D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{415D6122-8F17-40C2-8304-6A878467C06D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{183EB195-CC72-4667-AA2F-FECA210F776F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{183EB195-CC72-4667-AA2F-FECA210F776F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{183EB195-CC72-4667-AA2F-FECA210F776F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{183EB195-CC72-4667-AA2F-FECA210F776F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,5 +63,10 @@ Global
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		version = 0.4
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{415D6122-8F17-40C2-8304-6A878467C06D} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
+		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
+		{183EB195-CC72-4667-AA2F-FECA210F776F} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
 	EndGlobalSection
 EndGlobal

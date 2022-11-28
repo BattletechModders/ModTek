@@ -10,8 +10,10 @@ namespace Harmony
 		{
 			foreach (var instruction in instructions)
 			{
-				if (instruction.operand == from)
-					instruction.operand = to;
+#pragma warning disable CS0252, CS0253
+                if (instruction.operand == from)
+#pragma warning restore CS0252, CS0253
+                    instruction.operand = to;
 				yield return instruction;
 			}
 		}
