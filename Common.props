@@ -17,8 +17,6 @@
       $(BattleTechGameDir)\BattleTech_Data\Managed
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <!-- embed symbols into the dll -->
     <DebugType>embedded</DebugType>
   </PropertyGroup>
