@@ -16,6 +16,7 @@
     <Copy SourceFiles="@(ModTekDepFiles)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
     <Copy SourceFiles="@(Harmony12XDeps)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X\" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
+    <MakeDir Directories="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride"/>
   </Target>
 
   <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="!Exists('$(BattleTechGameDir)\winhttp.dll')">
