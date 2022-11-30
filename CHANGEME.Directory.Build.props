@@ -1,0 +1,9 @@
+﻿<!--
+Move this file to the parent directory and rename it to `Directory.Build.props`.
+Change BattleTechGameDir to point to your game installation.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BattleTechGameDir>C:\Games\Steam\SteamApps\common\BATTLETECH\</BattleTechGameDir>
+  </PropertyGroup>
+</Project>

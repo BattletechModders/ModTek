@@ -1,35 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
-  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly" />
-  </Target>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Common.props" />
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net472</TargetFramework>
-    <LangVersion>11</LangVersion>
     <RootNamespace>0Harmony12</RootNamespace>
     <AssemblyName>0Harmony12</AssemblyName>
     <Version>1.2.0.0</Version>
-    <AssemblySearchPaths>
-      $(ReferencePath);
-      {HintPathFromItem};
-      $(BattleTechGameDir)\BattleTech_Data\Managed
-    </AssemblySearchPaths>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Harmony12X\" />
   </Target>
   <ItemGroup>
-    <ProjectReference Include="..\HarmonyXInterop\HarmonyXInterop.csproj">
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
-    <Reference Include="System"/>
-    <Reference Include="System.Core"/>
-    <Reference Include="System.Data"/>
-    <Reference Include="System.Xml"/>
+    <ProjectReference Include="..\HarmonyXInterop\HarmonyXInterop.csproj" />
+    <Reference Include="System">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 </Project>

@@ -1,20 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
-  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly" />
-  </Target>
-
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net472</TargetFramework>
-    <LangVersion>11</LangVersion>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <AssemblySearchPaths>
-      {HintPathFromItem};
-      $(BattleTechGameDir)\BattleTech_Data\Managed\
-    </AssemblySearchPaths>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Common.props" />
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader*" />
@@ -49,6 +34,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="GitVersion.MsBuild">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="HarmonyX" />
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
@@ -58,11 +47,5 @@
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="HarmonyX" Version="2.10.1" />
   </ItemGroup>
 </Project>

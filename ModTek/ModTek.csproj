@@ -1,33 +1,11 @@
 ﻿<!-- Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
-<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
-  <!-- Check if the BattleTechGameDir variable is correct set  -->
-  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly" />
-  </Target>
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Imports a common set of project properties -->
+  <Import Project="..\Common.props" />
 
   <PropertyGroup>
-    <!-- All mods are libraries and produce a dll -->
-    <OutputType>Library</OutputType>
-
-    <!-- The last BattleTech game version uses .NET Framework 4.7.2, newer target frameworks won't work -->
-    <TargetFramework>net472</TargetFramework>
-
-    <!-- Set to a modern version -->
-    <LangVersion>11</LangVersion>
-
-    <!-- Traditional debugging does not work anyway, so no need to have such options available -->
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-
     <!-- Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
     <NoWarn>CS0649</NoWarn>
-
-    <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
-    <AssemblySearchPaths>
-      {HintPathFromItem};
-      $(BattleTechGameDir)\BattleTech_Data\Managed\
-    </AssemblySearchPaths>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 
   <!-- Copies dll and assets -->
@@ -35,12 +13,17 @@
     <Copy SourceFiles="$(TargetPath);@(Asset)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
 
-  <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
   <ItemGroup>
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.3.0" />
-  </ItemGroup>
+    <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
 
-  <ItemGroup>
+    <!-- Automatically set the version number of your assembly based on git tags and semver -->
+    <PackageReference Include="GitVersion.MsBuild">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
     <!-- Harmony is needed to hook into the game -->
     <Reference Include="0Harmony">
       <!-- Every dll found in Managed should not be copied to OutDir when building -->
@@ -108,12 +91,6 @@
     <Reference Include="UnityEngine.VideoModule">
       <Private>False</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Automatically set the version number of your assembly based on git tags and semver -->
-    <PackageReference Include="GitVersion.MsBuild" Version="5.10.3">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 
   <!-- Reference static files to be copied -->
