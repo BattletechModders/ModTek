@@ -8,7 +8,7 @@ namespace ModTek.Features.Logging;
 
 internal static class LoggingFeature
 {
-    private static LoggingSettings Settings => ModTek.Config.Logging;
+    private static LoggingSettings _settings;
 
     private static LogAppender _mainLog;
     private static readonly List<LogAppender> _logsAppenders = new();
@@ -17,15 +17,17 @@ internal static class LoggingFeature
 
     internal static void Init()
     {
+        _settings = ModTek.Config.Logging;
+
         Directory.CreateDirectory(FilePaths.TempModTekDirectory);
 
-        _mainLog = new LogAppender(Settings.MainLogFilePath, Settings.MainLog);
-        foreach (var kv in Settings.Logs)
+        _mainLog = new LogAppender(_settings.MainLogFilePath, _settings.MainLog);
+        foreach (var kv in _settings.Logs)
         {
             _logsAppenders.Add(new LogAppender(kv.Key, kv.Value));
         }
 
-        if (Settings.LogUncaughtExceptions)
+        if (_settings.LogUncaughtExceptions)
         {
             AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
@@ -41,7 +43,7 @@ internal static class LoggingFeature
             };
         }
 
-        if (Settings.AsynchronousLoggingEnabled)
+        if (_settings.AsynchronousLoggingEnabled)
         {
             _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
         }
@@ -50,7 +52,7 @@ internal static class LoggingFeature
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
-        if (location == null && (Settings.LogStackTraces || (Settings.LogStackTracesOnExceptions && exception != null)))
+        if (location == null && (_settings.LogStackTraces || (_settings.LogStackTracesOnExceptions && exception != null)))
         {
             location = GrabStackTrace();
         }
@@ -84,6 +86,11 @@ internal static class LoggingFeature
     // note this can be called sync or async
     private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
     {
+        if (_settings.UnityConsoleAppenderEnabled)
+        {
+            UnityLogHandler.LogMessage(messageDto);
+        }
+
         _mainLog.Append(messageDto);
         foreach (var logAppender in _logsAppenders)
         {

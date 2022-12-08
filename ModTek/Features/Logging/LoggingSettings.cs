@@ -69,6 +69,11 @@ internal class LoggingSettings
     internal string[] IgnoreSkipForLoggers = {};
 
     [JsonProperty]
+    internal const string UnityConsoleAppenderEnabled_Description = "Append log statements to the unity console, slows down logging and spams the console.";
+    [JsonProperty]
+    internal bool UnityConsoleAppenderEnabled;
+
+    [JsonProperty]
     internal const string AsynchronousLoggingEnabled_Description = "Uses another thread to format and log messages off the main thread.";
     [JsonProperty]
     internal bool AsynchronousLoggingEnabled = true;
