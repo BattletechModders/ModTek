@@ -10,8 +10,9 @@ internal static class LoggingFeature
 {
     private static LoggingSettings _settings;
 
-    private static LogAppender _mainLog;
-    private static readonly List<LogAppender> _logsAppenders = new();
+    private static AppenderUnityConsole _consoleLog;
+    private static AppenderFile _mainLog;
+    private static readonly List<AppenderFile> _logsAppenders = new();
 
     private static MTLoggerAsyncQueue _queue;
 
@@ -21,10 +22,13 @@ internal static class LoggingFeature
 
         Directory.CreateDirectory(FilePaths.TempModTekDirectory);
 
-        _mainLog = new LogAppender(_settings.MainLogFilePath, _settings.MainLog);
+        AppenderUnityConsole.SetupUnityLogHandler();
+        _consoleLog = _settings.UnityConsoleAppenderEnabled ? new AppenderUnityConsole(_settings.UnityConsoleAppender) : null;
+
+        _mainLog = new AppenderFile(_settings.MainLogFilePath, _settings.MainLog);
         foreach (var kv in _settings.Logs)
         {
-            _logsAppenders.Add(new LogAppender(kv.Key, kv.Value));
+            _logsAppenders.Add(new AppenderFile(kv.Key, kv.Value));
         }
 
         if (_settings.LogUncaughtExceptions)
@@ -86,10 +90,7 @@ internal static class LoggingFeature
     // note this can be called sync or async
     private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
     {
-        if (_settings.UnityConsoleAppenderEnabled)
-        {
-            UnityLogHandler.LogMessage(messageDto);
-        }
+        _consoleLog?.Append(messageDto);
 
         _mainLog.Append(messageDto);
         foreach (var logAppender in _logsAppenders)

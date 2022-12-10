@@ -1,10 +1,10 @@
 ﻿using Harmony;
-using HBS.Logging;
-using ModTek.Util;
+using UnityEngine;
+using Logger = HBS.Logging.Logger;
 
 namespace ModTek.Features.Logging.Patches;
 
-[HarmonyPatch(typeof(Logger), "CaptureUnityLogs")]
+[HarmonyPatch(typeof(Logger), nameof(Logger.CaptureUnityLogs))]
 internal static class Logger_CaptureUnityLogs_Patch
 {
     public static bool Prepare()
@@ -12,14 +12,9 @@ internal static class Logger_CaptureUnityLogs_Patch
         return ModTek.Enabled;
     }
 
-    private static readonly RunOnlyOnceHandler CleanupHandler = new();
-    public static void Cleanup()
-    {
-        CleanupHandler.Run(UnityLogHandler.Setup);
-    }
-
     public static bool Prefix()
     {
+        Application.logMessageReceived -= Logger.HandleUnityLog;
         return false;
     }
 }

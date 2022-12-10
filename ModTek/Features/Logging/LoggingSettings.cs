@@ -42,7 +42,7 @@ internal class LoggingSettings
     [JsonProperty]
     internal Dictionary<string, LogLevel> OverrideLoggerLevels = new()
     {
-        { nameof(Log.Unity), LogLevel.Debug },
+        { nameof(AppenderUnityConsole.UnityLoggerName), LogLevel.Debug },
         { nameof(Log.Debugger), LogLevel.Debug },
         { nameof(Log.AppDomain), LogLevel.Debug },
         { nameof(ModTek), NullableLogger.TraceLogLevel }
@@ -69,9 +69,18 @@ internal class LoggingSettings
     internal string[] IgnoreSkipForLoggers = {};
 
     [JsonProperty]
-    internal const string UnityConsoleAppenderEnabled_Description = "Append log statements to the unity console, slows down logging and spams the console.";
+    internal const string UnityConsoleAppenderEnabled_Description = "Append HBS log statements to the unity console, slows down logging and spams the console.";
     [JsonProperty]
     internal bool UnityConsoleAppenderEnabled;
+
+    [JsonProperty]
+    internal const string UnityConsoleAppender_Description = "Settings for the unity console appender.";
+    [JsonProperty]
+    internal AppenderSettings UnityConsoleAppender = new()
+    {
+        AbsoluteTimeEnabled = false,
+        StartupTimeEnabled = false,
+    };
 
     [JsonProperty]
     internal const string AsynchronousLoggingEnabled_Description = "Uses another thread to format and log messages off the main thread.";
