@@ -46,6 +46,11 @@ case ${os_type} in
         else
             export LD_PRELOAD="libdoorstop.so:${LD_PRELOAD}"
         fi
+        
+        #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
+        #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
+        #Work around used as it is a bug that is patched out in newer versions of mono.
+        export TERM=xterm
     ;;
     Darwin*)
         # BASEDIR should be the Resources directory
