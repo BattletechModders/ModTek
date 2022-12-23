@@ -1,27 +1,42 @@
 ﻿using System;
+using System.IO;
 using HBS.Logging;
 using UnityEngine;
 using Logger = HBS.Logging.Logger;
 
 namespace ModTek.Features.Logging;
 
-internal class AppenderUnityConsole : AppenderBase
+internal class AppenderUnityConsole
 {
     // appender part
 
-    private readonly ILogger _logger;
+    private readonly Filters _filters;
+    private readonly Formatter _formatter;
+    private readonly ILogger _debugUnityLogger;
 
-    internal AppenderUnityConsole(AppenderSettings settings) : base(settings)
+    internal AppenderUnityConsole(AppenderSettings settings)
     {
-        _logger = Debug.unityLogger;
+        _filters = new Filters(settings);
+        _formatter = new Formatter(settings);
+        _debugUnityLogger = Debug.unityLogger;
     }
 
-    // TODO support for LogLevelExtension
-    // TODO support for context -> threading issue
-    protected override void WriteLine(MTLoggerMessageDto messageDto, string line)
+    internal void Append(MTLoggerMessageDto messageDto)
     {
+        // breaks the loop: Unity -> HBS -(x)-> Unity
+        if (messageDto.loggerName == UnityLoggerName)
+        {
+            return;
+        }
+
+        if (!_filters.IsIncluded(messageDto))
+        {
+            return;
+        }
+
+        var logLine = _formatter.GetFormattedLogLine(messageDto);
         s_ignoreNextUnityCapture = true;
-        _logger.Log(LogLevelToLogType(messageDto.logLevel), line);
+        _debugUnityLogger.Log(LogLevelToLogType(messageDto.logLevel), logLine);
     }
 
     private static LogType LogLevelToLogType(LogLevel level)
@@ -38,6 +53,7 @@ internal class AppenderUnityConsole : AppenderBase
 
     internal static void SetupUnityLogHandler()
     {
+        File.WriteAllText("Mods/.modtek/test.log", "");
         Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
     }
 
@@ -46,6 +62,7 @@ internal class AppenderUnityConsole : AppenderBase
 
     private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
     {
+        // breaks the loop: HBS -> Unity -(x)-> HBS
         if (s_ignoreNextUnityCapture)
         {
             s_ignoreNextUnityCapture = false;

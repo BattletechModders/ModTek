@@ -3,13 +3,12 @@ using System.Linq;
 
 namespace ModTek.Features.Logging;
 
-internal abstract class AppenderBase
+internal class Filters
 {
-    private readonly Formatter _formatter;
     private readonly List<Filter> _includeFilters;
     private readonly List<Filter> _excludeFilters;
 
-    internal AppenderBase(AppenderSettings settings)
+    internal Filters(AppenderSettings settings)
     {
         if (settings.Includes != null)
         {
@@ -33,25 +32,20 @@ internal abstract class AppenderBase
                 _excludeFilters.AddRange(legacyFilters);
             }
         }
-
-        _formatter = new Formatter(settings);
     }
 
-    internal void Append(MTLoggerMessageDto messageDto)
+    internal bool IsIncluded(MTLoggerMessageDto messageDto)
     {
         if (_includeFilters != null && !_includeFilters.Any(x => x.IsMatch(messageDto)))
         {
-            return;
+            return false;
         }
 
         if (_excludeFilters != null && _excludeFilters.Any(x => x.IsMatch(messageDto)))
         {
-            return;
+            return false;
         }
 
-        var logLine = _formatter?.GetFormattedLogLine(messageDto) ?? messageDto.message;
-        WriteLine(messageDto, logLine);
+        return true;
     }
-
-    protected abstract void WriteLine(MTLoggerMessageDto messageDto, string line);
 }

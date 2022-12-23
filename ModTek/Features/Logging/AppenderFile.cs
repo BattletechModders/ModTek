@@ -6,12 +6,16 @@ using ModTek.Util;
 
 namespace ModTek.Features.Logging;
 
-internal class AppenderFile : AppenderBase, IDisposable
+internal class AppenderFile : IDisposable
 {
+    private readonly Filters _filters;
+    private readonly Formatter _formatter;
     private readonly StreamWriter _writer;
 
-    internal AppenderFile(string filePath, AppenderSettings settings) : base(settings)
+    internal AppenderFile(string filePath, AppenderSettings settings)
     {
+        _filters = new Filters(settings);
+        _formatter = new Formatter(settings);
         var path =  Path.Combine(FilePaths.TempModTekDirectory, filePath);
 
         FileUtils.CreateParentOfPath(path);
@@ -31,11 +35,18 @@ internal class AppenderFile : AppenderBase, IDisposable
         }
     }
 
-    protected override void WriteLine(MTLoggerMessageDto messageDto, string line)
+    internal void Append(MTLoggerMessageDto messageDto)
     {
+        if (!_filters.IsIncluded(messageDto))
+        {
+            return;
+        }
+
+        var logLine = _formatter.GetFormattedLogLine(messageDto);
+
         lock(this)
         {
-            _writer.WriteLine(line);
+            _writer.WriteLine(logLine);
         }
     }
 }

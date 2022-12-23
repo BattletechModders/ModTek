@@ -69,7 +69,7 @@ internal class LoggingSettings
     internal string[] IgnoreSkipForLoggers = {};
 
     [JsonProperty]
-    internal const string UnityConsoleAppenderEnabled_Description = "Append HBS log statements to the unity console, slows down logging and spams the console.";
+    internal const string UnityConsoleAppenderEnabled_Description = "Append HBS log statements to the unity console. Disabled by default as it reduces performance.";
     [JsonProperty]
     internal bool UnityConsoleAppenderEnabled;
 
