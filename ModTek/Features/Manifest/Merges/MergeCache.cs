@@ -164,7 +164,7 @@ internal class MergeCache
         var countMax = (float)QueuedMerges.Count;
 
         // find entries missing in cache
-        foreach (var kv in QueuedMerges)
+        foreach (var kv in QueuedMerges.OrderBy(kv => kv.Key.Type).ThenBy(kv => kv.Key.Id))
         {
             var key = kv.Key;
             var queuedEntry = kv.Value;

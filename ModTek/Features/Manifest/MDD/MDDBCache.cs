@@ -167,9 +167,9 @@ internal class MDDBCache
         var reindexResources = new HashSet<CacheKey>();
 
         // find entries missing in cache
-        foreach (var type in BTConstants.MDDBTypes)
+        foreach (var type in BTConstants.MDDBTypes.OrderBy(x => x))
         {
-            foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfType(type))
+            foreach (var manifestEntry in BetterBTRL.Instance.AllEntriesOfType(type).OrderBy(x => x.Id))
             {
                 if (IsIgnored(manifestEntry, out var key))
                 {
