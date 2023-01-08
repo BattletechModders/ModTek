@@ -1,7 +1,7 @@
 ﻿# Release notes
 
-All notable changes to this project will be documented in this file.
-This project adheres to [Semantic Versioning](http://semver.org/).
+All notable changes should be documented in this file.
+Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
 
 ## Known Issues
 
@@ -18,7 +18,7 @@ For users:
 For modders:
 - HarmonyX support is now enabled by default, see [Harmony12X](doc/HARMONY12X.md).
 - Improved logging support via HBS Logger, see [Logging](doc/LOGGING.md).
-- Added `Assembly` CustomResource, allows resolving third-party .NET dlls without writing resolve handlers in mods.
+- Added a `Assembly` CustomResource type, allows resolving third-party .NET dlls without writing resolve handlers in mods.
 
 ## 3.0 - CptMoore
 

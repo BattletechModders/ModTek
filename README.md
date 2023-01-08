@@ -7,7 +7,7 @@ Since BattleTech 1.7, HBS introduced their own mod-loader, which is based on an 
 # Topics
 
 - [Installation Instructions](INSTALL.md)
-- [Changelog](doc/CHANGES.md)
+- [Changelog](CHANGES.md)
 - [How to contribute to ModTek](doc/CONTRIBUTE.md).
 
 ## Modding
