@@ -19,6 +19,9 @@
       MANAGED_ARCHIVE_URL:
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   mod-builder:
     runs-on: ubuntu-latest
@@ -55,21 +58,55 @@ jobs:
           tag_name: "latest"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Release Latest
+
+      - name: Delete Latest
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        uses: dev-drprasad/delete-tag-and-release@master
+        with:
+          tag_name: "latest"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - id: release_latest
+        name: Release Latest
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
+          allowUpdates: false
+          artifactErrorsFailBuild: true
           artifacts: ${{ env.DIST_DIR }}/*
+          draft: false
           generateReleaseNotes: true
           makeLatest: true
           name: "Latest (unstable)"
           prerelease: true
           tag: "latest"
-      - name: Release Tag
+
+      - id: release_tag
+        name: Release Tag
         uses: ncipollo/release-action@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           allowUpdates: true
+          artifactErrorsFailBuild: true
           artifacts: ${{ env.DIST_DIR }}/*
           body: ${{ inputs.release-notes }}
+          draft: false
+          generateReleaseNotes: true
           makeLatest: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+
+      - name: Show release outputs
+        shell: bash
+        run: |
+          echo 'id: '
+          echo -n '${{ steps.release_tag.outputs.id }}'
+          echo -n '${{ steps.release_latest.outputs.id }}'
+          echo ''
+          echo ''
+          echo 'url:'
+          echo -n '${{ steps.release_tag.outputs.html_url }}'
+          echo -n '${{ steps.release_latest.outputs.html_url }}'
+          echo ''
