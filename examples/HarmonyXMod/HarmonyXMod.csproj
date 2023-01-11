@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- TODO this csproj uses too much ModTek infrastructure still for for an example mod -->
+  <!-- TODO not sure how to handle this, as we do want a test mod for this, but we also want a shared config for now -->
+  <Import Project="..\..\Common.props" />
+
+  <ItemGroup>
+    <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
+  </ItemGroup>
+  <!-- TODO example is disabled by default since it doesnt do anything useful. a useful but optional feature would be nice -->
+  <Target Condition="'$(ModTekExamplesEnabled)' == 'true'" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXMod\" />
+    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXMod\" />
+  </Target>
+
+  <ItemGroup>
+    <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+
+    <!-- Automatically set the version number of your assembly based on git tags and semver -->
+    <PackageReference Include="GitVersion.MsBuild">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
+    <!-- Use the latest HarmonyX, make sure ModTek gets the newest dlls too -->
+    <PackageReference Include="HarmonyX" />
+
+    <!-- Important system libraries that are basically always used -->
+    <Reference Include="System">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Main game library, best to publicize it to access internals easily and efficently -->
+    <Reference Include="Assembly-CSharp" Publicize="true">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

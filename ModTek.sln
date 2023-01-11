@@ -24,6 +24,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HarmonyXInterop", "HarmonyX
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Harmony12Interop", "HarmonyXInterop\Harmony12Interop\Harmony12Interop.csproj", "{183EB195-CC72-4667-AA2F-FECA210F776F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{6480C6DD-C6E7-4D8C-9220-37FB34162CF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarmonyXMod", "examples\HarmonyXMod\HarmonyXMod.csproj", "{C0839FDC-E835-40B5-831A-E4EB5D9040D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +58,10 @@ Global
 		{183EB195-CC72-4667-AA2F-FECA210F776F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{183EB195-CC72-4667-AA2F-FECA210F776F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{183EB195-CC72-4667-AA2F-FECA210F776F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0839FDC-E835-40B5-831A-E4EB5D9040D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0839FDC-E835-40B5-831A-E4EB5D9040D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0839FDC-E835-40B5-831A-E4EB5D9040D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0839FDC-E835-40B5-831A-E4EB5D9040D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -68,5 +76,6 @@ Global
 		{415D6122-8F17-40C2-8304-6A878467C06D} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
 		{D309E43C-CEEC-4BE6-BB5E-8A5C90BA5462} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
 		{183EB195-CC72-4667-AA2F-FECA210F776F} = {2095443E-5ECB-4187-878D-E4DDD3ABF9D2}
+		{C0839FDC-E835-40B5-831A-E4EB5D9040D5} = {6480C6DD-C6E7-4D8C-9220-37FB34162CF8}
 	EndGlobalSection
 EndGlobal
