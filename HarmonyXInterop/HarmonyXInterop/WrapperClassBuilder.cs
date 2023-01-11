@@ -112,11 +112,14 @@ internal class WrapperClassBuilder
         {
             var originalParameterInfo = originalParameters[index];
             var parameterBuilder = methodBuilder.DefineParameter(1 + index, originalParameterInfo.Attributes, originalParameterInfo.Name);
-            foreach (var customAttributeData in originalParameterInfo.CustomAttributes)
+            if (originalParameterInfo.DefaultValue != DBNull.Value)
             {
-                parameterBuilder.SetCustomAttribute(new(
-                    customAttributeData.Constructor,
-                    customAttributeData.ConstructorArguments.Cast<object>().ToArray()));
+                // setting the default value is not really necessary, but it should keep up the illusion of being the original method
+                parameterBuilder.SetConstant(originalParameterInfo.DefaultValue);
+            }
+            foreach (var customBuilder in originalParameterInfo.GetCustomAttributesData().Select(ToCustomAttributeBuilder))
+            {
+                parameterBuilder.SetCustomAttribute(customBuilder);
             }
         }
 
@@ -124,6 +127,20 @@ internal class WrapperClassBuilder
         methodBuilder.DefineParameter(1 + runOriginalIndex, 0, "__runOriginal");
 
         AddIL(methodBuilder, originalMethod, runOriginalIndex);
+    }
+    private static CustomAttributeBuilder ToCustomAttributeBuilder(CustomAttributeData data)
+    {
+        var attributeArgs = data.ConstructorArguments.Select(a => a.Value).ToArray();
+
+        var propertyArgs = data.NamedArguments.Where(i => i.MemberInfo is PropertyInfo);
+        var propertyInfos = propertyArgs.Select(a => (PropertyInfo)a.MemberInfo).ToArray();
+        var propertyValues = propertyArgs.Select(a => a.TypedValue.Value).ToArray();
+
+        var fieldArgs = data.NamedArguments.Where(i => i.MemberInfo is FieldInfo);
+        var namedFieldInfos = fieldArgs.Select(a => (FieldInfo)a.MemberInfo).ToArray();
+        var namedFieldValues = fieldArgs.Select(a => a.TypedValue.Value).ToArray();
+
+        return new CustomAttributeBuilder(data.Constructor, attributeArgs, propertyInfos, propertyValues, namedFieldInfos, namedFieldValues);
     }
     private Type Build()
     {
