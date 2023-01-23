@@ -14,7 +14,7 @@ internal static class Preloader
     {
         Logger.Main.Rotate();
 
-        Logger.Main.Log("Preloader starting");
+        Logger.Main.Log($"Preloader v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
         Paths.Print();
         SingleInstanceEnforcer.Enforce();
         Cleaner.Clean();
