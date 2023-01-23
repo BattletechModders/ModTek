@@ -16,10 +16,14 @@ internal class AssemblyCache : IAssemblyResolver
     {
         searchDirectories = new List<string>
         {
-            Paths.AssembliesOverrideDirectory,
             Paths.ModTekDirectory,
             Paths.ManagedDirectory
         };
+
+        if (Directory.Exists(Paths.AssembliesOverrideDirectory))
+        {
+            searchDirectories.Insert(0, Paths.AssembliesOverrideDirectory);
+        }
     }
 
     public AssemblyDefinition Resolve(AssemblyNameReference name)

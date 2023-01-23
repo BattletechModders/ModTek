@@ -48,6 +48,11 @@ internal static class Preloader
 
     private static void PreloadAssembliesOverride()
     {
+        if (!Directory.Exists(Paths.AssembliesOverrideDirectory))
+        {
+            return;
+        }
+
         Logger.Main.Log($"Preloading override assemblies from `{Paths.GetRelativePath(Paths.AssembliesOverrideDirectory)}`:");
         foreach (var file in Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll").OrderBy(p => p))
         {
