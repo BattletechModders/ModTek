@@ -76,7 +76,14 @@ internal class Formatter
             sb.Append(prefix);
             sb.Append("Location Trace");
             sb.Append(Environment.NewLine);
-            sb.Append(messageDto.location.ToString());
+            try
+            {
+                sb.Append(messageDto.location.ToString());
+            }
+            catch (Exception e)
+            {
+                sb.Append(e);
+            }
         }
 
         var line = sb.ToString();
