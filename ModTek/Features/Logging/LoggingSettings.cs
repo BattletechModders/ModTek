@@ -42,7 +42,7 @@ internal class LoggingSettings
     [JsonProperty]
     internal Dictionary<string, LogLevel> OverrideLoggerLevels = new()
     {
-        { nameof(AppenderUnityConsole.UnityLoggerName), LogLevel.Debug },
+        { AppenderUnityConsole.UnityLoggerName, LogLevel.Debug },
         { nameof(Log.Debugger), LogLevel.Debug },
         { nameof(Log.AppDomain), LogLevel.Debug },
         { nameof(ModTek), NullableLogger.TraceLogLevel }
