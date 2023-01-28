@@ -6,6 +6,7 @@ namespace ModTek;
 internal static class Log
 {
     internal static readonly NullableLogger Main = NullableLogger.GetLogger(typeof(Log).Assembly.GetName().Name, NullableLogger.TraceLogLevel);
+    internal static readonly NullableLogger Profiler = NullableLogger.GetLogger(nameof(Profiler), NullableLogger.TraceLogLevel);
     internal static readonly NullableLogger Debugger = NullableLogger.GetLogger(nameof(Debugger), NullableLogger.TraceLogLevel);
     internal static readonly NullableLogger AppDomain = NullableLogger.GetLogger(nameof(AppDomain), NullableLogger.TraceLogLevel);
 

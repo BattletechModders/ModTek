@@ -77,6 +77,11 @@ internal class Configuration
     internal bool ShowDataManagerStatsInLoadingCurtain = true;
 
     [JsonProperty]
+    internal const string ProfilerEnabled_Description = "Enables a very simple profiler.";
+    [JsonProperty]
+    internal bool ProfilerEnabled = true;
+
+    [JsonProperty]
     internal const string BlockedMods_Description = "Mods that should not be allowed to load. Useful in cases where those mods would (newly) interfere with ModTek.";
     [JsonProperty]
     internal string[] BlockedMods = { "FYLS" };

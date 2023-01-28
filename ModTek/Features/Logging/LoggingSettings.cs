@@ -43,6 +43,7 @@ internal class LoggingSettings
     internal Dictionary<string, LogLevel> OverrideLoggerLevels = new()
     {
         { AppenderUnityConsole.UnityLoggerName, LogLevel.Debug },
+        { nameof(Log.Profiler), LogLevel.Debug },
         { nameof(Log.Debugger), LogLevel.Debug },
         { nameof(Log.AppDomain), LogLevel.Debug },
         { nameof(ModTek), NullableLogger.TraceLogLevel }
