@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
 using HBS.Logging;
 
-namespace HarmonyXMod;
+namespace HarmonyXModTest;
 
 public static class Main
 {
-    private static readonly ILog s_log = Logger.GetLogger(nameof(HarmonyXMod));
+    private static readonly ILog s_log = Logger.GetLogger(nameof(HarmonyXModTest));
     public static void Start()
     {
         s_log.Log("Starting");
@@ -21,6 +21,6 @@ public static class Main
     static void GetReleaseVersion(ref string __result)
     {
         var old = __result;
-        __result = old + $"\nHarmonyXMod";
+        __result = old + "\nHarmonyXModTest";
     }
 }

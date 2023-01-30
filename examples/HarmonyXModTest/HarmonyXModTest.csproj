@@ -1,15 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- TODO this csproj uses too much ModTek infrastructure still for for an example mod -->
-  <!-- TODO not sure how to handle this, as we do want a test mod for this, but we also want a shared config for now -->
+  <!-- This is just a test mod, so we can use ModTek common props -->
   <Import Project="..\..\Common.props" />
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
   </ItemGroup>
-  <!-- TODO example is disabled by default since it doesnt do anything useful. a useful but optional feature would be nice -->
-  <Target Condition="'$(ModTekExamplesEnabled)' == 'true'" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXMod\" />
-    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXMod\" />
+  <Target Condition="'$(CopyToBattleTechGameDir)' == 'true'" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXModTest\" />
+    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXModTest\" />
   </Target>
 
   <ItemGroup>
@@ -20,7 +18,7 @@
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
     <PackageReference Include="GitVersion.MsBuild">
-      <PrivateAssets>all</PrivateAssets>
+      <PrivateAssets>All</PrivateAssets>
     </PackageReference>
 
     <!-- Use the latest HarmonyX, make sure ModTek gets the newest dlls too -->

@@ -21,7 +21,7 @@
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
     <PackageReference Include="GitVersion.MsBuild">
-      <PrivateAssets>all</PrivateAssets>
+      <PrivateAssets>All</PrivateAssets>
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->

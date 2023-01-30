@@ -1,5 +1,0 @@
-{
-	"Name": "HarmonyXMod",
-	"DLL": "HarmonyXMod.dll",
-	"DLLEntryPoint": "HarmonyXMod.Main.Start"
-}
