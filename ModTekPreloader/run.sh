@@ -67,9 +67,9 @@ case ${os_type} in
         )
         export DYLD_LIBRARY_PATH="${BASEDIR}/:${DYLD_LIBRARY_PATH}"
         if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
-            export DYLD_INSERT_LIBRARIES="libdoorstop.dylib"
+            export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib"
         else
-            export DYLD_INSERT_LIBRARIES="libdoorstop.dylib:${DYLD_INSERT_LIBRARIES}"
+            export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES}"
         fi
     ;;
     *)
