@@ -11,6 +11,11 @@ internal static class CustomResourcesFeature
 {
     private static readonly HashSet<string> CustomResources = Enum.GetNames(typeof(InternalCustomResourceType)).ToHashSet();
 
+    internal static IReadOnlyCollection<string> GetTypes()
+    {
+        return CustomResources;
+    }
+
     internal static bool IsCustomResourceType(string type)
     {
         return CustomResources.Contains(type);
