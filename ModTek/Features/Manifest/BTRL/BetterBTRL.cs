@@ -72,6 +72,11 @@ internal class BetterBTRL
         return copy;
     }
 
+    internal string[] AllTypes()
+    {
+        return currentManifest.AllTypes();
+    }
+
     internal VersionManifestEntry[] EntriesByID(string id)
     {
         return currentManifest.EntriesByID(id);

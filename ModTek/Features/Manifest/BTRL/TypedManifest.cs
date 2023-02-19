@@ -61,6 +61,11 @@ internal class TypedManifest
         return addendums.TryGetValue(name, out var addendum) ? addendum : null;
     }
 
+    public string[] AllTypes()
+    {
+        return manifest.Keys.ToArray();
+    }
+
     public VersionManifestEntry[] AllEntries(bool filterByOwnership)
     {
         return FilterUnowned(manifest.Values.SelectMany(x => x.Values), filterByOwnership).ToArray();
