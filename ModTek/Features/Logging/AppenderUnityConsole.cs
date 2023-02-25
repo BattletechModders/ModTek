@@ -53,7 +53,6 @@ internal class AppenderUnityConsole
 
     internal static void SetupUnityLogHandler()
     {
-        File.WriteAllText("Mods/.modtek/test.log", "");
         Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
     }
 
