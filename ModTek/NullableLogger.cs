@@ -67,36 +67,30 @@ internal sealed class NullableLogger
 
     // log levels
 
-    internal ILevel? Trace => _trace;
-    internal ILevel? Debug => _debug;
-    internal ILevel? Info => _info;
-    internal ILevel? Warning => _warning;
-    internal ILevel? Error => _error;
-
-    private LevelLogger? _trace;
-    private LevelLogger? _debug;
-    private LevelLogger? _info;
-    private LevelLogger? _warning;
-    private LevelLogger? _error;
+    internal ILevel? Trace { get; private set; }
+    internal ILevel? Debug { get; private set; }
+    internal ILevel? Info { get; private set; }
+    internal ILevel? Warning { get; private set; }
+    internal ILevel? Error { get; private set; }
 
     private void RefreshLogLevel()
     {
-        var lowerLevelEnabled = SyncLevelLogger(false, TraceLogLevel, ref _trace);
-        SyncLevelLogger(lowerLevelEnabled, LogLevel.Debug, ref _debug);
-        SyncLevelLogger(lowerLevelEnabled, LogLevel.Log, ref _info);
-        SyncLevelLogger(lowerLevelEnabled, LogLevel.Warning, ref _warning);
-        SyncLevelLogger(lowerLevelEnabled, LogLevel.Error, ref _error);
+        var lowerLevelEnabled = false;
+        Trace = SyncLevelLogger(ref lowerLevelEnabled, TraceLogLevel, Trace);
+        Debug = SyncLevelLogger(ref lowerLevelEnabled, LogLevel.Debug, Debug);
+        Info = SyncLevelLogger(ref lowerLevelEnabled, LogLevel.Log, Info);
+        Warning = SyncLevelLogger(ref lowerLevelEnabled, LogLevel.Warning, Warning);
+        Error = SyncLevelLogger(ref lowerLevelEnabled, LogLevel.Error, Error);
     }
 
-    private bool SyncLevelLogger(bool lowerLevelEnabled, LogLevel logLevel, ref LevelLogger? field)
+    private ILevel? SyncLevelLogger(ref bool lowerLevelEnabled, LogLevel logLevel, ILevel? logger)
     {
         if (lowerLevelEnabled || Log.IsEnabledFor(logLevel))
         {
-            field ??= new(logLevel, Log);
-            return true;
+            lowerLevelEnabled = true;
+            return logger ?? new LevelLogger(logLevel, Log);
         }
-        field = null;
-        return false;
+        return null;
     }
 
     // logging
