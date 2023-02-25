@@ -25,10 +25,7 @@
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <Reference Include="0Harmony">
-      <!-- Every dll found in Managed should not be copied to OutDir when building -->
-      <Private>False</Private>
-    </Reference>
+    <PackageReference Include="HarmonyX" />
 
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->

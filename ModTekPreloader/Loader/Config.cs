@@ -12,12 +12,6 @@ internal class Config
     internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
 
     [JsonProperty]
-    internal readonly string Harmony12XEnabled_Description =
-        "Enables Harmony X and its shims for Harmony 1 and 2, does work pretty well but not perfectly and some mods might need to be updated.";
-    [JsonProperty]
-    internal bool Harmony12XEnabled = true;
-
-    [JsonProperty]
     internal readonly string Harmony12XLogChannelFilter_Description
         = $"The channels to log into `{Paths.GetRelativePath(Paths.HarmonyLogFile)}`: None=0 Info=2 IL=4 Warn=8 Error=16 Debug=32 All=62";
     [JsonProperty]

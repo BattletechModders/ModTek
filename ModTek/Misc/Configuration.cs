@@ -15,23 +15,6 @@ internal class Configuration
     internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{FileUtils.GetRelativePath(ConfigPath)}`.";
 
     [JsonProperty]
-    internal const string ShowLoadingScreenErrors_Description = "TODO";
-    [JsonProperty]
-    internal bool ShowLoadingScreenErrors = true;
-
-    [JsonProperty]
-    internal const string ShowErrorPopup_Description = "TODO";
-    [JsonProperty]
-    internal bool ShowErrorPopup = true;
-
-    [JsonProperty]
-    internal const string UseErrorWhiteList_Description = "TODO";
-    [JsonProperty]
-    internal bool UseErrorWhiteList = true;
-    [JsonProperty]
-    internal string[] ErrorWhitelist = { "Data.DataManager [ERROR] ManifestEntry is null" };
-
-    [JsonProperty]
     internal const string SearchModsInSubDirectories_Description = "Searches recursively all directories for mod.json instead only for directories directly found under Mods. Set to false for pre v2.0 behavior.";
     [JsonProperty]
     internal bool SearchModsInSubDirectories = true;

@@ -21,10 +21,7 @@ internal static class Preloader
         InjectorsAppDomain.Run();
 
         Logger.Main.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
-        if (Config.Instance.Harmony12XEnabled)
-        {
-            DynamicShimInjector.Setup();
-        }
+        DynamicShimInjector.Setup();
         PreloadAssembliesInjected();
         PreloadAssembliesOverride();
         PreloadModTek();

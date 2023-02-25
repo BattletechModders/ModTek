@@ -182,7 +182,6 @@ internal static class ModDefExLoading
     internal static void Setup()
     {
         // setup assembly resolver
-        TryResolveAssemblies.Add("0Harmony", Assembly.GetAssembly(typeof(HarmonyInstance)));
         AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
         {
             var resolvingName = new AssemblyName(args.Name);

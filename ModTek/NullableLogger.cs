@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using HBS.Logging;
+using ModTek.Features.Logging;
 
 namespace NullableLogging;
 
@@ -28,20 +29,10 @@ internal sealed class NullableLogger
     // tracking (static)
 
     private static readonly SortedList<string, NullableLogger> _loggers = new();
-    static NullableLogger()
-    {
-        TrackLoggerLevelChanges();
-    }
-    private static void TrackLoggerLevelChanges()
-    {
-        HarmonyInstance
-            .Create(typeof(NullableLogger).FullName)
-            .Patch(
-                original: typeof(Logger.LogImpl).GetProperty(nameof(Logger.LogImpl.Level))!.SetMethod,
-                postfix: new(typeof(NullableLogger), nameof(LogImpl_set_Level_Postfix))
-            );
-    }
-    private static void LogImpl_set_Level_Postfix()
+
+    [HarmonyPatch(typeof(Logger.LogImpl), nameof(Logger.LogImpl.Level), MethodType.Setter)]
+    [HarmonyPostfix]
+    internal static void LogImpl_set_Level_Postfix()
     {
         lock (_loggers)
         {
@@ -115,17 +106,20 @@ internal sealed class NullableLogger
 
         public void Log(Exception e)
         {
-            _log.LogAtLevel(_level, null, e);
+            // _log.LogAtLevel(_level, null, e);
+            LoggingFeature.LogAtLevel(_log.Name, _level, null, e, null);
         }
 
         public void Log(string message)
         {
-            _log.LogAtLevel(_level, message);
+            // _log.LogAtLevel(_level, message);
+            LoggingFeature.LogAtLevel(_log.Name, _level, message, null, null);
         }
 
         public void Log(string message, Exception e)
         {
-            _log.LogAtLevel(_level, message, e);
+            // _log.LogAtLevel(_level, message, e);
+            LoggingFeature.LogAtLevel(_log.Name, _level, message, e, null);
         }
     }
 }

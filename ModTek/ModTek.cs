@@ -7,7 +7,6 @@ using BattleTech.Data;
 using ModTek.Features.AssembliesLoader;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomSoundBankDefs;
-using ModTek.Features.HarmonyPatching;
 using ModTek.Features.Logging;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
@@ -25,8 +24,6 @@ public static partial class ModTek
 
     // TBD fields below
 
-    internal static bool HasLoaded { get; private set; }
-
     internal static ModDefEx SettingsDef { get; private set; }
 
     internal static bool Enabled => SettingsDef.Enabled;
@@ -42,12 +39,14 @@ public static partial class ModTek
         Load();
     }
 
+    private static bool s_hasTriedLoading;
     private static void Load()
     {
-        if (HasLoaded)
+        if (s_hasTriedLoading)
         {
             return;
         }
+        s_hasTriedLoading = true;
 
         try
         {
@@ -56,6 +55,7 @@ public static partial class ModTek
         catch (Exception e)
         {
             LoggingFeature.WriteExceptionToFatalLog(e);
+            FinishAndCleanup();
         }
     }
 
@@ -75,9 +75,7 @@ public static partial class ModTek
             }
             catch (Exception e)
             {
-                Log.Main.Error?.Log($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
-                FinishAndCleanup();
-                return;
+                throw new Exception($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
             }
         }
 
@@ -102,18 +100,17 @@ public static partial class ModTek
         // load progress bar
         if (Enabled && !ProgressPanel.Initialize(FilePaths.ModTekDirectory, $"ModTek v{GitVersionInformation.FullSemVer}"))
         {
-            Log.Main.Error?.Log("Failed to load progress bar.  Skipping mod loading completely.");
-            FinishAndCleanup();
+            throw new Exception("Failed to load progress bar.  Skipping mod loading completely.");
         }
 
         try
         {
-            HarmonyUtils.PatchAll();
+            Log.Main.Info?.Log("Applying ModTek harmony patches");
+            Harmony.CreateAndPatchAll(typeof(ModTek).Assembly, "io.github.mpstark.ModTek");
         }
         catch (Exception e)
         {
-            Log.Main.Error?.Log("PATCHING FAILED!", e);
-            return;
+            throw new Exception("PATCHING FAILED!", e);
         }
 
         if (Enabled == false)
@@ -156,11 +153,8 @@ public static partial class ModTek
 
     internal static IEnumerator<ProgressReport> HarmonySummaryAndFinish()
     {
-        var sliderText = "Saving Harmony Summary";
+        var sliderText = "Saving list of loaded assemblies";
         yield return new ProgressReport(1, sliderText, "", true);
-        Log.Main.Info?.Log(sliderText);
-        HarmonyUtils.PrintHarmonySummary();
-
         File.WriteAllText(
             FilePaths.AssembliesLoadedLogPath,
             "Assemblies loaded:" + AppDomain.CurrentDomain.GetAssemblies()
@@ -175,8 +169,6 @@ public static partial class ModTek
 
     internal static void FinishAndCleanup()
     {
-        HasLoaded = true;
-
         stopwatch.Stop();
         Log.Main.Info?.Log($"Done. Elapsed running time: {stopwatch.Elapsed.TotalSeconds} seconds");
         stopwatch = null;

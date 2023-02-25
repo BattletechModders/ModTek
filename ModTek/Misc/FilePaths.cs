@@ -24,7 +24,6 @@ internal static class FilePaths
     internal static readonly string MDDBCacheDirectory = Path.Combine(TempModTekDirectory, "Database");
     internal static readonly string ModMDDBPath = Path.Combine(MDDBCacheDirectory, MDD_FILE_NAME);
     internal static readonly string LoadOrderPath = Path.Combine(TempModTekDirectory, "load_order.json");
-    internal static readonly string HarmonySummaryPath = Path.Combine(TempModTekDirectory, "harmony_summary.log");
     internal static readonly string AssembliesLoadedLogPath = Path.Combine(TempModTekDirectory, "assemblies_loaded.log");
     internal static readonly string ModTekSettingsPath = Path.Combine(ModTekDirectory, MOD_JSON_NAME);
     internal static readonly string AssetBundlesDirectory = Path.Combine(StreamingAssetsDirectory, "data", "assetbundles");
