@@ -1,5 +1,4 @@
-﻿using Harmony;
-using UnityEngine;
+﻿using UnityEngine;
 using Logger = HBS.Logging.Logger;
 
 namespace ModTek.Features.Logging.Patches;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Harmony;
 using Mono.Data.Sqlite;
 
 namespace ModTek.Features.Logging.Patches;

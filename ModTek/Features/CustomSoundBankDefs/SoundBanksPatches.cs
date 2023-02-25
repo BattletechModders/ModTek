@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using BattleTech;
 using BattleTech.UI;
-using Harmony;
 using HBS;
 using UnityEngine;
 

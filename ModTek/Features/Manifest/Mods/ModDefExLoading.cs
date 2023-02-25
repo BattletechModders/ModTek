@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Harmony;
 using ModTek.Features.CustomResources;
 using ModTek.Util;
 using Newtonsoft.Json;

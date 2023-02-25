@@ -1,6 +1,5 @@
 using System;
 using BattleTech.UI;
-using Harmony;
 
 namespace ModTek.Features.Profiler.Patches;
 

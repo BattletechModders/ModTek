@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Harmony;
 using ModTek.Features.CustomSVGAssets.Patches;
 using ModTek.Misc;
 using ModTek.Util;

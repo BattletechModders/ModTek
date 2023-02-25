@@ -1,6 +1,5 @@
 ﻿using System;
 using BattleTech.Data;
-using Harmony;
 using UnityEngine;
 
 namespace ModTek.Features.Manifest.Patches;

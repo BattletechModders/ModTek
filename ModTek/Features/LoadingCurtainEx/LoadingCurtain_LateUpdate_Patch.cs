@@ -1,6 +1,5 @@
 using System;
 using BattleTech.UI;
-using Harmony;
 using ModTek.Features.LoadingCurtainEx.DataManagerStats;
 
 namespace ModTek.Features.LoadingCurtainEx;

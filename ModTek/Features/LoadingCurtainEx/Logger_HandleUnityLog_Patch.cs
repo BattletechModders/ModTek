@@ -1,6 +1,5 @@
 using System.Linq;
 using BattleTech.UI;
-using Harmony;
 using UnityEngine;
 using Logger = HBS.Logging.Logger;
 

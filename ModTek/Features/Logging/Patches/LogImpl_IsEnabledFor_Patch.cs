@@ -1,4 +1,3 @@
-using Harmony;
 using HBS.Logging;
 
 namespace ModTek.Features.Logging.Patches;

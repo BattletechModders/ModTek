@@ -1,5 +1,4 @@
 using System.IO;
-using Harmony;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global

@@ -7,7 +7,6 @@ using BattleTech;
 using BattleTech.Assetbundles;
 using BattleTech.Data;
 using BattleTech.UI;
-using Harmony;
 using SVGImporter;
 using static BattleTech.Data.DataManager;
 

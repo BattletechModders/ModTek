@@ -1,7 +1,6 @@
 using System;
 using BattleTech.BinkMedia;
 using BinkPlugin;
-using Harmony;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming

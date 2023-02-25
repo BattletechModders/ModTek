@@ -1,6 +1,5 @@
 using System;
 using BattleTech;
-using Harmony;
 
 namespace ModTek.Features.Logging.Patches;
 

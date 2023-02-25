@@ -1,5 +1,4 @@
 ﻿using BattleTech.Data;
-using Harmony;
 using ModTek.Misc;
 
 namespace ModTek.Features.Manifest.Patches;

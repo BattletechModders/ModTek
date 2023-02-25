@@ -2,7 +2,6 @@
 using System.IO;
 using BattleTech;
 using BattleTech.Assetbundles;
-using Harmony;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using BattleTech;
 using BattleTech.Data;
-using Harmony;
 using ModTek.Features.Manifest.BTRL;
 
 // ReSharper disable RedundantAssignment

@@ -1,5 +1,4 @@
 ﻿using System;
-using Harmony;
 using HBS.Logging;
 using ModTek.Util;
 

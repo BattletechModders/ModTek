@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
-using Harmony;
 using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.MDD;
 

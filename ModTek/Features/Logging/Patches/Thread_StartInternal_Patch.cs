@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Threading;
-using Harmony;
 
 namespace ModTek.Features.Logging.Patches;
 

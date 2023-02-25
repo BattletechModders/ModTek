@@ -1,7 +1,6 @@
 using System;
 using BattleTech;
 using BattleTech.Data;
-using Harmony;
 using ModTek.Features.Manifest.Mods;
 
 namespace ModTek.Features.LoadAtBattleStart.Patches;

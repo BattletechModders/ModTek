@@ -9,7 +9,6 @@ using BattleTech.ModSupport;
 using BattleTech.Save;
 using BattleTech.UI;
 using BattleTech.UI.TMProWrapper;
-using Harmony;
 using ModTek.Features.Manifest.Mods;
 using UnityEngine;
 

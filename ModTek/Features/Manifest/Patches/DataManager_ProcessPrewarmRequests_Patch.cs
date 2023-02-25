@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BattleTech.Data;
-using Harmony;
 
 namespace ModTek.Features.Manifest.Patches;
 

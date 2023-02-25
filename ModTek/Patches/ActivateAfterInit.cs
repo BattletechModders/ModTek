@@ -1,4 +1,3 @@
-using Harmony;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming

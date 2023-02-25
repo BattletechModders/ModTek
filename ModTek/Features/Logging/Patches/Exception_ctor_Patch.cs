@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Harmony;
 using UnityEngine;
 
 namespace ModTek.Features.Logging.Patches;
