@@ -1,19 +1,23 @@
+<!-- Use the modern .NET Sdk csproj style, avoids lots of boilerplace configuration -->
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- This is just a test mod, so we can use ModTek common props -->
-  <Import Project="..\..\Common.props" />
+  <!-- Imports a common set of project properties -->
+  <Import Project="Common.props" />
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
   </ItemGroup>
-  <Target Condition="'$(CopyToBattleTechGameDir)' == 'true'" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXModTest\" />
-    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\HarmonyXModTest\" />
+
+  <!-- Copy the mod dll to the BT game dir if the mod directory exists there -->
+  <Target Condition="Exists('$(BattleTechGameDir)\Mods\$(ProjectName)\')" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
+    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
   </Target>
 
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
       <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
@@ -21,8 +25,11 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
 
-    <!-- Use the latest HarmonyX, make sure ModTek gets the newest dlls too -->
-    <PackageReference Include="HarmonyX" />
+    <!-- Harmony is needed to hook into the game -->
+    <Reference Include="0Harmony">
+      <!-- Every dll found in Managed should not be copied to OutDir when building -->
+      <Private>False</Private>
+    </Reference>
 
     <!-- Important system libraries that are basically always used -->
     <Reference Include="System">

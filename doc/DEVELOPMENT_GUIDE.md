@@ -105,7 +105,7 @@ Steps to get a working debugger setup:
     1. (TODO make this easier by making ModTek create a directory with all DLLs: `Mods/.modtek/AssembliesDebug` or so)
 6. find the spot you want to debug, place a breakpoint
 6. connect dnSpyEx to Unity (default port etc..)
-your breakpoint should be hit as long as no mods patch the method with your breakpoint (see `harmony_summary.log`)
+your breakpoint should be hit as long as no mods patch the method with your breakpoint (see `HarmonyFileLog.log`)
 
 ### BTDebug Mod
 
@@ -155,7 +155,8 @@ HarmonyX is the latest harmony version available and can by used by adding a pac
 ```xml
 <ItemGroup>
   <PackageReference Include="HarmonyX" Version="2.10.1">
-    <Private>False</Private>
+    <PrivateAssets>All</PrivateAssets>
+    <ExcludeAssets>runtime</ExcludeAssets>
   </PackageReference>
 </ItemGroup>
 ```

@@ -1,0 +1,5 @@
+{
+	"Name": "ModTemplateWithHarmonyX",
+	"DLL": "ModTemplateWithHarmonyX.dll",
+	"DLLEntryPoint": "ModTemplateWithHarmonyX.Main.Start"
+}

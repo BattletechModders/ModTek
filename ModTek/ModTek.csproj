@@ -1,6 +1,4 @@
-﻿<!-- Use the .NET Sdk csproj style, avoids lots of boilerplace configuration -->
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Imports a common set of project properties -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\Common.props" />
 
   <PropertyGroup>
@@ -8,7 +6,6 @@
     <NoWarn>CS0649</NoWarn>
   </PropertyGroup>
 
-  <!-- Copies dll and assets -->
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="$(TargetPath);@(Asset)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
@@ -17,6 +14,7 @@
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
       <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
@@ -25,7 +23,10 @@
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <PackageReference Include="HarmonyX" />
+    <PackageReference Include="HarmonyX">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
 
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->

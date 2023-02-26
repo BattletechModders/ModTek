@@ -1,6 +1,6 @@
-using Harmony;
+using HarmonyLib;
 
-namespace ModTemplate.Patches;
+namespace ModTemplateWithHarmonyX.Patches;
 
 [HarmonyPatch(typeof(VersionInfo), nameof(VersionInfo.GetReleaseVersion))]
 static class VersionInfo_GetReleaseVersion_Patch
@@ -10,6 +10,6 @@ static class VersionInfo_GetReleaseVersion_Patch
     static void Postfix(ref string __result)
     {
         var old = __result;
-        __result = old + "\nModTemplate";
+        __result = old + "\nMTWHX(1)";
     }
 }

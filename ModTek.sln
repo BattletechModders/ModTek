@@ -26,9 +26,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Harmony12Interop", "Harmony
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{6480C6DD-C6E7-4D8C-9220-37FB34162CF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarmonyXModTest", "examples\HarmonyXModTest\HarmonyXModTest.csproj", "{C0839FDC-E835-40B5-831A-E4EB5D9040D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplateWithHarmonyX", "examples\ModTemplateWithHarmonyX\ModTemplateWithHarmonyX.csproj", "{C0839FDC-E835-40B5-831A-E4EB5D9040D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplate", "examples\ModTemplate\ModTemplate.csproj", "{253B7E45-1D8E-450E-AA00-F79818D707C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplateWithOldHarmony1", "examples\ModTemplateWithOldHarmony1\ModTemplateWithOldHarmony1.csproj", "{253B7E45-1D8E-450E-AA00-F79818D707C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

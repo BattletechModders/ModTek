@@ -1,19 +1,23 @@
+<!-- Use the modern .NET Sdk csproj style, avoids lots of boilerplace configuration -->
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Import a common file that include a default set of settings for your mod -->
+  <!-- Imports a common set of project properties -->
   <Import Project="Common.props" />
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
   </ItemGroup>
-  <Target Condition="'$(CopyToBattleTechGameDir)' == 'true'" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTemplate\" />
-    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\ModTemplate\" />
+  
+  <!-- Copy the mod dll to the BT game dir if the mod directory exists there -->
+  <Target Condition="Exists('$(BattleTechGameDir)\Mods\$(ProjectName)\')" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
+    <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
   </Target>
 
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
       <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
@@ -22,10 +26,10 @@
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <Reference Include="0Harmony">
-      <!-- Every dll found in Managed should not be copied to OutDir when building -->
-      <Private>False</Private>
-    </Reference>
+    <PackageReference Include="HarmonyX">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
 
     <!-- Important system libraries that are basically always used -->
     <Reference Include="System">

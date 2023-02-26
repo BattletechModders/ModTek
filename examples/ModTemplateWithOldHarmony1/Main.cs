@@ -2,17 +2,17 @@
 using Harmony;
 using HBS.Logging;
 
-namespace ModTemplate;
+namespace ModTemplateWithOldHarmony1;
 
 public static class Main
 {
-    private static readonly ILog s_log = Logger.GetLogger(nameof(ModTemplate));
+    private static readonly ILog s_log = Logger.GetLogger(nameof(ModTemplateWithOldHarmony1));
     public static void Start()
     {
         s_log.Log("Starting");
 
         HarmonyInstance
-            .Create(nameof(ModTemplate))
+            .Create(nameof(ModTemplateWithOldHarmony1))
             .PatchAll(Assembly.GetExecutingAssembly());
 
         s_log.Log("Started");
