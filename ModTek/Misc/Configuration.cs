@@ -62,7 +62,7 @@ internal class Configuration
     [JsonProperty]
     internal const string ProfilerEnabled_Description = "Enables a very simple profiler.";
     [JsonProperty]
-    internal bool ProfilerEnabled = true;
+    internal bool ProfilerEnabled;
 
     [JsonProperty]
     internal const string BlockedMods_Description = "Mods that should not be allowed to load. Useful in cases where those mods would (newly) interfere with ModTek.";
