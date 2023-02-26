@@ -180,6 +180,7 @@ internal static class WeaponCategoryValue_GetIcon
     }
 }
 
+[HarmonyPatch]
 internal static class SVGAssetLoadRequest_Load
 {
     private static readonly HashSet<string> UILookAndColorConstantsIcons =

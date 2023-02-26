@@ -6,6 +6,7 @@ using ModTek.Features.Logging;
 
 namespace NullableLogging;
 
+[HarmonyPatch]
 internal sealed class NullableLogger
 {
     // instantiation
