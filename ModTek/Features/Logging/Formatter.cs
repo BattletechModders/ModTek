@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using HBS.Logging;
 
 namespace ModTek.Features.Logging;
 
@@ -76,14 +77,7 @@ internal class Formatter
             sb.Append(prefix);
             sb.Append("Location Trace");
             sb.Append(Environment.NewLine);
-            try
-            {
-                sb.Append(messageDto.location.ToString());
-            }
-            catch (Exception e)
-            {
-                sb.Append(e);
-            }
+            sb.Append(GetLocationString(messageDto.location));
         }
 
         var line = sb.ToString();
@@ -100,5 +94,21 @@ internal class Formatter
         }
 
         return line;
+    }
+
+    private static string GetLocationString(IStackTrace st)
+    {
+        try
+        {
+            return st switch
+            {
+                UnityStackTrace ust => ust.stackTrace,
+                _ => st.ToString()
+            };
+        }
+        catch (Exception e)
+        {
+            return e.ToString();
+        }
     }
 }
