@@ -24,7 +24,7 @@ In our case, we want to simply add the condition that you cannot launch a missio
 
 ## Setting Your Project Up
 
-Create a new project and solution with Visual Studio. You should target .NET 4.7, as this is what the game is using. See [ModTek.csproj](../ModTek/ModTek.csproj) on how your csproj can look like.
+Create a new project and solution with Visual Studio. You should target .NET 4.7.1, as this is what the game is using. See [ModTek.csproj](../ModTek/ModTek.csproj) on how your csproj can look like.
 
 On the right, make sure that you add references to the `0Harmony.dll` and `Assembly-CSharp.dll`. If you will be using the settings from your `mod.json`, you will also need `Newtonsoft.Json.dll`. 
 

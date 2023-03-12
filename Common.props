@@ -7,8 +7,8 @@
   <PropertyGroup>
     <!-- All mods and utilites are libraries and produce a dll -->
     <OutputType>Library</OutputType>
-    <!-- The latest BattleTech game version uses .NET Framework 4.7.2, newer target frameworks won't work -->
-    <TargetFramework>net472</TargetFramework>
+    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks won't work -->
+    <TargetFramework>net471</TargetFramework>
     <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework -->
     <LangVersion>11</LangVersion>
     <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->

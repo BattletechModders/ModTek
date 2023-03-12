@@ -8,14 +8,14 @@ it is heavily focused on DLL mods but some parts can still be applied to the JSO
 
 ## .NET Development
 
-BattleTech is based on Unity 2018.4.2 with Mono based on .NET Framework 4.7.2 .
+BattleTech is based on Unity 2018.4.2 with Mono based on .NET Framework 4.7.1 .
 Microsoft still supports the mentioned .NET version with its latest development tools.
 
 ### Rider or Visual Studio with Resharper
 
 Use the latest and greatest Visual Studio you can find. As of this writing it is Visual Studio 2022.
 - Visual Studio 2022 community is for free. Do not even think about using Visual Studio Code, its not worth it.
-- Newer Visual Studios and newer C# versions can be used, as long as they can target the old .NET Framework 4.7.2 used by the game.
+- Newer Visual Studios and newer C# versions can be used, as long as they can target the old .NET Framework 4.7.1 used by the game.
 - If you have the money, use Resharper from JetBrains.
 
 Rider is the C# IDE of the JetBrains that integrates similar functionality as Resharper. It still requires the build tools from MS to be installed.
@@ -60,7 +60,7 @@ Many older mods still use the old style csproj files. Don't copy those, use SDK 
 
 ### C# Latest:
 
-While .NET Framework 4.7.2 came with C# 7.3, you can use the latest C# (as of this writing 11) with albeit less features. Here are the highlights:
+While .NET Framework 4.7.1 came with C# 7.3, you can use the latest C# (as of this writing 11) with albeit less features. Here are the highlights:
 - Nullable reference types: When enabled, all reference types (e.g. string) are assumed to be wanted to be not-null.
   Assigning null or not initializing a field variable will lead to compiler warnings. Modern languages (Kotlin/Swift) have this already, C# has it too.
   Only caveat is that while we can use this, they are some language improvements regarding this feature that are not available in our old .NET Framework version.
