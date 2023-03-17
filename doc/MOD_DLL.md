@@ -14,7 +14,7 @@ This tutorial/walk-through uses:
 * BattleTech itself
 * [Visual Studio Community 2022](https://www.visualstudio.com/downloads/) to write and compile your mod's `.dll`
 * [dnSpyEx](https://github.com/dnSpyEx/dnSpy) to decompile game assembly back to C#
-* [Harmony](https://github.com/pardeike/Harmony) to patch methods at runtime
+* [HarmonyX](https://github.com/BepInEx/HarmonyX) to patch methods at runtime
 
 ## Do Your Research
 
@@ -24,17 +24,19 @@ In our case, we want to simply add the condition that you cannot launch a missio
 
 ## Setting Your Project Up
 
-Create a new project and solution with Visual Studio. You should target .NET 4.7.1, as this is what the game is using. See [ModTek.csproj](../ModTek/ModTek.csproj) on how your csproj can look like.
+Copy the mod template found in the same directory as the following csproj file: [ModTemplateWithHarmonyX.csproj](../examples/ModTemplateWithHarmonyX/ModTemplateWithHarmonyX.csproj)
 
-On the right, make sure that you add references to the `0Harmony.dll` and `Assembly-CSharp.dll`. If you will be using the settings from your `mod.json`, you will also need `Newtonsoft.Json.dll`. 
+Open your copy of the mod template with Visual Studio or Rider, it will complain about not finding the BattleTech directory.
 
-It's a hassle to change the other references like System and such to match the installed game and unless you're doing something special, you can skip changing the references. You do not need to reference ModTek.
+Copy [CHANGEME.Directory.Build.props](../CHANGEME.Directory.Build.props) as `Directory.Build.props` to your template copy and modify its contents to so that the BattleTechGameDir variable points to your BattleTech installation directory.
+
+For more best practices see the [Development Guide](DEVELOPMENT_GUIDE.md)
 
 ## Actually Writing Your Mod
 
 Now that you understand how the functionality works, you can change it. In our case, we want `ValidateLance` to return false when the lance is overweight, as well as fill in the same values that the function already does (i.e. we want to have exactly the same side effects as if the code was written in the method itself). It would be relatively easy to just hop into changing it in dnSpy and recompiling the method -- but we can't do that in this case, since we want to have a seperate `.dll` that does it at runtime.
 
-That's why we're using [Harmony](https://github.com/pardeike/Harmony) -- it allows you to "hook" onto methods before and after they are called, as well as to directly modify the executed IL code with a transpiler. The 'hooks' before are called Prefixes; they can modify the parameters passed into the function, as well as actually prevent the original code from being called, and the hooks after are called Postfixes; which can modify what the function returns. You can learn more about Harmony from looking at it's [wiki](https://github.com/pardeike/Harmony/wiki) and looking through other people's Harmony-based mods.
+That's why we're using [HarmonyX](https://github.com/BepInEx/HarmonyX) -- it allows you to "hook" onto methods before and after they are called, as well as to directly modify the executed IL code with a transpiler. The 'hooks' before are called Prefixes; they can modify the parameters passed into the function, as well as actually prevent the original code from being called, and the hooks after are called Postfixes; which can modify what the function returns. You can learn more about Harmony from looking at it's [wiki](https://github.com/pardeike/Harmony/wiki) and looking through other people's Harmony-based mods.
 
 Since `ValidateLance` doesn't have parameters, we still want the original code to execute, and we want to change `ValidateLance`'s return value, we'll use a postfix patch, which something like this:
 
@@ -57,8 +59,7 @@ public static class DropLimit
 {
     public static void Init(string directory, string settingsJSON)
     {
-        var harmony = HarmonyInstance.Create("io.github.mpstark.DropLimit");
-        harmony.PatchAll(Assembly.GetExecutingAssembly());
+        Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "io.github.mpstark.DropLimit");
     }
 }
 ```
@@ -119,8 +120,7 @@ internal class ModSettings
 internal static ModSettings Settings = new ModSettings();
 public static void Init(string directory, string settingsJSON)
 {
-    var harmony = HarmonyInstance.Create("io.github.mpstark.DropLimit");
-    harmony.PatchAll(Assembly.GetExecutingAssembly());
+    var harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "io.github.mpstark.DropLimit");
 
     // read settings
     try
