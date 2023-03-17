@@ -31,7 +31,7 @@ Actual migration:
 2. Change the global using introduced in the preparation to `global using HarmonyLib;`
 3. Update the Harmony patching mechanism, as it changed.
    ```csharp
-   var harmony = HarmonyInstance.Create("my harmony identifier);
+   var harmony = HarmonyInstance.Create("my harmony identifier");
    harmony.PatchAll(Assembly.GetExecutingAssembly());
    ```
    HarmonyX:
@@ -42,7 +42,7 @@ Actual migration:
    That emulates the behavior from Harmony1 and is necessary so other mods can make your prefix not execute.
    Prefixes not skipping automatically anymore is the main difference between Harmony from pardeike and HarmonyX from BepInEx.
    
-   Optionally one can now replace any try/catch the game with the [HarmonySafeWrap] attribute, exception thrown by the patch will be logged
+   One can now replace any try/catch with the [HarmonySafeWrap] attribute, exception thrown by the patch will be logged
    to the HBS Logger "HarmonyX" and thus will be available in the logs under `.modtek`.
    ```csharp
    [HarmonyPrefix]
