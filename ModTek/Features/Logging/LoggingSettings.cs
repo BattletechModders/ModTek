@@ -46,6 +46,7 @@ internal class LoggingSettings
         { nameof(Log.Profiler), LogLevel.Debug },
         { nameof(Log.Debugger), LogLevel.Debug },
         { nameof(Log.AppDomain), LogLevel.Debug },
+        { nameof(Log.HarmonyX), LogLevel.Log },
         { nameof(ModTek), NullableLogger.TraceLogLevel }
     };
 
