@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using HBS.Logging;
+using NullableLogging;
 
 namespace ModTek.Features.Logging;
 
@@ -62,7 +63,12 @@ internal static class LinePrefixToFilterTransformer
 
         if (match.Groups[2].Success)
         {
-            if (!Enum.TryParse(match.Groups[2].Value, true, out LogLevel logLevel))
+            LogLevel logLevel;
+            if ("TRACE".Equals(match.Groups[2].Value, StringComparison.OrdinalIgnoreCase) )
+            {
+                logLevel = NullableLogger.TraceLogLevel;
+            }
+            else if (!Enum.TryParse(match.Groups[2].Value, true, out logLevel))
             {
                 throw new ArgumentException("Can't parse " + match.Groups[2].Value + ". Not a valid HBS log level");
             }
