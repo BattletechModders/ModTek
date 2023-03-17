@@ -9,6 +9,7 @@ internal static class Log
     internal static readonly NullableLogger Profiler = NullableLogger.GetLogger(nameof(Profiler), NullableLogger.TraceLogLevel);
     internal static readonly NullableLogger Debugger = NullableLogger.GetLogger(nameof(Debugger), NullableLogger.TraceLogLevel);
     internal static readonly NullableLogger AppDomain = NullableLogger.GetLogger(nameof(AppDomain), NullableLogger.TraceLogLevel);
+    internal static readonly NullableLogger HarmonyX = NullableLogger.GetLogger(nameof(HarmonyX), NullableLogger.TraceLogLevel);
 
     internal static void LogIf(this NullableLogger.ILevel @this, bool condition, string message)
     {

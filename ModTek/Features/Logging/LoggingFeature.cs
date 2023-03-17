@@ -51,6 +51,8 @@ internal static class LoggingFeature
         {
             _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
         }
+
+        HarmonyXLoggerAdapter.Setup();
     }
 
     // used for intercepting all logging attempts and to log centrally
