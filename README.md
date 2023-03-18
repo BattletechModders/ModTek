@@ -29,6 +29,7 @@ Since BattleTech 1.7, HBS introduced their own mod-loader, which is based on an 
 - [Development Guide](doc/DEVELOPMENT_GUIDE.md)
 - [Preloader and Injectors](doc/PRELOADER.md)
 - [Logging with ModTek](doc/LOGGING.md)
+- [HarmonyX Support](doc/HARMONY12X.md)
 
 ### Custom Types
 

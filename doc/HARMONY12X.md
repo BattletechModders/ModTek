@@ -4,7 +4,30 @@ BepInEx is a modding tool and a modding community that provides an alternative t
 To allow support for mods using other versions, BepInEx provides "shims" that redirect calls from older harmony versions to HarmonyX.
 
 ModTek supports loading up HarmonyX with the BepInEx shims for Harmony 1.2 and Harmony 2, see the ModTekPreloader configuration to enable that feature.
-This allows mods written against those Harmony versions to coexist.
+This allows mods written against those Harmony versions to coexist with the newest Harmony X.
+
+## Harmony Changes
+
+Potentially breaking changes for Harmony 1 mods that get shimmed:
+- The patching backend changed, which is more strict and can also detect issues that were ignored before. That can lead to the patching process throwing errors.
+- The shims in use does not cover 100% of the API of the original, e.g. the ILGenerator of Harmony 1.2 is not implemented. In general it works, and even Harmony 1 transpilers are wrapped successfully during the patching process.
+- DLLs are not directly loaded from the location where the mod DLL is original at, but it will be re-written to `.modtek/AssembliesShimmed` and loaded from there. The assembly location property is patched to return the original path even if the assembly is loaded from the shimmed directory. This avoids mods reading or writing files from the wrong directory if using paths relative to the location of the mod' DLL.
+- Harmony 1 patch sorting was broken and did not work, this was fixed in Harmony 2 and Harmony X, leading to a different executing order of prefixes and postfixes, especially when using priorities and after/before attributes as those were broken too in Harmony 1.
+
+Potentially breaking changes for mods switching from Harmony 1 to Harmony X without using shimming:
+- When using Harmony X directly, patch prefixes are not skipped automatically. In Harmony 1, a prefix A that runs before a prefix B could make prefix B skip if A asked to do so. This is not automatically possible anymore when prefix B is directly patched with Harmony X. To keep compatibility with other mods, follow the migration guide on how to make a mods prefix patches skippable for maximum backwards compatibility.
+
+For a full list of changes introduced with Harmony 2, see https://harmony.pardeike.net/articles/new.html .
+
+For a full list of changes introduced with Harmony X, see https://github.com/BepInEx/HarmonyX/wiki/Difference-between-Harmony-and-HarmonyX .
+
+Changes in ModTek:
+- Harmony Logging
+  - harmony_summary.log was removed, as it was anyway buggy as the order of patches was a guess and one never knew how it was correct, as well as anything patching after the summary was obviously missing from the summary.
+  - All patches and the order of patches are now visible in the harmony logs, either at `.modtek/HarmonyFileLog.log` or as part of `.modtek/battletech_log.txt`.
+  - Log levels for harmony logging are managed in the ModTekPreloader configuration.
+- ModTek uses HarmonyX itself and prefix skipping was not implemented, meaning other mods can't disable or modify ModTek prefixes yet using the normal Harmony 1 mechanisms.
+- HarmonyX support exists since ModTek v3, and since ModTek v4 its force enabled and can't be disabled anymore.
 
 ## Migration Guide
 
@@ -42,7 +65,7 @@ Actual migration:
    That emulates the behavior from Harmony1 and is necessary so other mods can make your prefix not execute.
    Prefixes not skipping automatically anymore is the main difference between Harmony from pardeike and HarmonyX from BepInEx.
    
-   One can now replace any try/catch with the [HarmonySafeWrap] attribute, exception thrown by the patch will be logged
+   One can now replace any try/catch with the [HarmonyWrapSafe] attribute, exception thrown by the patch will be logged
    to the HBS Logger "HarmonyX" and thus will be available in the logs under `.modtek`.
    ```csharp
    [HarmonyPrefix]
@@ -69,7 +92,7 @@ Actual migration:
    HarmonyX:
    ```csharp
    [HarmonyPrefix]
-   [HarmonySafeWrap]
+   [HarmonyWrapSafe]
    public static void Prefix(ref bool __runOriginal, MechDef mech, ref HashSet<string> __result)
    {
        if (!__runOriginal)
@@ -87,7 +110,7 @@ Actual migration:
        __runOriginal = false;
    }
    ```
-5. One can also add `[HarmonySafeWrap]` to all postfixes to keep it consistent with the prefixes.
+5. One can also add `[HarmonyWrapSafe]` to all postfixes to keep it consistent with the prefixes.
    ```csharp
    [HarmonyPostfix]
    public static bool Postfix(MechDef mech, ref HashSet<string> __result)
@@ -106,7 +129,7 @@ Actual migration:
    HarmonyX:
    ```csharp
    [HarmonyPostfix]
-   [HarmonySafeWrap]
+   [HarmonyWrapSafe]
    public static void Postfix(MechDef mech, ref HashSet<string> __result)
    {
        // something complicated here
@@ -115,23 +138,22 @@ Actual migration:
 
 See the BattleTech, ModTek or Harmony logs in `.modtek` in case you encounter errors.
 
-## How it works internally
+## History of Modtek and Harmony Versions
 
-Note that in order for it to work, the ModTekPreloader has to intercept assembly load calls and rewrite the assembly. They are then saved to disk
-at a location under `.modtek`. Due to how harmony is being distributed, all breaking versions of harmony have the same assembly name, and .NET can't load
-different assemblies under the same name. The shim is made to work by renaming the dependencies in assemblies, e.g. a ModTek.dll that references
-the `0Harmony.dll` version 1.2 will have the reference changed to the shim of the name `OHarmony12.dll`.
+BattleTech provides official mod support, though they just copy pasted the ModTek version at the time and named it ModLoader.
+Through that they also included the latest official Harmony 1 release as part of BattleTech.
 
-## Limitations
+ModTek was sometimes bundled with a slightly customized version of Harmony 1, which only differed in implementation not API.
 
-The shims do not cover 100% of the API of the original versions, e.g. the ILGenerator of Harmony 1.2 is not implemented.
-However almost no mods use that. In general, transpilers are wrapped successfully via shims and do work. Sometimes a buggy
-implementation in Harmony 1 allowed for invalid or broken patching, which would now throw an error during patching due to 
-HarmonyX being more strict and bug free.
+Harmony 2 was being developed but never integrated into ModTek, it had radical changes in namespace and some APIs and was therefore not backwards compatible, meaning ModTek could not
+just replace the Harmony 1 dll with the Harmony 2 dll.
 
-With BepInEx 6 they will not support older harmony versions anymore, however shimming is still working even with newer HarmonyX.
-Also BepInEx 5 is still supported in LTS mode and does support the harmony shims.
+BepInEx is a modding framework and community which implemented a fork of Harmony 2 called Harmony X that changed some things that made it also incompatible in behavior to Harmony 2.
+However, since there were several BepInEx mods that were still reliant on Harmony 1, they opted to add shims that allowed mods written against Harmony 1 to be dynamically changed to Harmony X support.
 
-## How to use it
+ModTek v3 then started supporting HarmonyX and used the Harmony 1<>X bridging support from BepInEx and improved upon it, since it wasn't properly supporting Harmony 1 behavior.
 
-Reference `Mods/ModTek/Harmony12X/0Harmony.dll` to use the latest HarmonyX version and enable HarmonyX in the `ModTek/config.json`.
+ModTek v4 is similar to v3, however in v3 one could disable HarmonyX support which would avoid shimming.
+With ModTek v4 one can't disable HarmonyX anymore and Harmony 1 mods will always be shimmed.
+
+HarmonyX strives to be backwards compatible with older HarmonyX versions, hence why shimming between HarmonyX versions is not yet necessary.
