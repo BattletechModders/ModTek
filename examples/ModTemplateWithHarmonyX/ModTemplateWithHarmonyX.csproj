@@ -1,7 +1,26 @@
 <!-- Use the modern .NET Sdk csproj style, avoids lots of boilerplace configuration -->
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Imports a common set of project properties -->
-  <Import Project="Common.props" />
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="ValidateBattleTechGameDir">
+  <!-- Check if the BattleTechGameDir variable is correctly set -->
+  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
+    <Error Text="BattleTechGameDir variable not set properly" />
+  </Target>
+
+  <PropertyGroup>
+    <!-- All mods and utilites are libraries and produce a dll -->
+    <OutputType>Library</OutputType>
+    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks won't work -->
+    <TargetFramework>net471</TargetFramework>
+    <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework -->
+    <LangVersion>11</LangVersion>
+    <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
+    <AssemblySearchPaths>
+      {HintPathFromItem};
+      $(BattleTechGameDir)\BattleTech_Data\Managed
+    </AssemblySearchPaths>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <!-- embed symbols into the dll -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
 
   <ItemGroup>
     <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
@@ -15,18 +34,18 @@
 
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
-    <PackageReference Include="GitVersion.MsBuild">
+    <PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <PackageReference Include="HarmonyX">
+    <PackageReference Include="HarmonyX" Version="2.10.1">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
