@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -247,51 +247,74 @@ internal static class LoadedAudioBank_LoadBankExternal
         Log.Main.Debug?.Log("LoadedAudioBank.LoadBankExternal " + __instance.name);
         if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name) == false)
         {
+            Log.Main.Warning?.Log($"Soundbank {__instance.name} does not exists");
             return false;
         }
-
-        var uri = new Uri(SoundBanksFeature.soundBanks[__instance.name].filename).AbsoluteUri;
-        Log.Main.Debug?.Log("\t" + uri);
-        var www = new WWW(uri);
-        while (!www.isDone)
+        string filename = SoundBanksFeature.soundBanks[__instance.name].filename;
+        if(File.Exists(filename) == false)
         {
-            Thread.Sleep(25);
+            Log.Main.Warning?.Log($"Soundbank {filename} does not exists");
+            return false;
+        };
+        byte[] content = null;
+        try
+        {
+            content = File.ReadAllBytes(filename);
         }
-
-        Log.Main.Debug?.Log("\t'" + uri + "' loaded");
-        var pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
-        GCHandle? handle = null;
-        var dataLength = (uint) www.bytes.Length;
-        if (pparams != null)
+        catch (Exception e)
         {
-            Log.Main.Debug?.Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
-            var aes = Aes.Create();
-            aes.Mode = CipherMode.CBC;
-            aes.KeySize = 256;
-            aes.BlockSize = 128;
-            aes.FeedbackSize = 128;
-            aes.Padding = PaddingMode.PKCS7;
-            aes.Key = Convert.FromBase64String(pparams.param1);
-            aes.IV = Convert.FromBase64String(pparams.param2);
-            var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-            byte[] result = null;
-            using (var msEncrypt = new MemoryStream())
-            {
-                using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                {
-                    csEncrypt.Write(www.bytes, 0, www.bytes.Length);
-                }
-
-                result = msEncrypt.ToArray();
-            }
-
-            handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-            dataLength = (uint) result.Length;
+            Log.Main.Error?.Log($"\tfail to read soundbank from fs\n{e.ToString()}");
+        }
+        Log.Main.Debug?.Log($"\t'{filename}' loaded. Length: {content.Length}");
+        ProcessParameters pparams = null;
+        if ((content[0] == 'B') && (content[1] == 'K') && (content[2] == 'H') && (content[3] == 'D'))
+        {
+            pparams = null;
         }
         else
         {
-            handle = GCHandle.Alloc(www.bytes, GCHandleType.Pinned);
-            dataLength = (uint) www.bytes.Length;
+            pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
+        }
+        GCHandle? handle = null;
+        var dataLength = (uint)content.Length;
+        if (pparams != null)
+        {
+            Log.Main.Debug?.Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
+            byte[] result = null;
+            try
+            {
+                var aes = Aes.Create();
+                aes.Mode = CipherMode.CBC;
+                aes.KeySize = 256;
+                aes.BlockSize = 128;
+                aes.FeedbackSize = 128;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Key = Convert.FromBase64String(pparams.param1);
+                aes.IV = Convert.FromBase64String(pparams.param2);
+                var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+                using (var msEncrypt = new MemoryStream())
+                {
+                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        csEncrypt.Write(content, 0, content.Length);
+                    }
+
+                    result = msEncrypt.ToArray();
+                }
+                handle = GCHandle.Alloc(result, GCHandleType.Pinned);
+                dataLength = (uint)result.Length;
+            }
+            catch (Exception e)
+            {
+                Log.Main.Error?.Log($"\tfail to process soundbank from fs\n{e.ToString()}");
+                handle = GCHandle.Alloc(content, GCHandleType.Pinned);
+                dataLength = (uint)content.Length;
+            }
+        }
+        else
+        {
+            handle = GCHandle.Alloc(content, GCHandleType.Pinned);
+            dataLength = (uint)content.Length;
         }
 
         if (handle.HasValue == false)
@@ -308,9 +331,7 @@ internal static class LoadedAudioBank_LoadBankExternal
             {
                 SoundBanksFeature.soundBanks[__instance.name].registerEvents();
                 SoundBanksFeature.soundBanks[__instance.name].setVolume();
-            }
-
-            ;
+            };
         }
         catch
         {
