@@ -53,15 +53,7 @@ jobs:
         run: ${{ inputs.build-script }}
       - name: Delete Latest
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-        uses: dev-drprasad/delete-tag-and-release@master
-        with:
-          tag_name: "latest"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete Latest
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-        uses: dev-drprasad/delete-tag-and-release@master
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           tag_name: "latest"
         env:
