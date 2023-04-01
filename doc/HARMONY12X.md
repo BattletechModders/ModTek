@@ -113,7 +113,7 @@ Actual migration:
 5. One can also add `[HarmonyWrapSafe]` to all postfixes to keep it consistent with the prefixes.
    ```csharp
    [HarmonyPostfix]
-   public static bool Postfix(MechDef mech, ref HashSet<string> __result)
+   public static void Postfix(MechDef mech, ref HashSet<string> __result)
    {
        try
        {
