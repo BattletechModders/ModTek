@@ -1,4 +1,5 @@
-﻿#nullable enable
+﻿// get the latest version of the nullable logger from MechEngineer
+#nullable enable
 using System;
 using System.Collections.Generic;
 using HBS.Logging;
@@ -15,11 +16,12 @@ internal sealed class NullableLogger
     {
         lock (_loggers)
         {
-            if (!_loggers.TryGetValue(name, out var loggers))
+            if (!_loggers.TryGetValue(name, out var logger))
             {
-                loggers = new(name, defaultLogLevel);
+                logger = new(name, defaultLogLevel);
+                _loggers[name] = logger;
             }
-            return loggers;
+            return logger;
         }
     }
 
@@ -27,13 +29,14 @@ internal sealed class NullableLogger
 
     internal const LogLevel TraceLogLevel = (LogLevel)200;
 
-    // tracking (static)
+    // tracking
 
     private static readonly SortedList<string, NullableLogger> _loggers = new();
 
     [HarmonyPatch(typeof(Logger.LogImpl), nameof(Logger.LogImpl.Level), MethodType.Setter)]
     [HarmonyPostfix]
-    internal static void LogImpl_set_Level_Postfix()
+    [HarmonyWrapSafe]
+    private static void LogImpl_set_Level_Postfix()
     {
         lock (_loggers)
         {
