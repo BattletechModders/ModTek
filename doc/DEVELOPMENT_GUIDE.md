@@ -165,25 +165,29 @@ The version should be updated by you as ModTek updates it, though HarmonyX tries
 ### Use Publicizer not Traverse
 
 > **Warning**
-> Do not inherit from publicized classes and let your instances be used by code that uses reflection to access it.
-> For example, don't inherit from publicized unity classes.
+> Publicizing is not without quirks,
+> please visit [github.com/krafs/Publicizer](https://github.com/krafs/Publicizer#quirks)
+> for a list of possible issues and suggested workarounds.
 
-Thanks to the work at BepInEx, we now have an easy way to publicize an assembly, what does it do any why do we need that?
+> **Note**
+> BepInEx.AssemblyPublicizer.MSBuild is not recommended anymore as Krafs.Publicizer
+> covers provides more options and has a documented list of issues that come
+> from publicizing.
+
+What does a publicizer do and why do we need it?
 - It makes all classes, methods, properties and fields of assemblies public (with some exceptions).
 - It avoids the need to write reflection tools or wrappers to access private stuff, leads to cleaner and faster code at runtime.
 
 Add to your csproj:
 ```xml
+<PropertyGroup>
+  <!-- avoids IgnoresAccessChecksToAttribute warnings -->
+  <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
+</PropertyGroup>
 <ItemGroup>
-  <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.3.0" />
+  <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
+  <Publicize Include="Assembly-CSharp" />
 </ItemGroup>
-```
-
-and modify a reference to an assembly to include `Publicize="true"`:
-```xml
-<Reference Include="Assembly-CSharp" Publicize="true">
-  <Private>False</Private>
-</Reference>
 ```
 
 Now instead of writing something with Harmony Traverse:

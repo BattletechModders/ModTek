@@ -10,13 +10,20 @@
     <Copy SourceFiles="$(TargetPath);@(Asset)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
 
+  <PropertyGroup>
+    <!-- avoids IgnoresAccessChecksToAttribute warnings -->
+    <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild">
-      <PrivateAssets>All</PrivateAssets>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
+    <PackageReference Include="Krafs.Publicizer" />
+    <!-- Main game library, best to publicize it to access internals easily and efficently -->
+    <Publicize Include="Assembly-CSharp" />
+    <!-- Sometimes compiler generated members are called the same as normal members in compiled code and C# can't distinguish them -->
+    <Publicize Include="UnityEngine.CoreModule" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
 
+  <ItemGroup>
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
     <PackageReference Include="GitVersion.MsBuild">
       <PrivateAssets>All</PrivateAssets>
@@ -30,7 +37,7 @@
 
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->
-    <Reference Include="Assembly-CSharp" Publicize="true">
+    <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>
 
@@ -77,7 +84,7 @@
     <Reference Include="UnityEngine.AssetBundleModule">
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule" Publicize="true">
+    <Reference Include="UnityEngine.CoreModule">
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">

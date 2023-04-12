@@ -32,13 +32,18 @@
     <Copy SourceFiles="mod.json" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
   </Target>
 
+  <PropertyGroup>
+    <!-- avoids IgnoresAccessChecksToAttribute warnings -->
+    <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">
-      <PrivateAssets>All</PrivateAssets>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
+    <!-- Main game library, best to publicize it to access internals easily and efficiently -->
+    <Publicize Include="Assembly-CSharp" />
+  </ItemGroup>
 
+  <ItemGroup>
     <!-- Automatically set the version number of your assembly based on git tags and semver -->
     <PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
       <PrivateAssets>All</PrivateAssets>
@@ -59,7 +64,7 @@
     </Reference>
 
     <!-- Main game library, best to publicize it to access internals easily and efficently -->
-    <Reference Include="Assembly-CSharp" Publicize="true">
+    <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>
   </ItemGroup>
