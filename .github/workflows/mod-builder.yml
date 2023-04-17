@@ -51,13 +51,18 @@ jobs:
       - name: Build Mod
         working-directory: ${{ inputs.checkout-directory }}
         run: ${{ inputs.build-script }}
-      - name: Delete Latest
+
+      - name: Delete Latest (Remote)
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: dev-drprasad/delete-tag-and-release@v1.0
         with:
           tag_name: "latest"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete Latest (Local)
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        working-directory: ${{ inputs.checkout-directory }}
+        run: git tag -d latest || true
       - id: release_latest
         name: Release Latest
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
