@@ -118,10 +118,13 @@ internal class Instruction
         }
 
         var lastIndex = filterCount - 1;
-        var lastFilter = jPath.Filters[lastIndex];
-        if (lastFilter is not FieldFilter fieldFilter)
+        FieldFilter fieldFilter;
         {
-            throw new Exception($"{nameof(AutoCreateProperty)}: JSONPath does not contain a field property expression at the end");
+            fieldFilter = jPath.Filters[lastIndex] as FieldFilter;
+            if (fieldFilter?.Name == null)
+            {
+                throw new Exception($"{nameof(AutoCreateProperty)}: JSONPath does not contain a field property expression at the end");
+            }
         }
 
         IEnumerable<JToken> tmpTokens = new[]
@@ -139,7 +142,7 @@ internal class Instruction
         var tokens = new List<JToken>();
         foreach (var parentToken in tmpTokens)
         {
-            var found = lastFilter.ExecuteFilter(root, parentToken, false).SingleOrDefault();
+            var found = fieldFilter.ExecuteFilter(root, new[] { parentToken }, false).SingleOrDefault();
             if (found == null)
             {
                 if (parentToken is not JObject parentObject)
