@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using ModTek.Features.Manifest;
+using ModTek.Util;
 using Newtonsoft.Json.Linq;
 
 namespace ModTek.Features.AdvJSONMerge;
@@ -13,23 +16,37 @@ internal static class AdvJSONMergeFeature
     private static void DoAdvancedMerge(JObject target, JObject merge)
     {
         var instructions = merge[nameof(AdvancedJSONMerge.Instructions)].ToObject<List<Instruction>>();
-        foreach (var instruction in instructions)
+        for (var index = 0; index < instructions.Count; index++)
         {
-            if (!instruction.Process(target))
+            var instruction = instructions[index];
+            try
             {
-                Log.Main.Warning?.Log($"An instruction (Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') did not perform anything.");
+                instruction.Process(target);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"The instruction (Index: {index} Action: '{instruction.Action}' JSONPath: '{instruction.JSONPath}') produced an error", e);
             }
         }
     }
 
-    public static void MergeIntoTarget(JObject target, JObject merge)
+    public static void MergeIntoTarget(JObject target, FileVersionTuple mergeVersion)
     {
-        if (IsAdvancedJSONMerge(merge))
+        try
         {
-            DoAdvancedMerge(target, merge);
-            return;
-        }
+            var merge = HBSJsonUtils.ParseGameJSONFile(mergeVersion.AbsolutePath);
 
-        target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+            if (IsAdvancedJSONMerge(merge))
+            {
+                DoAdvancedMerge(target, merge);
+                return;
+            }
+
+            target.Merge(merge, new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Error merging {mergeVersion.Path}", e);
+        }
     }
 }

@@ -154,7 +154,7 @@ internal class Configuration
 
     private class ShouldSerializeContractResolver : DefaultContractResolver
     {
-        public static readonly ShouldSerializeContractResolver Instance = new();
+        public new static readonly ShouldSerializeContractResolver Instance = new();
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {

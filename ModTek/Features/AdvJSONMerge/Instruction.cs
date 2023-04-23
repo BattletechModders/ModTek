@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq.JsonPath;
 
 namespace ModTek.Features.AdvJSONMerge;
 
@@ -18,13 +20,15 @@ internal class Instruction
     [JsonProperty]
     public JToken Value;
 
-    public bool Process(JObject root)
-    {
-        var jTokens = root.SelectTokens(JSONPath).ToList();
+    [JsonProperty]
+    public bool AutoCreateProperty;
 
+    public void Process(JObject root)
+    {
+        var jTokens = GetOrCreateJTokens(root);
         if (jTokens.Count == 0)
         {
-            return false;
+            throw new Exception("Did not find anything");
         }
 
         foreach (var jToken in jTokens)
@@ -51,9 +55,9 @@ internal class Instruction
                 }
                 case MergeAction.ArrayAdd:
                 {
-                    if (!(jToken is JArray jArray))
+                    if (jToken is not JArray jArray)
                     {
-                        throw new Exception("JSONPath needs to point an array");
+                        throw new Exception("JSONPath needs to point to an array");
                     }
 
                     jArray.Add(Value);
@@ -71,7 +75,7 @@ internal class Instruction
                 }
                 case MergeAction.ObjectMerge:
                 {
-                    if (!(jToken is JObject jObject1) || !(Value is JObject jObject2))
+                    if (jToken is not JObject jObject1 || Value is not JObject jObject2)
                     {
                         throw new Exception("JSONPath has to point to an object and Value has to be an object");
                     }
@@ -82,7 +86,7 @@ internal class Instruction
                 }
                 case MergeAction.ArrayConcat:
                 {
-                    if (!(jToken is JArray jArray1) || !(Value is JArray jArray2))
+                    if (jToken is not JArray jArray1 || Value is not JArray jArray2)
                     {
                         throw new Exception("JSONPath has to point to an array and Value has to be an array");
                     }
@@ -92,11 +96,84 @@ internal class Instruction
                 }
                 default:
                 {
-                    throw new Exception("Unhandled action in Process");
+                    throw new Exception("Unhandled action");
                 }
             }
         }
+    }
 
-        return true;
+    private List<JToken> GetOrCreateJTokens(JToken root)
+    {
+        var jPath = new JPath(JSONPath);
+
+        if (!AutoCreateProperty)
+        {
+            return JPath.Evaluate(jPath.Filters, root, root, false).ToList();
+        }
+
+        var filterCount = jPath.Filters.Count;
+        if (filterCount < 1)
+        {
+            throw new Exception($"{nameof(AutoCreateProperty)}: JSONPath does not contain a field property expression");
+        }
+
+        var lastIndex = filterCount - 1;
+        var lastFilter = jPath.Filters[lastIndex];
+        if (lastFilter is not FieldFilter fieldFilter)
+        {
+            throw new Exception($"{nameof(AutoCreateProperty)}: JSONPath does not contain a field property expression at the end");
+        }
+
+        IEnumerable<JToken> tmpTokens = new[]
+        {
+            root
+        };
+        for (var index = 0; index < lastIndex; index++)
+        {
+            var filter = jPath.Filters[index];
+            tmpTokens = filter.ExecuteFilter(root, tmpTokens, false);
+        }
+
+        var defaultValue = GetDefaultValueForAction();
+
+        var tokens = new List<JToken>();
+        foreach (var parentToken in tmpTokens)
+        {
+            var found = lastFilter.ExecuteFilter(root, parentToken, false).SingleOrDefault();
+            if (found == null)
+            {
+                if (parentToken is not JObject parentObject)
+                {
+                    throw new Exception($"{nameof(AutoCreateProperty)}: The container is not an object and does not accept properties");
+                }
+                var property = new JProperty(fieldFilter.Name)
+                {
+                    Value = defaultValue
+                };
+                parentObject.Add(property);
+                tokens.Add(property.Value);
+            }
+            else
+            {
+                tokens.Add(found);
+            }
+        }
+
+        return tokens;
+    }
+
+    private JToken GetDefaultValueForAction()
+    {
+        switch (Action)
+        {
+            case MergeAction.ArrayAdd:
+            case MergeAction.ArrayConcat:
+                return new JArray();
+            case MergeAction.Replace: // doesn't matter, will be replaced anyway
+            case MergeAction.ObjectMerge:
+                return new JObject();
+            default:
+                throw new Exception($"{nameof(AutoCreateProperty)}: The merge action is not supported");
+        }
     }
 }

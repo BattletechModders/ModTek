@@ -21,6 +21,8 @@
     <Publicize Include="Assembly-CSharp" />
     <!-- Sometimes compiler generated members are called the same as normal members in compiled code and C# can't distinguish them -->
     <Publicize Include="UnityEngine.CoreModule" IncludeCompilerGeneratedMembers="false" />
+    <!-- Avoid overriding publicizied methods by not publicizing them in the first place -->
+    <Publicize Include="Newtonsoft.Json" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
   </ItemGroup>
 
   <ItemGroup>

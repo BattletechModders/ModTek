@@ -76,8 +76,7 @@ internal class MergeCacheEntry : IEquatable<MergeCacheEntry>
         var target = HBSJsonUtils.ParseGameJSON(originalContent);
         foreach (var entry in Merges)
         {
-            var merge = HBSJsonUtils.ParseGameJSONFile(entry.AbsolutePath);
-            AdvJSONMergeFeature.MergeIntoTarget(target, merge);
+            AdvJSONMergeFeature.MergeIntoTarget(target, entry);
         }
 
         var mergedContent = target.ToString(Formatting.Indented);
