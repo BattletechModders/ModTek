@@ -10,7 +10,7 @@ internal class LoggingSettings
     [JsonProperty]
     internal const string DebugLogDumpServerListen_Description = "HTTP server to force logs dump";
     [JsonProperty]
-    internal string DebugLogDumpServerListen = "http://localhost:65181/";
+    internal string DebugLogDumpServerListen = string.Empty;
 
     [JsonProperty]
     internal const string LogUncaughtExceptions_Description = "Logs uncaught exceptions via AppDomain handler.";
