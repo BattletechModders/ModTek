@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using ModTek.Features.CustomResources;
 using ModTek.Util;
 using Newtonsoft.Json;
+using static UnityEngine.PostProcessing.AntialiasingModel;
 
 namespace ModTek.Features.Manifest.Mods;
 
@@ -115,7 +116,37 @@ internal static class ModDefExLoading
 
         return true;
     }
+    internal static void DebugLogDump(ModDefEx modDef)
+    {
+        if (string.IsNullOrEmpty(modDef.DebugDumpMethod)) { return; }
+        MethodInfo[] methods = null;
+        if (GetTypeAndMethodNames(modDef.DebugDumpMethod, out var typeName, out var methodName))
+        {
+            methods = AssemblyUtil.FindMethods(modDef.Assembly, methodName, typeName);
+        }
+        else
+        {
+            Log.Main.Error?.Log($"Can't parce {modDef.DebugDumpMethod}");
+        }
+        if (methods == null || methods.Length == 0)
+        {
+            Log.Main.Error?.Log($"Can't find {typeName}::{methodName} in assembly");
+            return;
+        }
+        foreach (var method in methods)
+        {
+            try
+            {
+                Log.Main.Info?.Log($"\tDebugLogDump {modDef.QuotedName}{typeName}::{methodName} ");
+                method.Invoke(null, null);
+            }
+            catch (Exception e)
+            {
+                Log.Main.Warning?.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+            }
+        }
 
+    }
     internal static void FinishedLoading(ModDefEx modDef, List<string> ModLoadOrder)
     {
         const string methodName = "FinishedLoading";
@@ -162,7 +193,7 @@ internal static class ModDefExLoading
         }
     }
 
-    private static bool GetTypeAndMethodNames(string dotNotation, out string typeName, out string methodName)
+    public static bool GetTypeAndMethodNames(string dotNotation, out string typeName, out string methodName)
     {
         var pos = dotNotation.LastIndexOf('.');
         if (pos == -1)

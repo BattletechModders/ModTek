@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using HBS.Logging;
 using Newtonsoft.Json;
 using NullableLogging;
@@ -7,6 +7,11 @@ namespace ModTek.Features.Logging;
 
 internal class LoggingSettings
 {
+    [JsonProperty]
+    internal const string DebugLogDumpServerListen_Description = "HTTP server to force logs dump";
+    [JsonProperty]
+    internal string DebugLogDumpServerListen = "http://localhost:65181/";
+
     [JsonProperty]
     internal const string LogUncaughtExceptions_Description = "Logs uncaught exceptions via AppDomain handler.";
     [JsonProperty]

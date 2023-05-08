@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -96,6 +96,7 @@ public class ModDefEx : IEquatable<ModDefEx>
     public string DLL { get; set; }
     public string DLLEntryPoint { get; set; }
 
+    public string DebugDumpMethod { get; set; }
     [DefaultValue(false)]
     public bool EnableAssemblyVersionCheck { get; set; } = false;
 

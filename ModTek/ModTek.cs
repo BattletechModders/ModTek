@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -164,6 +164,7 @@ public static partial class ModTek
         );
 
         yield return new ProgressReport(1, "Game now loading", "", true);
+        Features.DebugDump.DebugDumpServer.Instance.Report();
         FinishAndCleanup();
     }
 

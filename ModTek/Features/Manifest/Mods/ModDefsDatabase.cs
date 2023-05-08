@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -304,7 +304,20 @@ internal static class ModDefsDatabase
 
         FailedToLoadMods.Add(modName);
     }
-
+    internal static void DebugLogDump()
+    {
+        if (ModLoadOrder == null || ModLoadOrder.Count <= 0)
+        {
+            return;
+        }
+        {
+            Log.Main.Info?.Log("Calling DebugLogDump:");
+            foreach (var modDef in ModsInLoadOrder().Where(modDef => modDef.Assembly != null))
+            {
+                ModDefExLoading.DebugLogDump(modDef);
+            }
+        }
+    }
     internal static void FinishedLoadingMods()
     {
         if (ModLoadOrder == null || ModLoadOrder.Count <= 0)
