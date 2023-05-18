@@ -55,6 +55,12 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
+    <!-- Enables many newer language features for .NET Framework -->
+    <PackageReference Include="PolySharp" Version="1.13.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+
     <!-- Important system libraries that are basically always used -->
     <Reference Include="System">
       <Private>False</Private>

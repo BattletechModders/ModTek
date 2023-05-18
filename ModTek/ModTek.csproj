@@ -37,6 +37,12 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
+    <!-- Enables many newer language features for .NET Framework -->
+    <PackageReference Include="PolySharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->
     <Reference Include="Assembly-CSharp">
