@@ -161,7 +161,7 @@ Example replaces the mech tags with a new list of tags.
 
 ```JSON
 {
-    "JSONPath": "MechTags/items",
+    "JSONPath": "MechTags.items",
     "Action": "Replace",
     "Value": [
         "unit_mech",
