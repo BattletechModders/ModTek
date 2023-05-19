@@ -96,15 +96,15 @@ Any breakpoint set in a method that gets directly patched by Harmony will not br
 
 Steps to get a working debugger setup:
 
-1. download [dnSpy(Ex)](https://github.com/dnSpyEx/dnSpy)
-2. in `doorstop_config.ini` change `debug_enabled=false` to `debug_enabled=true`
-3. if on steam, prepare the steamappid file
+1. in `BATTLETECH/doorstop_config.ini` change `debug_enabled=false` to `debug_enabled=true`
+2. if on steam, prepare the steamappid file
     1. create a file as `BATTLETECH/steam_appid.txt` with the contents: `637090`
-4. start the game
+3. start the game now or just before connecting dnSpyEx to BT
+4. download [dnSpy(Ex)](https://github.com/dnSpyEx/dnSpy)
 5. start dnSpyEx and add all dlls from `Mods/.modtek/AssembliesShimmed`, `Mods/.modtek/AssembliesInjected`, `BATTLETECH/BattleTech_Data/Managed` and `Mods/*/*.dll` to its project window.
     1. (TODO make this easier by making ModTek create a directory with all DLLs: `Mods/.modtek/AssembliesDebug` or so)
 6. find the spot you want to debug, place a breakpoint
-6. connect dnSpyEx to Unity (default port etc..)
+7. connect dnSpy(Ex) to BattleTech by pressing `Start` and use `Unity (connect)` using the default port
 your breakpoint should be hit as long as no mods patch the method with your breakpoint (see `HarmonyFileLog.log`)
 
 ### BTDebug Mod
