@@ -43,19 +43,6 @@ internal class LoggingSettings
     internal bool LogStackTracesOnExceptions = true;
 
     [JsonProperty]
-    internal const string OverrideLoggerLevels_Description = "Overrides the log levels for the given loggers.";
-    [JsonProperty]
-    internal Dictionary<string, LogLevel> OverrideLoggerLevels = new()
-    {
-        { AppenderUnityConsole.UnityLoggerName, LogLevel.Debug },
-        { nameof(Log.Profiler), LogLevel.Debug },
-        { nameof(Log.Debugger), LogLevel.Debug },
-        { nameof(Log.AppDomain), LogLevel.Debug },
-        { nameof(Log.HarmonyX), LogLevel.Log },
-        { nameof(ModTek), NullableLogger.TraceLogLevel }
-    };
-
-    [JsonProperty]
     internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored to a certain extend. Set to true for FYLS behavior, not recommended though.";
     [JsonProperty]
     internal bool IgnoreLoggerLogLevel;
