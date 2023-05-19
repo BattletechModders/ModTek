@@ -2,13 +2,18 @@
 # Installing ModTek v3
 
 > **Note**
+> ModTek v3 or later does **not** have a `ModTekInjector.exe` anymore, and instead it uses 
+> [UnityDoorstop](https://github.com/BattletechModders/UnityDoorstop), which is based on hooking via libraries.
+> OS platforms (Windows, Linux, Mac) and game distribution platforms (Steam, GOG) are supported.
+
+> **Warning**
 > For ModTek to work properly, BATTLETECH should be installed outside of the program files folder structure,
 > as that is protected by [UAC](https://en.wikipedia.org/wiki/User_Account_Control) and therefore interferes with ModTek.
 
 Installation of ModTek is straightforward for Windows. You download the `ModTek.zip` file and extract it to the directory of the game.
 
 1. Download the [latest stable release from github](https://github.com/BattletechModders/ModTek/releases).
-1. Extract the contents of the zip to `BATTLETECH/` so that the `Mods/` folder in the zip appears as `BATTLETECH/Mods/` and the [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) files (winhttp.dll etc..) appear directly under `BATTLETECH/`.
+1. Extract the contents of the zip as-is to `BATTLETECH/` so that the `Mods/` folder in the zip appears as `BATTLETECH/Mods/` and the [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) files (winhttp.dll etc..) appear directly under `BATTLETECH/`.
 
 > **Note**
 > `BATTLETECH/` refers to the installation folder where `BattleTech.exe` can be found.
@@ -17,7 +22,7 @@ On game startup, ModTek decorates the version number found in the bottom left co
 
 ## Linux
 
-The zip contains the UnityDoorstop script `run.sh` and libraries to run the game with.
+The Modtek zip also contains the UnityDoorstop script `run.sh` and the hooking libraries to run the game with.
 
 ### Steam on Linux
 
@@ -65,6 +70,9 @@ The launch options should then look something like this:
 
 
 ## Enabling or Disabling
+
+> **Obsolete**
+> Please report if this feature still works and/or if this is still in use.
 
 ModTek 0.7.6 or higher can be enabled or disabled from within the in-game mods menu. If ModTek is enabled, the  "MODS ENABLED" check box will always be set to enabled. To disable ModTek look through the mod list until you find 'ModTek', and disable that 'mod'. Restart the game, and only the in-game mod-loader will be used. Repeat the process but enable the 'ModTek' mod to re-enable an external ModTek install.
 
