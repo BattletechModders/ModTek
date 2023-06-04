@@ -14,13 +14,25 @@ internal static class AssemblyOriginalPathTracker
 
     internal static void SetupAssemblyResolve()
     {
-        AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
-            var resolvingName = new AssemblyName(args.Name);
-            if (AssemblyPaths.TryGetValue(resolvingName.Name, out var assemblyPath))
+            Logger.Main.Log($"Unhandled exception: {args.ExceptionObject}");
+        };
+
+        AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+        {
+            try
             {
-                Logger.Main.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
-                return Assembly.LoadFile(assemblyPath);
+                var resolvingName = new AssemblyName(args.Name);
+                if (AssemblyPaths.TryGetValue(resolvingName.Name, out var assemblyPath))
+                {
+                    Logger.Main.Log($"Found assembly {resolvingName.Name} at {assemblyPath}.");
+                    return Assembly.LoadFile(assemblyPath);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Main.Log($"Error when resolving assembly {args.Name}: {e}");
             }
             return null;
         };
