@@ -5,7 +5,6 @@ using System.Reflection;
 using ModTek.Features.CustomResources;
 using ModTek.Util;
 using Newtonsoft.Json;
-using static UnityEngine.PostProcessing.AntialiasingModel;
 
 namespace ModTek.Features.Manifest.Mods;
 

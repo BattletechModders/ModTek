@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Loader;
@@ -18,6 +19,7 @@ internal class Cleaner
         "(Mods)/BTModLoader.log",
         "(Mods)/ModTek/Newtonsoft.Json.dll",
         "(Mods)/ModTek/config.defaults.json",
+        "(Mods)/ModTek/harmony_summary.log",
     };
 
     internal static void Clean()
@@ -52,7 +54,7 @@ internal class Cleaner
         }
 
         File.Copy(backupPath, Paths.GameMainAssemblyFile, true);
-        Logger.Main.Log($"{Paths.GetRelativePath(Paths.GameMainAssemblyFile)} restored from {Paths.GetRelativePath(backupPath)} .");
+        Logger.Main.Log($"{FileUtils.GetRelativePath(Paths.GameMainAssemblyFile)} restored from {FileUtils.GetRelativePath(backupPath)} .");
         return true;
     }
 

@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading;
 using BattleTech;
 using BattleTech.UI;
 using HBS;

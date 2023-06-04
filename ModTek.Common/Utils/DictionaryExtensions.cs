@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ModTek.Util;
+namespace ModTek.Common.Utils;
 
 internal static class DictionaryExtensions
 {

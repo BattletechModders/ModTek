@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Utils;
 using ModTekPreloader.Harmony12X;
 using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
@@ -15,9 +16,11 @@ internal static class Preloader
         Logger.Main.Rotate();
 
         Logger.Main.Log($"Preloader v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
-        Paths.Print();
+        PrintPaths();
         SingleInstanceEnforcer.Enforce();
         Cleaner.Clean();
+        AssemblyTracker.Setup();
+
         InjectorsAppDomain.Run();
 
         Logger.Main.Log("Note that when preloading assemblies of the same name, the first one loaded wins.");
@@ -29,13 +32,13 @@ internal static class Preloader
         AppDomain.CurrentDomain.GetAssemblies()
             .Select(a => a.CodeBase)
             .Where(l => !string.IsNullOrWhiteSpace(l))
-            .Select(Paths.GetRelativePath)
+            .Select(FileUtils.GetRelativePath)
             .LogAsList("Assemblies loaded:");
     }
 
     private static void PreloadAssembliesInjected()
     {
-        Logger.Main.Log($"Preloading injected assemblies from `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
+        Logger.Main.Log($"Preloading injected assemblies from `{FileUtils.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
         foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
         {
             Logger.Main.Log($"\t{Path.GetFileName(file)}");
@@ -50,7 +53,7 @@ internal static class Preloader
             return;
         }
 
-        Logger.Main.Log($"Preloading override assemblies from `{Paths.GetRelativePath(Paths.AssembliesOverrideDirectory)}`:");
+        Logger.Main.Log($"Preloading override assemblies from `{FileUtils.GetRelativePath(Paths.AssembliesOverrideDirectory)}`:");
         foreach (var file in Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll").OrderBy(p => p))
         {
             Logger.Main.Log($"\t{Path.GetFileName(file)}");
@@ -61,7 +64,13 @@ internal static class Preloader
     private static void PreloadModTek()
     {
         var file = Path.Combine(Paths.ModTekDirectory, "ModTek.dll");
-        Logger.Main.Log($"Preloading ModTek from `{Paths.GetRelativePath(file)}`:");
+        Logger.Main.Log($"Preloading ModTek from `{FileUtils.GetRelativePath(file)}`:");
         Assembly.LoadFile(file);
+    }
+
+    private static void PrintPaths()
+    {
+        Logger.Main.Log($"{nameof(Paths.GameMainAssemblyFile)}: {Paths.GameMainAssemblyFile}");
+        Logger.Main.Log($"{nameof(Paths.ModTekDirectory)}: {Paths.ModTekDirectory}");
     }
 }

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
@@ -26,10 +27,10 @@ internal class DynamicShimInjector
         Logger.Main.Log("Setting up HarmonyX interoperability");
         if (!Directory.Exists(Paths.Harmony12XDirectory))
         {
-            throw new Exception($"HarmonyX can't be loaded, directory `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}` missing.");
+            throw new Exception($"HarmonyX can't be loaded, directory `{FileUtils.GetRelativePath(Paths.Harmony12XDirectory)}` missing.");
         }
 
-        Logger.Main.Log($"Preloading supported Harmony12X assemblies from `{Paths.GetRelativePath(Paths.Harmony12XDirectory)}`.");
+        Logger.Main.Log($"Preloading supported Harmony12X assemblies from `{FileUtils.GetRelativePath(Paths.Harmony12XDirectory)}`.");
         foreach (var harmonyVersion in HarmonyVersion.SupportedVersions)
         {
             var file = Path.Combine(Paths.Harmony12XDirectory, $"{harmonyVersion.Name}.dll");

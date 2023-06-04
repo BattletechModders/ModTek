@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 using Newtonsoft.Json;
 
@@ -9,11 +10,11 @@ internal class Config
 {
 #pragma warning disable CS0649
     [JsonProperty]
-    internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{Paths.GetRelativePath(Paths.PreloaderConfigFile)}`.";
+    internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{FileUtils.GetRelativePath(Paths.PreloaderConfigFile)}`.";
 
     [JsonProperty]
     internal readonly string Harmony12XLogChannelFilter_Description
-        = $"The channels to log into `{Paths.GetRelativePath(Paths.HarmonyLogFile)}`: None=0 Info=2 IL=4 Warn=8 Error=16 Debug=32 All=62";
+        = $"The channels to log into `{FileUtils.GetRelativePath(Paths.HarmonyLogFile)}`: None=0 Info=2 IL=4 Warn=8 Error=16 Debug=32 All=62";
     [JsonProperty]
     internal int Harmony12XLogChannelFilter = 26;
 
@@ -28,7 +29,7 @@ internal class Config
 
     private Config()
     {
-        Paths.CreateDirectoryForFile(Paths.PreloaderConfigDefaultsFile);
+        FileUtils.CreateDirectoryForFile(Paths.PreloaderConfigDefaultsFile);
         File.WriteAllText(
             Paths.PreloaderConfigDefaultsFile,
             JsonConvert.SerializeObject(this, Formatting.Indented)

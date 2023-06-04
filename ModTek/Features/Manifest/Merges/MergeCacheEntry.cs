@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using ModTek.Common.Utils;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;

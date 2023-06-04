@@ -1,7 +1,7 @@
 using System;
 using HarmonyLib.Public.Patching;
 
-namespace ModTek.Features.Logging;
+namespace ModTek.Features.Logging.Patches;
 
 [HarmonyPatch(typeof(HarmonyManipulator), "LogPatchException")]
 internal static class HarmonyManipulator_LogPatchException_Patch

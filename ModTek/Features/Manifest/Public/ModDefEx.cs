@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BattleTech;
+using ModTek.Common.Utils;
 using ModTek.Features.Manifest.Mods;
-using ModTek.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

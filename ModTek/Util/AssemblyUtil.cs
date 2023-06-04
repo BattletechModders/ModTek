@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Utils;
 
 namespace ModTek.Util;
 
@@ -80,7 +81,7 @@ internal static class AssemblyUtil
 
         if (methodParameters.Length == 0)
         {
-            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter dictionary");
+            Log.Main.Info?.Log($"\tInvoking '{AssemblyUtils.GetFullName(method)}()' using parameter dictionary");
             method.Invoke(null, null);
             return true;
         }
@@ -99,7 +100,7 @@ internal static class AssemblyUtil
         }
 
         var parametersString = string.Join(", ", parametersStrings.ToArray());
-        Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter dictionary");
+        Log.Main.Info?.Log($"\tInvoking '{AssemblyUtils.GetFullName(method)}({parametersString})' using parameter dictionary");
         method.Invoke(null, parameterList.ToArray());
         return true;
     }
@@ -115,7 +116,7 @@ internal static class AssemblyUtil
                 return false;
             }
 
-            Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}()' using parameter type");
+            Log.Main.Info?.Log($"\tInvoking '{AssemblyUtils.GetFullName(method)}()' using parameter type");
             method.Invoke(null, null);
             return true;
         }
@@ -137,7 +138,7 @@ internal static class AssemblyUtil
         }
 
         var parametersString = string.Join(", ", parametersStrings.ToArray());
-        Log.Main.Info?.Log($"\tInvoking '{GetFullName(method)}({parametersString})' using parameter type");
+        Log.Main.Info?.Log($"\tInvoking '{AssemblyUtils.GetFullName(method)}({parametersString})' using parameter type");
         method.Invoke(null, parameters);
         return true;
     }
@@ -160,52 +161,5 @@ internal static class AssemblyUtil
             }
             return e.Types.Where(x => x != null);
         }
-    }
-
-    internal static string GetAssemblyName(this MemberInfo Method)
-    {
-        return Method.DeclaringType?.Assembly.GetName().Name;
-    }
-
-    internal static string GetFullName(this MemberInfo Method)
-    {
-        return Method.DeclaringType?.FullName + "." + Method.Name;
-    }
-
-    internal static string GetLocationOrName(Assembly assembly)
-    {
-        var name = assembly.GetName().Name;
-        try
-        {
-            // codebase points to the path of the loaded assembly
-            // location points to the path of the original assembly location
-            // if shimmed, this can differ, see preloader fake assembly location setting
-            var codeBase = string.IsNullOrWhiteSpace(assembly.CodeBase) ? null : FileUtils.GetRelativePath(assembly.CodeBase);
-            var location = string.IsNullOrWhiteSpace(assembly.Location) ? null : FileUtils.GetRelativePath(assembly.Location);
-
-            var formatted = "";
-            if (location == null || Path.GetFileNameWithoutExtension(location) != name)
-            {
-                formatted = name;
-            }
-            if (location != null)
-            {
-                if (formatted.Length > 0)
-                {
-                    formatted += " at ";
-                }
-                formatted += location;
-            }
-            if (codeBase != null && location != codeBase)
-            {
-                formatted += $" ({codeBase})";
-            }
-            return formatted;
-        }
-        catch
-        {
-            // ignored
-        }
-        return name;
     }
 }

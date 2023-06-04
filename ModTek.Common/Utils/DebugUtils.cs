@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace ModTek.Util;
+namespace ModTek.Common.Utils;
 
 internal static class DebugUtils
 {

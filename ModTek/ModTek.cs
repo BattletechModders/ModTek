@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using BattleTech.Data;
 using ModTek.Features.AssembliesLoader;
 using ModTek.Features.CustomDebugSettings;
@@ -12,7 +11,6 @@ using ModTek.Features.Manifest;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Misc;
 using ModTek.UI;
-using ModTek.Util;
 using Newtonsoft.Json;
 
 namespace ModTek;
@@ -66,22 +64,22 @@ public static partial class ModTek
         LoggingFeature.Init();
         Config.LogAnyDanglingExceptions();
 
-        if (File.Exists(FilePaths.ModTekSettingsPath))
+        if (File.Exists(FilePaths.ModTekModJsonPath))
         {
             try
             {
-                SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekSettingsPath);
+                SettingsDef = ModDefEx.CreateFromPath(FilePaths.ModTekModJsonPath);
                 SettingsDef.Version = GitVersionInformation.SemVer;
             }
             catch (Exception e)
             {
-                throw new Exception($"Caught exception while parsing {FilePaths.ModTekSettingsPath}", e);
+                throw new Exception($"Caught exception while parsing {FilePaths.ModTekModJsonPath}", e);
             }
         }
 
         if (SettingsDef == null)
         {
-            Log.Main.Info?.Log("File not exists " + FilePaths.ModTekSettingsPath + " fallback to defaults");
+            Log.Main.Info?.Log("File not exists " + FilePaths.ModTekModJsonPath + " fallback to defaults");
             SettingsDef = new ModDefEx
             {
                 Enabled = true,
@@ -92,7 +90,7 @@ public static partial class ModTek
                 Author = "Mpstark, CptMoore, Tyler-IN, alexbartlow, janxious, m22spencer, KMiSSioN, ffaristocrat, Morphyum",
                 Website = "https://github.com/BattletechModders/ModTek"
             };
-            File.WriteAllText(FilePaths.ModTekSettingsPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
+            File.WriteAllText(FilePaths.ModTekModJsonPath, JsonConvert.SerializeObject(SettingsDef, Formatting.Indented));
             SettingsDef.Directory = FilePaths.ModTekDirectory;
             SettingsDef.SaveState();
         }
@@ -153,16 +151,6 @@ public static partial class ModTek
 
     internal static IEnumerator<ProgressReport> HarmonySummaryAndFinish()
     {
-        var sliderText = "Saving list of loaded assemblies";
-        yield return new ProgressReport(1, sliderText, "", true);
-        File.WriteAllText(
-            FilePaths.AssembliesLoadedLogPath,
-            "Assemblies loaded:" + AppDomain.CurrentDomain.GetAssemblies()
-                .Select(AssemblyUtil.GetLocationOrName)
-                .OrderBy(a => a)
-                .AsTextList()
-        );
-
         yield return new ProgressReport(1, "Game now loading", "", true);
         Features.DebugDump.DebugDumpServer.Instance.Report();
         FinishAndCleanup();

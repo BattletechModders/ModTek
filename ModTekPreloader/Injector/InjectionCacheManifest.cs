@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Injector;
@@ -20,11 +21,11 @@ internal class InjectionCacheManifest
         IsUpToDate = string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
         if (IsUpToDate)
         {
-            Logger.Main.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
+            Logger.Main.Log($"Injection cache manifest at `{FileUtils.GetRelativePath(Paths.InjectionCacheManifestFile)}` is up to date.");
         }
         else
         {
-            Logger.Main.Log($"Injection cache manifest at `{Paths.GetRelativePath(Paths.InjectionCacheManifestFile)}` is outdated.");
+            Logger.Main.Log($"Injection cache manifest at `{FileUtils.GetRelativePath(Paths.InjectionCacheManifestFile)}` is outdated.");
         }
     }
 
@@ -115,7 +116,7 @@ internal class InjectionCacheManifest
         public static CacheEntry FromFile(string absolutePath)
         {
             var time = File.GetLastWriteTimeUtc(absolutePath).ToString("o", CultureInfo.InvariantCulture);
-            var path = Paths.GetRelativePath(absolutePath);
+            var path = FileUtils.GetRelativePath(absolutePath);
             return new CacheEntry(time, path);
         }
     }

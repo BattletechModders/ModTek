@@ -2,16 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ModTek.Misc;
+using ModTek.Common.Globals;
 
-namespace ModTek.Util;
+namespace ModTek.Common.Utils;
 
 internal static class FileUtils
 {
     // this is more an informative path that works for diagnosing issues
-    internal static string GetRelativePath(string absolutePath)
+    internal static string GetRelativePath(string path)
     {
-        return new Uri(FilePaths.BaseDirectory).MakeRelativeUri(new Uri(absolutePath)).ToString();
+        try
+        {
+            return new Uri(CommonPaths.BaseDirectory).MakeRelativeUri(new Uri(path)).ToString();
+        }
+        catch
+        {
+            return path;
+        }
     }
 
     // this is the correct relative path with proper directory separators for internal use
@@ -148,12 +155,39 @@ internal static class FileUtils
         {
             var pathCurrent = path + (i == 0 ? "" : "." + i);
             var pathNext = path + "." + (i + 1);
-            if (!File.Exists(pathCurrent))
-            {
-                continue;
-            }
             File.Delete(pathNext);
-            File.Move(pathCurrent, pathNext);
+            if (File.Exists(pathCurrent))
+            {
+                File.Move(pathCurrent, pathNext);
+            }
+        }
+    }
+
+    internal static void CreateDirectoryForFile(string filePath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new Exception($"Could not find directory for {filePath}"));
+    }
+
+    internal static void SetupCleanDirectory(string path, bool recursive = false)
+    {
+        var di = new DirectoryInfo(path);
+        if (di.Exists)
+        {
+            foreach (var file in di.GetFiles())
+            {
+                file.Delete();
+            }
+            if (recursive)
+            {
+                foreach (var dir in di.GetDirectories())
+                {
+                    dir.Delete(true);
+                }
+            }
+        }
+        else
+        {
+            di.Create();
         }
     }
 }

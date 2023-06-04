@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
-using BattleTech;
-using HBS;
 using ModTek.Features.Manifest.Mods;
 using UnityEngine;
 

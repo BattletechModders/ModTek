@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using ModTek.Common.Utils;
 using ModTekPreloader.Injector;
 
 namespace ModTekPreloader.Logging;
@@ -21,8 +22,8 @@ internal class Logger
 
     internal void Rotate()
     {
-        Paths.CreateDirectoryForFile(_path);
-        Paths.RotatePath(_path, 1);
+        FileUtils.CreateDirectoryForFile(_path);
+        FileUtils.RotatePath(_path, 1);
         File.WriteAllText(_path, "");
     }
 

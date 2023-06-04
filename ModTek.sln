@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplateWithHarmonyX", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplateWithOldHarmony1", "examples\ModTemplateWithOldHarmony1\ModTemplateWithOldHarmony1.csproj", "{253B7E45-1D8E-450E-AA00-F79818D707C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek.Common", "ModTek.Common\ModTek.Common.csproj", "{67588F2A-B438-407C-AD16-ED6F4C9D12FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,10 @@ Global
 		{253B7E45-1D8E-450E-AA00-F79818D707C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{253B7E45-1D8E-450E-AA00-F79818D707C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{253B7E45-1D8E-450E-AA00-F79818D707C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67588F2A-B438-407C-AD16-ED6F4C9D12FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67588F2A-B438-407C-AD16-ED6F4C9D12FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67588F2A-B438-407C-AD16-ED6F4C9D12FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67588F2A-B438-407C-AD16-ED6F4C9D12FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

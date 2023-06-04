@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using ModTek.Common.Utils;
 using ModTek.Features.CustomResources;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.UI;
-using ModTek.Util;
 
 namespace ModTek.Features.AssembliesLoader;
 
@@ -21,7 +21,7 @@ internal static class CustomAssembliesLoader
             if (registeredAssemblyPaths.TryGetValue(assemblyName.Name, out var assemblyPath))
             {
                 var assembly = Assembly.LoadFile(assemblyPath);
-                Log.Main.Info?.Log($"Loaded custom assembly {AssemblyUtil.GetLocationOrName(assembly)}");
+                Log.Main.Info?.Log($"Loaded custom assembly {AssemblyUtils.GetLocationOrName(assembly)}");
                 res = assembly;
             }
             else

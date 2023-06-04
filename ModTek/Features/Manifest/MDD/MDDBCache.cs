@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Common.Utils;
 using ModTek.Features.CustomTags;
 using ModTek.Features.Manifest.BTRL;
 using ModTek.Misc;
 using ModTek.UI;
-using ModTek.Util;
 using CacheDB = System.Collections.Generic.Dictionary<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
 using CacheKeyValue = System.Collections.Generic.KeyValuePair<ModTek.Features.Manifest.CacheKey, ModTek.Features.Manifest.FileVersionTuple>;
 

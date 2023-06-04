@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Loader;
@@ -13,7 +14,7 @@ internal static class SingleInstanceEnforcer
 
     internal static void Enforce()
     {
-        Paths.CreateDirectoryForFile(Paths.LockFile);
+        FileUtils.CreateDirectoryForFile(Paths.LockFile);
         try
         {
             Logger.Main.Log($"{LogPrefix} Locking");

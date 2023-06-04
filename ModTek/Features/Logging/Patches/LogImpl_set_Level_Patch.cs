@@ -1,6 +1,6 @@
 ﻿using System;
 using HBS.Logging;
-using ModTek.Util;
+using ModTek.Common.Utils;
 
 namespace ModTek.Features.Logging.Patches;
 

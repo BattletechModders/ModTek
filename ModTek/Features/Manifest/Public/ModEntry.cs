@@ -2,10 +2,10 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using BattleTech;
+using ModTek.Common.Utils;
 using ModTek.Features.CustomResources;
 using ModTek.Features.Manifest.MDD;
 using ModTek.Misc;
-using ModTek.Util;
 using Newtonsoft.Json;
 
 // ReSharper disable once CheckNamespace

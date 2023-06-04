@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
 
@@ -73,8 +74,8 @@ internal class AssemblyCache : IAssemblyResolver
 
     internal void SaveAssembliesToDisk()
     {
-        Paths.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
-        Logger.Main.Log($"Assemblies modified by injectors and saved to `{Paths.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
+        FileUtils.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
+        Logger.Main.Log($"Assemblies modified by injectors and saved to `{FileUtils.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
         foreach (var kv in assemblies.OrderBy(kv => kv.Key))
         {
             var name = kv.Key;

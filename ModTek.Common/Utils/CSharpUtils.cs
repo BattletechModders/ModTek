@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace ModTek.Util;
+namespace ModTek.Common.Utils;
 
 internal static class CSharpUtils
 {
@@ -16,8 +16,14 @@ internal static class CSharpUtils
         }
     }
 
-    internal static string AsTextList(this IEnumerable<string> items, string prefix = "\n - ")
+    internal static string AsTextList(this IEnumerable<string> items)
     {
-        return items?.Aggregate("", (current, item) => current + prefix + item);
+        return items?.Aggregate("", (current, item) => current + AsTextListLine(item));
+    }
+
+    private const string TextListLinePrefix = "\n - ";
+    internal static string AsTextListLine(string line)
+    {
+        return TextListLinePrefix + line;
     }
 }

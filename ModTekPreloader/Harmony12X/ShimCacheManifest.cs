@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Utils;
 using ModTekPreloader.Injector;
 using ModTekPreloader.Logging;
 using Mono.Cecil;
@@ -59,7 +60,7 @@ internal class ShimCacheManifest
             Logger.Main.Log($"Shimmed cache manifest could not be loaded {Paths.ShimmedCacheManifestFile}: {e}");
             File.Delete(Paths.ShimmedCacheManifestFile);
         }
-        Paths.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
+        FileUtils.SetupCleanDirectory(Paths.AssembliesShimmedDirectory);
     }
 
     private class CacheInvalidatedException : Exception
@@ -74,7 +75,7 @@ internal class ShimCacheManifest
     internal string GetPathToShimmedAssembly(string originalAbsolutePath)
     {
         var time = CacheEntry.GetTimeFromFile(originalAbsolutePath);
-        var originalPath = Paths.GetRelativePath(originalAbsolutePath);
+        var originalPath = FileUtils.GetRelativePath(originalAbsolutePath);
 
         if (data.TryGetValue(originalPath, out var entry))
         {
@@ -101,7 +102,7 @@ internal class ShimCacheManifest
             return;
         }
 
-        var text = $"Loading shimmed assembly from `{Paths.GetRelativePath(absolutePath)}` instead of `{Paths.GetRelativePath(originalAbsolutePath)}`";
+        var text = $"Loading shimmed assembly from `{FileUtils.GetRelativePath(absolutePath)}` instead of `{FileUtils.GetRelativePath(originalAbsolutePath)}`";
         if (begin != null)
         {
             text += $", shimming took {(DateTime.Now-begin.Value).TotalSeconds:#0.000}s";
@@ -119,7 +120,7 @@ internal class ShimCacheManifest
         }
 
         var path = Path.Combine(Paths.AssembliesShimmedDirectory, $"{assemblyDefinition.Name.Name}.dll");
-        Logger.Main.Log($"Saving shimmed assembly to `{Paths.GetRelativePath(path)}`.");
+        Logger.Main.Log($"Saving shimmed assembly to `{FileUtils.GetRelativePath(path)}`.");
         assemblyDefinition.Write(path);
         return path;
     }

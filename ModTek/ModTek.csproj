@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <!-- Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
-    <NoWarn>CS0649</NoWarn>
+    <NoWarn>$(NoWarn);CS0649</NoWarn>
   </PropertyGroup>
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
@@ -117,5 +117,8 @@
   <ItemGroup>
     <None LinkBase=".modtek" Include="$(BattleTechGameDir)\Mods\.modtek\**" />
     <None LinkBase="ModTek" Include="$(BattleTechGameDir)\Mods\ModTek\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
   </ItemGroup>
 </Project>

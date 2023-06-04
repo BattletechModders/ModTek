@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Utils;
 using ModTekPreloader.Logging;
 
 namespace ModTekPreloader.Injector;
@@ -20,7 +21,7 @@ internal class InjectorsRunner : IDisposable
 
     internal void RunInjectors()
     {
-        Logger.Main.Log($"Searching injector assemblies in `{Paths.GetRelativePath(Paths.InjectorsDirectory)}`:");
+        Logger.Main.Log($"Searching injector assemblies in `{FileUtils.GetRelativePath(Paths.InjectorsDirectory)}`:");
         foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
         {
             SearchInjectorEntrypointAndInvoke(injectorPath);

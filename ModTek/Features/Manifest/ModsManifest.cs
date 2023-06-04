@@ -5,6 +5,7 @@ using System.Linq;
 using BattleTech;
 using BattleTech.UI;
 using HBS;
+using ModTek.Common.Utils;
 using ModTek.Features.AdvJSONMerge;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
@@ -15,7 +16,6 @@ using ModTek.Features.Manifest.Merges;
 using ModTek.Features.Manifest.Mods;
 using ModTek.Misc;
 using ModTek.UI;
-using ModTek.Util;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace ModTek.Features.Manifest;

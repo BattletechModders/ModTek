@@ -20,6 +20,6 @@
     <!-- embed symbols into the dll -->
     <DebugType>embedded</DebugType>
     <!-- ignore some warning -->
-    <NoWarn>CS0436</NoWarn>
+    <NoWarn>CS0436</NoWarn> <!-- CS0436: same namespace+classname warning, e.g. happens due to GitVersion generated classes not having distinct namespaces -->
   </PropertyGroup>
 </Project>

@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using BattleTech;
 using BattleTech.Data;
+using ModTek.Common.Utils;
 using ModTek.Features.Manifest.MDD;
-using ModTek.Util;
 
 namespace ModTek.Features.Manifest.BTRL;
 

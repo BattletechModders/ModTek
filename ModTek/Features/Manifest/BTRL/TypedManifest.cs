@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BattleTech;
+using ModTek.Common.Utils;
 using ModTek.Features.CustomDebugSettings;
 using ModTek.Features.CustomGameTips;
 using ModTek.Misc;
-using ModTek.Util;
 using TypedDict = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, BattleTech.VersionManifestEntry>>;
 
 namespace ModTek.Features.Manifest.BTRL;
