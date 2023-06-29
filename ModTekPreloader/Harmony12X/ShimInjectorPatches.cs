@@ -71,7 +71,7 @@ internal static class ShimInjectorPatches
         [HarmonyPrefix]
         private static bool LoadAssembly_Prefix(ref string assemblyRef)
         {
-            Logger.Main.Log("Warning: LoadAssembly_Prefix: " + assemblyRef);
+            Logger.Main.Log("Warning: AppDomain.LoadAssembly called, which does not support shimming: " + assemblyRef);
             return true;
         }
 

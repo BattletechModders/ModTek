@@ -24,7 +24,7 @@ internal static class AssemblyTracker
             }
             catch (Exception e)
             {
-                Logger.Main.Log($"Error during OnCurrentDomainOnAssemblyLoad event: {e}");
+                Logger.Main.Log($"Error during OnCurrentDomainOnAssemblyLoad event with assembly={args.LoadedAssembly}: {e}");
             }
         };
 
