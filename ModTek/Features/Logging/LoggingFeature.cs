@@ -12,7 +12,7 @@ internal static class LoggingFeature
 
     private static AppenderUnityConsole _consoleLog;
     private static AppenderFile _mainLog;
-    private static readonly List<AppenderFile> _logsAppenders = new();
+    private static AppenderFile[] _logsAppenders = Array.Empty<AppenderFile>();
 
     private static MTLoggerAsyncQueue _queue;
 
@@ -25,11 +25,11 @@ internal static class LoggingFeature
         AppenderUnityConsole.SetupUnityLogHandler();
         _consoleLog = _settings.UnityConsoleAppenderEnabled ? new AppenderUnityConsole(_settings.UnityConsoleAppender) : null;
 
-        _mainLog = new AppenderFile(_settings.MainLogFilePath, _settings.MainLog);
-        foreach (var kv in _settings.Logs)
         {
-            _logsAppenders.Add(new AppenderFile(kv.Key, kv.Value));
+            var mainLogPath =  Path.Combine(FilePaths.TempModTekDirectory, _settings.MainLogFilePath);
+            _mainLog = new AppenderFile(mainLogPath, _settings.MainLog);
         }
+        AddAppenders(FilePaths.TempModTekDirectory, _settings.Logs);
 
         if (_settings.LogUncaughtExceptions)
         {
@@ -53,6 +53,26 @@ internal static class LoggingFeature
         }
 
         HarmonyXLoggerAdapter.Setup();
+    }
+
+    internal static void AddAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
+    {
+        if (logs == null || logs.Count < 1)
+        {
+            return;
+        }
+
+        // we dont want in-place changes, otherwise we would need to lock between write/read
+        // hence we work by copy and replace (replace being an atomic operation)
+        var logsAppenders = new AppenderFile[_logsAppenders.Length + logs.Count];
+        Array.Copy(_logsAppenders, logsAppenders, _logsAppenders.Length);
+        var index = _logsAppenders.Length;
+        foreach (var kv in logs)
+        {
+            var logPath = Path.Combine(basePath, kv.Key);
+            logsAppenders[index++] = new AppenderFile(logPath, kv.Value);
+        }
+        _logsAppenders = logsAppenders;
     }
 
     // used for intercepting all logging attempts and to log centrally

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using ModTek.Features.CustomResources;
+using ModTek.Features.Logging;
 using ModTek.Util;
 using Newtonsoft.Json;
 
@@ -16,6 +17,9 @@ internal static class ModDefExLoading
 
         // although manifest related, CR listings are mostly relevant for the FinishedLoading call
         CustomResourcesFeature.ProcessModDef(modDef);
+
+        // setup logs before calling the assembly
+        LoggingFeature.AddAppenders(modDef.Directory, modDef.Logs);
 
         // load the mod assembly
         if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))

@@ -12,11 +12,10 @@ internal class AppenderFile : IDisposable
     private readonly Formatter _formatter;
     private readonly StreamWriter _writer;
 
-    internal AppenderFile(string filePath, AppenderSettings settings)
+    internal AppenderFile(string path, AppenderSettings settings)
     {
         _filters = new Filters(settings);
         _formatter = new Formatter(settings);
-        var path =  Path.Combine(FilePaths.TempModTekDirectory, filePath);
 
         FileUtils.CreateParentOfPath(path);
         FileUtils.RotatePath(path, settings.LogRotationCount);

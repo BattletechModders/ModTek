@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using BattleTech;
 using ModTek.Common.Utils;
+using ModTek.Features.Logging;
 using ModTek.Features.Manifest.Mods;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -120,6 +121,11 @@ public class ModDefEx : IEquatable<ModDefEx>
     // a settings file to be nice to our users and have a known place for settings
     // these will be different depending on the mod obviously
     public JObject Settings { get; set; } = new();
+
+    [JsonProperty]
+    internal const string Logs_Description = "Allows to define logs, the `key` specifies the log file path relative to `the mods directory`.";
+    [JsonProperty]
+    internal Dictionary<string, AppenderSettings> Logs { get; set; }
 
     [JsonIgnore]
     public bool LoadFail { get; set; }
