@@ -50,6 +50,18 @@ Modify the `start.sh` script from GOG to execute the `run.sh` script from ModTek
 
 Using Proton or Wine is also supported, make sure the `winhttp.dll` from UnityDoorstop is loaded by setting the override to `native, builtin`.
 
+### mono crash on Linux
+
+If a crash happens with the following error
+> ```
+> Receiving unhandled NULL exception
+> #0  0x007f981f25cab9 in mini_get_debug_options
+> #1  0x007f982693674c in init_mono
+> ```
+
+Add a file /etc/sysctl.d/01-disable-aslr.conf with contents
+> kernel.randomize_va_space = 0
+
 ## macOS
 
 > **Note**
