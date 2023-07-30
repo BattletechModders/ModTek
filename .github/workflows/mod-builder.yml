@@ -52,26 +52,28 @@ jobs:
         working-directory: ${{ inputs.checkout-directory }}
         run: ${{ inputs.build-script }}
 
-      - name: Delete Latest (Remote)
+      - name: Delete Latest Release and Tag
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: dev-drprasad/delete-tag-and-release@v1.0
         with:
+          delete_release: true
           tag_name: "latest"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Delete Latest (Local)
+      - name: Create Latest Tag
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         working-directory: ${{ inputs.checkout-directory }}
-        run: git tag -d latest || true
+        run: |
+          git tag -d latest || true
+          git tag latest
+          git push origin latest
       - id: release_latest
         name: Release Latest
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
-          allowUpdates: false
           artifactErrorsFailBuild: true
           artifacts: ${{ env.DIST_DIR }}/*
-          draft: false
           generateReleaseNotes: true
           makeLatest: true
           name: "Latest (unstable)"
