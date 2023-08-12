@@ -38,7 +38,9 @@ Launch options for Linux:
 
 ### GOG on Linux
 
-Modify the `start.sh` script from GOG to execute the `run.sh` script from ModTek/UnityDoorstop instead of `BattleTech`.
+GOG installs into `battletech/game/`. Extract the zip file into the same directory as the `Battletech` executable.
+
+Modify the `start.sh` script from GOG to execute the `run.sh` script supplied by ModTek/UnityDoorstop instead of `BattleTech`.
 
 > ```
 > #chmod +x "BattleTech"
