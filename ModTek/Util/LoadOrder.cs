@@ -8,45 +8,45 @@ namespace ModTek.Util;
 
 internal static class LoadOrder
 {
-    public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> modDefs, out List<ModDefEx> notLoaded, List<string> cachedOrder)
+    public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> registeredMods, out List<ModDefEx> notLoaded, List<string> cachedOrder)
     {
-        var modDefsCopy = new Dictionary<string, ModDefEx>(modDefs);
+        var candidates = new Dictionary<string, ModDefEx>(registeredMods);
         var loadOrder = new List<string>();
 
         // remove all mods that have a conflict
-        var tryToLoad = modDefs.Keys.ToList();
+        var tryToLoad = candidates.Keys.ToList();
         var hasConflicts = new List<ModDefEx>();
-        foreach (var modDef in modDefs.Values)
+        foreach (var modDef in registeredMods.Values)
         {
             var conflicts = modDef.CalcConflicts(tryToLoad);
             if (conflicts.Count == 0)
             {
                 continue;
             }
-            modDefsCopy.Remove(modDef.Name);
+            candidates.Remove(modDef.Name);
             hasConflicts.Add(modDef);
         }
 
-        FillInOptionalDependencies(modDefsCopy);
+        FillInOptionalDependencies(candidates);
 
         // load the order specified in the file
         foreach (var modName in cachedOrder)
         {
-            if (!modDefsCopy.ContainsKey(modName) || modDefsCopy[modName].CalcMissingDependsOn(loadOrder).Count > 0)
+            if (!candidates.ContainsKey(modName) || candidates[modName].CalcMissingDependsOn(loadOrder).Count > 0)
             {
                 continue;
             }
 
-            modDefsCopy.Remove(modName);
+            candidates.Remove(modName);
             loadOrder.Add(modName);
         }
 
-        // everything that is left in the copy hasn't been loaded before
+        // everything that is left in the candidates list hasn't been loaded before
         notLoaded = new List<ModDefEx>();
-        notLoaded.AddRange(modDefsCopy.Values.OrderByDescending(x => x.Name).ToList());
+        notLoaded.AddRange(candidates.Values.OrderByDescending(x => x.Name).ToList());
 
         // there is nothing left to load
-        if (modDefsCopy.Count == 0)
+        if (candidates.Count == 0)
         {
             notLoaded.AddRange(hasConflicts);
             return loadOrder;
@@ -60,7 +60,7 @@ internal static class LoadOrder
 
             for (var i = notLoaded.Count - 1; i >= 0; i--)
             {
-                var modDef = modDefs[notLoaded[i].Name];
+                var modDef = notLoaded[i];
 
                 if (modDef.CalcMissingDependsOn(loadOrder).Count > 0)
                 {
