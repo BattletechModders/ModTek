@@ -26,6 +26,11 @@ internal class LoggingSettings
     internal bool LogSqlQueryInitializations;
 
     [JsonProperty]
+    internal const string LogSqlQueryExecutionsFromDapper_Description = "Logs out any sql queries being executed via Dapper, logs actual parameters.";
+    [JsonProperty]
+    internal bool LogSqlQueryExecutionsFromDapper;
+
+    [JsonProperty]
     internal const string LogThreadStarts_Description = "Logs who starts threads.";
     [JsonProperty]
     internal bool LogThreadStarts = true;
