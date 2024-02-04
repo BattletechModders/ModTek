@@ -60,18 +60,14 @@ internal class InjectionCacheManifest
 
         // preloader
         files.Add(Paths.PreloaderConfigFile);
-        if (Directory.Exists(Paths.ModTekDirectory))
+        if (Directory.Exists(Paths.ModTekBinDirectory))
         {
-            files.AddRange(Directory.GetFiles(Paths.ModTekDirectory, "*.dll"));
+            files.AddRange(Directory.GetFiles(Paths.ModTekBinDirectory, "*.dll"));
         }
         files.AddRange(Directory.GetFiles(Paths.InjectorsDirectory));
         if (Directory.Exists(Paths.AssembliesOverrideDirectory))
         {
             files.AddRange(Directory.GetFiles(Paths.AssembliesOverrideDirectory, "*.dll"));
-        }
-        if (Directory.Exists(Paths.Harmony12XDirectory))
-        {
-            files.AddRange(Directory.GetFiles(Paths.Harmony12XDirectory, "*.dll"));
         }
 
         // output

@@ -63,7 +63,7 @@ internal static class Preloader
 
     private static void PreloadModTek()
     {
-        var file = Path.Combine(Paths.ModTekDirectory, "ModTek.dll");
+        var file = Path.Combine(Paths.ModTekBinDirectory, "ModTek.dll");
         Logger.Main.Log($"Preloading ModTek from `{FileUtils.GetRelativePath(file)}`:");
         Assembly.LoadFile(file);
     }

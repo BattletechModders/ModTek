@@ -12,7 +12,10 @@
     <PackageReference Include="GitVersion.MsBuild">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="HarmonyX" />
+    <PackageReference Include="HarmonyX">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
     <PackageReference Include="PolySharp">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

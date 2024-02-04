@@ -2,7 +2,7 @@
   <Import Project="..\Common.props" />
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\bin\" />
   </Target>
 
   <ItemGroup>
