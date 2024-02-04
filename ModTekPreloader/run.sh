@@ -81,6 +81,6 @@ case ${os_type} in
 esac
 
 export DOORSTOP_ENABLED="1"
-export DOORSTOP_TARGET_ASSEMBLY="${BASEDIR}/Mods/ModTek/ModTekPreloader.dll"
+export DOORSTOP_TARGET_ASSEMBLY="${BASEDIR}/Mods/ModTek/bin/ModTekPreloader.dll"
 
 exec "$executable_path" "$@"
