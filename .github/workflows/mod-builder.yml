@@ -32,7 +32,7 @@ jobs:
       DIST_DIR: ${{ github.workspace }}/dist
     steps:
       - name: Setup dotnet
-        uses: actions/setup-dotnet@master
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8
           dotnet-quality: preview
@@ -43,7 +43,7 @@ jobs:
           7z e -p${{ secrets.MANAGED_ARCHIVE_PW }} -o"${{ env.MANAGED_DIR }}" Managed.7z
           rm Managed.7z
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ inputs.checkout-directory }}
           fetch-depth: 0 # tags for GitVersion
