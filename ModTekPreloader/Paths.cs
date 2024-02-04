@@ -17,7 +17,7 @@ internal class Paths
     internal static readonly string PreloaderConfigFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.json");
     internal static readonly string PreloaderConfigDefaultsFile = Path.Combine(ModTekDirectory, "ModTekPreloader.config.help.json");
     internal static readonly string AssembliesOverrideDirectory = Path.Combine(ModTekDirectory, "AssembliesOverride");
-    internal static readonly string Harmony12XDirectory = Path.Combine(ModTekDirectory, "Harmony12X");
+    internal static readonly string ModTekBinDirectory = Path.Combine(ModTekDirectory, "bin");
     internal static readonly string HarmonyLogFile = Path.Combine(DotModTekDirectory, "HarmonyFileLog.log");
     internal static readonly string LogFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.log");
     internal static readonly string LockFile = Path.Combine(DotModTekDirectory, "ModTekPreloader.lock");
