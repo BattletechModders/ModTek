@@ -10,11 +10,17 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
-## x.x - CptMoore
+## 4.1 - kMiSSioN
+
+For modders:
+- Added a DebugDumpServer to allow triggering log dumps via HTTP calls, disabled by default
+
+## 4.0 - CptMoore
 
 For modders:
 - Added example mods
 - HarmonyX support can't be disabled anymore and is now the preferred way to patch during runtime
+- HarmonyX logging is now fully integrated into ModTek
 
 ## 3.1 - CptMoore / kMiSSioN
 
