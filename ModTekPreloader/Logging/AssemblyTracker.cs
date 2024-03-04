@@ -41,17 +41,15 @@ internal static class AssemblyTracker
             return;
         }
 
-        if (s_assembliesLoaded.Contains(assembly))
+        if (!s_assembliesLoaded.Add(assembly))
         {
             return;
         }
 
-        s_assembliesLoaded.Add(assembly);
-
         var locationOrName = AssemblyUtils.GetLocationOrName(assembly);
         File.AppendAllText(Paths.AssembliesLoadedLogPath, CSharpUtils.AsTextListLine(locationOrName));
 
-        if (!Path.IsPathRooted(assembly.Location))
+        if (assembly.IsDynamic || !Path.IsPathRooted(assembly.Location))
         {
             return;
         }
