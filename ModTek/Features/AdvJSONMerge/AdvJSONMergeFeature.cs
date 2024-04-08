@@ -10,7 +10,7 @@ internal static class AdvJSONMergeFeature
 {
     private static bool IsAdvancedJSONMerge(JObject merge)
     {
-        return (merge[nameof(AdvancedJSONMerge.TargetID)] != null || merge[nameof(AdvancedJSONMerge.TargetIDs)] != null) && merge[nameof(AdvancedJSONMerge.Instructions)] != null;
+        return merge[nameof(AdvancedJSONMerge.TargetID)] != null || merge[nameof(AdvancedJSONMerge.TargetIDs)] != null;
     }
 
     private static void DoAdvancedMerge(JObject target, JObject merge)
