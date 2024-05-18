@@ -11,8 +11,8 @@
       <Harmony12XDeps Exclude="$(TargetPath)" Include="$(OutDir)**" />
       <DoorstopFiles Include="run.sh;doorstop_config.ini" />
     </ItemGroup>
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\bin\" />
-    <Copy SourceFiles="@(Harmony12XDeps)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\bin\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
+    <Copy SourceFiles="@(Harmony12XDeps)" DestinationFolder="$(ModTekLibDir)" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
     <MakeDir Directories="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" />
   </Target>

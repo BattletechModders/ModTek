@@ -17,7 +17,7 @@ jobs:
         # set permissions and also check if files exist (chmod 644)
         chmod 755 run.sh
         chmod 644 winhttp.dll
-        chmod 644 Mods/ModTek/bin/*.dll
+        chmod 644 Mods/ModTek/lib/*.dll
         7z a -tzip -mx9 "$DIST_DIR/ModTek.zip" -ir!.
       release-notes: |
         > **Note**

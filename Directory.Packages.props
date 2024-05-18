@@ -6,7 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="Krafs.Publicizer" Version="2.2.1" />
     <PackageVersion Include="GitVersion.MsBuild" Version="5.12.0" />
-<!--    <PackageVersion Include="HarmonyX" Version="2.11.0" />-->
+<!--    <PackageVersion Include="HarmonyX" Version="2.12.0" />-->
     <PackageVersion Include="HarmonyX" Version="2.10.2" />
     <PackageVersion Include="PolySharp" Version="1.14.1" />
   </ItemGroup>

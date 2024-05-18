@@ -17,7 +17,7 @@ internal class AssemblyCache : IAssemblyResolver
     {
         searchDirectories = new List<string>
         {
-            Paths.ModTekBinDirectory,
+            Paths.ModTekLibDirectory,
             Paths.ManagedDirectory
         };
 

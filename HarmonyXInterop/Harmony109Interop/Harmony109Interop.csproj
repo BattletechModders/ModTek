@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\bin\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\HarmonyXInterop\HarmonyXInterop.csproj" />

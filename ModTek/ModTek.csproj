@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\bin\" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
     <Copy SourceFiles="@(Asset)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
 

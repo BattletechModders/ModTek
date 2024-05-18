@@ -26,10 +26,10 @@ internal class DynamicShimInjector
     {
         Logger.Main.Log("Setting up HarmonyX interoperability");
 
-        Logger.Main.Log($"Preloading supported Harmony12X assemblies from `{FileUtils.GetRelativePath(Paths.ModTekBinDirectory)}`.");
+        Logger.Main.Log($"Preloading supported Harmony12X assemblies from `{FileUtils.GetRelativePath(Paths.ModTekLibDirectory)}`.");
         foreach (var harmonyVersion in HarmonyVersion.SupportedVersions)
         {
-            var file = Path.Combine(Paths.ModTekBinDirectory, $"{harmonyVersion.Name}.dll");
+            var file = Path.Combine(Paths.ModTekLibDirectory, $"{harmonyVersion.Name}.dll");
             Logger.Main.Log($"\t{Path.GetFileName(file)}");
             var assembly = Assembly.LoadFile(file);
             if (!harmonyVersion.IsMatch(assembly.GetName().Version))

@@ -60,9 +60,9 @@ internal class InjectionCacheManifest
 
         // preloader
         files.Add(Paths.PreloaderConfigFile);
-        if (Directory.Exists(Paths.ModTekBinDirectory))
+        if (Directory.Exists(Paths.ModTekLibDirectory))
         {
-            files.AddRange(Directory.GetFiles(Paths.ModTekBinDirectory, "*.dll"));
+            files.AddRange(Directory.GetFiles(Paths.ModTekLibDirectory, "*.dll"));
         }
         files.AddRange(Directory.GetFiles(Paths.InjectorsDirectory));
         if (Directory.Exists(Paths.AssembliesOverrideDirectory))
