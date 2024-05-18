@@ -13,8 +13,6 @@ internal static class Preloader
 {
     internal static void Run()
     {
-        Logger.Main.Rotate();
-
         Logger.Main.Log($"Preloader v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
         PrintPaths();
         SingleInstanceEnforcer.Enforce();

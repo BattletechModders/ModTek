@@ -19,7 +19,7 @@ internal class AppenderFile : IDisposable
 
         FileUtils.CreateParentOfPath(path);
         FileUtils.RotatePath(path, settings.LogRotationCount);
-        _writer = new StreamWriter(path) { AutoFlush = true };
+        _writer = FileUtils.LogStream(path);
         _writer.WriteLine($"ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
         _writer.WriteLine(DateTimeOffset.Now.ToString("o", CultureInfo.InvariantCulture));
         _writer.WriteLine(new string('-', 80));

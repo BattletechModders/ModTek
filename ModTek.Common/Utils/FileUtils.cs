@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using ModTek.Common.Globals;
 
 namespace ModTek.Common.Utils;
@@ -189,5 +190,16 @@ internal static class FileUtils
         {
             di.Create();
         }
+    }
+
+    public static StreamWriter LogStream(string path)
+    {
+        return new StreamWriter(
+            File.Open(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite|FileShare.Delete),
+            Encoding.UTF8,
+            32 * 1024
+        ) {
+            AutoFlush = true
+        };
     }
 }

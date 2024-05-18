@@ -6,12 +6,13 @@ namespace ModTek.Features.Logging;
 
 internal static class HarmonyXLoggerAdapter
 {
+    private static readonly HBS.Logging.Logger.LogImpl s_logImpl = Log.HarmonyX.Log;
     internal static void Setup()
     {
         Logger.MessageReceived += (_, args) =>
         {
             var level = MapHarmonyLogChannelToHbsLogLevel(args.LogChannel);
-            Log.HarmonyX.Log.LogAtLevel(level, args.Message);
+            s_logImpl.LogAtLevel(level, args.Message);
         };
     }
 

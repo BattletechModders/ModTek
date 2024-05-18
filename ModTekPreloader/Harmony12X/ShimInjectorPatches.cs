@@ -21,7 +21,6 @@ internal static class ShimInjectorPatches
             {
                 HarmonyLib.Tools.Logger.ChannelFilter = (HarmonyLib.Tools.Logger.LogChannel)filter;
                 var logger = new Logger(Paths.HarmonyLogFile);
-                logger.Rotate();
                 HarmonyLib.Tools.Logger.MessageReceived += (_, args) =>
                 {
                     logger.Log($"[{args.LogChannel}] {args.Message}");
