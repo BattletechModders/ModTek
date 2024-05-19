@@ -12,6 +12,7 @@ Directory.Build.props
 *.userprefs
 *.sln.docstates
 *.svclog
+*.DotSettings
 .vs/
 .vscode/settings.json
 
