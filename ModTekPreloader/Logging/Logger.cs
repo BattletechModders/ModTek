@@ -32,9 +32,10 @@ internal class Logger
     [MethodImpl(MethodImplOptions.Synchronized)]
     internal void Log(object obj)
     {
+        var line = $"{GetTime()}{_prefix} {obj}";
         lock (this)
         {
-            _writer.WriteLine($"{GetTime()}{_prefix} {obj}");
+            _writer.WriteLine(line);
         }
     }
 
