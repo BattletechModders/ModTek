@@ -29,7 +29,6 @@ internal class Logger
         _writer = FileUtils.LogStream(path);
     }
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
     internal void Log(object obj)
     {
         var line = $"{GetTime()}{_prefix} {obj}";
