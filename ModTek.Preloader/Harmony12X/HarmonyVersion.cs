@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ModTekPreloader.Harmony12X;
+namespace ModTek.Preloader.Harmony12X;
 
 internal class HarmonyVersion
 {

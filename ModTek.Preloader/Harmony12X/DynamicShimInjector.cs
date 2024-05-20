@@ -2,11 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 using Mono.Cecil;
 
-namespace ModTekPreloader.Harmony12X;
+namespace ModTek.Preloader.Harmony12X;
 
 /* from BepInEx 5
  * https://github.com/BepInEx/HarmonyInteropDlls/

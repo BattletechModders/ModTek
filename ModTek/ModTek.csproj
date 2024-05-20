@@ -27,34 +27,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Automatically set the version number of your assembly based on git tags and semver -->
-    <PackageReference Include="GitVersion.MsBuild">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
-
     <!-- Harmony is needed to hook into the game -->
     <PackageReference Include="HarmonyX">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
-    <!-- Enables many newer language features for .NET Framework -->
-    <PackageReference Include="PolySharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->
     <Reference Include="Assembly-CSharp">
-      <Private>False</Private>
-    </Reference>
-
-    <!-- Important system libraries that are basically always used -->
-    <Reference Include="System">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
       <Private>False</Private>
     </Reference>
 
@@ -114,11 +95,6 @@
     <Asset Include="$(ProjectDir)\..\LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- Reference files generated in the game directory for quick access in the IDE -->
-  <ItemGroup>
-    <None LinkBase=".modtek" Include="$(BattleTechGameDir)\Mods\.modtek\**" />
-    <None LinkBase="ModTek" Include="$(BattleTechGameDir)\Mods\ModTek\**" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
   </ItemGroup>

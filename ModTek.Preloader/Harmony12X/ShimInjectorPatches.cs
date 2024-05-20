@@ -2,10 +2,11 @@
 using System.IO;
 using System.Reflection;
 using HarmonyLib;
-using ModTekPreloader.Loader;
-using ModTekPreloader.Logging;
+using ModTek.Common.Globals;
+using ModTek.Common.Logging;
+using ModTek.Preloader.Loader;
 
-namespace ModTekPreloader.Harmony12X;
+namespace ModTek.Preloader.Harmony12X;
 
 internal static class ShimInjectorPatches
 {
@@ -20,7 +21,7 @@ internal static class ShimInjectorPatches
             if (filter > 0)
             {
                 HarmonyLib.Tools.Logger.ChannelFilter = (HarmonyLib.Tools.Logger.LogChannel)filter;
-                var logger = new Logger(Paths.HarmonyLogFile);
+                var logger = new SimpleLogger(Paths.HarmonyLogFile);
                 HarmonyLib.Tools.Logger.MessageReceived += (_, args) =>
                 {
                     logger.Log($"[{args.LogChannel}] {args.Message}");

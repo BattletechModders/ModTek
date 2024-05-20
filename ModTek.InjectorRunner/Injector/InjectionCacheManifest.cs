@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Injector;
+namespace ModTek.InjectorRunner.Injector;
 
 internal class InjectionCacheManifest
 {

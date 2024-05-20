@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader;
+namespace ModTek.Preloader;
 
 internal static class IEnumerableExtensions
 {

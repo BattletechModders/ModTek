@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Harmony12X;
+namespace ModTek.Preloader.Harmony12X;
 
 // workaround for shimmed assemblies being loaded from another directory
 internal static class AssemblyOriginalPathTracker

@@ -17,6 +17,7 @@ For users:
 
 For modders:
 - Moved all ModTek dlls (ModTek, HarmonyX, MonoMod, etc..) to `ModTek/lib`.
+  - Requires to update doorstop config on windows and run.sh on linux / macos.
 
 ## 4.1 - kMiSSioN
 

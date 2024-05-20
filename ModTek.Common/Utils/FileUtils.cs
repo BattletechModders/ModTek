@@ -14,7 +14,7 @@ internal static class FileUtils
     {
         try
         {
-            return new Uri(CommonPaths.BaseDirectory).MakeRelativeUri(new Uri(path)).ToString();
+            return new Uri(Paths.BaseDirectory).MakeRelativeUri(new Uri(path)).ToString();
         }
         catch
         {

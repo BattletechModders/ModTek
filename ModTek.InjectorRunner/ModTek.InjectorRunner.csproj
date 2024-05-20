@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Common.props" />
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ModTek.Preloader" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
+  </ItemGroup>
+</Project>

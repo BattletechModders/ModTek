@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace ModTekPreloader.Loader;
+namespace ModTek.Preloader.Loader;
 
 internal static class LegacyChecker
 {

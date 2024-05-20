@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Injector;
-using ModTekPreloader.Logging;
+using ModTek.InjectorRunner.Injector;
 using Mono.Cecil;
 
-namespace ModTekPreloader.Harmony12X;
+namespace ModTek.Preloader.Harmony12X;
 
 internal class ShimCacheManifest
 {

@@ -7,9 +7,9 @@
   <PropertyGroup>
     <!-- All mods and utilites are libraries and produce a dll -->
     <OutputType>Library</OutputType>
-    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks won't work -->
+    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks are more likely to be incompatible -->
     <TargetFramework>net471</TargetFramework>
-    <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework -->
+    <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework, PolySharp helps with backports -->
     <LangVersion>12</LangVersion>
     <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <AssemblySearchPaths>
@@ -26,4 +26,23 @@
   <PropertyGroup>
     <ModTekLibDir>$(BattleTechGameDir)\Mods\ModTek\lib\</ModTekLibDir>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Makes sure dll versions are using commits and tags found in the git repo -->
+    <PackageReference Include="GitVersion.MsBuild">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <!-- Allows to use many modern language features in older .NET frameworks -->
+    <PackageReference Include="PolySharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <!-- Common libraries that are really used everywhere -->
+    <Reference Include="System">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

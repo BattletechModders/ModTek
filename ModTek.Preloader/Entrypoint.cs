@@ -1,6 +1,6 @@
 using System;
-using ModTekPreloader.Loader;
-using ModTekPreloader.Logging;
+using ModTek.Preloader.Loader;
+using Logger = ModTek.Preloader.Logger;
 
 // ReSharper disable once CheckNamespace
 namespace Doorstop;

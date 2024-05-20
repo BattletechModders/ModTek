@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Loader;
+namespace ModTek.Preloader.Loader;
 
 internal static class SingleInstanceEnforcer
 {
@@ -14,7 +14,7 @@ internal static class SingleInstanceEnforcer
 
     internal static void Enforce()
     {
-        FileUtils.CreateDirectoryForFile(Paths.LockFile);
+        FileUtils.CreateDirectoryForFile(Paths.PreloaderLockFile);
         try
         {
             Logger.Main.Log($"{LogPrefix} Locking");
@@ -23,7 +23,7 @@ internal static class SingleInstanceEnforcer
                 () =>
                 {
                     LockFileStream = new FileStream(
-                        Paths.LockFile,
+                        Paths.PreloaderLockFile,
                         FileMode.OpenOrCreate,
                         FileAccess.Write,
                         FileShare.None, // this is only supported on windows
@@ -53,7 +53,7 @@ internal static class SingleInstanceEnforcer
         }
         catch
         {
-            Logger.Main.Log($"{LogPrefix} Another BattleTech process is locking {Paths.LockFile}");
+            Logger.Main.Log($"{LogPrefix} Another BattleTech process is locking {Paths.PreloaderLockFile}");
             throw;
         }
     }

@@ -1,10 +1,16 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace ModTekPreloader.Logging;
+namespace ModTek.Common.Logging;
 
 internal class ConsoleLoggerAdapter : TextWriter
 {
+    private readonly SimpleLogger _logger;
+    internal ConsoleLoggerAdapter(SimpleLogger logger)
+    {
+        _logger = logger;
+    }
+
     public string Prefix { get; set; } = string.Empty;
     public override Encoding Encoding => Encoding.UTF8;
 
@@ -28,7 +34,7 @@ internal class ConsoleLoggerAdapter : TextWriter
 
     public override void Flush()
     {
-        Logger.Main.Log(Prefix + buffer);
+        _logger.Log(Prefix + buffer);
         buffer.Clear();
     }
 

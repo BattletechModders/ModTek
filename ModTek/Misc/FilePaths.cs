@@ -10,9 +10,9 @@ internal static class FilePaths
     private const string MDD_FILE_NAME = "MetadataDatabase.db";
 
     // Common paths
-    internal static string ModsDirectory => CommonPaths.ModsDirectory;
-    internal static string ModTekDirectory => CommonPaths.ModTekDirectory;
-    internal static string TempModTekDirectory => CommonPaths.DotModTekDirectory;
+    internal static string ModsDirectory => Paths.ModsDirectory;
+    internal static string ModTekDirectory => Paths.ModTekDirectory;
+    internal static string TempModTekDirectory => Paths.DotModTekDirectory;
 
     // ModTek paths
     internal static readonly string StreamingAssetsDirectory = Application.streamingAssetsPath;

@@ -4,18 +4,9 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="GitVersion.MsBuild">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="HarmonyX">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <Reference Include="System">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Data">
       <Private>False</Private>
     </Reference>

@@ -2,10 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Globals;
+using ModTek.Common.Logging;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Injector;
+namespace ModTek.InjectorRunner.Injector;
 
 internal class InjectorsRunner : IDisposable
 {
@@ -53,8 +54,8 @@ internal class InjectorsRunner : IDisposable
 
     private void InvokeInjector(string name, MethodInfo injectMethod)
     {
-        using var errorLogger = new ConsoleLoggerAdapter { Prefix = $"{name} Error: " };
-        using var infoLogger = new ConsoleLoggerAdapter { Prefix = $"{name}: " };
+        using var errorLogger = new ConsoleLoggerAdapter(Logger.Main) { Prefix = $"{name} Error: " };
+        using var infoLogger = new ConsoleLoggerAdapter(Logger.Main) { Prefix = $"{name}: " };
 
         var originalConsoleOut = Console.Out;
         var originalConsoleError = Console.Error;

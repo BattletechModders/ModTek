@@ -2,12 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Harmony12X;
-using ModTekPreloader.Injector;
-using ModTekPreloader.Logging;
+using ModTek.InjectorRunner.Injector;
+using ModTek.Preloader.Harmony12X;
 
-namespace ModTekPreloader.Loader;
+namespace ModTek.Preloader.Loader;
 
 internal static class Preloader
 {

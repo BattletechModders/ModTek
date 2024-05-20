@@ -1,11 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\Common.props" />
 
-  <ItemGroup>
-    <Link Include="$(BattleTechGameDir)\Mods\.modtek\ModTekPreloader*" />
-    <Link Include="$(BattleTechGameDir)\Mods\ModTek\ModTekPreloader*" />
-  </ItemGroup>
-
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
       <Harmony12XDeps Exclude="$(TargetPath)" Include="$(OutDir)**" />
@@ -33,20 +28,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="GitVersion.MsBuild">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="HarmonyX" />
-    <PackageReference Include="PolySharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <Reference Include="System">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
@@ -54,5 +36,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
+    <ProjectReference Include="..\ModTek.InjectorRunner\ModTek.InjectorRunner.csproj" />
   </ItemGroup>
 </Project>

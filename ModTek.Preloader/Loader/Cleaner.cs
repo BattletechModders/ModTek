@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 
-namespace ModTekPreloader.Loader;
+namespace ModTek.Preloader.Loader;
 
 internal class Cleaner
 {

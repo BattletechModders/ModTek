@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 using Mono.Cecil;
 
-namespace ModTekPreloader.Injector;
+namespace ModTek.InjectorRunner.Injector;
 
-internal class AssemblyCache : IAssemblyResolver
+class AssemblyCache : IAssemblyResolver
 {
     private readonly Dictionary<string, AssemblyBag> assemblies = new();
     private readonly List<string> searchDirectories;

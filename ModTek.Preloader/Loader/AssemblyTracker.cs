@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
 
-namespace ModTekPreloader.Logging;
+namespace ModTek.Preloader.Loader;
 
 // useful for debugging
 internal static class AssemblyTracker

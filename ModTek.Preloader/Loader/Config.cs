@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
+using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTekPreloader.Logging;
 using Newtonsoft.Json;
 
-namespace ModTekPreloader.Loader;
+namespace ModTek.Preloader.Loader;
 
 internal class Config
 {
