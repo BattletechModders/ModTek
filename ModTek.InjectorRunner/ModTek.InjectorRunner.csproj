@@ -8,4 +8,14 @@
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HarmonyX">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <Reference Include="Mono.Cecil">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

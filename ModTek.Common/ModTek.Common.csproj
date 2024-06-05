@@ -1,20 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\Common.props" />
 
-  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
-  </Target>
-
   <ItemGroup>
     <InternalsVisibleTo Include="ModTek" />
     <InternalsVisibleTo Include="ModTek.Preloader" />
     <InternalsVisibleTo Include="ModTek.InjectorRunner" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="HarmonyX" />
-    <Reference Include="Mono.Cecil">
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
 </Project>
