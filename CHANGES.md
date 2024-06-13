@@ -10,10 +10,10 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
-## Upcoming - CptMoore
+## 4.2 - CptMoore
 
 For users:
-- Updated UnityDoorstop to latest version + still including a steamfix.
+- Updated UnityDoorstop to latest version + still including our custom steamfix.
 
 For modders:
 - Moved all ModTek dlls (ModTek, HarmonyX, MonoMod, etc..) to `ModTek/lib`.
