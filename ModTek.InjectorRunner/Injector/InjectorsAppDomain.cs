@@ -1,4 +1,5 @@
 using System;
+using ModTek.Common.Globals;
 
 namespace ModTek.InjectorRunner.Injector;
 
@@ -10,7 +11,11 @@ internal class InjectorsAppDomain : MarshalByRefObject
     {
         // this AppDomain allows us to unload all dlls used by the Injectors
         // also it enforces isolation to allow running injectors during project build time
-        var domain = AppDomain.CreateDomain(ModTekInjectorsDomainName);
+        var domain = AppDomain.CreateDomain(ModTekInjectorsDomainName, null, new AppDomainSetup
+        {
+            // for some reason InjectorRunner can't find itself within the newly created AppDomain otherwise
+            PrivateBinPath = Paths.ModTekLibDirectory
+        });
         try
         {
             var @this = (InjectorsAppDomain)domain.CreateInstance(
