@@ -69,7 +69,7 @@ internal static class AssemblyUtil
         catch (Exception e)
         {
             var typeString = typeName == null ? "in" : $"in type {typeName} of";
-            Log.Main.Warning?.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.FullName}", e);
+            Log.Main.Warning?.Log($"Can't find method(s) {methodName} {typeString} assembly {assembly.CodeBase}", e);
             return null;
         }
     }
