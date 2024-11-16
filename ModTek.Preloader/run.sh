@@ -1,94 +1,91 @@
 #!/bin/sh
-# Doorstop start script optimized for ModTek
+set -eux
+# Doorstop run script copied from BepInEx and optimized for ModTek
 
-export DOORSTOP_MONO_DEBUG_ENABLED="0"
-export DOORSTOP_MONO_DEBUG_ADDRESS="127.0.0.1:55555"
-export DOORSTOP_MONO_DEBUG_SUSPEND="0"
+executable_name="BattleTech"
+steam_launch_wrapper_name="steam-launch-wrapper" # TODO how does MacOS work?
 
-# Use POSIX-compatible way to get the directory of the executable
+# Use POSIX-compatible way to get the directory of this script
 a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a" || exit; pwd -P)
 
-# Launch via Steam
-# converts
-# steam -> run (this) -> steam stuff -> BattleTech
-# into
-# steam -> run -> steam stuff -> run (continuation) -> BattleTech
-# to avoid the doorstop preloader lib interfering with steam stuff
+# If launched via Steam, makes sure to delay preloading/lib insertion to just before calling BattleTech,
+# in order to avoid interfering with steam wrappers.
+# > steam -> run (this) -> steam wrappers -> run (continuation) -> BattleTech
 # Steam debugging
-# ./run.sh %command% > ~/Games/steam_command_output.txt 2>&1
-if [ "$1" != "${1#*steam-launch-wrapper}" ]
+# ./run.sh %command% > ~/steam_command_output.txt 2>&1
+# POSIX shell can't find and insert in the middle of the argument list
+if [ -n "${1:-}" ] && [ "$1" != "${1%"/${steam_launch_wrapper_name}"}" ]
 then
-  set -- "$@" "$1" # push
-  shift
-  while [ "$1" = "${1#*steam-launch-wrapper}" ]
+  steam_first_wrapper="$1"
+  set -- "$@" "$1" ; shift # rotates the first argument to the back
+  # continue to rotate until the steam wrapper is again the first argument
+  while [ "$1" != "$steam_first_wrapper" ]
   do
-    if [ "$1" != "${1#*BattleTech}" ]
+    if [ "$1" != "${1%"/${executable_name}"}" ] # insert this script to before BattleTech gets rotated
     then
       set -- "$@" "${BASEDIR}/run.sh"
     fi
-    set -- "$@" "$1" # push
-    shift
+    set -- "$@" "$1" ; shift # rotates the first argument to the back
   done
   exec "$@"
 fi
 
-# Launched by providing a binary (mainly Steam)
-if [ -x "$1" ]
+# get doorstop settings for linux/mac from the ini (why does doorstop not do this for us?)
+doorstop_config() { grep "^${1}=" "${BASEDIR}/doorstop_config.ini" | cut -d= -f2- ; }
+doorstop_bool() { sed s@true@1@ | sed s@false@0@ ; }
+export DOORSTOP_MONO_DEBUG_ENABLED="$(doorstop_config debug_enabled | doorstop_bool)"
+export DOORSTOP_MONO_DEBUG_ADDRESS="$(doorstop_config debug_address)"
+export DOORSTOP_MONO_DEBUG_SUSPEND="$(doorstop_config debug_suspend | doorstop_bool)"
+export DOORSTOP_ENABLED="$(doorstop_config enabled | doorstop_bool)"
+export DOORSTOP_TARGET_ASSEMBLY="$(doorstop_config target_assembly | tr '\\' '/' )"
+
+# check if the first parameter is the executable, e.g. as forwarded through Steam
+if [ -n "${1:-}" ] && [ -x "$1" ]
 then
-    executable_path="$1"
-    shift
+  executable_path="$1"
+  shift
 fi
 
 os_type="$(uname -s)"
 case ${os_type} in
-    Linux*)
-        # Launched run.sh directly without specifying a binary
-        if [ -z "$executable_path" ]
-        then
-            executable_path="${BASEDIR}/BattleTech"
-        fi
-        export LD_LIBRARY_PATH="${BASEDIR}/:${LD_LIBRARY_PATH}"
-        if [ -z "$LD_PRELOAD" ]; then
-            export LD_PRELOAD="libdoorstop.so"
-        else
-            export LD_PRELOAD="libdoorstop.so:${LD_PRELOAD}"
-        fi
-        
-        #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
-        #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
-        #Work around used as it is a bug that is patched out in newer versions of mono.
-        export TERM=xterm
-    ;;
-    Darwin*)
-        # Launched run.sh directly without specifying a binary
-        if [ -z "$executable_path" ]
-        then
-            # BASEDIR should be the Resources directory
-            contents_path=$(dirname "$BASEDIR")
-            real_app_name=$(defaults read "${contents_path}/Info" CFBundleExecutable)
-            executable_path="${contents_path}/MacOS/${real_app_name}"
-        fi
-        # fix mods wanting BattleTech_Data
-        (
-            cd "$BASEDIR"
-            ln -fs Data BattleTech_Data
-        )
-        export DYLD_LIBRARY_PATH="${BASEDIR}/:${DYLD_LIBRARY_PATH}"
-        if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
-            export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib"
-        else
-            export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES}"
-        fi
-    ;;
-    *)
-        # alright who is running games on freebsd
-        echo "Unknown operating system (${os_type})"
-        echo "Make an issue at https://github.com/NeighTools/UnityDoorstop"
-        exit 1
-    ;;
-esac
+  Linux*)
+    # guess executable path if launched without specifying an executable
+    if [ -z "${executable_path:-}" ]
+    then
+      executable_path="${BASEDIR}/${executable_name}"
+    fi
+    
+    #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
+    #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
+    #Work around used as it is a bug that is patched out in newer versions of mono.
+    export TERM=xterm
 
-export DOORSTOP_ENABLED="1"
-export DOORSTOP_TARGET_ASSEMBLY="${BASEDIR}/Mods/ModTek/lib/ModTek.Preloader.dll"
+    export LD_PRELOAD="${BASEDIR}/libdoorstop.so:${LD_PRELOAD:-}"
+    LD_PRELOAD="${LD_PRELOAD%:}"
+  ;;
+  Darwin*)
+    # guess executable path if launched without specifying an executable
+    if [ -z "${executable_path:-}" ]
+    then
+      # BASEDIR should be the Resources directory
+      executable_path="$(dirname "$BASEDIR")/MacOS/${executable_name}"
+    fi
+    
+    # fix mods wanting BattleTech_Data
+    (
+      cd "$BASEDIR" || exit 99
+      ln -fs Data BattleTech_Data
+    )
+
+    export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES:-}"
+    DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES%:}"
+  ;;
+  *)
+    # alright who is running games on freebsd
+    echo "Unknown operating system (${os_type})"
+    echo "Make an issue at https://github.com/NeighTools/UnityDoorstop"
+    exit 1
+  ;;
+esac
 
 exec "$executable_path" "$@"
