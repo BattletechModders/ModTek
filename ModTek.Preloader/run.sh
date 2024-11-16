@@ -1,32 +1,38 @@
 #!/bin/sh
-# Doorstop start script (heavily modified and cleaned up for ModTek use case)
+# Doorstop start script optimized for ModTek
 
 export DOORSTOP_MONO_DEBUG_ENABLED="0"
 export DOORSTOP_MONO_DEBUG_ADDRESS="127.0.0.1:55555"
 export DOORSTOP_MONO_DEBUG_SUSPEND="0"
 
-################################################################################
-# Everything past this point is the actual script
-
-# Special case: program is launched via Steam
-# In that case rerun the script via their bootstrapper to ensure Steam overlay works
-if [ "$2" = "SteamLaunch" ]; then
-    script_path="$0"
-    # code found here: https://stackoverflow.com/questions/63864755/remove-last-argument-in-shell-script-posix/69952637#69952637
-    i=0
-    while [ $((i+=1)) -lt $# ]; do
-        set -- "$@" "$1"
-        shift
-    done # 1 2 3 -> 3 1 2
-    game_path="$1" # last argument
-    shift # $@ is now without last argument
-    "$@" "$script_path" "$game_path"
-    exit
-fi
-
 # Use POSIX-compatible way to get the directory of the executable
 a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a" || exit; pwd -P)
 
+# Launch via Steam
+# converts
+# steam -> run (this) -> steam stuff -> BattleTech
+# into
+# steam -> run -> steam stuff -> run (continuation) -> BattleTech
+# to avoid the doorstop preloader lib interfering with steam stuff
+# Steam debugging
+# ./run.sh %command% > ~/Games/steam_command_output.txt 2>&1
+if [ "$1" != "${1#*steam-launch-wrapper}" ]
+then
+  set -- "$@" "$1" # push
+  shift
+  while [ "$1" = "${1#*steam-launch-wrapper}" ]
+  do
+    if [ "$1" != "${1#*BattleTech}" ]
+    then
+      set -- "$@" "${BASEDIR}/run.sh"
+    fi
+    set -- "$@" "$1" # push
+    shift
+  done
+  exec "$@"
+fi
+
+# Launched by providing a binary (mainly Steam)
 if [ -x "$1" ]
 then
     executable_path="$1"
@@ -36,6 +42,7 @@ fi
 os_type="$(uname -s)"
 case ${os_type} in
     Linux*)
+        # Launched run.sh directly without specifying a binary
         if [ -z "$executable_path" ]
         then
             executable_path="${BASEDIR}/BattleTech"
@@ -53,9 +60,10 @@ case ${os_type} in
         export TERM=xterm
     ;;
     Darwin*)
-        # BASEDIR should be the Resources directory
+        # Launched run.sh directly without specifying a binary
         if [ -z "$executable_path" ]
         then
+            # BASEDIR should be the Resources directory
             contents_path=$(dirname "$BASEDIR")
             real_app_name=$(defaults read "${contents_path}/Info" CFBundleExecutable)
             executable_path="${contents_path}/MacOS/${real_app_name}"
