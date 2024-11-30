@@ -37,12 +37,12 @@ internal class MTStopwatch
         AddMeasurement(elapsed);
     }
 
-    internal void AddMeasurement(long elapsedTicks, long incrementCount = 1)
+    internal void AddMeasurement(long elapsedTicks)
     {
         var ticks = Interlocked.Add(ref _ticks, elapsedTicks);
-        if (Callback != null && incrementCount != 0)
+        var count = Interlocked.Increment(ref _count);
+        if (Callback != null)
         {
-            var count = Interlocked.Add(ref _count, incrementCount);
             if (count % CallbackForEveryNumberOfMeasurements == 0)
             {
                 Callback.Invoke(new Stats(ticks, count));
@@ -69,7 +69,8 @@ internal class MTStopwatch
     {
         internal long Ticks { get; }
         internal long Count { get; }
-        internal long TotalMS => TicksToMS(Ticks);
+        internal TimeSpan TotalTime => TimeSpanFromTicks(Ticks);
+        internal TimeSpan AverageTime => TimeSpanFromTicks(Ticks / Count);
 
         internal Stats(MTStopwatch sw)
         {
@@ -81,11 +82,6 @@ internal class MTStopwatch
         {
             Ticks = ticks;
             Count = count;
-        }
-
-        private static long TicksToMS(long ticks)
-        {
-            return Stopwatch.IsHighResolution ? ticks / (Stopwatch.Frequency / 1000L) : ticks;
         }
     }
 

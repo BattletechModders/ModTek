@@ -36,10 +36,10 @@ internal class Formatter
             sb.Append(" ");
         }
 
-        if (messageDto.thread != null)
+        if (messageDto.nonMainThread != null)
         {
             sb.Append("[ThreadId=");
-            sb.Append(messageDto.thread.ManagedThreadId);
+            sb.Append(messageDto.nonMainThread.ManagedThreadId);
             sb.Append("] ");
         }
 

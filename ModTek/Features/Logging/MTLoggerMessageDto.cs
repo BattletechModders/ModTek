@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading;
 using HBS.Logging;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace ModTek.Features.Logging;
 
@@ -24,7 +23,7 @@ internal class MTLoggerMessageDto
     private readonly long _ticks = Stopwatch.GetTimestamp();
 
     // we need the thread before switch to async logging
-    internal readonly Thread thread = Object.CurrentThreadIsMainThread() ? null : Thread.CurrentThread;
+    internal readonly Thread nonMainThread;
 
     internal readonly string message;
     internal readonly string loggerName;
@@ -32,13 +31,14 @@ internal class MTLoggerMessageDto
     internal readonly Exception exception;
     internal readonly IStackTrace location;
 
-    internal MTLoggerMessageDto(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
+    internal MTLoggerMessageDto(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location, Thread nonMainThread)
     {
         this.loggerName = loggerName;
         this.logLevel = logLevel;
         this.message = message?.ToString(); // message as object might not be thread-safe
         this.exception = exception;
         this.location = location;
+        this.nonMainThread = nonMainThread;
     }
 
     internal TimeSpan StartupTime()

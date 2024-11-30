@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
 
@@ -83,8 +84,13 @@ internal static class LoggingFeature
             location = GrabStackTrace();
         }
 
-        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception, location);
-        if (_queue == null || !_queue.Add(messageDto))
+        var nonMainThread = UnityEngine.Object.CurrentThreadIsMainThread() ? null : Thread.CurrentThread;
+        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception, location, nonMainThread);
+        if (
+            _queue == null
+            || (nonMainThread != null && _queue.ThreadIsLoggerThread(nonMainThread))
+            || !_queue.Add(messageDto)
+        )
         {
             ProcessLoggerMessage(messageDto);
         }

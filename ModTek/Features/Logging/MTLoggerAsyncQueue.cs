@@ -14,7 +14,7 @@ internal class MTLoggerAsyncQueue
     internal MTLoggerAsyncQueue(Action<MTLoggerMessageDto> processor)
     {
         _processor = processor;
-        _queue = new BlockingCollection<MTLoggerMessageDto>(10 * 1024);
+        _queue = new BlockingCollection<MTLoggerMessageDto>(100_000);
         Application.quitting += () => _queue.CompleteAdding();
         _thread = new Thread(Loop)
         {
@@ -27,8 +27,13 @@ internal class MTLoggerAsyncQueue
 
     private static readonly MTStopwatch _loggingStopwatch = new()
     {
-        Callback = stats => Log.Main.Debug?.Log($"Asynchronous logging offloaded {stats.TotalMS - _queueStopwatch.GetStats().TotalMS} ms from the main thread."),
-        CallbackForEveryNumberOfMeasurements = 10000
+        Callback = stats =>
+        {
+            var dispatchStats = _dispatchStopWatch.GetStats();
+            var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
+            Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread, dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageTime}.");
+        },
+        CallbackForEveryNumberOfMeasurements = 10_000
     };
 
     private void Loop()
@@ -58,21 +63,17 @@ internal class MTLoggerAsyncQueue
         }
     }
 
-    private bool CurrentThreadIsLoggerThread() => Thread.CurrentThread == _thread;
+    internal bool ThreadIsLoggerThread(Thread thread) => thread == _thread;
 
-
-    private static readonly MTStopwatch _queueStopwatch = new();
-    // return false only if there was an error or async is not wanted
+    private static readonly MTStopwatch _dispatchStopWatch = new();
+    // return false if, for example, the queue was already "completed"
     internal bool Add(MTLoggerMessageDto messageDto)
     {
-        _queueStopwatch.Start();
+        _dispatchStopWatch.Start();
         try
         {
-            if (!_queue.IsAddingCompleted && !CurrentThreadIsLoggerThread())
-            {
-                _queue.Add(messageDto);
-                return true;
-            }
+            _queue.Add(messageDto);
+            return true;
         }
         catch
         {
@@ -80,7 +81,7 @@ internal class MTLoggerAsyncQueue
         }
         finally
         {
-            _queueStopwatch.Stop();
+            _dispatchStopWatch.Stop();
         }
         return false;
     }
