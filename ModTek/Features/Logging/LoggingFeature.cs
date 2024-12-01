@@ -79,13 +79,32 @@ internal static class LoggingFeature
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
+        // capture timestamp as early as possible, to be as close to the callers intended time
+        var timestamp = MTLoggerMessageDto.GetTimestamp();
+        
+        // fill out location if not already filled out while still on caller stack
         if (location == null && (_settings.LogStackTraces || (_settings.LogStackTracesOnExceptions && exception != null)))
         {
             location = GrabStackTrace();
         }
 
+        // capture caller thread if not unity main thread
         var nonMainThread = UnityEngine.Object.CurrentThreadIsMainThread() ? null : Thread.CurrentThread;
-        var messageDto = new MTLoggerMessageDto(loggerName, logLevel, message, exception, location, nonMainThread);
+
+        // convert message to string while still in caller thread
+        var messageAsString = message?.ToString();
+        
+        var messageDto = new MTLoggerMessageDto
+        (
+            timestamp,
+            loggerName,
+            logLevel,
+            messageAsString, 
+            exception,
+            location,
+            nonMainThread
+        );
+        
         if (
             _queue == null
             || (nonMainThread != null && _queue.ThreadIsLoggerThread(nonMainThread))

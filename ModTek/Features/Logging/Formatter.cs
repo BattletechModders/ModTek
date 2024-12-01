@@ -36,48 +36,48 @@ internal class Formatter
             sb.Append(" ");
         }
 
-        if (messageDto.nonMainThread != null)
+        if (messageDto.NonMainThread != null)
         {
             sb.Append("[ThreadId=");
-            sb.Append(messageDto.nonMainThread.ManagedThreadId);
+            sb.Append(messageDto.NonMainThread.ManagedThreadId);
             sb.Append("] ");
         }
 
-        sb.Append(messageDto.loggerName);
+        sb.Append(messageDto.LoggerName);
         sb.Append(" ");
 
         sb.Append("[");
-        sb.Append(LogLevelExtension.LogToString(messageDto.logLevel));
+        sb.Append(LogLevelExtension.LogToString(messageDto.LogLevel));
         sb.Append("]");
 
         var prefix = " ";
-        if (!string.IsNullOrEmpty(messageDto.message))
+        if (!string.IsNullOrEmpty(messageDto.Message))
         {
             sb.Append(prefix);
             if (_sanitizerRegex == null)
             {
-                sb.Append(messageDto.message);
+                sb.Append(messageDto.Message);
             }
             else
             {
-                sb.Append(_sanitizerRegex.Replace(messageDto.message, string.Empty));
+                sb.Append(_sanitizerRegex.Replace(messageDto.Message, string.Empty));
             }
             prefix = Environment.NewLine;
         }
 
-        if (messageDto.exception != null)
+        if (messageDto.Exception != null)
         {
             sb.Append(prefix);
-            sb.Append(messageDto.exception);
+            sb.Append(messageDto.Exception);
             prefix = Environment.NewLine;
         }
 
-        if (messageDto.location != null)
+        if (messageDto.Location != null)
         {
             sb.Append(prefix);
             sb.Append("Location Trace");
             sb.Append(Environment.NewLine);
-            sb.Append(GetLocationString(messageDto.location));
+            sb.Append(GetLocationString(messageDto.Location));
         }
 
         var line = sb.ToString();

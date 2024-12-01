@@ -38,17 +38,17 @@ internal class Filter
 
     internal bool IsMatch(MTLoggerMessageDto messageDto)
     {
-        if (_loggerNames != null && !_loggerNames.Contains(messageDto.loggerName))
+        if (_loggerNames != null && !_loggerNames.Contains(messageDto.LoggerName))
         {
             return false;
         }
 
-        if (_logLevels != null && !_logLevels.Contains(messageDto.logLevel))
+        if (_logLevels != null && !_logLevels.Contains(messageDto.LogLevel))
         {
             return false;
         }
 
-        if (_messagePrefixesMatcher != null && !_messagePrefixesMatcher.IsMatch(messageDto.message))
+        if (_messagePrefixesMatcher != null && !_messagePrefixesMatcher.IsMatch(messageDto.Message))
         {
             return false;
         }

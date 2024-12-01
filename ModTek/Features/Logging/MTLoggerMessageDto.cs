@@ -9,38 +9,42 @@ namespace ModTek.Features.Logging;
 internal class MTLoggerMessageDto
 {
     internal static readonly TimeSpan InitialUnityStartupTime;
-    internal static readonly long InitialStopwatchTicks;
+    internal static readonly long InitialStopwatchTimestamp;
     internal static readonly DateTimeOffset InitialDatTimeOffsetUtc;
 
     static MTLoggerMessageDto()
     {
         InitialUnityStartupTime = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
-        InitialStopwatchTicks = Stopwatch.GetTimestamp();
+        InitialStopwatchTimestamp = Stopwatch.GetTimestamp();
         InitialDatTimeOffsetUtc = DateTimeOffset.UtcNow;
     }
 
-    // we want to be as close to the time when the log statement was triggered
-    private readonly long _ticks = Stopwatch.GetTimestamp();
-
-    // we need the thread before switch to async logging
-    internal readonly Thread nonMainThread;
-
-    internal readonly string message;
-    internal readonly string loggerName;
-    internal readonly LogLevel logLevel;
-    internal readonly Exception exception;
-    internal readonly IStackTrace location;
-
-    internal MTLoggerMessageDto(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location, Thread nonMainThread)
-    {
-        this.loggerName = loggerName;
-        this.logLevel = logLevel;
-        this.message = message?.ToString(); // message as object might not be thread-safe
-        this.exception = exception;
-        this.location = location;
-        this.nonMainThread = nonMainThread;
+    private readonly long _timestamp;
+    internal readonly string LoggerName;
+    internal readonly LogLevel LogLevel;
+    internal readonly string Message;
+    internal readonly Exception Exception;
+    internal readonly IStackTrace Location;
+    internal readonly Thread NonMainThread;
+    
+    internal MTLoggerMessageDto(
+        long timestamp,
+        string loggerName,
+        LogLevel logLevel,
+        string message,
+        Exception exception,
+        IStackTrace location,
+        Thread nonMainThread
+    ) {
+        _timestamp = timestamp;
+        LoggerName = loggerName;
+        LogLevel = logLevel;
+        Message = message;
+        Exception = exception;
+        Location = location;
+        NonMainThread = nonMainThread;
     }
-
+    
     internal TimeSpan StartupTime()
     {
         return InitialUnityStartupTime.Add(GetElapsedSinceInitial());
@@ -53,6 +57,8 @@ internal class MTLoggerMessageDto
 
     private TimeSpan GetElapsedSinceInitial()
     {
-        return MTStopwatch.TimeSpanFromTicks(_ticks - InitialStopwatchTicks);
+        return MTStopwatch.TimeSpanFromTicks(_timestamp - InitialStopwatchTimestamp);
     }
+
+    internal static long GetTimestamp() => Stopwatch.GetTimestamp();
 }

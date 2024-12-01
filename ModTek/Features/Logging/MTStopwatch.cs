@@ -70,8 +70,8 @@ internal class MTStopwatch
         internal long Ticks { get; }
         internal long Count { get; }
         internal TimeSpan TotalTime => TimeSpanFromTicks(Ticks);
-        internal TimeSpan AverageTime => TimeSpanFromTicks(Ticks / Count);
-
+        internal long AverageNanoseconds => (long)((double)Ticks / Count / Stopwatch.Frequency * 1e+9);
+        
         internal Stats(MTStopwatch sw)
         {
             Ticks = Interlocked.Read(ref sw._ticks);

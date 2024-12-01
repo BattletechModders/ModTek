@@ -29,11 +29,12 @@ internal class MTLoggerAsyncQueue
     {
         Callback = stats =>
         {
-            var dispatchStats = _dispatchStopWatch.GetStats();
+            var dispatchStats = _dispatchStopWatch.GetStats(); // overhead we otherwise would not have on (main) thread
             var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
-            Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread, dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageTime}.");
+            Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
+            Log.Main.Trace?.Log($"Dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
         },
-        CallbackForEveryNumberOfMeasurements = 10_000
+        CallbackForEveryNumberOfMeasurements = 25_000
     };
 
     private void Loop()

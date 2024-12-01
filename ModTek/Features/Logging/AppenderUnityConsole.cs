@@ -23,7 +23,7 @@ internal class AppenderUnityConsole
     internal void Append(MTLoggerMessageDto messageDto)
     {
         // breaks the loop: Unity -> HBS -(x)-> Unity
-        if (messageDto.loggerName == UnityLoggerName)
+        if (messageDto.LoggerName == UnityLoggerName)
         {
             return;
         }
@@ -35,7 +35,7 @@ internal class AppenderUnityConsole
 
         var logLine = _formatter.GetFormattedLogLine(messageDto);
         s_ignoreNextUnityCapture = true;
-        _debugUnityLogger.Log(LogLevelToLogType(messageDto.logLevel), logLine);
+        _debugUnityLogger.Log(LogLevelToLogType(messageDto.LogLevel), logLine);
     }
 
     private static LogType LogLevelToLogType(LogLevel level)
