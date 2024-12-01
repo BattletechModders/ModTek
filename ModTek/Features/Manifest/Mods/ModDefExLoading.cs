@@ -20,6 +20,11 @@ internal static class ModDefExLoading
 
         // setup logs before calling the assembly
         LoggingFeature.AddAppenders(modDef.Directory, modDef.Logs);
+        if (modDef.Log != null)
+        {
+            var logPath = Path.Combine(modDef.Directory, modDef.Log.FilePath);
+            LoggingFeature.AddModLogAppender(logPath, modDef.Log.LoggerName);
+        }
 
         // load the mod assembly
         if (modDef.DLL != null && !LoadAssemblyAndCallInit(modDef))

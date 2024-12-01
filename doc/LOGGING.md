@@ -6,7 +6,7 @@ ModTek logging has the following features:
 - Provides filter options to determine what does or does not get into the log.
 - Formats a log message so that it includes a logger name, nicely formatted time, thread id if not on main thread, log message and possibly an exception.
 - Uses a high precision timer, to allow 1/10 of microsecond precision (10^-7) for time stamps instead of milliseconds (10^-3).
-- Supports adding additional log files. (TODO allow mods to define the log files directly in mod.json, right now only possible via `ModTek/config.json`)
+- Supports adding additional log files through `ModTek/config.json`.
 - Added more log levels, use "200" for Trace logging and "250" for Fatal logging. In C# enums are ints, so casting a integer to HBS' LogLevel is valid, `(LogLevel)200`.
 - Log rotation per game start. Logs are rotated to survive at least one other start, logs that end with `.1` are from a previous application start.
 
@@ -68,7 +68,25 @@ In the advanced merge json example from before, set 200 as the log level for you
 }
 ```
 
+### Mod Local Logs
+
+> **Note**
+> It is not recommended to use this feature as it produces duplicate IO
+
+If a mod author wants to have a separate copy of all logs a logger produces, one can enable a separate log in `mod.json`:
+```json
+{
+  "Log": {
+    "FilePath": "log.txt",
+    "LoggerName": "YourMod"
+  }
+}
+```
+
 ### Nullable loggers
+
+> **Note**
+> Nullable loggers is an advanced feature only necesary if one takes the time to use it
 
 Another way of enhancing performance is using nullable loggers. This is only for advanced users requiring lots of performance while still wanting readable code.
 
@@ -109,3 +127,4 @@ if (nullableLogger != null)
 There is a caveat, the game changes log levels after the mods have initialized, so in order to keep up there is a Harmony patch required and some boilerplate code.
 
 For the boilerplate code, see [NullableLogger.cs](../ModTek/NullableLogger.cs) and [Log.cs](../ModTek/Log.cs) as used by ModTek itself.
+ModTek comments out some parts in `NullableLogger.cs` and replaces them with internal calls, these would need to be reverted back.

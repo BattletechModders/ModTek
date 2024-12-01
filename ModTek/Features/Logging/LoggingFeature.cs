@@ -13,7 +13,7 @@ internal static class LoggingFeature
 
     private static AppenderUnityConsole _consoleLog;
     private static AppenderFile _mainLog;
-    private static AppenderFile[] _logsAppenders = Array.Empty<AppenderFile>();
+    private static AppenderFile[] _logsAppenders = [];
 
     private static MTLoggerAsyncQueue _queue;
 
@@ -73,6 +73,16 @@ internal static class LoggingFeature
             var logPath = Path.Combine(basePath, kv.Key);
             logsAppenders[index++] = new AppenderFile(logPath, kv.Value);
         }
+        _logsAppenders = logsAppenders;
+    }
+
+    internal static void AddModLogAppender(string logPath, string loggerName)
+    {
+        var logsAppenders = new AppenderFile[_logsAppenders.Length + 1];
+        Array.Copy(_logsAppenders, logsAppenders, _logsAppenders.Length);
+        var index = _logsAppenders.Length;
+        var settings = new AppenderSettings { Includes = [new FilterSettings { LoggerNames = [loggerName] }] };
+        logsAppenders[index] = new AppenderFile(logPath, settings);
         _logsAppenders = logsAppenders;
     }
 

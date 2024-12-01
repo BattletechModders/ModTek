@@ -122,10 +122,25 @@ public class ModDefEx : IEquatable<ModDefEx>
     // these will be different depending on the mod obviously
     public JObject Settings { get; set; } = new();
 
+    // TODO to be removed in the future or kept undocumented
+    // complex setup of log files, same complexity as ModTek itself
     [JsonProperty]
     internal const string Logs_Description = "Allows to define logs, the `key` specifies the log file path relative to `the mods directory`.";
     [JsonProperty]
     internal Dictionary<string, AppenderSettings> Logs { get; set; }
+    
+    // simplified dedicated log file setup for mods
+    [JsonProperty]
+    internal const string Log_Description = "Allows to define a log relative to the mods directory, that will contain a copy of all log statements for the specified logger.";
+    [JsonProperty]
+    internal ModLogSettings Log { get; set; }
+    internal class ModLogSettings
+    {
+        [JsonProperty(Required = Required.Always)]
+        internal string FilePath { get; set; }
+        [JsonProperty(Required = Required.Always)]
+        internal string LoggerName { get; set; }
+    }
 
     [JsonIgnore]
     public bool LoadFail { get; set; }
@@ -141,7 +156,7 @@ public class ModDefEx : IEquatable<ModDefEx>
         var modStatePath = Path.Combine(Directory, ModTek.MOD_STATE_JSON_NAME);
         var state = new ModState();
         state.Enabled = Enabled;
-        Log.Main.Info?.Log("\t\twriting to FS:" + QuotedName + "->" + state.Enabled);
+        global::ModTek.Log.Main.Info?.Log("\t\twriting to FS:" + QuotedName + "->" + state.Enabled);
         state.SaveToPath(modStatePath);
     }
 
