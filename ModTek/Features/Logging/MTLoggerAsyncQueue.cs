@@ -10,31 +10,33 @@ internal class MTLoggerAsyncQueue
 {
     private readonly Action<MTLoggerMessageDto> _processor;
     private readonly BlockingCollection<MTLoggerMessageDto> _queue;
-    private readonly Thread _thread;
+    internal readonly int LogWriterThreadId;
     internal MTLoggerAsyncQueue(Action<MTLoggerMessageDto> processor)
     {
         _processor = processor;
         _queue = new BlockingCollection<MTLoggerMessageDto>(100_000);
         Application.quitting += () => _queue.CompleteAdding();
-        _thread = new Thread(Loop)
+        var thread = new Thread(Loop)
         {
             Name = nameof(MTLoggerAsyncQueue),
             Priority = ThreadPriority.BelowNormal, // game should take priority
             IsBackground = false // don't exit automatically
         };
-        _thread.Start();
+        thread.Start();
+        LogWriterThreadId = thread.ManagedThreadId;
     }
 
     private static readonly MTStopwatch _loggingStopwatch = new()
     {
         Callback = stats =>
         {
-            var dispatchStats = _dispatchStopWatch.GetStats(); // overhead we otherwise would not have on (main) thread
+            var dispatchStats = _dispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
             var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
             Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
             Log.Main.Trace?.Log($"Dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+            Log.Main.Trace?.Log($"An estimated maximum of {s_memoryEstimatedUsageMax / 1_000_000} MB was ever used by {s_memoryObjectCountMax} log statements.");
         },
-        CallbackForEveryNumberOfMeasurements = 25_000
+        CallbackForEveryNumberOfMeasurements = 50_000
     };
 
     private void Loop()
@@ -52,6 +54,10 @@ internal class MTLoggerAsyncQueue
                 {
                     LoggingFeature.WriteExceptionToFatalLog(e);
                 }
+                finally
+                {
+                    UnTrackMemory(message);
+                }
             }
         }
         catch (InvalidOperationException)
@@ -64,8 +70,7 @@ internal class MTLoggerAsyncQueue
         }
     }
 
-    internal bool ThreadIsLoggerThread(Thread thread) => thread == _thread;
-
+    // tracks all overhead on the main thread that happens due to async logging
     private static readonly MTStopwatch _dispatchStopWatch = new();
     // return false if, for example, the queue was already "completed"
     internal bool Add(MTLoggerMessageDto messageDto)
@@ -74,6 +79,7 @@ internal class MTLoggerAsyncQueue
         try
         {
             _queue.Add(messageDto);
+            TrackMemory(messageDto); // only track if add did not fail
             return true;
         }
         catch
@@ -85,5 +91,43 @@ internal class MTLoggerAsyncQueue
             _dispatchStopWatch.Stop();
         }
         return false;
+    }
+    
+    // memory tracking
+    private static long s_memoryEstimatedUsage;
+    private static long s_memoryEstimatedUsageMax;
+    private static long s_memoryObjectCount;
+    private static long s_memoryObjectCountMax;
+    private static void TrackMemory(MTLoggerMessageDto messageDto)
+    {
+        var currentCount = Interlocked.Increment(ref s_memoryObjectCount);
+        var currentMemoryUse = Interlocked.Add(ref s_memoryEstimatedUsage, messageDto.EstimatedSizeInMemory);
+
+        var knownMax = Interlocked.Read(ref s_memoryEstimatedUsageMax);
+        if (knownMax >= currentMemoryUse)
+        {
+            return;
+        }
+
+        while (true)
+        {
+            var setMax = Interlocked.CompareExchange(ref s_memoryEstimatedUsageMax, currentMemoryUse, knownMax);
+            if (setMax == knownMax) // our attempt did set a new max
+            {
+                // no CAS here, as we don't care if slightly wrong stats are saved
+                Volatile.Write(ref s_memoryObjectCountMax, currentCount);
+                break;
+            }
+            if (setMax >= currentMemoryUse) // another thread already set a higher max than we estimated
+            {
+                break;
+            }
+            knownMax = setMax; // let's retry
+        }
+    }
+    private static void UnTrackMemory(MTLoggerMessageDto messageDto)
+    {
+        Interlocked.Add(ref s_memoryEstimatedUsage, -messageDto.EstimatedSizeInMemory);
+        Interlocked.Decrement(ref s_memoryObjectCount);
     }
 }

@@ -88,8 +88,8 @@ internal static class LoggingFeature
             location = GrabStackTrace();
         }
 
-        // capture caller thread if not unity main thread
-        var nonMainThread = UnityEngine.Object.CurrentThreadIsMainThread() ? null : Thread.CurrentThread;
+        // capture caller thread
+        var threadId = Thread.CurrentThread.ManagedThreadId;
 
         // convert message to string while still in caller thread
         var messageAsString = message?.ToString();
@@ -102,12 +102,12 @@ internal static class LoggingFeature
             messageAsString, 
             exception,
             location,
-            nonMainThread
+            threadId
         );
         
         if (
             _queue == null
-            || (nonMainThread != null && _queue.ThreadIsLoggerThread(nonMainThread))
+            || _queue.LogWriterThreadId == threadId
             || !_queue.Add(messageDto)
         )
         {

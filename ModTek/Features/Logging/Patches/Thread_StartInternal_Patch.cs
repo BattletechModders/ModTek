@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace ModTek.Features.Logging.Patches;
@@ -13,6 +14,6 @@ internal static class Thread_StartInternal_Patch
 
     public static void Postfix(Thread __instance)
     {
-        Log.Debugger.Debug?.Log("A thread was started with ThreadId=" + __instance.ManagedThreadId + new StackTrace(4));
+        Log.Debugger.Debug?.Log("A thread was started with ThreadId=" + __instance.ManagedThreadId + Environment.NewLine + new StackTrace(4));
     }
 }

@@ -8,6 +8,9 @@ namespace ModTek.Features.Logging;
 
 internal class Formatter
 {
+    // we assume the formatter is first accessed when we are on the unity main thread
+    private static readonly int s_unityMainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+    
     private readonly AppenderSettings _settings;
     private readonly Regex _sanitizerRegex;
 
@@ -36,10 +39,10 @@ internal class Formatter
             sb.Append(" ");
         }
 
-        if (messageDto.NonMainThread != null)
+        if (messageDto.ThreadId != s_unityMainThreadId)
         {
             sb.Append("[ThreadId=");
-            sb.Append(messageDto.NonMainThread.ManagedThreadId);
+            sb.Append(messageDto.ThreadId);
             sb.Append("] ");
         }
 

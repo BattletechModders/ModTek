@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using HBS.Logging;
 using UnityEngine;
 
@@ -25,7 +24,7 @@ internal class MTLoggerMessageDto
     internal readonly string Message;
     internal readonly Exception Exception;
     internal readonly IStackTrace Location;
-    internal readonly Thread NonMainThread;
+    internal readonly int ThreadId;
     
     internal MTLoggerMessageDto(
         long timestamp,
@@ -34,7 +33,7 @@ internal class MTLoggerMessageDto
         string message,
         Exception exception,
         IStackTrace location,
-        Thread nonMainThread
+        int threadId
     ) {
         _timestamp = timestamp;
         LoggerName = loggerName;
@@ -42,7 +41,7 @@ internal class MTLoggerMessageDto
         Message = message;
         Exception = exception;
         Location = location;
-        NonMainThread = nonMainThread;
+        ThreadId = threadId;
     }
     
     internal TimeSpan StartupTime()
@@ -61,4 +60,32 @@ internal class MTLoggerMessageDto
     }
 
     internal static long GetTimestamp() => Stopwatch.GetTimestamp();
+    
+    // memory tracking
+    internal int EstimatedSizeInMemory => SizeInMemoryEstimatedOverhead + LoggerName.Length + (Message?.Length ?? 0);
+    
+    private const int SizeInMemoryEstimatedOverhead =
+        ReferenceTypeEstimatedOverhead
+        + (ConcurrentQueueSegmentEstimatedOverhead + (ItemsPerSegment-1))/ItemsPerSegment // round up
+        + sizeof(long) // _timestamp
+        + sizeof(long) // LoggerName
+        + sizeof(LogLevel)
+        + sizeof(long) // Message
+        + sizeof(long) // ignoring exception object, rarely used and complex to calculate
+        + sizeof(long) // ignoring location object, rarely used and complex to calculate
+        + sizeof(int); // ThreadId
+
+    private const int ConcurrentQueueSegmentEstimatedOverhead =
+        ReferenceTypeEstimatedOverhead
+        + ItemsPerSegment * sizeof(long) // m_array
+        + ItemsPerSegment * sizeof(bool) // m_state
+        + sizeof(long) // m_next
+        + sizeof(long) // m_index
+        + sizeof(int) // m_low
+        + sizeof(int) // m_high
+        + sizeof(long); // m_source
+
+    private const int ItemsPerSegment = 32;
+    
+    private const int ReferenceTypeEstimatedOverhead = 16;
 }
