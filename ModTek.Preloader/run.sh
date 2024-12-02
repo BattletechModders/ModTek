@@ -53,6 +53,7 @@ case ${os_type} in
     if [ -z "${executable_path:-}" ]
     then
       executable_path="${BASEDIR}/${executable_name}"
+      cd "${BASEDIR}"
     fi
     
     #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
