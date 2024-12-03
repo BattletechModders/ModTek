@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 using ThreadPriority = System.Threading.ThreadPriority;
@@ -9,12 +8,13 @@ namespace ModTek.Features.Logging;
 internal class MTLoggerAsyncQueue
 {
     private readonly Action<MTLoggerMessageDto> _processor;
-    private readonly BlockingCollection<MTLoggerMessageDto> _queue;
+    private readonly LightWeightBlockingQueue<MTLoggerMessageDto> _queue;
     internal readonly int LogWriterThreadId;
+    
     internal MTLoggerAsyncQueue(Action<MTLoggerMessageDto> processor)
     {
         _processor = processor;
-        _queue = new BlockingCollection<MTLoggerMessageDto>(100_000);
+        _queue = new LightWeightBlockingQueue<MTLoggerMessageDto>();
         Application.quitting += () => _queue.CompleteAdding();
         var thread = new Thread(Loop)
         {
@@ -34,39 +34,38 @@ internal class MTLoggerAsyncQueue
             var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
             Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
             Log.Main.Trace?.Log($"Dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
-            Log.Main.Trace?.Log($"An estimated maximum of {s_memoryEstimatedUsageMax / 1_000_000} MB was ever used by {s_memoryObjectCountMax} log statements.");
+#if MEMORY_TRACE
+            Log.Main.Trace?.Log($"An estimated maximum of {s_memoryEstimatedUsageMax / 1_000_000} MB was ever used by {s_memoryObjectCountMax} 
+#endif
         },
         CallbackForEveryNumberOfMeasurements = 50_000
     };
 
     private void Loop()
     {
-        try
+        while (true)
         {
-            while (!_queue.IsCompleted)
+            if (!_queue.TryDequeueOrWait(out var message))
             {
-                var message = _queue.Take();
-                try
-                {
-                    _loggingStopwatch.Track(() => _processor(message));
-                }
-                catch (Exception e)
-                {
-                    LoggingFeature.WriteExceptionToFatalLog(e);
-                }
-                finally
-                {
-                    UnTrackMemory(message);
-                }
+                return;
             }
-        }
-        catch (InvalidOperationException)
-        {
-            // ignore
-        }
-        finally
-        {
-            _queue.Dispose();
+            
+            _loggingStopwatch.Start();
+            try
+            {
+                _processor(message);
+            }
+            catch (Exception e)
+            {
+                LoggingFeature.WriteExceptionToFatalLog(e);
+            }
+            finally
+            {
+                _loggingStopwatch.Stop();
+#if MEMORY_TRACE
+                UnTrackMemory(message);
+#endif
+            }
         }
     }
 
@@ -78,21 +77,22 @@ internal class MTLoggerAsyncQueue
         _dispatchStopWatch.Start();
         try
         {
-            _queue.Add(messageDto);
-            TrackMemory(messageDto); // only track if add did not fail
-            return true;
-        }
-        catch
-        {
-            // ignore
+            if (_queue.TryEnqueueOrWait(messageDto))
+            {
+#if MEMORY_TRACE
+                TrackMemory(messageDto);
+#endif
+                return true;
+            }
+            return false;
         }
         finally
         {
             _dispatchStopWatch.Stop();
         }
-        return false;
     }
     
+#if MEMORY_TRACE
     // memory tracking
     private static long s_memoryEstimatedUsage;
     private static long s_memoryEstimatedUsageMax;
@@ -130,4 +130,5 @@ internal class MTLoggerAsyncQueue
         Interlocked.Add(ref s_memoryEstimatedUsage, -messageDto.EstimatedSizeInMemory);
         Interlocked.Decrement(ref s_memoryObjectCount);
     }
+#endif
 }
