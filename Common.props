@@ -10,7 +10,7 @@
     <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks are more likely to be incompatible -->
     <TargetFramework>net471</TargetFramework>
     <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework, PolySharp helps with backports -->
-    <LangVersion>12</LangVersion>
+    <LangVersion>13</LangVersion>
     <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <AssemblySearchPaths>
       {HintPathFromItem};
