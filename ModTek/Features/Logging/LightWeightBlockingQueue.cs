@@ -11,11 +11,10 @@ internal class LightWeightBlockingQueue<T>
     private readonly ConcurrentQueue<T> _queue = new();
         
     private const int MaxQueueSize = 100_000; // probably about 30MB if full
-    private long _queueSize; // faster than calling _queue.Count
-    private bool _addingCompleted; // some way to shut down the thread
+    private volatile int _queueSize; // faster than calling _queue.Count
+    private volatile bool _addingCompleted; // some way to shut down the thread
 
     // returns false if nothing can be dequeued anymore (empty + _addingCompleted)
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryDequeueOrWait(out T item)
     {
         var spinWait = new SpinWait();
@@ -25,7 +24,7 @@ internal class LightWeightBlockingQueue<T>
             {
                 // this can still drop logs, very unlikely but possible
                 Thread.Sleep(1);
-                if (_queue.IsEmpty)
+                if (_queueSize == 0)
                 {
                     return false;
                 }
@@ -38,7 +37,6 @@ internal class LightWeightBlockingQueue<T>
     }
 
     // returns false if nothing can be enqueued anymore (_addingCompleted)
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryEnqueueOrWait(T item)
     {
         if (_addingCompleted)
@@ -49,14 +47,15 @@ internal class LightWeightBlockingQueue<T>
         while (_queueSize >= MaxQueueSize)
         {
             Thread.SpinWait(4);
-                
+
             if (_addingCompleted)
             {
                 return false;
             }
         }
-        
+        // a compare exchange + retries in the loop would be more strict, but going over max is ok too (and faster)
         Interlocked.Increment(ref _queueSize);
+
         _queue.Enqueue(item);
         return true;
     }
