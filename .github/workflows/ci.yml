@@ -10,15 +10,29 @@ jobs:
     with:
       checkout-directory: 'ModTek'
       build-script: |
-        dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$BATTLETECH_DIR"
-        cd "$BATTLETECH_DIR"
-        rm -fr "BattleTech_Data/"
-        find . -type f -printf "%m:%p\n"
-        # set permissions and also check if files exist (chmod 644)
-        chmod 755 run.sh
-        chmod 644 winhttp.dll
-        chmod 644 Mods/ModTek/lib/*.dll
-        7z a -tzip -mx9 "$DIST_DIR/ModTek.zip" -ir!.
+        build_modtek() {
+          btdir="$1"
+          zipname="$2"
+          dotnet build --verbosity normal --configuration Release -p:BattleTechGameDir="$btdir"
+          cd "$btdir"
+          rm -fr "BattleTech_Data/"
+          find . -type f -printf "%m:%p\n"
+          # set permissions and also check if files exist (chmod 644)
+          chmod 755 run.sh
+          chmod 644 winhttp.dll
+          chmod 644 Mods/ModTek/lib/*.dll
+          7z a -tzip -mx9 "$DIST_DIR/$zipname" -ir!.
+          cd -
+          dotnet clean --verbosity normal --configuration Release -p:BattleTechGameDir="$btdir"
+        }
+        
+        BATTLETECH_DIR_OLD_HARMONY="${BATTLETECH_DIR}oldharmony"
+        cp -a "$BATTLETECH_DIR" "$BATTLETECH_DIR_OLD_HARMONY"
+        build_modtek "$BATTLETECH_DIR" "ModTek.zip"
+        
+        OLD_HARMONYX_VERSION="2.10.2"
+        sed -i -r -e 's/Include="HarmonyX" Version="[^"]+?"/Include="HarmonyX" Version="'$OLD_HARMONYX_VERSION'"/g' Directory.Packages.props
+        build_modtek "$BATTLETECH_DIR_OLD_HARMONY" "ModTek-old-HarmonyX-${OLD_HARMONYX_VERSION}.zip"
       release-notes: |
         > **Note**
         > **ModTekInjector.exe was replaced by [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop)**.
