@@ -56,7 +56,7 @@ internal static class LoggingFeature
         HarmonyXLoggerAdapter.Setup();
     }
 
-    internal static void AddAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
+    private static void AddAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
     {
         if (logs == null || logs.Count < 1)
         {
@@ -76,8 +76,21 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
+    internal static void AddModLogAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
+    {
+        if (!_settings.ModLogAppendersEnabled)
+        {
+            return;
+        }
+        AddAppenders(basePath, logs);
+    }
+
     internal static void AddModLogAppender(string logPath, string loggerName)
     {
+        if (!_settings.ModLogAppendersEnabled)
+        {
+            return;
+        }
         var logsAppenders = new AppenderFile[_logsAppenders.Length + 1];
         Array.Copy(_logsAppenders, logsAppenders, _logsAppenders.Length);
         var index = _logsAppenders.Length;

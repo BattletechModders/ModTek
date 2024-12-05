@@ -19,7 +19,7 @@ internal static class ModDefExLoading
         CustomResourcesFeature.ProcessModDef(modDef);
 
         // setup logs before calling the assembly
-        LoggingFeature.AddAppenders(modDef.Directory, modDef.Logs);
+        LoggingFeature.AddModLogAppenders(modDef.Directory, modDef.Logs);
         if (modDef.Log != null)
         {
             var logPath = Path.Combine(modDef.Directory, modDef.Log.FilePath);

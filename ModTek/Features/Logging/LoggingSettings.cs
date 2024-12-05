@@ -71,6 +71,11 @@ internal class LoggingSettings
     internal bool UnityConsoleAppenderEnabled;
 
     [JsonProperty]
+    internal const string ModLogAppendersEnabled_Description = "Allows mods to configure log appenders, set to false to improve performance.";
+    [JsonProperty]
+    internal bool ModLogAppendersEnabled = true;
+
+    [JsonProperty]
     internal const string UnityConsoleAppender_Description = "Settings for the unity console appender.";
     [JsonProperty]
     internal AppenderSettings UnityConsoleAppender = new()
