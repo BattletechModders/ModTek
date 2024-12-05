@@ -21,7 +21,7 @@ internal static class LogLevelExtension
         };
     }
 
-    internal static bool IsLogLevelEnabled(LogLevel loggerLevel, LogLevel messageLevel)
+    internal static bool IsLogLevelGreaterThan(LogLevel loggerLevel, LogLevel messageLevel)
     {
         return Convert(messageLevel) >= Convert(loggerLevel);
     }

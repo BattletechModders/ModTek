@@ -13,7 +13,7 @@ internal static class LogImpl_IsEnabledFor_Patch
     [HarmonyPriority(Priority.High)]
     public static bool Prefix(Logger.LogImpl __instance, LogLevel level, ref bool __result)
     {
-        __result = LogLevelExtension.IsLogLevelEnabled(__instance.EffectiveLevel, level);
+        __result = LogLevelExtension.IsLogLevelGreaterThan(__instance.EffectiveLevel, level);
         return false;
     }
 }

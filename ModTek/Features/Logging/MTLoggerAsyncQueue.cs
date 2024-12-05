@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using UnityEngine;
 using ThreadPriority = System.Threading.ThreadPriority;
@@ -30,29 +31,37 @@ internal class MTLoggerAsyncQueue
     {
         Callback = stats =>
         {
-            var dispatchStats = LoggingFeature.DispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
-            var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
-            Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
-
-            var trace = Log.Main.Trace;
-            if (trace is not null)
+            var debug = Log.Main.Debug;
+            if (debug is not null)
             {
-                var dtoStats = LoggingFeature.MessageDtoStopWatch.GetStats();
-                trace.Log($"DTO setup took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
+                var dispatchStats = LoggingFeature.DispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
+                var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
+                debug.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
 
-                trace.Log($"Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+                var trace = Log.Main.Trace;
+                if (trace is not null)
+                {
+                    var sb = new StringBuilder();
 
-                var filterStats = AppenderFile.FiltersStopWatch.GetStats();
-                trace.Log($"Filters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
+                    var dtoStats = LoggingFeature.MessageDtoStopWatch.GetStats();
+                    sb.Append($"\nDTO setup took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
 
-                var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
-                trace.Log($"Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
+                    sb.Append($"\nDispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
 
-                var bytesStats = AppenderFile.GetBytesStopwatch.GetStats();
-                trace.Log($"GetBytes took a total of {bytesStats.TotalTime} with an average of {bytesStats.AverageNanoseconds}ns.");
+                    var filterStats = AppenderFile.FiltersStopWatch.GetStats();
+                    sb.Append($"\nFilters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
 
-                var writeStats = AppenderFile.WriteStopwatch.GetStats();
-                trace.Log($"Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
+                    var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
+                    sb.Append($"\nFormatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
+
+                    var bytesStats = AppenderFile.GetBytesStopwatch.GetStats();
+                    sb.Append($"\nGetBytes took a total of {bytesStats.TotalTime} with an average of {bytesStats.AverageNanoseconds}ns.");
+
+                    var writeStats = AppenderFile.WriteStopwatch.GetStats();
+                    sb.Append($"\nWrite called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
+
+                    trace.Log(sb.ToString());
+                }
             }
         },
         CallbackForEveryNumberOfMeasurements = 50_000

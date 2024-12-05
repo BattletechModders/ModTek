@@ -9,13 +9,13 @@ internal struct MTLoggerMessageDto
 {
     internal static readonly TimeSpan InitialUnityStartupTime;
     internal static readonly long InitialStopwatchTimestamp;
-    internal static readonly DateTimeOffset InitialDatTimeOffsetUtc;
+    internal static readonly DateTime InitialDateTime;
 
     static MTLoggerMessageDto()
     {
         InitialUnityStartupTime = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
         InitialStopwatchTimestamp = Stopwatch.GetTimestamp();
-        InitialDatTimeOffsetUtc = DateTimeOffset.UtcNow;
+        InitialDateTime = DateTime.UtcNow;
     }
 
     internal volatile bool CommittedToQueue;
@@ -54,9 +54,9 @@ internal struct MTLoggerMessageDto
         return InitialUnityStartupTime.Add(GetElapsedSinceInitial());
     }
 
-    internal DateTimeOffset GetDateTimeOffsetUtc()
+    internal DateTime GetDateTime()
     {
-        return InitialDatTimeOffsetUtc.Add(GetElapsedSinceInitial());
+        return InitialDateTime.Add(GetElapsedSinceInitial());
     }
 
     private TimeSpan GetElapsedSinceInitial()

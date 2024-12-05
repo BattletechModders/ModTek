@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using HBS.Logging;
@@ -23,21 +22,39 @@ internal class Formatter
 
     internal string GetFormattedLogLine(MTLoggerMessageDto messageDto)
     {
+        // only improving TRACE level already brings all the benefits
+        // but we would have 2 different formats in the same log file
+        //!LogLevelExtension.IsLogLevelGreaterThan(LogLevel.Log, messageDto.LogLevel);
+        var fastLogging = _settings.FastLoggingEnabled;
+
         var sb = new StringBuilder();
 
-        if (_settings.AbsoluteTimeEnabled)
+        if (fastLogging)
         {
-            var dtoUtc = messageDto.GetDateTimeOffsetUtc();
-            var dto = _settings.AbsoluteTimeUseUtc ? dtoUtc : dtoUtc.ToLocalTime();
-            sb.Append(dto.ToString(_settings.AbsoluteFormat, CultureInfo.InvariantCulture));
-            sb.Append(" ");
+            if (_settings.AbsoluteTimeEnabled || _settings.StartupTimeEnabled)
+            {
+                var ts = messageDto.StartupTime();
+                var secondsWithFraction = ts.Ticks * 1E-07m;
+                sb.Append(secondsWithFraction);
+                sb.Append(" ");
+            }
         }
-
-        if (_settings.StartupTimeEnabled)
+        else
         {
-            var ts = messageDto.StartupTime();
-            sb.Append(ts.ToString(_settings.StartupTimeFormat));
-            sb.Append(" ");
+            if (_settings.AbsoluteTimeEnabled)
+            {
+                var dt = messageDto.GetDateTime();
+                var dts = _settings.AbsoluteTimeUseUtc ? dt : dt.ToLocalTime();
+                sb.Append(dts.ToString(_settings.AbsoluteFormat, CultureInfo.InvariantCulture));
+                sb.Append(" ");
+            }
+
+            if (_settings.StartupTimeEnabled)
+            {
+                var ts = messageDto.StartupTime();
+                sb.Append(ts.ToString(_settings.StartupTimeFormat));
+                sb.Append(" ");
+            }
         }
 
         if (messageDto.ThreadId != s_unityMainThreadId)
@@ -58,13 +75,13 @@ internal class Formatter
         if (!string.IsNullOrEmpty(messageDto.Message))
         {
             sb.Append(prefix);
-            if (_sanitizerRegex == null)
+            if (!fastLogging && _sanitizerRegex != null)
             {
-                sb.Append(messageDto.Message);
+                sb.Append(_sanitizerRegex.Replace(messageDto.Message, string.Empty));
             }
             else
             {
-                sb.Append(_sanitizerRegex.Replace(messageDto.Message, string.Empty));
+                sb.Append(messageDto.Message);
             }
             prefix = Environment.NewLine;
         }
@@ -84,15 +101,18 @@ internal class Formatter
             sb.Append(GetLocationString(messageDto.Location));
         }
 
-        if (_settings.NormalizeNewLines)
+        if (!fastLogging)
         {
-            sb.Replace("\r", "");
-            sb.Replace("\n", Environment.NewLine);
-        }
+            if (_settings.NormalizeNewLines)
+            {
+                sb.Replace("\r", "");
+                sb.Replace("\n", Environment.NewLine);
+            }
 
-        if (_settings.IndentNewLines)
-        {
-            sb.Replace("\n", "\n\t");
+            if (_settings.IndentNewLines)
+            {
+                sb.Replace("\n", "\n\t");
+            }
         }
 
         sb.Append(Environment.NewLine);
