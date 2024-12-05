@@ -174,7 +174,6 @@ internal static class LoggingFeature
         return new DiagnosticsStackTrace(6, false);
     }
 
-    // note this can be called sync or async
     private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
     {
         _consoleLog?.Append(messageDto);

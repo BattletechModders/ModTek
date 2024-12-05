@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using HBS.Logging;
@@ -82,6 +83,8 @@ internal class Formatter
             sb.Append(Environment.NewLine);
             sb.Append(GetLocationString(messageDto.Location));
         }
+
+        sb.Append(Environment.NewLine);
 
         var line = sb.ToString();
 

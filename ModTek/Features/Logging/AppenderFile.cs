@@ -33,6 +33,11 @@ internal class AppenderFile : IDisposable
         WriteLine(VersionInfo.GetFormattedInfo());
     }
 
+    private void WriteLine(string line)
+    {
+        Write(line + Environment.NewLine);
+    }
+
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
     internal void Append(MTLoggerMessageDto messageDto)
@@ -61,23 +66,16 @@ internal class AppenderFile : IDisposable
             FormatterStopWatch.Stop();
         }
 
-        WriteLine(logLine);
+        Write(logLine);
     }
 
     internal static readonly MTStopwatch GetBytesStopwatch = new();
     internal static readonly MTStopwatch WriteStopwatch = new();
-    private void WriteLine(string line)
+    private void Write(string text)
     {
-        byte[] bytes;
         GetBytesStopwatch.Start();
-        try
-        {
-            bytes = System.Text.Encoding.UTF8.GetBytes(line + Environment.NewLine);
-        }
-        finally
-        {
-            GetBytesStopwatch.Stop();
-        }
+        var bytes = System.Text.Encoding.UTF8.GetBytes(text);
+        GetBytesStopwatch.Stop();
 
         WriteStopwatch.Start();
         try
