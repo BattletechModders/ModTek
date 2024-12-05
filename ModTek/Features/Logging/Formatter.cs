@@ -84,22 +84,20 @@ internal class Formatter
             sb.Append(GetLocationString(messageDto.Location));
         }
 
-        sb.Append(Environment.NewLine);
-
-        var line = sb.ToString();
-
         if (_settings.NormalizeNewLines)
         {
-            line = line.Replace("\r", "");
-            line = line.Replace("\n", Environment.NewLine);
+            sb.Replace("\r", "");
+            sb.Replace("\n", Environment.NewLine);
         }
 
         if (_settings.IndentNewLines)
         {
-            line = line.Replace("\n", "\n\t");
+            sb.Replace("\n", "\n\t");
         }
 
-        return line;
+        sb.Append(Environment.NewLine);
+
+        return sb.ToString();
     }
 
     private static string GetLocationString(IStackTrace st)
