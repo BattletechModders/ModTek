@@ -99,6 +99,7 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
+    internal static readonly MTStopwatch MessageDtoStopWatch = new();
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
@@ -127,6 +128,8 @@ internal static class LoggingFeature
             location,
             threadId
         );
+
+        MessageDtoStopWatch.AddMeasurement(MTLoggerMessageDto.GetTimestamp() - timestamp);
         
         if (
             _queue == null

@@ -16,7 +16,7 @@ internal class MTLoggerAsyncQueue
         _processor = processor;
         _queue = new LightWeightBlockingQueue<MTLoggerMessageDto>();
         Application.quitting += () => _queue.CompleteAdding();
-        var thread = new Thread(Loop)
+        var thread = new Thread(LoggingLoop)
         {
             Name = nameof(MTLoggerAsyncQueue),
             Priority = ThreadPriority.BelowNormal, // game should take priority
@@ -33,15 +33,36 @@ internal class MTLoggerAsyncQueue
             var dispatchStats = _dispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
             var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
             Log.Main.Debug?.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
-            Log.Main.Trace?.Log($"Dispatched {dispatchStats.Count} log statements in {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+
+            var trace = Log.Main.Trace;
+            if (trace is not null)
+            {
+                var dtoStats = LoggingFeature.MessageDtoStopWatch.GetStats();
+                trace.Log($"DTO setup took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
+
+                trace.Log($"Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+
+                var filterStats = AppenderFile.FiltersStopWatch.GetStats();
+                trace.Log($"Filters took at total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
+
+                var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
+                trace.Log($"Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
+
+                var bytesStats = AppenderFile.GetBytesStopwatch.GetStats();
+                trace.Log($"GetBytes took a total of {bytesStats.TotalTime} with an average of {bytesStats.AverageNanoseconds}ns.");
+
+                var writeStats = AppenderFile.WriteStopwatch.GetStats();
+                trace.Log($"Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
+
 #if MEMORY_TRACE
-            Log.Main.Trace?.Log($"An estimated maximum of {s_memoryEstimatedUsageMax / 1_000_000} MB was ever used by {s_memoryObjectCountMax} 
+                trace.Log($"An estimated maximum of {s_memoryEstimatedUsageMax / 1_000_000} MB was ever used by {s_memoryObjectCountMax})
 #endif
+            }
         },
         CallbackForEveryNumberOfMeasurements = 50_000
     };
 
-    private void Loop()
+    private void LoggingLoop()
     {
         while (true)
         {
