@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
+using UnityEngine;
 
 namespace ModTek.Features.Logging;
 
@@ -50,6 +51,7 @@ internal static class LoggingFeature
 
         if (_settings.AsynchronousLoggingEnabled)
         {
+            Application.quitting += () => _queue = null;
             _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
         }
 
@@ -100,12 +102,17 @@ internal static class LoggingFeature
     }
 
     internal static readonly MTStopwatch MessageDtoStopWatch = new();
+    // tracks all overhead on the main thread that happens due to async logging
+    internal static readonly MTStopwatch DispatchStopWatch = new();
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
         // capture timestamp as early as possible, to be as close to the callers intended time
         var timestamp = MTLoggerMessageDto.GetTimestamp();
-        
+
+        // convert message to string while still in caller thread
+        var messageAsString = message?.ToString(); // do this asap too, as this can throw exceptions
+
         // fill out location if not already filled out while still on caller stack
         if (location == null && (_settings.LogStackTraces || (_settings.LogStackTracesOnExceptions && exception != null)))
         {
@@ -115,30 +122,37 @@ internal static class LoggingFeature
         // capture caller thread
         var threadId = Thread.CurrentThread.ManagedThreadId;
 
-        // convert message to string while still in caller thread
-        var messageAsString = message?.ToString();
-        
-        var messageDto = new MTLoggerMessageDto
-        (
-            timestamp,
-            loggerName,
-            logLevel,
-            messageAsString, 
-            exception,
-            location,
-            threadId
-        );
+        if (_queue == null || _queue.LogWriterThreadId == threadId)
+        {
+            var messageDto = new MTLoggerMessageDto
+            (
+                timestamp,
+                loggerName,
+                logLevel,
+                messageAsString,
+                exception,
+                location,
+                threadId
+            );
+            ProcessLoggerMessage(messageDto);
+            return;
+        }
+
+        DispatchStopWatch.Start();
+        ref var updateDto = ref _queue.AcquireUncommitedOrWait();
+        DispatchStopWatch.Stop();
+
+        updateDto.Timestamp = timestamp;
+        updateDto.LoggerName = loggerName;
+        updateDto.LogLevel = logLevel;
+        updateDto.Message = messageAsString;
+        updateDto.Exception = exception;
+        updateDto.Location = location;
+        updateDto.ThreadId = threadId;
+
+        updateDto.Commit();
 
         MessageDtoStopWatch.AddMeasurement(MTLoggerMessageDto.GetTimestamp() - timestamp);
-        
-        if (
-            _queue == null
-            || _queue.LogWriterThreadId == threadId
-            || !_queue.Add(messageDto)
-        )
-        {
-            ProcessLoggerMessage(messageDto);
-        }
     }
 
     private static DiagnosticsStackTrace GrabStackTrace()

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ModTek.Features.Logging;
 
-internal class MTLoggerMessageDto
+internal struct MTLoggerMessageDto
 {
     internal static readonly TimeSpan InitialUnityStartupTime;
     internal static readonly long InitialStopwatchTimestamp;
@@ -18,13 +18,18 @@ internal class MTLoggerMessageDto
         InitialDatTimeOffsetUtc = DateTimeOffset.UtcNow;
     }
 
-    private readonly long _timestamp;
-    internal readonly string LoggerName;
-    internal readonly LogLevel LogLevel;
-    internal readonly string Message;
-    internal readonly Exception Exception;
-    internal readonly IStackTrace Location;
-    internal readonly int ThreadId;
+    internal volatile bool CommittedToQueue;
+    internal long Timestamp;
+    internal string LoggerName;
+    internal LogLevel LogLevel;
+    internal string Message;
+    internal Exception Exception;
+    internal IStackTrace Location;
+    internal int ThreadId;
+
+    public MTLoggerMessageDto()
+    {
+    }
     
     internal MTLoggerMessageDto(
         long timestamp,
@@ -35,7 +40,7 @@ internal class MTLoggerMessageDto
         IStackTrace location,
         int threadId
     ) {
-        _timestamp = timestamp;
+        Timestamp = timestamp;
         LoggerName = loggerName;
         LogLevel = logLevel;
         Message = message;
@@ -56,36 +61,20 @@ internal class MTLoggerMessageDto
 
     private TimeSpan GetElapsedSinceInitial()
     {
-        return MTStopwatch.TimeSpanFromTicks(_timestamp - InitialStopwatchTimestamp);
+        return MTStopwatch.TimeSpanFromTicks(Timestamp - InitialStopwatchTimestamp);
     }
 
     internal static long GetTimestamp() => Stopwatch.GetTimestamp();
-    
-    // memory tracking
-    internal int EstimatedSizeInMemory => SizeInMemoryEstimatedOverhead + LoggerName.Length + (Message?.Length ?? 0);
-    
-    private const int SizeInMemoryEstimatedOverhead =
-        ReferenceTypeEstimatedOverhead
-        + (ConcurrentQueueSegmentEstimatedOverhead + (ItemsPerSegment-1))/ItemsPerSegment // round up
-        + sizeof(long) // _timestamp
-        + sizeof(long) // LoggerName
-        + sizeof(LogLevel)
-        + sizeof(long) // Message
-        + sizeof(long) // ignoring exception object, rarely used and complex to calculate
-        + sizeof(long) // ignoring location object, rarely used and complex to calculate
-        + sizeof(int); // ThreadId
 
-    private const int ConcurrentQueueSegmentEstimatedOverhead =
-        ReferenceTypeEstimatedOverhead
-        + ItemsPerSegment * sizeof(long) // m_array
-        + ItemsPerSegment * sizeof(bool) // m_state
-        + sizeof(long) // m_next
-        + sizeof(long) // m_index
-        + sizeof(int) // m_low
-        + sizeof(int) // m_high
-        + sizeof(long); // m_source
+    // allow queue to read it
+    internal void Commit()
+    {
+        this.CommittedToQueue = true;
+    }
 
-    private const int ItemsPerSegment = 32;
-    
-    private const int ReferenceTypeEstimatedOverhead = 16;
+    // uncommit, prepare for re-use
+    internal void Reset()
+    {
+        this = default;
+    }
 }
