@@ -43,7 +43,6 @@ internal class LightWeightBlockingQueue
         // return (endIndex - startIndex + MaxRingBufferSize) % MaxRingBufferSize;
     }
 
-    // returns false if nothing can be dequeued anymore (empty + _addingCompleted)
     internal ref MTLoggerMessageDto AcquireCommittedOrWait()
     {
         var spinWait = new SpinWait();
@@ -76,7 +75,6 @@ internal class LightWeightBlockingQueue
         }
     }
 
-    // returns false if nothing can be enqueued anymore (_addingCompleted)
     internal ref MTLoggerMessageDto AcquireUncommitedOrWait()
     {
         while (true)

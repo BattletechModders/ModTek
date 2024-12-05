@@ -1,3 +1,4 @@
+using System;
 using HBS.Logging;
 
 namespace ModTek.Features.Logging;
@@ -7,7 +8,17 @@ internal static class LogLevelExtension
     internal static string LogToString(LogLevel level)
     {
         var eLogLevel = Convert(level);
-        return eLogLevel.ToString().ToUpperInvariant();
+        return eLogLevel switch // fast switch with static string, in order of most occuring
+        {
+            ELogLevels.Trace => "TRACE",
+            ELogLevels.Debug => "DEBUG",
+            ELogLevels.Log => "LOG",
+            ELogLevels.Warning => "WARN",
+            ELogLevels.Error => "ERROR",
+            ELogLevels.Fatal => "FATAL",
+            ELogLevels.OFF => "OFF",
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     internal static bool IsLogLevelEnabled(LogLevel loggerLevel, LogLevel messageLevel)
@@ -18,7 +29,7 @@ internal static class LogLevelExtension
     private static ELogLevels Convert(LogLevel level)
     {
         var intLevel = (int)level;
-        if (intLevel >= (int)LogLevel.Debug && intLevel <= (int)LogLevel.Error)
+        if (intLevel is >= (int)LogLevel.Debug and <= (int)LogLevel.Error)
         {
             intLevel = intLevel * 10 + (int)ELogLevels.Debug;
         }
