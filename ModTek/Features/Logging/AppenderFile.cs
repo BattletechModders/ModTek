@@ -18,7 +18,7 @@ internal class AppenderFile : IDisposable
 
         FileUtils.CreateParentOfPath(path);
         FileUtils.RotatePath(path, settings.LogRotationCount);
-        const int BufferSize = 1 << 24; // 16MB
+        const int BufferSize = 128 * 1024;
         _writer = new FileStream(
             path,
             FileMode.Append,

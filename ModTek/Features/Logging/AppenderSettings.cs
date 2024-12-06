@@ -65,7 +65,7 @@ internal class AppenderSettings
     internal string StartupTimeFormat = "hh':'mm':'ss'.'fffffff";
 
     [JsonProperty]
-    internal const string FastLoggingEnabled_Description = "If enabled, hardcodes formats and disables many settings to achieve high performance.";
+    internal const string FastLoggingEnabled_Description = "If enabled, hardcodes formats and disables sanitation to achieve high performance.";
     [JsonProperty]
-    internal bool FastLoggingEnabled = false;
+    internal bool FastLoggingEnabled = true;
 }

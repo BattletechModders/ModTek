@@ -20,23 +20,46 @@ internal class Formatter
         _sanitizerRegex = new Regex(settings.MessageSanitizerRegex, RegexOptions.Compiled);
     }
 
+    private readonly StringBuilder _sb = new(128 * 1024);
     internal string GetFormattedLogLine(MTLoggerMessageDto messageDto)
     {
-        // only improving TRACE level already brings all the benefits
-        // but we would have 2 different formats in the same log file
-        //!LogLevelExtension.IsLogLevelGreaterThan(LogLevel.Log, messageDto.LogLevel);
         var fastLogging = _settings.FastLoggingEnabled;
 
-        var sb = new StringBuilder();
+        _sb.Clear();
 
         if (fastLogging)
         {
-            if (_settings.AbsoluteTimeEnabled || _settings.StartupTimeEnabled)
+            if (_settings.AbsoluteTimeEnabled)
+            {
+                var dt = messageDto.GetDateTime();
+                void AppendTwoDigits(int value)
+                {
+                    _sb.Append((char)(value / 10 + '0'));
+                    _sb.Append((char)(value % 10 + '0'));
+                }
+                AppendTwoDigits(dt.Hour);
+                _sb.Append(":");
+                AppendTwoDigits(dt.Minute);
+                _sb.Append(":");
+                AppendTwoDigits(dt.Second);
+                _sb.Append(".");
+                var ticks = dt.Ticks;
+                _sb.Append((char)(((ticks / 1_000_000) % 10) + '0'));
+                _sb.Append((char)(((ticks / 100_000) % 10) + '0'));
+                _sb.Append((char)(((ticks / 10_000) % 10) + '0'));
+                _sb.Append((char)(((ticks / 1_000) % 10) + '0'));
+                _sb.Append((char)(((ticks / 100) % 10) + '0'));
+                _sb.Append((char)(((ticks / 10) % 10) + '0'));
+                _sb.Append((char)(((ticks / 1) % 10) + '0'));
+                _sb.Append(" ");
+            }
+
+            if (_settings.StartupTimeEnabled)
             {
                 var ts = messageDto.StartupTime();
                 var secondsWithFraction = ts.Ticks * 1E-07m;
-                sb.Append(secondsWithFraction);
-                sb.Append(" ");
+                _sb.Append(secondsWithFraction);
+                _sb.Append(" ");
             }
         }
         else
@@ -45,79 +68,79 @@ internal class Formatter
             {
                 var dt = messageDto.GetDateTime();
                 var dts = _settings.AbsoluteTimeUseUtc ? dt : dt.ToLocalTime();
-                sb.Append(dts.ToString(_settings.AbsoluteFormat, CultureInfo.InvariantCulture));
-                sb.Append(" ");
+                _sb.Append(dts.ToString(_settings.AbsoluteFormat, CultureInfo.InvariantCulture));
+                _sb.Append(" ");
             }
 
             if (_settings.StartupTimeEnabled)
             {
                 var ts = messageDto.StartupTime();
-                sb.Append(ts.ToString(_settings.StartupTimeFormat));
-                sb.Append(" ");
+                _sb.Append(ts.ToString(_settings.StartupTimeFormat));
+                _sb.Append(" ");
             }
         }
 
         if (messageDto.ThreadId != s_unityMainThreadId)
         {
-            sb.Append("[ThreadId=");
-            sb.Append(messageDto.ThreadId);
-            sb.Append("] ");
+            _sb.Append("[ThreadId=");
+            _sb.Append(messageDto.ThreadId);
+            _sb.Append("] ");
         }
 
-        sb.Append(messageDto.LoggerName);
-        sb.Append(" ");
+        _sb.Append(messageDto.LoggerName);
+        _sb.Append(" ");
 
-        sb.Append("[");
-        sb.Append(LogLevelExtension.LogToString(messageDto.LogLevel));
-        sb.Append("]");
+        _sb.Append("[");
+        _sb.Append(LogLevelExtension.LogToString(messageDto.LogLevel));
+        _sb.Append("]");
 
         var prefix = " ";
         if (!string.IsNullOrEmpty(messageDto.Message))
         {
-            sb.Append(prefix);
+            _sb.Append(prefix);
             if (!fastLogging && _sanitizerRegex != null)
             {
-                sb.Append(_sanitizerRegex.Replace(messageDto.Message, string.Empty));
+                _sb.Append(_sanitizerRegex.Replace(messageDto.Message, string.Empty));
             }
             else
             {
-                sb.Append(messageDto.Message);
+                _sb.Append(messageDto.Message);
             }
             prefix = Environment.NewLine;
         }
 
         if (messageDto.Exception != null)
         {
-            sb.Append(prefix);
-            sb.Append(messageDto.Exception);
+            _sb.Append(prefix);
+            _sb.Append(messageDto.Exception);
             prefix = Environment.NewLine;
         }
 
         if (messageDto.Location != null)
         {
-            sb.Append(prefix);
-            sb.Append("Location Trace");
-            sb.Append(Environment.NewLine);
-            sb.Append(GetLocationString(messageDto.Location));
+            _sb.Append(prefix);
+            _sb.Append("Location Trace");
+            _sb.Append(Environment.NewLine);
+            _sb.Append(GetLocationString(messageDto.Location));
         }
 
         if (!fastLogging)
         {
             if (_settings.NormalizeNewLines)
             {
-                sb.Replace("\r", "");
-                sb.Replace("\n", Environment.NewLine);
+                _sb.Replace("\r", "");
+                _sb.Replace("\n", Environment.NewLine);
             }
 
             if (_settings.IndentNewLines)
             {
-                sb.Replace("\n", "\n\t");
+                _sb.Replace("\n", "\n\t");
             }
         }
 
-        sb.Append(Environment.NewLine);
+        _sb.Append(Environment.NewLine);
 
-        return sb.ToString();
+        return _sb.ToString();
     }
 
     private static string GetLocationString(IStackTrace st)
