@@ -36,40 +36,33 @@ internal class MTLoggerAsyncQueue
     {
         Callback = stats =>
         {
-            var debug = Log.Main.Debug;
-            if (debug is not null)
+            var logger = Log.Main.Trace;
+            if (logger is null)
             {
-                var dispatchStats = LoggingFeature.DispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
-                var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
-                debug.Log($"Asynchronous logging offloaded {offloadedTime} from the main thread.");
-
-                var trace = Log.Main.Trace;
-                if (trace is not null)
-                {
-                    var sb = new StringBuilder();
-
-                    var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
-                    sb.Append($"\nEnd-to-end processing had a latency average of {latencyStats.AverageNanoseconds / 1_000_000}ms.");
-
-                    var dtoStats = LoggingFeature.MessageSetupStopWatch.GetStats();
-                    sb.Append($"\n  On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
-
-                    sb.Append($"\n    Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
-
-                    sb.Append($"\n  Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.");
-
-                    var filterStats = AppenderFile.FiltersStopWatch.GetStats();
-                    sb.Append($"\n    Filters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
-
-                    var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
-                    sb.Append($"\n    Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
-
-                    var writeStats = AppenderFile.WriteStopwatch.GetStats();
-                    sb.Append($"\n    Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
-
-                    trace.Log(sb.ToString());
-                }
+                return;
             }
+
+            var dispatchStats = LoggingFeature.DispatchStopWatch.GetStats(); // fetch the overhead introduced by async logging
+            var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
+
+            var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
+            var dtoStats = LoggingFeature.MessageSetupStopWatch.GetStats();
+            var filterStats = AppenderFile.FiltersStopWatch.GetStats();
+            var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
+            var writeStats = AppenderFile.WriteStopwatch.GetStats();
+
+            logger.Log(
+                $"""
+                Asynchronous logging offloaded {offloadedTime} from the main thread.
+                End-to-end processing had an average latency of {latencyStats.AverageNanoseconds / 1_000_000}ms.
+                  On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.
+                    Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.
+                  Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.
+                    Filters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.
+                    Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.
+                    Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.
+                """
+            );
         },
         CallbackForEveryNumberOfMeasurements = 50_000
     };
