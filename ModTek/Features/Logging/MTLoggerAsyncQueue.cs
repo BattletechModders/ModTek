@@ -48,19 +48,24 @@ internal class MTLoggerAsyncQueue
                 {
                     var sb = new StringBuilder();
 
-                    var dtoStats = LoggingFeature.MessageDtoStopWatch.GetStats();
-                    sb.Append($"\nDTO setup took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
+                    var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
+                    sb.Append($"\nEnd-to-end processing had a latency average of {latencyStats.AverageNanoseconds / 1_000_000}ms.");
 
-                    sb.Append($"\nDispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+                    var dtoStats = LoggingFeature.MessageSetupStopWatch.GetStats();
+                    sb.Append($"\n  On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.");
+
+                    sb.Append($"\n    Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.");
+
+                    sb.Append($"\n  Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.");
 
                     var filterStats = AppenderFile.FiltersStopWatch.GetStats();
-                    sb.Append($"\nFilters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
+                    sb.Append($"\n    Filters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.");
 
                     var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
-                    sb.Append($"\nFormatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
+                    sb.Append($"\n    Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
 
                     var writeStats = AppenderFile.WriteStopwatch.GetStats();
-                    sb.Append($"\nWrite called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
+                    sb.Append($"\n    Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
 
                     trace.Log(sb.ToString());
                 }

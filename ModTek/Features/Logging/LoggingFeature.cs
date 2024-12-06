@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using HBS.Logging;
@@ -109,14 +110,14 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
-    internal static readonly MTStopwatch MessageDtoStopWatch = new();
+    internal static readonly MTStopwatch MessageSetupStopWatch = new();
     // tracks all overhead on the main thread that happens due to async logging
     internal static readonly MTStopwatch DispatchStopWatch = new();
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
         // capture timestamp as early as possible, to be as close to the callers intended time
-        var timestamp = MTLoggerMessageDto.GetTimestamp();
+        var timestamp = Stopwatch.GetTimestamp();
 
         // convert message to string while still in caller thread
         var messageAsString = message?.ToString(); // do this asap too, as this can throw exceptions
@@ -160,7 +161,7 @@ internal static class LoggingFeature
 
         updateDto.Commit();
 
-        MessageDtoStopWatch.AddMeasurement(MTLoggerMessageDto.GetTimestamp() - timestamp);
+        MessageSetupStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - timestamp);
     }
 
     private static DiagnosticsStackTrace GrabStackTrace()

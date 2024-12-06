@@ -64,17 +64,17 @@ internal struct MTLoggerMessageDto
         return MTStopwatch.TimeSpanFromTicks(Timestamp - s_stopwatchTimestamp);
     }
 
-    internal static long GetTimestamp() => Stopwatch.GetTimestamp();
-
     // allow queue to read it
     internal void Commit()
     {
         this.CommittedToQueue = true;
     }
 
+    internal static readonly MTStopwatch LatencyStopWatch = new();
     // uncommit, prepare for re-use
     internal void Reset()
     {
+        LatencyStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - Timestamp);
         this = default;
     }
 }

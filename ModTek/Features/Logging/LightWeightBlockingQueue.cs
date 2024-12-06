@@ -15,8 +15,8 @@ internal class LightWeightBlockingQueue
     internal void Shutdown() => _shutdown = true;
     private volatile bool _shutdown; // some way to break the waiting
 
-    // 100k leads to about ~30MB, pre-allocation uses much less due to absent strings
-    private const int MaxRingBufferSize = 1 << 16; // power of 2 required by FastModuloMaskForBitwiseAnd
+    // 100k leads to about ~30MB, pre-allocation reports less due to absent strings
+    private const int MaxRingBufferSize = 100_000;
     private const int MaxQueueSize = MaxRingBufferSize - 1; // Start=End need to be distinguishable
     // ring buffer is used by Disruptor(.NET), seems to work well for them
     // typed based exchanges are 56ns (fixed as of .NET 7) hence why we use object based ones
@@ -26,22 +26,34 @@ internal class LightWeightBlockingQueue
     private volatile int _nextWritingIndex; // sync in between writers
     private volatile int _nextReadIndex; // sync between readers -> writers
 
-    // see https://en.wikipedia.org/wiki/Modulo#Performance_issues
-    // Bitwise AND is faster than modulo, just requires size to be power of 2
-    // only gained like 1-2ns though (meaning it is within measurement error...)
-    private const int FastModuloMaskForBitwiseAnd = MaxRingBufferSize - 1;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int Next(int index)
     {
-        return (index + 1) & FastModuloMaskForBitwiseAnd;
-        // return (index + 1) % MaxRingBufferSize;
+        return (index + 1) % MaxRingBufferSize;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int Size(int startIndex, int endIndex)
     {
-        return (endIndex - startIndex) & FastModuloMaskForBitwiseAnd;
-        // return (endIndex - startIndex + MaxRingBufferSize) % MaxRingBufferSize;
+        return (endIndex - startIndex + MaxRingBufferSize) % MaxRingBufferSize;
     }
+
+    // the following trick is faster but less human consumption friendly
+    // my guess is that modulo is already optimized and only the addition for the Size calc is what makes a difference
+    // see https://en.wikipedia.org/wiki/Modulo#Performance_issues
+    // Bitwise AND is faster than modulo, just requires size to be power of 2
+    // only gained like 1-2ns though (meaning it is within measurement error...)
+    // private const int MaxRingBufferSize = 1 << 16; // power of 2 required by FastModuloMaskForBitwiseAnd
+    // private const int FastModuloMaskForBitwiseAnd = MaxRingBufferSize - 1;
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // private static int Next(int index)
+    // {
+    //     return (index + 1) & FastModuloMaskForBitwiseAnd;
+    // }
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // private static int Size(int startIndex, int endIndex)
+    // {
+    //     return (endIndex - startIndex) & FastModuloMaskForBitwiseAnd;
+    // }
 
     internal ref MTLoggerMessageDto AcquireCommittedOrWait()
     {
