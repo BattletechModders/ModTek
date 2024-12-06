@@ -36,10 +36,13 @@ internal static class HBSJsonUtils
         return JObject.Parse(commasAdded);
     }
 
+    private static readonly Regex s_fixMissingCommasInJson = new(
+        """(\]|\}|"|[A-Za-z0-9])\s*\n\s*(\[|\{|")""",
+        RegexOptions.Singleline|RegexOptions.Compiled
+    );
     private static string FixHBSJsonCommas(string json)
     {
         // add missing commas, this only fixes if there is a newline
-        var rgx = new Regex(@"(\]|\}|""|[A-Za-z0-9])\s*\n\s*(\[|\{|"")", RegexOptions.Singleline);
-        return rgx.Replace(json, "$1,\n$2");
+        return s_fixMissingCommasInJson.Replace(json, "$1,\n$2");
     }
 }
