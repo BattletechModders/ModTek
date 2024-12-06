@@ -27,15 +27,16 @@ internal class AppenderFile : IDisposable
             BufferSize,
             FileOptions.None
         );
-        WriteLine($"ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})");
-        WriteLine(DateTimeOffset.Now.ToString("o", CultureInfo.InvariantCulture));
-        WriteLine(new string('-', 80));
-        WriteLine(VersionInfo.GetFormattedInfo());
-    }
 
-    private void WriteLine(string line)
-    {
-        Write(line + Environment.NewLine);
+        MTLoggerMessageDto.GetTimings(out var stopwatchTimestamp, out var dateTime, out var unityStartupTime);
+        Write(
+            $"""
+            ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})
+            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} {nameof(unityStartupTime)}={unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} {nameof(stopwatchTimestamp)}={stopwatchTimestamp}
+            {new string('-', 80)}
+            {VersionInfo.GetFormattedInfo()}
+            """
+        );
     }
 
     internal static readonly MTStopwatch FiltersStopWatch = new();
@@ -70,13 +71,17 @@ internal class AppenderFile : IDisposable
     }
 
     internal static readonly MTStopwatch GetBytesStopwatch = new();
-    internal static readonly MTStopwatch WriteStopwatch = new();
     private void Write(string text)
     {
         GetBytesStopwatch.Start();
         var bytes = System.Text.Encoding.UTF8.GetBytes(text);
         GetBytesStopwatch.Stop();
+        Write(bytes);
+    }
 
+    internal static readonly MTStopwatch WriteStopwatch = new();
+    private void Write(byte[] bytes)
+    {
         WriteStopwatch.Start();
         try
         {

@@ -7,9 +7,16 @@ namespace ModTek.Features.Logging;
 
 internal struct MTLoggerMessageDto
 {
-    private static long s_stopwatchTimestamp = Stopwatch.GetTimestamp();
-    private static DateTime s_dateTime = DateTime.UtcNow;
-    private static TimeSpan s_unityStartupTime = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
+    private static readonly long s_stopwatchTimestamp = Stopwatch.GetTimestamp();
+    private static readonly DateTime s_dateTime = DateTime.UtcNow;
+    private static readonly TimeSpan s_unityStartupTime = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
+
+    internal static void GetTimings(out long stopwatchTimestamp, out DateTime dateTime, out TimeSpan unityStartupTime)
+    {
+        stopwatchTimestamp = s_stopwatchTimestamp;
+        dateTime = s_dateTime;
+        unityStartupTime = s_unityStartupTime;
+    }
 
     internal volatile bool CommittedToQueue;
     internal long Timestamp;
