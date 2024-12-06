@@ -1,49 +1,60 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace ModTek.Features.Logging;
 
 internal class Filters
 {
-    private readonly List<Filter> _includeFilters;
-    private readonly List<Filter> _excludeFilters;
+    private readonly Filter[] _includeFilters;
+    private readonly Filter[] _excludeFilters;
 
     internal Filters(AppenderSettings settings)
     {
         if (settings.Includes != null)
         {
-            _includeFilters = settings.Includes.Select(fs => new Filter(fs)).ToList();
+            _includeFilters = settings.Includes.Select(fs => new Filter(fs)).ToArray();
         }
         if (settings.Excludes != null)
         {
-            _excludeFilters = settings.Excludes.Select(fs => new Filter(fs)).ToList();
+            _excludeFilters = settings.Excludes.Select(fs => new Filter(fs)).ToArray();
         }
 
         // support old prefixes style
         if (settings.PrefixesToIgnore != null)
         {
-            var legacyFilters = LinePrefixToFilterTransformer.CreateFilters(settings.PrefixesToIgnore);
-            if (_excludeFilters == null)
-            {
-                _excludeFilters = legacyFilters;
-            }
-            else
-            {
-                _excludeFilters.AddRange(legacyFilters);
-            }
+            var legacyFilters = LinePrefixToFilterTransformer.CreateFilters(settings.PrefixesToIgnore).ToArray();
+            _excludeFilters = _excludeFilters == null ? legacyFilters : [.._excludeFilters, ..legacyFilters];
         }
     }
 
-    internal bool IsIncluded(MTLoggerMessageDto messageDto)
+    internal bool IsIncluded(ref MTLoggerMessageDto messageDto)
     {
-        if (_includeFilters != null && !_includeFilters.Any(x => x.IsMatch(messageDto)))
+        if (_includeFilters != null)
         {
-            return false;
+            var found = false;
+            foreach (var filter in _includeFilters)
+            {
+                if (filter.IsMatch(ref messageDto))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                return false;
+            }
         }
 
-        if (_excludeFilters != null && _excludeFilters.Any(x => x.IsMatch(messageDto)))
+        if (_excludeFilters != null)
         {
-            return false;
+            foreach (var filter in _excludeFilters)
+            {
+                if (filter.IsMatch(ref messageDto))
+                {
+                    return false;
+                }
+            }
         }
 
         return true;

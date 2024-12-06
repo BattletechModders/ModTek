@@ -52,10 +52,18 @@ internal static class LoggingFeature
         if (_settings.AsynchronousLoggingEnabled)
         {
             Application.quitting += () => _queue = null;
-            _queue = new MTLoggerAsyncQueue(ProcessLoggerMessage);
+            _queue = new MTLoggerAsyncQueue(new MessageProcessor());
         }
 
         HarmonyXLoggerAdapter.Setup();
+    }
+
+    private class MessageProcessor : MTLoggerAsyncQueue.IMessageProcessor
+    {
+        public void Process(ref MTLoggerMessageDto message)
+        {
+            ProcessLoggerMessage(ref message);
+        }
     }
 
     private static void AddAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
@@ -134,7 +142,7 @@ internal static class LoggingFeature
                 location,
                 threadId
             );
-            ProcessLoggerMessage(messageDto);
+            ProcessLoggerMessage(ref messageDto);
             return;
         }
 
@@ -174,14 +182,14 @@ internal static class LoggingFeature
         return new DiagnosticsStackTrace(6, false);
     }
 
-    private static void ProcessLoggerMessage(MTLoggerMessageDto messageDto)
+    private static void ProcessLoggerMessage(ref MTLoggerMessageDto messageDto)
     {
-        _consoleLog?.Append(messageDto);
+        _consoleLog?.Append(ref messageDto);
 
-        _mainLog.Append(messageDto);
+        _mainLog.Append(ref messageDto);
         foreach (var logAppender in _logsAppenders)
         {
-            logAppender.Append(messageDto);
+            logAppender.Append(ref messageDto);
         }
     }
 

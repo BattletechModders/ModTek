@@ -20,7 +20,7 @@ internal class AppenderUnityConsole
         _debugUnityLogger = Debug.unityLogger;
     }
 
-    internal void Append(MTLoggerMessageDto messageDto)
+    internal void Append(ref MTLoggerMessageDto messageDto)
     {
         // breaks the loop: Unity -> HBS -(x)-> Unity
         if (messageDto.LoggerName == UnityLoggerName)
@@ -28,12 +28,14 @@ internal class AppenderUnityConsole
             return;
         }
 
-        if (!_filters.IsIncluded(messageDto))
+        if (!_filters.IsIncluded(ref messageDto))
         {
             return;
         }
 
-        var logLine = _formatter.GetFormattedLogLine(messageDto);
+        // working with bytes and converting is more costly here, but cheaper elsewhere
+        var count = _formatter.GetFormattedLogLine(ref messageDto, out var logBytes);
+        var logLine = System.Text.Encoding.UTF8.GetString(logBytes, 0, count);
         s_ignoreNextUnityCapture = true;
         _debugUnityLogger.Log(LogLevelToLogType(messageDto.LogLevel), logLine);
     }

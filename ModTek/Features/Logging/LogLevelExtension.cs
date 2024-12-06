@@ -13,7 +13,7 @@ internal static class LogLevelExtension
             ELogLevels.Trace => "TRACE",
             ELogLevels.Debug => "DEBUG",
             ELogLevels.Log => "LOG",
-            ELogLevels.Warning => "WARN",
+            ELogLevels.Warning => "WARNING",
             ELogLevels.Error => "ERROR",
             ELogLevels.Fatal => "FATAL",
             ELogLevels.OFF => "OFF",

@@ -18,35 +18,38 @@ internal class AppenderFile : IDisposable
 
         FileUtils.CreateParentOfPath(path);
         FileUtils.RotatePath(path, settings.LogRotationCount);
-        const int BufferSize = 128 * 1024;
         _writer = new FileStream(
             path,
             FileMode.Append,
             FileAccess.Write,
             FileShare.ReadWrite|FileShare.Delete,
-            BufferSize,
+            1, // small buffer size means AutoFlush
             FileOptions.None
         );
 
         MTLoggerMessageDto.GetTimings(out var stopwatchTimestamp, out var dateTime, out var unityStartupTime);
-        Write(
+        Write(System.Text.Encoding.UTF8.GetBytes(
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})
             {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} {nameof(unityStartupTime)}={unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} {nameof(stopwatchTimestamp)}={stopwatchTimestamp}
             {new string('-', 80)}
             {VersionInfo.GetFormattedInfo()}
             """
-        );
+        ));
+    }
+    private void Write(byte[] bytes)
+    {
+        Write(bytes, bytes.Length);
     }
 
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
-    internal void Append(MTLoggerMessageDto messageDto)
+    internal void Append(ref MTLoggerMessageDto messageDto)
     {
         FiltersStopWatch.Start();
         try
         {
-            if (!_filters.IsIncluded(messageDto))
+            if (!_filters.IsIncluded(ref messageDto))
             {
                 return;
             }
@@ -56,39 +59,30 @@ internal class AppenderFile : IDisposable
             FiltersStopWatch.Stop();
         }
 
-        string logLine;
+        byte[] logBytes;
+        int length;
         FormatterStopWatch.Start();
         try
         {
-            logLine = _formatter.GetFormattedLogLine(messageDto);
+            length = _formatter.GetFormattedLogLine(ref messageDto, out logBytes);
         }
         finally
         {
             FormatterStopWatch.Stop();
         }
 
-        Write(logLine);
-    }
-
-    internal static readonly MTStopwatch GetBytesStopwatch = new();
-    private void Write(string text)
-    {
-        GetBytesStopwatch.Start();
-        var bytes = System.Text.Encoding.UTF8.GetBytes(text);
-        GetBytesStopwatch.Stop();
-        Write(bytes);
+        Write(logBytes, length);
     }
 
     internal static readonly MTStopwatch WriteStopwatch = new();
-    private void Write(byte[] bytes)
+    private void Write(byte[] bytes, int length)
     {
         WriteStopwatch.Start();
         try
         {
             lock(this)
             {
-                _writer.Write(bytes, 0, bytes.Length);
-                _writer.Flush();
+                _writer.Write(bytes, 0, length);
             }
         }
         finally

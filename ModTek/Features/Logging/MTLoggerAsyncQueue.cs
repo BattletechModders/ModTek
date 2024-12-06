@@ -8,11 +8,16 @@ namespace ModTek.Features.Logging;
 
 internal class MTLoggerAsyncQueue
 {
-    private readonly Action<MTLoggerMessageDto> _processor;
+    private readonly IMessageProcessor _processor;
     private readonly LightWeightBlockingQueue _queue;
     internal readonly int LogWriterThreadId;
+
+    internal interface IMessageProcessor
+    {
+        void Process(ref MTLoggerMessageDto message);
+    }
     
-    internal MTLoggerAsyncQueue(Action<MTLoggerMessageDto> processor)
+    internal MTLoggerAsyncQueue(IMessageProcessor processor)
     {
         _processor = processor;
         _queue = new LightWeightBlockingQueue();
@@ -54,9 +59,6 @@ internal class MTLoggerAsyncQueue
                     var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
                     sb.Append($"\nFormatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.");
 
-                    var bytesStats = AppenderFile.GetBytesStopwatch.GetStats();
-                    sb.Append($"\nGetBytes took a total of {bytesStats.TotalTime} with an average of {bytesStats.AverageNanoseconds}ns.");
-
                     var writeStats = AppenderFile.WriteStopwatch.GetStats();
                     sb.Append($"\nWrite called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.");
 
@@ -76,7 +78,7 @@ internal class MTLoggerAsyncQueue
             s_loggingStopwatch.Start();
             try
             {
-                _processor(message);
+                _processor.Process(ref message);
             }
             catch (Exception e)
             {
