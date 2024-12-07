@@ -19,6 +19,8 @@ internal struct MTLoggerMessageDto
     }
 
     internal volatile bool CommittedToQueue;
+
+    // either these are set
     internal long Timestamp;
     internal string LoggerName;
     internal LogLevel LogLevel;
@@ -26,6 +28,8 @@ internal struct MTLoggerMessageDto
     internal Exception Exception;
     internal IStackTrace Location;
     internal int ThreadId;
+    // or this is set
+    internal bool FlushToDisk;
 
     public MTLoggerMessageDto()
     {

@@ -25,6 +25,14 @@ internal class FileStreamImpl : ILogStream
         }
     }
 
+    public void FlushToDisk()
+    {
+        lock (this)
+        {
+            _stream.Flush(true);
+        }
+    }
+
     public void Dispose()
     {
         lock (this)

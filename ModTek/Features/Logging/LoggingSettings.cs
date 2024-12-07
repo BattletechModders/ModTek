@@ -90,6 +90,11 @@ internal class LoggingSettings
     internal bool AsynchronousLoggingEnabled = true;
 
     [JsonProperty]
+    internal const string LogFlushToDisk_Description = "Makes ILog.Flush() flush logs to disk. Blocks until completed.";
+    [JsonProperty]
+    internal bool LogFlushToDisk = true;
+
+    [JsonProperty]
     internal const string MainLog_Description = "The main log.";
     [JsonProperty(Required = Required.Always)]
     internal AppenderSettings MainLog = new();

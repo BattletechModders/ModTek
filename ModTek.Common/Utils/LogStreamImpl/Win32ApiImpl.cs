@@ -92,6 +92,15 @@ internal class Win32ApiImpl : ILogStream
         return overlapped;
     }
 
+    public void FlushToDisk()
+    {
+        if (FlushFileBuffers(this._handle))
+            return;
+
+        var errorCode = Marshal.GetLastWin32Error();
+        throw new IOException($"Win32Error {errorCode}");
+    }
+
     public void Dispose()
     {
         if (!_handle.IsClosed)
@@ -148,4 +157,8 @@ internal class Win32ApiImpl : ILogStream
         int numBytesToWrite,
         out int numBytesWritten,
         IntPtr mustBeZero);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool FlushFileBuffers(SafeHandle hHandle);
 }

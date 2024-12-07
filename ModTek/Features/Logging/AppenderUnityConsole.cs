@@ -22,6 +22,12 @@ internal class AppenderUnityConsole
 
     internal void Append(ref MTLoggerMessageDto messageDto)
     {
+        if (messageDto.FlushToDisk)
+        {
+            // this is in-memory, nothing to flush to disk!
+            return;
+        }
+
         // breaks the loop: Unity -> HBS -(x)-> Unity
         if (messageDto.LoggerName == UnityLoggerName)
         {

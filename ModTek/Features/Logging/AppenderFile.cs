@@ -37,10 +37,25 @@ internal class AppenderFile : IDisposable
         Write(bytes, bytes.Length);
     }
 
+    internal static readonly MTStopwatch FlushStopWatch = new();
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
     internal void Append(ref MTLoggerMessageDto messageDto)
     {
+        if (messageDto.FlushToDisk)
+        {
+            FlushStopWatch.Start();
+            try
+            {
+                _writer.FlushToDisk();
+            }
+            finally
+            {
+                FlushStopWatch.Stop();
+            }
+            return;
+        }
+
         FiltersStopWatch.Start();
         try
         {
@@ -85,9 +100,6 @@ internal class AppenderFile : IDisposable
 
     public void Dispose()
     {
-        lock(this)
-        {
-            _writer?.Dispose();
-        }
+        _writer?.Dispose();
     }
 }

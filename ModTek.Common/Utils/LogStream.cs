@@ -33,6 +33,11 @@ internal class LogStream
         _impl.Append(bytes, srcOffset, count);
     }
 
+    public void FlushToDisk()
+    {
+        _impl.FlushToDisk();
+    }
+
     public void Dispose()
     {
         _impl.Dispose();

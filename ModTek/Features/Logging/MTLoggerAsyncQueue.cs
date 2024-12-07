@@ -47,6 +47,7 @@ internal class MTLoggerAsyncQueue
 
             var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
             var dtoStats = LoggingFeature.MessageSetupStopWatch.GetStats();
+            var flushStats = AppenderFile.FlushStopWatch.GetStats();
             var filterStats = AppenderFile.FiltersStopWatch.GetStats();
             var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
             var writeStats = AppenderFile.WriteStopwatch.GetStats();
@@ -54,6 +55,7 @@ internal class MTLoggerAsyncQueue
             logger.Log(
                 $"""
                 Asynchronous logging offloaded {offloadedTime} from the main thread.
+                Flushed explicitly {flushStats.Count} times for a total of {flushStats.TotalTime} and an average of {flushStats.AverageNanoseconds}ns.
                 End-to-end processing had an average latency of {latencyStats.AverageNanoseconds / 1_000_000}ms.
                   On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.
                     Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.

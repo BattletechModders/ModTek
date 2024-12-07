@@ -69,6 +69,11 @@ internal class MonoIoFileStreamImpl : ILogStream
         }
     }
 
+    public void FlushToDisk()
+    {
+        _stream.Flush(true);
+    }
+
     public void Dispose()
     {
         _stream.Dispose();

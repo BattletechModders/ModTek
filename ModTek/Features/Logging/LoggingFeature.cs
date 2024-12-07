@@ -128,10 +128,7 @@ internal static class LoggingFeature
             location = GrabStackTrace();
         }
 
-        // capture caller thread
-        var threadId = Thread.CurrentThread.ManagedThreadId;
-
-        if (_queue == null || _queue.LogWriterThreadId == threadId)
+        if (!IsDispatchAvailable(out var threadId))
         {
             var messageDto = new MTLoggerMessageDto
             (
@@ -162,6 +159,31 @@ internal static class LoggingFeature
         updateDto.Commit();
 
         MessageSetupStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - timestamp);
+    }
+
+    internal static void Flush()
+    {
+        if (!IsDispatchAvailable(out _))
+        {
+            var messageDto = new MTLoggerMessageDto();
+            messageDto.FlushToDisk = true;
+            ProcessLoggerMessage(ref messageDto);
+            return;
+        }
+
+        DispatchStopWatch.Start();
+        ref var updateDto = ref _queue.AcquireUncommitedOrWait();
+        DispatchStopWatch.Stop();
+
+        updateDto.Commit();
+    }
+
+    private static bool IsDispatchAvailable(out int currentThreadId)
+    {
+        // capture caller thread
+        currentThreadId = Thread.CurrentThread.ManagedThreadId;
+
+        return !(_queue == null || _queue.LogWriterThreadId == currentThreadId);
     }
 
     private static DiagnosticsStackTrace GrabStackTrace()
