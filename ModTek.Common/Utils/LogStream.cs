@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 
 namespace ModTek.Common.Utils;
 
@@ -9,22 +8,19 @@ internal class LogStream
     private readonly ILogStream _impl;
     internal LogStream(string path)
     {
-        try
+        _impl = GetPlatformDependentLogStream(path);
+    }
+
+    private static ILogStream GetPlatformDependentLogStream(string path)
+    {
+        var os = Environment.OSVersion;
+
+        if (os.Platform is PlatformID.Unix)
         {
-            if (typeof(string).Assembly.GetTypes().Any(x => x.FullName == "System.IO.MonoIO"))
-            {
-                _impl = new MonoIoFileStreamImpl(path);
-            }
-            else
-            {
-                // win32 improvements
-                throw new NotImplementedException();
-            }
+            return new MonoIoFileStreamImpl(path);
         }
-        catch
-        {
-            _impl = new ThreadSafeFileStreamImpl(path);
-        }
+
+        return new SimpleThreadSafeFileStreamImpl(path);
     }
 
     public void Append(byte[] bytes, int srcOffset, int count)
@@ -112,10 +108,10 @@ internal class LogStream
         }
     }
     
-    private class ThreadSafeFileStreamImpl : ILogStream
+    private class SimpleThreadSafeFileStreamImpl : ILogStream
     {
         private readonly FileStream _stream;
-        internal ThreadSafeFileStreamImpl(string path)
+        internal SimpleThreadSafeFileStreamImpl(string path)
         {
             _stream = new FileStream(
                 path,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using ModTek.Common.Utils;
+using UnityEngine;
 
 namespace ModTek.Features.Logging;
 
@@ -23,12 +24,14 @@ internal class AppenderFile : IDisposable
         Write(System.Text.Encoding.UTF8.GetBytes(
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})
+            {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
             {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} {nameof(unityStartupTime)}={unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} {nameof(stopwatchTimestamp)}={stopwatchTimestamp}
             {new string('-', 80)}
             {VersionInfo.GetFormattedInfo()}
             """
         ));
     }
+
     private void Write(byte[] bytes)
     {
         Write(bytes, bytes.Length);
