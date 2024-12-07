@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.IO;
 using ModTek.Common.Utils;
 
 namespace ModTek.Features.Logging;
@@ -9,7 +8,7 @@ internal class AppenderFile : IDisposable
 {
     private readonly Filters _filters;
     private readonly Formatter _formatter;
-    private readonly FileStream _writer;
+    private readonly LogStream _writer;
 
     internal AppenderFile(string path, AppenderSettings settings)
     {
@@ -18,14 +17,7 @@ internal class AppenderFile : IDisposable
 
         FileUtils.CreateParentOfPath(path);
         FileUtils.RotatePath(path, settings.LogRotationCount);
-        _writer = new FileStream(
-            path,
-            FileMode.Append,
-            FileAccess.Write,
-            FileShare.ReadWrite|FileShare.Delete,
-            1, // small buffer size means AutoFlush
-            FileOptions.None
-        );
+        _writer = new LogStream(path);
 
         MTLoggerMessageDto.GetTimings(out var stopwatchTimestamp, out var dateTime, out var unityStartupTime);
         Write(System.Text.Encoding.UTF8.GetBytes(
@@ -80,10 +72,7 @@ internal class AppenderFile : IDisposable
         WriteStopwatch.Start();
         try
         {
-            lock(this)
-            {
-                _writer.Write(bytes, 0, length);
-            }
+            _writer.Append(bytes, 0, length);
         }
         finally
         {
