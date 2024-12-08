@@ -12,11 +12,23 @@ using ModTek.Util;
 
 namespace ModTek.Features.Profiler.Patches;
 
+[HarmonyPatch(typeof(MechDef), nameof(MechDef.RefreshChassis))]
+internal static class MechDef_RefreshChassis_Patch
+{
+    internal static void Prefix(ref bool __runOriginal, MechDef __instance)
+    {
+        if (__instance.dataManager == null && __instance.Description == null)
+        {
+            __runOriginal = false;
+        }
+    }
+}
+
 [HarmonyPatch]
 internal static class JSONSerializationUtility_FromJSON_Patch
 {
     private static string basePath;
-    private static bool testNewton = false;
+    private static bool testNewton = true;
 
     public static bool Prepare()
     {
@@ -29,7 +41,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
             }
             Directory.CreateDirectory(basePath);
         }
-        return ModTek.Enabled && ModTek.Config.ProfilerEnabled;
+        return ModTek.Enabled; // && ModTek.Config.ProfilerEnabled;
     }
 
     [HarmonyTargetMethods]
@@ -106,7 +118,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     {
         __state = new MyState();
 
-        if (testNewton && target.GetType() == typeof(MechDef))
+        if (testNewton) //  && target.GetType() == typeof(MechDef)
         {
             s_newton.Start();
             try
@@ -119,7 +131,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
             }
             catch (Exception ex)
             {
-                Log.Main.Error?.Log("Error populating " + target.GetType(), ex);
+                Log.Main.Error?.Log("Error N PopulateObject SerializeObject" + target.GetType(), ex);
             }
             finally
             {
@@ -135,7 +147,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     {
         s_stopwatch.AddMeasurement(__state.Tracker.End());
 
-        if (testNewton)
+        if (testNewton) // && target.GetType() == typeof(MechDef)
         {
             try
             {
@@ -145,7 +157,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
             }
             catch (Exception ex)
             {
-                Log.Main.Error?.Log("Error populating " + target.GetType(), ex);
+                Log.Main.Error?.Log("Error H SerializeObject " + target.GetType(), ex);
             }
         }
     }

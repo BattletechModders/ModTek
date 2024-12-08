@@ -9,6 +9,7 @@ using fastJSON;
 using HBS.Collections;
 using HBS.Util;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
@@ -54,17 +55,20 @@ internal static class HBSJsonUtils
         return s_fixMissingCommasInJson.Replace(json, "$1,\n$2");
     }
 
+    private static readonly JsonSerializerSettings s_jsonSerializerSettings = new()
+    {
+        ContractResolver = new FastJsonContractResolver(),
+        NullValueHandling = NullValueHandling.Ignore,
+        Converters = [
+            new TagSetConverter(),
+            new StringEnumConverter(),
+        ],
+    };
+
     // might work, only slightly tested
     internal static string SerializeObject(object target)
     {
-        return JsonConvert.SerializeObject(
-            target,
-            new JsonSerializerSettings
-            {
-                MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-                ContractResolver = new FastJsonContractResolver()
-            }
-        );
+        return JsonConvert.SerializeObject(target, s_jsonSerializerSettings);
     }
 
     // does not work 100%, issues e.g. with MechDef and ChassisRefresh
@@ -76,11 +80,7 @@ internal static class HBSJsonUtils
         var commentsStripped = JSONSerializationUtility.StripHBSCommentsFromJSON(json);
         var commasAdded = FixHBSJsonCommas(commentsStripped);
         var dictionariesFixed = FixStructures(commasAdded);
-        JsonConvert.PopulateObject(dictionariesFixed, target, new JsonSerializerSettings
-        {
-            ContractResolver = new FastJsonContractResolver(),
-            Converters = [new TagSetConverter()]
-        });
+        JsonConvert.PopulateObject(dictionariesFixed, target, s_jsonSerializerSettings);
     }
 
     private static string FixStructures(string json)
@@ -207,6 +207,8 @@ internal static class HBSJsonUtils
 
     private class FastJsonContractResolver : DefaultContractResolver
     {
+
+
         private readonly Dictionary<Type, List<MemberInfo>> _serializableMembersCache = new();
         protected override List<MemberInfo> GetSerializableMembers(Type objectType)
         {
