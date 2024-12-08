@@ -34,7 +34,7 @@ internal static class JSONSerializationUtility_RehydrateObjectFromDictionary_Pat
         CallbackForEveryNumberOfMeasurements = 1000
     };
 
-    [HarmonyPriority(Priority.First)]
+    [HarmonyPriority(Priority.Last)]
     public static void Prefix(string classStructure, ref MTStopwatch.Tracker __state)
     {
         if (string.IsNullOrEmpty(classStructure))
@@ -43,7 +43,7 @@ internal static class JSONSerializationUtility_RehydrateObjectFromDictionary_Pat
         }
     }
 
-    [HarmonyPriority(Priority.Last)]
+    [HarmonyPriority(Priority.First)]
     public static void Postfix(string classStructure, ref MTStopwatch.Tracker __state)
     {
         if (string.IsNullOrEmpty(classStructure))

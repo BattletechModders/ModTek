@@ -96,12 +96,10 @@
   </ItemGroup>
 
   <!-- helpful direct access to resources in BT, might trigger IDE indexing -->
-  <!--
   <ItemGroup>
     <None Include="$(BattleTechGameDir)\Mods\.modtek\*.txt;$(BattleTechGameDir)\Mods\.modtek\*.log"  LinkBase=".modtek" />
     <None Include="$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.json;$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.csv" LinkBase="BattleTech_Data"/>
   </ItemGroup>
-  -->
 
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />

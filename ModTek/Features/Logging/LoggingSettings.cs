@@ -97,7 +97,10 @@ internal class LoggingSettings
     [JsonProperty]
     internal const string MainLog_Description = "The main log.";
     [JsonProperty(Required = Required.Always)]
-    internal AppenderSettings MainLog = new();
+    internal AppenderSettings MainLog = new()
+    {
+        Excludes = [ new FilterSettings { LoggerNames = ["HarmonyX" ] } ]
+    };
     [JsonProperty(Required = Required.Always)]
     internal string MainLogFilePath = "battletech_log.txt";
 

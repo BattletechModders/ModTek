@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using HBS.Logging;
 
 namespace ModTek.Features.Logging;
@@ -7,7 +8,7 @@ internal static class LogLevelExtension
 {
     internal static string LogToString(LogLevel level)
     {
-        var eLogLevel = Convert(level);
+        var eLogLevel = ConvertHbsLogLevelToELogLevel(level);
         return eLogLevel switch // fast switch with static string, in order of most occuring
         {
             ELogLevels.Trace => "TRACE",
@@ -23,10 +24,10 @@ internal static class LogLevelExtension
 
     internal static bool IsLogLevelGreaterThan(LogLevel loggerLevel, LogLevel messageLevel)
     {
-        return Convert(messageLevel) >= Convert(loggerLevel);
+        return ConvertHbsLogLevelToELogLevel(messageLevel) >= ConvertHbsLogLevelToELogLevel(loggerLevel);
     }
 
-    private static ELogLevels Convert(LogLevel level)
+    private static ELogLevels ConvertHbsLogLevelToELogLevel(LogLevel level)
     {
         var intLevel = (int)level;
         if (intLevel is >= (int)LogLevel.Debug and <= (int)LogLevel.Error)
@@ -34,6 +35,33 @@ internal static class LogLevelExtension
             intLevel = intLevel * 10 + (int)ELogLevels.Debug;
         }
         return (ELogLevels)intLevel;
+    }
+
+    internal static TraceLevel GetLevelFilter(ILog log)
+    {
+        if (log is not Logger.LogImpl logImpl)
+        {
+            return TraceLevel.Verbose; // either off or verbose, better too much
+        }
+        var effectiveLevel = logImpl.EffectiveLevel;
+        var eLogLevel = ConvertHbsLogLevelToELogLevel(effectiveLevel);
+        return ConvertELogLevelToTraceLevel(eLogLevel);
+    }
+
+    private static TraceLevel ConvertELogLevelToTraceLevel(ELogLevels level)
+    {
+        level = (ELogLevels)((int)level / 10 * 10);
+        return level switch
+        {
+            ELogLevels.OFF => TraceLevel.Off,
+            ELogLevels.Fatal => TraceLevel.Error,
+            ELogLevels.Error => TraceLevel.Error,
+            ELogLevels.Warning => TraceLevel.Warning,
+            ELogLevels.Log => TraceLevel.Info,
+            ELogLevels.Debug => TraceLevel.Verbose,
+            ELogLevels.Trace => TraceLevel.Verbose,
+            _ => throw new ArgumentOutOfRangeException(nameof(level), level, null)
+        };
     }
 
     // log levels
