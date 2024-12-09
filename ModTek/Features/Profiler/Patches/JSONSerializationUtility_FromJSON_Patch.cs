@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using BattleTech;
+using fastJSON;
 using HBS.Util;
 using ModTek.Features.Logging;
 using ModTek.Misc;
@@ -86,6 +87,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
             Log.Main.Trace?.Log("IJsonTemplated.FromJSON " + fromJsonMethod);
 
             yield return genericMethod.MakeGenericMethod(jsonTemplated);
+            // break;
         }
     }
 
@@ -109,6 +111,33 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     {
         internal MTStopwatch.Tracker Tracker;
         internal long counter = Interlocked.Increment(ref s_counter);
+
+        internal string nn;
+        internal string nh;
+        internal string hn;
+        internal string hh;
+
+        internal void Save()
+        {
+            var differentPopulate = true;
+            var differentSerializers = false; // tag sets and dictionaries work differently
+            if ((differentSerializers && nn != nh) || (differentPopulate && hn != nn))
+            {
+                File.WriteAllText(Path.Combine(basePath, $"{counter}_NN.json"), nn);
+            }
+            if ((differentSerializers && nn != nh) || (differentPopulate && nh != hh))
+            {
+                File.WriteAllText(Path.Combine(basePath, $"{counter}_NH.json"), nn);
+            }
+            if ((differentSerializers && hn != hh) || (differentPopulate && hn != nn))
+            {
+                File.WriteAllText(Path.Combine(basePath, $"{counter}_HN.json"), hn);
+            }
+            if ((differentSerializers && hn != hh) || (differentPopulate && nh != hh))
+            {
+                File.WriteAllText(Path.Combine(basePath, $"{counter}_HH.json"), hh);
+            }
+        }
     }
 
     private static long s_counter;
@@ -116,6 +145,15 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     [HarmonyPriority(Priority.First)]
     public static void Prefix(object target, string json, ref MyState __state)
     {
+        if (target == null)
+        {
+            return;
+        }
+        if (typeof(MechDef).Assembly != target.GetType().Assembly)
+        {
+            return;
+        }
+
         __state = new MyState();
 
         if (testNewton) //  && target.GetType() == typeof(MechDef)
@@ -123,15 +161,14 @@ internal static class JSONSerializationUtility_FromJSON_Patch
             s_newton.Start();
             try
             {
-                var mechDef = new MechDef();
-                HBSJsonUtils.PopulateObject(mechDef, json);
-                var output = HBSJsonUtils.SerializeObject(mechDef);
-                var path = Path.Combine(basePath, $"{__state.counter}_N.json");
-                File.WriteAllText(path, output);
+                var objectCopy = Activator.CreateInstance(target.GetType());
+                HBSJsonUtils.PopulateObject(objectCopy, json);
+                __state.nn = HBSJsonUtils.SerializeObject(objectCopy);
+                __state.nh = JSON.ToJSON(objectCopy);
             }
             catch (Exception ex)
             {
-                Log.Main.Error?.Log("Error N PopulateObject SerializeObject" + target.GetType(), ex);
+                Log.Main.Error?.Log("Error Populating and Serializing " + target.GetType(), ex);
             }
             finally
             {
@@ -145,19 +182,32 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     [HarmonyPriority(Priority.Last)]
     public static void Postfix(object target, string json, ref MyState __state)
     {
+        if (__state == null)
+        {
+            return;
+        }
+
         s_stopwatch.AddMeasurement(__state.Tracker.End());
 
         if (testNewton) // && target.GetType() == typeof(MechDef)
         {
             try
             {
-                var output = HBSJsonUtils.SerializeObject(target);
-                var path = Path.Combine(basePath, $"{__state.counter}_H.json");
-                File.WriteAllText(path, output);
+                __state.hn = HBSJsonUtils.SerializeObject(target);
+                __state.hh = JSON.ToJSON(target);
             }
             catch (Exception ex)
             {
-                Log.Main.Error?.Log("Error H SerializeObject " + target.GetType(), ex);
+                Log.Main.Error?.Log("Error Serializing " + target.GetType(), ex);
+            }
+
+            try
+            {
+                __state.Save();
+            }
+            catch (Exception ex)
+            {
+                Log.Main.Error?.Log("Error Saving JSONs " + target.GetType(), ex);
             }
         }
     }
