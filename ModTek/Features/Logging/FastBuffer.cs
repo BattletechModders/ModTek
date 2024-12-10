@@ -83,8 +83,8 @@ internal class FastBuffer
 
     internal void AppendLast2Digits(long value)
     {
-        Append((char)(value / 10 + '0'));
-        Append((char)(value % 10 + '0'));
+        Append((char)(((value / 10) % 10) + '0'));
+        Append((char)(((value / 1) % 10) + '0'));
     }
 
     internal void AppendLast7Digits(long value)

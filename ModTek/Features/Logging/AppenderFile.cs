@@ -21,7 +21,7 @@ internal class AppenderFile : IDisposable
         _writer = new LogStream(path);
 
         MTLoggerMessageDto.GetTimings(out var stopwatchTimestamp, out var dateTime, out var unityStartupTime);
-        Write(System.Text.Encoding.UTF8.GetBytes(
+        Write(
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})
             {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
@@ -29,11 +29,11 @@ internal class AppenderFile : IDisposable
             {new string('-', 80)}
             {VersionInfo.GetFormattedInfo()}
             """
-        ));
+        );
     }
-
-    private void Write(byte[] bytes)
+    private void Write(string text)
     {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(text);
         Write(bytes, bytes.Length);
     }
 
