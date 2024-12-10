@@ -50,7 +50,7 @@ internal static class JSONSerializationUtility_FromJSON_Patch
     {
         var genericMethod = typeof(JSONSerializationUtility)
             .GetMethods(BindingFlags.Public|BindingFlags.Static)
-            .Single(x => x.Name== "FromJSON" && x.GetParameters().Length == 2);
+            .Single(x => x.Name== nameof(JSONSerializationUtility.FromJSON) && x.GetParameters().Length == 2);
         Log.Main.Trace?.Log("JSONSerializationUtility.FromJSON " + genericMethod);
 
         foreach (
