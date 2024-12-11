@@ -8,10 +8,10 @@
   <PropertyGroup>
     <!-- All mods and utilites are libraries and produce a dll -->
     <OutputType>Library</OutputType>
-    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks won't work -->
-    <TargetFramework>net471</TargetFramework>
+    <!-- The latest BattleTech game version uses .NET Framework 4.7.2, newer target frameworks won't work -->
+    <TargetFramework>net472</TargetFramework>
     <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework -->
-    <LangVersion>11</LangVersion>
+    <LangVersion>13</LangVersion>
     <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <AssemblySearchPaths>
       {HintPathFromItem};
@@ -20,12 +20,18 @@
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <!-- embed symbols into the dll -->
     <DebugType>embedded</DebugType>
+    <!-- ignore some warning -->
+    <NoWarn>CS0436</NoWarn> <!-- CS0436: same namespace+classname warning, e.g. happens due to GitVersion generated classes not having distinct namespaces -->
   </PropertyGroup>
 
+  <!-- helpful direct access to resources in BT, might trigger IDE indexing and can introduce lag/stutter -->
+  <!--
   <ItemGroup>
-    <Link Include="$(BattleTechGameDir)\Mods\.modtek\*.log*" />
+    <None Include="$(BattleTechGameDir)\Mods\.modtek\*.txt;$(BattleTechGameDir)\Mods\.modtek\*.log"  LinkBase=".modtek" />
+    <None Include="$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.json;$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.csv" LinkBase="BattleTech_Data"/>
   </ItemGroup>
-
+  -->
+  
   <!-- Copy the mod dll to the BT game dir if the mod directory exists there -->
   <Target Condition="Exists('$(BattleTechGameDir)\Mods\$(ProjectName)\')" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
@@ -38,7 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
-    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0" />
     <!-- Main game library, best to publicize it to access internals easily and efficiently -->
     <Publicize Include="Assembly-CSharp" />
   </ItemGroup>
@@ -50,10 +56,16 @@
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <Reference Include="0Harmony" Version="2.10.1">
-      <!-- Every dll found in Managed should not be copied to OutDir when building -->
-      <Private>False</Private>
-    </Reference>
+    <PackageReference Include="HarmonyX" Version="2.10.2">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+
+    <!-- Enables many newer language features for .NET Framework -->
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
 
     <!-- Important system libraries that are basically always used -->
     <Reference Include="System">
@@ -63,7 +75,7 @@
       <Private>False</Private>
     </Reference>
 
-    <!-- Main game library -->
+    <!-- Main game library, best to publicize it to access internals easily and efficently -->
     <Reference Include="Assembly-CSharp">
       <Private>False</Private>
     </Reference>

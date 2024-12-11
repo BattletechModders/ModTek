@@ -1,0 +1,5 @@
+{
+	"Name": "ModTemplate",
+	"DLL": "ModTemplate.dll",
+	"DLLEntryPoint": "ModTemplate.Main.Start"
+}

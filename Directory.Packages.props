@@ -1,10 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
-    <!-- use centrally managed versions, see PackageVersion -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Krafs.Publicizer" Version="2.2.1" />
+    <PackageVersion Include="Krafs.Publicizer" Version="2.3.0" />
     <PackageVersion Include="GitVersion.MsBuild" Version="5.12.0" />
     <PackageVersion Include="HarmonyX" Version="2.13.0" />
     <PackageVersion Include="PolySharp" Version="1.15.0" />

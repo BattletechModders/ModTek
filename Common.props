@@ -1,26 +1,19 @@
 ﻿<Project InitialTargets="ValidateBattleTechGameDir">
-  <!-- Check if the BattleTechGameDir variable is correctly set -->
   <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
     <Error Text="BattleTechGameDir variable not set properly" />
   </Target>
 
   <PropertyGroup>
-    <!-- All mods and utilites are libraries and produce a dll -->
     <OutputType>Library</OutputType>
-    <!-- The latest BattleTech game version uses .NET Framework 4.7.1, newer target frameworks are more likely to be incompatible -->
-    <TargetFramework>net471</TargetFramework>
-    <!-- Set to a modern version, some newer language feature are not available in combination with .NET Framework, PolySharp helps with backports -->
+    <TargetFramework>net472</TargetFramework>
     <LangVersion>13</LangVersion>
-    <!-- We ask msbuild to only use reference DLLs found the BattleTech Managed directory -->
     <AssemblySearchPaths>
       {HintPathFromItem};
       $(BattleTechGameDir)\BattleTech_Data\Managed
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <!-- embed symbols into the dll -->
     <DebugType>embedded</DebugType>
-    <!-- ignore some warning -->
-    <NoWarn>CS0436</NoWarn> <!-- CS0436: same namespace+classname warning, e.g. happens due to GitVersion generated classes not having distinct namespaces -->
+    <NoWarn>CS0436</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -28,16 +21,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Makes sure dll versions are using commits and tags found in the git repo -->
     <PackageReference Include="GitVersion.MsBuild">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <!-- Allows to use many modern language features in older .NET frameworks -->
     <PackageReference Include="PolySharp">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <!-- Common libraries that are really used everywhere -->
     <Reference Include="System">
       <Private>False</Private>
     </Reference>

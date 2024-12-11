@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace ModTemplateWithHarmonyX.Patches;
+namespace ModTemplate.Patches;
 
 [HarmonyPatch(typeof(VersionInfo), nameof(VersionInfo.GetReleaseVersion))]
 static class VersionInfo_GetReleaseVersion_Patch

@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
 using HBS.Logging;
 
-namespace ModTemplateWithHarmonyX;
+namespace ModTemplate;
 
 public static class Main
 {
-    private static readonly ILog s_log = Logger.GetLogger(nameof(ModTemplateWithHarmonyX));
+    private static readonly ILog s_log = Logger.GetLogger(nameof(ModTemplate));
     public static void Start()
     {
         s_log.Log("Starting");
@@ -25,6 +25,6 @@ public static class Main
     static void GetReleaseVersion(ref string __result)
     {
         var old = __result;
-        __result = old + "\nHTWHX(2)";
+        __result = old + "\nMy Mod Template shows up!";
     }
 }
