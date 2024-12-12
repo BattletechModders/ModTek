@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
 
-namespace ModTek.Common.Utils.LogStreamImpl;
+namespace ModTek.Features.Logging.LogStreamImpl;
 
 // avoids lock in the app
 // still serializes the IO on OS level

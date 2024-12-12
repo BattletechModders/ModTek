@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace ModTek.Common.Utils.LogStreamImpl;
+namespace ModTek.Features.Logging.LogStreamImpl;
 
 internal class FileStreamImpl : ILogStream
 {

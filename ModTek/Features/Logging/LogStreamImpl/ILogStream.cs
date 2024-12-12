@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ModTek.Common.Utils.LogStreamImpl;
+namespace ModTek.Features.Logging.LogStreamImpl;
 
 internal interface ILogStream : IDisposable
 {

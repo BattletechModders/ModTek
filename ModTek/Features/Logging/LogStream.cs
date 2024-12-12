@@ -1,7 +1,7 @@
 using System;
-using ModTek.Common.Utils.LogStreamImpl;
+using ModTek.Features.Logging.LogStreamImpl;
 
-namespace ModTek.Common.Utils;
+namespace ModTek.Features.Logging;
 
 internal class LogStream
 {

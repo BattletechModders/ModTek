@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace ModTek.Common.Utils.LogStreamImpl;
+namespace ModTek.Features.Logging.LogStreamImpl;
 
 // posix guarantees atomic appends to a file
 // so instead of app level locks we get os level serialization
