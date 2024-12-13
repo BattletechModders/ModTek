@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using HBS.Logging;
 using UnityEngine;
 
@@ -29,7 +30,8 @@ internal struct MTLoggerMessageDto
     internal IStackTrace Location;
     internal int ThreadId;
     // or this is set
-    internal bool FlushToDisk;
+    internal bool FlushToDisk => FlushToDiskPostEvent != null;
+    internal ManualResetEventSlim FlushToDiskPostEvent;
 
     public MTLoggerMessageDto()
     {

@@ -163,19 +163,27 @@ internal static class LoggingFeature
 
     internal static void Flush()
     {
+        var flushEvent = new ManualResetEventSlim(false);
+
+        // this cannot guarantee everything is flushed during a shutdown, chances are good though
         if (!IsDispatchAvailable(out _))
         {
             var messageDto = new MTLoggerMessageDto();
-            messageDto.FlushToDisk = true;
+            messageDto.FlushToDiskPostEvent = flushEvent;
             ProcessLoggerMessage(ref messageDto);
             return;
         }
 
         DispatchStopWatch.Start();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
+        updateDto.FlushToDiskPostEvent = flushEvent;
         DispatchStopWatch.Stop();
 
         updateDto.Commit();
+
+        // always wait
+        // usually caller wants to flush to guarantee debug information on disk
+        flushEvent.Wait();
     }
 
     private static bool IsDispatchAvailable(out int currentThreadId)
@@ -207,12 +215,19 @@ internal static class LoggingFeature
 
     private static void ProcessLoggerMessage(ref MTLoggerMessageDto messageDto)
     {
-        _consoleLog?.Append(ref messageDto);
-
-        _mainLog.Append(ref messageDto);
-        foreach (var logAppender in _logsAppenders)
+        try
         {
-            logAppender.Append(ref messageDto);
+            _consoleLog?.Append(ref messageDto);
+
+            _mainLog.Append(ref messageDto);
+            foreach (var logAppender in _logsAppenders)
+            {
+                logAppender.Append(ref messageDto);
+            }
+        }
+        finally
+        {
+            messageDto.FlushToDiskPostEvent?.Set();
         }
     }
 
