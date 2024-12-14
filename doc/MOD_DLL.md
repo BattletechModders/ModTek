@@ -24,7 +24,7 @@ In our case, we want to simply add the condition that you cannot launch a missio
 
 ## Setting Your Project Up
 
-Copy the mod template found in the same directory as the following csproj file: [ModTemplateWithHarmonyX.csproj](../examples/ModTemplateWithHarmonyX/ModTemplateWithHarmonyX.csproj)
+Copy the mod template found in the same directory as the following csproj file: [ModTemplate.csproj](../examples/ModTemplate/ModTemplate.csproj)
 
 Open your copy of the mod template with Visual Studio or Rider, it will complain about not finding the BattleTech directory.
 
