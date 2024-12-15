@@ -14,10 +14,22 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
 
 For users:
 - Updated UnityDoorstop to latest version + still including our custom steamfix.
+- Fixed run.sh to work with new steam wrappers
 
 For modders:
 - Moved all ModTek dlls (ModTek, HarmonyX, MonoMod, etc..) to `ModTek/lib`.
-  - Requires to update doorstop config on windows and run.sh on linux / macos.
+  - Requires to update the doorstop ini
+  - Made run.sh depend on the doorstop.ini instead of having its own inline options
+- Updated HarmonyX
+  - New HarmonyX is based on a major rewrite of MonoMod, several bugs were encountered and fixed
+  - Still providing an older version of HarmonyX in-case the new HarmonyX feels unstable
+- Various Logging improvements and changes
+  - Async logging is now highly optimized
+    - reduction of 300+ ns to <100 ns spent on the caller thread (usually the unity main thread)
+  - Reduced logging (format) options to increase performance
+    - actual formatting times were reduces from 6-8 us to below 1 us
+    - now nvme drives are the bottleneck (~3 us), not the formatting code
+  - HBS' ILog.Flush() method is now supported and flushes OS buffers to disk
 
 ## 4.1 - kMiSSioN
 
