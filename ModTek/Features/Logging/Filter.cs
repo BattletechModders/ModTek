@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using HBS.Logging;
@@ -16,7 +15,9 @@ internal class Filter
     {
         if (settings.LoggerNames != null)
         {
-            _loggerNames = settings.LoggerNames;
+            // Intern allows us to use ReferenceEquals a.k.a ==
+            // since logger names are already interned by LogImpl
+            _loggerNames = settings.LoggerNames.Select(string.Intern).ToArray();
         }
         if (settings.LogLevels != null)
         {
@@ -39,13 +40,29 @@ internal class Filter
 
     internal bool IsMatch(ref MTLoggerMessageDto messageDto)
     {
-        if (_loggerNames != null && !_loggerNames.Contains(messageDto.LoggerName))
+        if (_loggerNames != null)
         {
+            foreach (var loggerName in _loggerNames)
+            {
+                if (loggerName == messageDto.LoggerName)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
-        if (_logLevels != null && !_logLevels.Contains(messageDto.LogLevel))
+        if (_logLevels != null)
         {
+            foreach (var logLevel in _logLevels)
+            {
+                if (logLevel == messageDto.LogLevel)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 

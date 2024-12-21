@@ -8,6 +8,7 @@ internal class MTStopwatch
 {
     internal Action<Stats> Callback { get; set; }
     internal long CallbackForEveryNumberOfMeasurements { get; set; } = 100;
+    internal long SkipFirstNumberOfMeasurements { get; set; } = 1000; // let's wait for the JIT to warm up
 
     private long _ticks;
     private long _count;
@@ -39,13 +40,17 @@ internal class MTStopwatch
 
     internal void AddMeasurement(long elapsedTicks)
     {
-        var ticks = Interlocked.Add(ref _ticks, elapsedTicks);
         var count = Interlocked.Increment(ref _count);
+        if (count <= SkipFirstNumberOfMeasurements)
+        {
+            return;
+        }
+        var ticks = Interlocked.Add(ref _ticks, elapsedTicks);
         if (Callback != null)
         {
             if (count % CallbackForEveryNumberOfMeasurements == 0)
             {
-                Callback.Invoke(new Stats(ticks, count));
+                Callback.Invoke(new Stats(this, ticks, count));
             }
         }
     }
@@ -70,18 +75,23 @@ internal class MTStopwatch
         internal long Ticks { get; }
         internal long Count { get; }
         internal TimeSpan TotalTime => TimeSpanFromTicks(Ticks);
-        internal long AverageNanoseconds => Count == 0 ? 0 : (long)((double)Ticks / Count / Stopwatch.Frequency * 1e+9);
+        internal long AverageNanoseconds => Count <= 0 ? 0 : (long)((double)Ticks / Count / Stopwatch.Frequency * 1e+9);
 
         internal Stats(MTStopwatch sw)
         {
             Ticks = Interlocked.Read(ref sw._ticks);
-            Count = Interlocked.Read(ref sw._count);
+            Count = Interlocked.Read(ref sw._count) - sw.SkipFirstNumberOfMeasurements;
         }
 
-        internal Stats(long ticks, long count)
+        internal Stats(MTStopwatch sw, long ticks, long count)
         {
             Ticks = ticks;
-            Count = count;
+            Count = count - sw.SkipFirstNumberOfMeasurements;
+        }
+
+        public override string ToString()
+        {
+            return $"measured {Count} times, taking a total of {TotalTime} with an average of {AverageNanoseconds}ns";
         }
     }
 

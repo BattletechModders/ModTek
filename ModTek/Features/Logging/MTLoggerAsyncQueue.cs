@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Threading;
 using UnityEngine;
 using ThreadPriority = System.Threading.ThreadPriority;
@@ -47,22 +46,18 @@ internal class MTLoggerAsyncQueue
 
             var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
             var dtoStats = LoggingFeature.MessageSetupStopWatch.GetStats();
-            var flushStats = AppenderFile.FlushStopWatch.GetStats();
-            var filterStats = AppenderFile.FiltersStopWatch.GetStats();
-            var formatterStats = AppenderFile.FormatterStopWatch.GetStats();
-            var writeStats = AppenderFile.WriteStopwatch.GetStats();
 
             logger.Log(
                 $"""
                 Asynchronous logging offloaded {offloadedTime} from the main thread.
-                Flushed explicitly {flushStats.Count} times for a total of {flushStats.TotalTime} and an average of {flushStats.AverageNanoseconds}ns.
+                Flushed {AppenderFile.FlushStopWatch.GetStats()}.
                 End-to-end processing had an average latency of {latencyStats.AverageNanoseconds / 1_000_000}ms.
                   On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.
-                    Dispatched {dispatchStats.Count} times, taking a total of {dispatchStats.TotalTime} with an average of {dispatchStats.AverageNanoseconds}ns.
+                    Dispatch {dispatchStats}.
                   Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.
-                    Filters took a total of {filterStats.TotalTime} with an average of {filterStats.AverageNanoseconds}ns.
-                    Formatter took a total of {formatterStats.TotalTime} with an average of {formatterStats.AverageNanoseconds}ns.
-                    Write called {writeStats.Count} times, taking a total of {writeStats.TotalTime} with an average of {writeStats.AverageNanoseconds}ns.
+                    Filters {AppenderFile.FiltersStopWatch.GetStats()}.
+                    Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
+                    Write {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );
         },

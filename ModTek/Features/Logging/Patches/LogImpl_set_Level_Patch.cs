@@ -21,18 +21,26 @@ internal static class LogImpl_set_Level_Patch
     [HarmonyPriority(Priority.Low)]
     public static void Postfix(string ___name, LogLevel? ___level, LogLevel? __state)
     {
-        if (___level != __state)
+        var log = Log.Main.Trace;
+        if (log == null)
         {
-            var debugText = ModTek.Config.Logging.DebugLogLevelSetters
-                ? "\n" + DebugUtils.GetStackTraceWithoutPatch()
-                : "";
-
-            var oldLevel = __state?.Let(l => LogLevelExtension.LogToString(l) + $"({(int)__state})") ?? "null";
-            var newLevel = ___level?.Let(l => LogLevelExtension.LogToString(l) + $"({(int)___level})") ?? "null";
-            Log.Main.Trace?.Log(
-                $"Log Level of logger name={___name} changed from level={oldLevel} to level={newLevel}{debugText}"
-            );
+            return;
         }
+
+        if (___level == __state)
+        {
+            return;
+        }
+
+        var debugText = ModTek.Config.Logging.DebugLogLevelSetters
+            ? "\n" + DebugUtils.GetStackTraceWithoutPatch()
+            : "";
+
+        var oldLevel = __state?.Let(l => LogLevelExtension.LogToString(l) + $"({(int)__state})") ?? "null";
+        var newLevel = ___level?.Let(l => LogLevelExtension.LogToString(l) + $"({(int)___level})") ?? "null";
+        log.Log(
+            $"Log Level of logger name={___name} changed from level={oldLevel} to level={newLevel}{debugText}"
+        );
     }
 
     private static R Let<P, R>(this P s, Func<P, R> func) where P: notnull

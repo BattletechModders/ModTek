@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace ModTek.Features.Logging.LogStreamImpl;
 
@@ -24,49 +23,7 @@ internal class MonoIoFileStreamImpl : ILogStream
 
     public void Append(byte[] bytes, int srcOffset, int count)
     {
-        // skip check as our logging never logs less
-        //EnsureMinimumSize(ref bytes, ref srcOffset, ref count);
-
         _stream.Write(bytes, srcOffset, count);
-    }
-
-    private const byte Linefeed = (byte)'\n';
-    private const int ZeroWidthSize = 3; // ZWSP is unfortunately 3 bytes and not 2 in UTF8
-    private const int ZeroWidthWithNewlineSize = 4;
-    private static readonly byte[] s_zeroWidthSpaceWithNewline = [0xE2, 0x80, 0x8B, Linefeed];
-    private static void EnsureMinimumSize(ref byte[] bytes, ref int srcOffset, ref int count)
-    {
-        // the buffer within FileStream is never thread safe
-        // to avoid it we always have to write at least 2 bytes
-        if (count >= 2)
-        {
-            return;
-        }
-
-        if (count > 0)
-        {
-            if (count == 1 && bytes[srcOffset] == Linefeed) // linux WriteLine()
-            {
-                bytes = s_zeroWidthSpaceWithNewline;
-                srcOffset = 0;
-                count = ZeroWidthWithNewlineSize;
-            }
-            else
-            {
-                var newBytes = new byte[ZeroWidthSize + count];
-                Buffer.BlockCopy(s_zeroWidthSpaceWithNewline, 0, newBytes, 0, ZeroWidthSize);
-                Buffer.BlockCopy(bytes, srcOffset, newBytes, ZeroWidthSize, count);
-                bytes = newBytes;
-                srcOffset = 0;
-                count = ZeroWidthSize + count;
-            }
-        }
-        else
-        {
-            bytes = s_zeroWidthSpaceWithNewline;
-            srcOffset = 0;
-            count = ZeroWidthSize;
-        }
     }
 
     public void FlushToDisk()

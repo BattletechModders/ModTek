@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Globalization;
+using System.Text;
 using HBS.Logging;
 
 namespace ModTek.Features.Logging;
@@ -27,7 +27,7 @@ internal class Formatter
     internal int GetFormattedLogLine(ref MTLoggerMessageDto messageDto, out byte[] bytes)
     {
         s_buffer ??= new FastBuffer();
-        s_buffer.Clear();
+        s_buffer.Setup();
 
         if (_absoluteTimeEnabled)
         {
@@ -36,62 +36,53 @@ internal class Formatter
             {
                 dt = dt.ToLocalTime();
             }
-            s_buffer.AppendLast2Digits(dt.Hour);
-            s_buffer.Append(':');
-            s_buffer.AppendLast2Digits(dt.Minute);
-            s_buffer.Append(':');
-            s_buffer.AppendLast2Digits(dt.Second);
-            s_buffer.Append('.');
-            s_buffer.AppendLast7Digits(dt.Ticks);
-            s_buffer.Append(' ');
+            s_buffer.Append(dt);
         }
 
         if (_startupTimeEnabled)
         {
             var ts = messageDto.StartupTime();
             var secondsWithFraction = ts.Ticks * 1E-07m;
-            s_buffer.Append(secondsWithFraction.ToString(CultureInfo.InvariantCulture));
-            s_buffer.Append(' ');
+            s_buffer.Append(secondsWithFraction);
+            s_buffer.Append((byte)' ');
         }
 
         if (messageDto.ThreadId != s_unityMainThreadId)
         {
-            s_buffer.Append("[ThreadId=");
-            s_buffer.Append(messageDto.ThreadId.ToString(CultureInfo.InvariantCulture));
-            s_buffer.Append("] ");
+            s_buffer.Append(s_threadIdPrefix);
+            s_buffer.Append(messageDto.ThreadId);
+            s_buffer.Append(s_threadIdSuffix);
         }
 
+        // TODO create injector and add a nameAsBytes field that should be passed along instead of string
         s_buffer.Append(messageDto.LoggerName);
-        s_buffer.Append(' ');
 
-        s_buffer.Append('[');
-        s_buffer.Append(LogLevelExtension.LogToString(messageDto.LogLevel));
-        s_buffer.Append(']');
+        s_buffer.Append(LogLevelExtension.GetCachedFormattedBytes(messageDto.LogLevel));
 
-        var prefix = " ";
+        var prefix = s_whitespaceBytes;
         if (!string.IsNullOrEmpty(messageDto.Message))
         {
             s_buffer.Append(prefix);
             s_buffer.Append(messageDto.Message);
-            prefix = Environment.NewLine;
+            prefix = s_environmentNewline;
         }
 
         if (messageDto.Exception != null)
         {
             s_buffer.Append(prefix);
             s_buffer.Append(messageDto.Exception.ToString());
-            prefix = Environment.NewLine;
+            prefix = s_environmentNewline;
         }
 
         if (messageDto.Location != null)
         {
             s_buffer.Append(prefix);
-            s_buffer.Append("Location Trace");
-            s_buffer.Append(Environment.NewLine);
+            s_buffer.Append(s_locationTraceLabel);
+            s_buffer.Append(s_environmentNewline);
             s_buffer.Append(GetLocationString(messageDto.Location));
         }
 
-        s_buffer.Append(Environment.NewLine);
+        s_buffer.Append(s_environmentNewline);
 
         return s_buffer.GetBytes(out bytes);
     }
@@ -111,4 +102,11 @@ internal class Formatter
             return e.ToString();
         }
     }
+
+    // avoid heap allocations during logging
+    private static readonly byte[] s_threadIdPrefix = Encoding.UTF8.GetBytes("[ThreadId=");
+    private static readonly byte[] s_threadIdSuffix = Encoding.UTF8.GetBytes("] ");
+    private static readonly byte[] s_whitespaceBytes = Encoding.UTF8.GetBytes(" ");
+    private static readonly byte[] s_environmentNewline = Encoding.UTF8.GetBytes(Environment.NewLine);
+    private static readonly byte[] s_locationTraceLabel = Encoding.UTF8.GetBytes("Location Trace");
 }

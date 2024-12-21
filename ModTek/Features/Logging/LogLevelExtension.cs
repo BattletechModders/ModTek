@@ -1,24 +1,44 @@
 using System;
+using System.Text;
 using HBS.Logging;
 
 namespace ModTek.Features.Logging;
 
 internal static class LogLevelExtension
 {
-    internal static string LogToString(LogLevel level)
+    private static readonly byte[] s_trace = GetFormattedBytes(ELogLevels.Trace);
+    private static readonly byte[] s_debug = GetFormattedBytes(ELogLevels.Debug);
+    private static readonly byte[] s_log = GetFormattedBytes(ELogLevels.Log);
+    private static readonly byte[] s_warning = GetFormattedBytes(ELogLevels.Warning);
+    private static readonly byte[] s_error = GetFormattedBytes(ELogLevels.Error);
+    private static readonly byte[] s_fatal = GetFormattedBytes(ELogLevels.Fatal);
+    private static readonly byte[] s_off = GetFormattedBytes(ELogLevels.OFF);
+    private static byte[] GetFormattedBytes(ELogLevels level) => Encoding.UTF8.GetBytes(" [" + ELogToString(level) + "]");
+    // avoid allocations during logging
+    internal static byte[] GetCachedFormattedBytes(LogLevel level)
     {
         var eLogLevel = Convert(level);
         return eLogLevel switch // fast switch with static string, in order of most occuring
         {
-            ELogLevels.Trace => "TRACE",
-            ELogLevels.Debug => "DEBUG",
-            ELogLevels.Log => "LOG",
-            ELogLevels.Warning => "WARNING",
-            ELogLevels.Error => "ERROR",
-            ELogLevels.Fatal => "FATAL",
-            ELogLevels.OFF => "OFF",
+            ELogLevels.Trace => s_trace,
+            ELogLevels.Debug => s_debug,
+            ELogLevels.Log => s_log,
+            ELogLevels.Warning => s_warning,
+            ELogLevels.Error => s_error,
+            ELogLevels.Fatal => s_fatal,
+            ELogLevels.OFF => s_off,
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+    internal static string LogToString(LogLevel level)
+    {
+        var eLogLevel = Convert(level);
+        return ELogToString(eLogLevel);
+    }
+    private static string ELogToString(ELogLevels eLogLevel)
+    {
+        return eLogLevel.ToString().ToUpperInvariant();
     }
 
     internal static bool IsLogLevelGreaterThan(LogLevel loggerLevel, LogLevel messageLevel)

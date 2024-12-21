@@ -37,7 +37,10 @@ internal class AppenderFile : IDisposable
         Write(bytes, bytes.Length);
     }
 
-    internal static readonly MTStopwatch FlushStopWatch = new();
+    internal static readonly MTStopwatch FlushStopWatch = new()
+    {
+        SkipFirstNumberOfMeasurements = 0
+    };
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
     internal void Append(ref MTLoggerMessageDto messageDto)
