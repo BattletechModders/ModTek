@@ -80,13 +80,13 @@ internal class MTStopwatch
         internal Stats(MTStopwatch sw)
         {
             Ticks = Interlocked.Read(ref sw._ticks);
-            Count = Interlocked.Read(ref sw._count) - sw.SkipFirstNumberOfMeasurements;
+            Count = Math.Max(Interlocked.Read(ref sw._count) - sw.SkipFirstNumberOfMeasurements, 0);
         }
 
         internal Stats(MTStopwatch sw, long ticks, long count)
         {
             Ticks = ticks;
-            Count = count - sw.SkipFirstNumberOfMeasurements;
+            Count = Math.Max(count - sw.SkipFirstNumberOfMeasurements, 0);
         }
 
         public override string ToString()

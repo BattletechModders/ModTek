@@ -32,28 +32,6 @@ internal struct MTLoggerMessageDto
     // or this is set
     internal bool FlushToDisk => FlushToDiskPostEvent != null;
     internal ManualResetEventSlim FlushToDiskPostEvent;
-
-    public MTLoggerMessageDto()
-    {
-    }
-    
-    internal MTLoggerMessageDto(
-        long timestamp,
-        string loggerName,
-        LogLevel logLevel,
-        string message,
-        Exception exception,
-        IStackTrace location,
-        int threadId
-    ) {
-        Timestamp = timestamp;
-        LoggerName = loggerName;
-        LogLevel = logLevel;
-        Message = message;
-        Exception = exception;
-        Location = location;
-        ThreadId = threadId;
-    }
     
     internal TimeSpan StartupTime()
     {

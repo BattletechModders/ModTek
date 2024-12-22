@@ -57,6 +57,7 @@ internal class MTLoggerAsyncQueue
                   Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.
                     Filters {AppenderFile.FiltersStopWatch.GetStats()}.
                     Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
+                      UTF8-Fallback {FastBuffer.UTF8FallbackStopwatch.GetStats()}.
                     Write {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );

@@ -131,15 +131,15 @@ internal static class LoggingFeature
         if (!IsDispatchAvailable(out var threadId))
         {
             var messageDto = new MTLoggerMessageDto
-            (
-                timestamp,
-                loggerName,
-                logLevel,
-                messageAsString,
-                exception,
-                location,
-                threadId
-            );
+            {
+                Timestamp = timestamp,
+                LoggerName = loggerName,
+                LogLevel = logLevel,
+                Message = messageAsString,
+                Exception = exception,
+                Location = location,
+                ThreadId = threadId
+            };
             ProcessLoggerMessage(ref messageDto);
             return;
         }
@@ -155,7 +155,6 @@ internal static class LoggingFeature
         updateDto.Exception = exception;
         updateDto.Location = location;
         updateDto.ThreadId = threadId;
-
         updateDto.Commit();
 
         MessageSetupStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - timestamp);
@@ -176,9 +175,9 @@ internal static class LoggingFeature
 
         DispatchStopWatch.Start();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        updateDto.FlushToDiskPostEvent = flushEvent;
         DispatchStopWatch.Stop();
 
+        updateDto.FlushToDiskPostEvent = flushEvent;
         updateDto.Commit();
 
         // always wait

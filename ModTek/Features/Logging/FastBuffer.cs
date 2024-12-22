@@ -92,16 +92,24 @@ internal unsafe class FastBuffer
                 const int IterSize = 8;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
                 {
-                    var r0 = SetAscii(positionIterPtr, charsIterPtr, 0);
-                    var r1 = SetAscii(positionIterPtr, charsIterPtr, 1);
-                    var r2 = SetAscii(positionIterPtr, charsIterPtr, 2);
-                    var r3 = SetAscii(positionIterPtr, charsIterPtr, 3);
-                    var r4 = SetAscii(positionIterPtr, charsIterPtr, 4);
-                    var r5 = SetAscii(positionIterPtr, charsIterPtr, 5);
-                    var r6 = SetAscii(positionIterPtr, charsIterPtr, 6);
-                    var r7 = SetAscii(positionIterPtr, charsIterPtr, 7);
-                    if (r0 && r1 && r2 && r3 && r4 && r5 && r6 && r7)
-                    {
+                    SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
+                    SetAscii(positionIterPtr, charsIterPtr, 1, out var a1);
+                    SetAscii(positionIterPtr, charsIterPtr, 2, out var a2);
+                    SetAscii(positionIterPtr, charsIterPtr, 3, out var a3);
+                    SetAscii(positionIterPtr, charsIterPtr, 4, out var a4);
+                    SetAscii(positionIterPtr, charsIterPtr, 5, out var a5);
+                    SetAscii(positionIterPtr, charsIterPtr, 6, out var a6);
+                    SetAscii(positionIterPtr, charsIterPtr, 7, out var a7);
+                    if (
+                        a0 &&
+                        a1 &&
+                        a2 &&
+                        a3 &&
+                        a4 &&
+                        a5 &&
+                        a6 &&
+                        a7
+                    ) {
                         _length += IterSize;
                     }
                     else
@@ -117,10 +125,12 @@ internal unsafe class FastBuffer
                 const int IterSize = 2;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
                 {
-                    var r0 = SetAscii(positionIterPtr, charsIterPtr, 0);
-                    var r1 = SetAscii(positionIterPtr, charsIterPtr, 1);
-                    if (r0 && r1)
-                    {
+                    SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
+                    SetAscii(positionIterPtr, charsIterPtr, 1, out var a1);
+                    if (
+                        a0 &&
+                        a1
+                    ) {
                         _length += IterSize;
                     }
                     else
@@ -135,8 +145,8 @@ internal unsafe class FastBuffer
             if (processingCount > 0)
             {
                 const int IterSize = 1;
-                var r0 = SetAscii(positionIterPtr, charsIterPtr, 0);
-                if (r0)
+                SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
+                if (a0)
                 {
                     _length += IterSize;
                 }
@@ -148,20 +158,23 @@ internal unsafe class FastBuffer
 
             return;
 
-            Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD)
+            Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
+            UTF8FallbackStopwatch.Start();
             const int Utf8MaxBytesPerChar = 4;
             EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
             var charIndex = value.Length - processingCount;
             _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
+            UTF8FallbackStopwatch.Stop();
         }
     }
+    internal static readonly MTStopwatch UTF8FallbackStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset)
+    private void SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset, out bool isAscii)
     {
         var valueAsByte = (byte)charsIterPtr[offset];
         positionIterPtr[offset] = valueAsByte;
-        return valueAsByte <= AsciiCompatibleWithUnicodeEqualsOrSmallerThan;
+        isAscii = valueAsByte <= AsciiCompatibleWithUnicodeEqualsOrSmallerThan;
     }
 
     internal void Append(DateTime value)
