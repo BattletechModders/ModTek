@@ -104,6 +104,7 @@ internal class Formatter
     }
 
     // avoid heap allocations during logging
+    // switch to inlined " "u8 once https://github.com/MonoMod/MonoMod/issues/194 is fixed
     private static readonly byte[] s_threadIdPrefix = Encoding.UTF8.GetBytes("[ThreadId=");
     private static readonly byte[] s_threadIdSuffix = Encoding.UTF8.GetBytes("] ");
     private static readonly byte[] s_whitespaceBytes = Encoding.UTF8.GetBytes(" ");

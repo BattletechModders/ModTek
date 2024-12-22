@@ -55,31 +55,11 @@ internal unsafe class FastBuffer
         }
     }
 
-    // mainly used for ThreadId
     internal void Append(int value)
     {
-        if (value < 10)
-        {
-            var position = GetPointerAndIncrementLength(1);
-            position[0] = (byte)(value % 10 + AsciiZero);
-        }
-        else if (value < 100)
-        {
-            var position = GetPointerAndIncrementLength(2);
-            position[0] = (byte)(value / 10 % 10 + AsciiZero);
-            position[1] = (byte)(value % 10 + AsciiZero);
-        }
-        else if (value < 1000)
-        {
-            var position = GetPointerAndIncrementLength(3);
-            position[0] = (byte)(value / 100 % 10 + AsciiZero);
-            position[1] = (byte)(value / 10 % 10 + AsciiZero);
-            position[2] = (byte)(value % 10 + AsciiZero);
-        }
-        else
-        {
-            Append(value.ToString(CultureInfo.InvariantCulture));
-        }
+        var digits = FormattingHelpers.CountDigits((uint)value);
+        var position = GetPointerAndIncrementLength(digits);
+        FormattingHelpers.WriteDigits(position, (uint)value, digits);
     }
 
     internal void Append(decimal value)
@@ -99,13 +79,6 @@ internal unsafe class FastBuffer
 
         // assume one byte per char, enlarge through AppendUsingEncoding if necessary
         EnsureCapacity(_length + processingCount);
-        void AppendUsingEncoding(int iterSize)
-        {
-            const int Utf8MaxBytesPerChar = 4;
-            EnsureCapacity(_length + (processingCount - iterSize) + (iterSize * Utf8MaxBytesPerChar));
-            var charIndex = value.Length - processingCount;
-            _length += Encoding.UTF8.GetBytes(value, charIndex, iterSize, _buffer, _length);
-        }
 
         fixed (char* chars = value)
         {
@@ -113,6 +86,7 @@ internal unsafe class FastBuffer
             var charsIterPtr = chars;
 
             // loop unrolling similar to Buffer.memcpy1
+            // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
 
             {
                 const int IterSize = 8;
@@ -132,7 +106,7 @@ internal unsafe class FastBuffer
                     }
                     else
                     {
-                        AppendUsingEncoding(IterSize);
+                        goto Utf8Fallback;
                     }
                     positionIterPtr = _bufferPtr + _length;
                     charsIterPtr += IterSize;
@@ -151,7 +125,7 @@ internal unsafe class FastBuffer
                     }
                     else
                     {
-                        AppendUsingEncoding(IterSize);
+                        goto Utf8Fallback;
                     }
                     positionIterPtr = _bufferPtr + _length;
                     charsIterPtr += IterSize;
@@ -168,9 +142,17 @@ internal unsafe class FastBuffer
                 }
                 else
                 {
-                    AppendUsingEncoding(IterSize);
+                    goto Utf8Fallback;
                 }
             }
+
+            return;
+
+            Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD)
+            const int Utf8MaxBytesPerChar = 4;
+            EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
+            var charIndex = value.Length - processingCount;
+            _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
         }
     }
 
@@ -184,33 +166,17 @@ internal unsafe class FastBuffer
 
     internal void Append(DateTime value)
     {
-        var hour = value.Hour;
-        var minute = value.Minute;
-        var second = value.Second;
-        var ticks = value.Ticks;
-
         var position = GetPointerAndIncrementLength(17);
-        position[0] = (byte)(hour / 10 % 10 + AsciiZero);
-        position[1] = (byte)(hour % 10 + AsciiZero);
+        FormattingHelpers.WriteDigits(position, value.Hour, 2);
         position[2] = (byte)':';
-        position[3] = (byte)(minute / 10 % 10 + AsciiZero);
-        position[4] = (byte)(minute % 10 + AsciiZero);
+        FormattingHelpers.WriteDigits(position + 3, value.Minute, 2);
         position[5] = (byte)':';
-        position[6] = (byte)(second / 10 % 10 + AsciiZero);
-        position[7] = (byte)(second % 10 + AsciiZero);
+        FormattingHelpers.WriteDigits(position + 6, value.Second, 2);
         position[8] = (byte)'.';
-        position[9] = (byte)(ticks / 1_000_000 % 10 + AsciiZero);
-        position[10] = (byte)(ticks / 100_000 % 10 + AsciiZero);
-        position[11] = (byte)(ticks / 10_000 % 10 + AsciiZero);
-        position[12] = (byte)(ticks / 1_000 % 10 + AsciiZero);
-        position[13] = (byte)(ticks / 100 % 10 + AsciiZero);
-        position[14] = (byte)(ticks / 10 % 10 + AsciiZero);
-        position[15] = (byte)(ticks % 10 + AsciiZero);
+        FormattingHelpers.WriteDigits(position + 9, value.Ticks, 7);
         position[16] = (byte)' ';
     }
-    const byte AsciiZero = (byte)'0';
 
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     private byte* GetPointerAndIncrementLength(int increment)
     {
         var length = _length;
