@@ -27,14 +27,17 @@ internal static class Injector
         // get the methods that we're hooking and injecting
         var hookType = game.MainModule.GetType(GAME_HOOK_TYPE);
         var methods = hookType.Methods;
-        var injectedMethod = modtek.MainModule.GetType(MODTEK_INIT_TYPE).Methods.Single(x => x.Name == MODTEK_INIT_METHOD);
-        var hookedMethod = methods.First(x => x.Name == GAME_HOOK_METHOD);
+        var modTekInitMethod = modtek.MainModule.GetType(MODTEK_INIT_TYPE).Methods.Single(x => x.Name == MODTEK_INIT_METHOD);
+        var hookMethod = methods.First(x => x.Name == GAME_HOOK_METHOD);
 
         // if the return type is an iterator -- need to go searching for its MoveNext method which contains the actual code you'll want to inject
-        if (hookedMethod.ReturnType.Name.Equals("IEnumerator"))
+        if (hookMethod.ReturnType.Name.Equals("IEnumerator"))
         {
-            var nestedIterator = hookType.NestedTypes.First(x => x.Name.Contains(GAME_HOOK_METHOD));
-            hookedMethod = nestedIterator.Methods.First(x => x.Name.Equals("MoveNext"));
+            hookMethod = hookType
+                .NestedTypes
+                .First(x => x.Name.Contains(GAME_HOOK_METHOD))
+                .Methods
+                .First(x => x.Name.Equals("MoveNext"));
         }
 
         // As of BattleTech v1.1 the Start() iterator method of BattleTech.Main has this at the end
@@ -44,30 +47,38 @@ internal static class Injector
         //  yield break;
         //}
 
-        // we want to inject after the PrepareSerializer call -- so search for that call in the CIL
-        var targetInstruction = -1;
-        for (var i = 0; i < hookedMethod.Body.Instructions.Count; i++)
+        Instruction FindPrepareSerializerCall()
         {
-            var instruction = hookedMethod.Body.Instructions[i];
-
-            if (!instruction.OpCode.Code.Equals(Code.Call) || !instruction.OpCode.OperandType.Equals(OperandType.InlineMethod))
+            // we want to inject after the PrepareSerializer call -- so search for that call in the CIL
+            foreach (var instruction in hookMethod.Body.Instructions)
             {
-                continue;
+                var opcode = instruction.OpCode;
+                if (!opcode.Code.Equals(Code.Call))
+                {
+                    continue;
+                }
+                if (!opcode.OperandType.Equals(OperandType.InlineMethod))
+                {
+                    continue;
+                }
+                var methodReference = (MethodReference)instruction.Operand;
+                if (methodReference.Name != "PrepareSerializer")
+                {
+                    continue;
+                }
+
+                return instruction;
             }
 
-            var methodReference = (MethodReference)instruction.Operand;
-            if (methodReference.Name.Contains("PrepareSerializer"))
-            {
-                targetInstruction = i;
-            }
+            throw new Exception("Couldn't find Serializer.PrepareSerializer");
         }
 
-        if (targetInstruction == -1)
-        {
-            throw new Exception("Couldn't find anything");
-        }
+        var existingInstruction = FindPrepareSerializerCall();
+        var modTekInitInstruction = Instruction.Create(
+            OpCodes.Call,
+            game.MainModule.ImportReference(modTekInitMethod)
+        );
 
-        hookedMethod.Body.GetILProcessor().InsertAfter(hookedMethod.Body.Instructions[targetInstruction],
-            Instruction.Create(OpCodes.Call, game.MainModule.ImportReference(injectedMethod)));
+        hookMethod.Body.GetILProcessor().InsertAfter(existingInstruction, modTekInitInstruction);
     }
 }
