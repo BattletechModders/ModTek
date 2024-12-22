@@ -100,7 +100,7 @@ internal unsafe class FastBuffer
                     SetAscii(positionIterPtr, charsIterPtr, 5, out var a5);
                     SetAscii(positionIterPtr, charsIterPtr, 6, out var a6);
                     SetAscii(positionIterPtr, charsIterPtr, 7, out var a7);
-                    if (
+                    if (!(
                         a0 &&
                         a1 &&
                         a2 &&
@@ -109,13 +109,10 @@ internal unsafe class FastBuffer
                         a5 &&
                         a6 &&
                         a7
-                    ) {
-                        _length += IterSize;
-                    }
-                    else
-                    {
+                    )) {
                         goto Utf8Fallback;
                     }
+                    _length += IterSize;
                     positionIterPtr = _bufferPtr + _length;
                     charsIterPtr += IterSize;
                 }
@@ -127,16 +124,13 @@ internal unsafe class FastBuffer
                 {
                     SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
                     SetAscii(positionIterPtr, charsIterPtr, 1, out var a1);
-                    if (
+                    if (!(
                         a0 &&
                         a1
-                    ) {
-                        _length += IterSize;
-                    }
-                    else
-                    {
+                    )) {
                         goto Utf8Fallback;
                     }
+                    _length += IterSize;
                     positionIterPtr = _bufferPtr + _length;
                     charsIterPtr += IterSize;
                 }
@@ -146,14 +140,11 @@ internal unsafe class FastBuffer
             {
                 const int IterSize = 1;
                 SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
-                if (a0)
-                {
-                    _length += IterSize;
-                }
-                else
+                if (!a0)
                 {
                     goto Utf8Fallback;
                 }
+                _length += IterSize;
             }
 
             return;
