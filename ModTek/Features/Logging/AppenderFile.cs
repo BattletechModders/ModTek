@@ -25,9 +25,9 @@ internal class AppenderFile : IDisposable
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate})
             {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
-            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} {nameof(unityStartupTime)}={unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} {nameof(stopwatchTimestamp)}={stopwatchTimestamp}
-            {VersionInfo.GetFormattedInfo()}
+            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp}
             {new string('-', 80)}
+
             """
         );
     }
