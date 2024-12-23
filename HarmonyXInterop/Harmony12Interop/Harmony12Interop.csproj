@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\Common.props" />
+  <Import Project="..\..\CommonBattleTech.props" />
   <PropertyGroup>
     <RootNamespace>0Harmony12</RootNamespace>
     <AssemblyName>0Harmony12</AssemblyName>

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\CommonStandard.props" />
+  <Import Project="..\CommonNetStandard.props" />
 
   <ItemGroup>
     <InternalsVisibleTo Include="ModTek.Preloader" />

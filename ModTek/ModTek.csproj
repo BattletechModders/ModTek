@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\Common.props" />
+  <Import Project="..\CommonBattleTech.props" />
 
   <PropertyGroup>
     <!-- Suppress warnings for fields never assigned to (e.g. json deserialization works via reflection, not direct assignment)  -->
@@ -96,12 +96,10 @@
   </ItemGroup>
 
   <!-- helpful direct access to resources in BT, might trigger IDE indexing -->
-  <!--
   <ItemGroup>
     <None Include="$(BattleTechGameDir)\Mods\.modtek\*.txt;$(BattleTechGameDir)\Mods\.modtek\*.log"  LinkBase=".modtek" />
-    <None Include="$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.json;$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.csv" LinkBase="BattleTech_Data"/>
+<!--    <None Include="$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.json;$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.csv" LinkBase="BattleTech_Data"/>-->
   </ItemGroup>
-  -->
 
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
