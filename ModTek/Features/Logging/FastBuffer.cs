@@ -68,7 +68,6 @@ internal unsafe class FastBuffer
         Append(value.ToString(CultureInfo.InvariantCulture));
     }
 
-    const byte AsciiCompatibleWithUnicodeEqualsOrSmallerThan = 127;
     internal void Append(string value)
     {
         var processingCount = value.Length;
@@ -88,6 +87,7 @@ internal unsafe class FastBuffer
             // loop unrolling similar to Buffer.memcpy1
             // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
 
+            // 8 is a sweat spot, for large amounts of data 4 is slower, 16 is slower
             {
                 const int IterSize = 8;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
@@ -151,9 +151,9 @@ internal unsafe class FastBuffer
 
             Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
             UTF8FallbackStopwatch.Start();
+            var charIndex = value.Length - processingCount;
             const int Utf8MaxBytesPerChar = 4;
             EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
-            var charIndex = value.Length - processingCount;
             _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
             UTF8FallbackStopwatch.Stop();
         }
@@ -161,11 +161,11 @@ internal unsafe class FastBuffer
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset, out bool isAscii)
+    private void SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset, out bool isUnicodeCompatibleAscii)
     {
         var valueAsByte = (byte)charsIterPtr[offset];
         positionIterPtr[offset] = valueAsByte;
-        isAscii = valueAsByte <= AsciiCompatibleWithUnicodeEqualsOrSmallerThan;
+        isUnicodeCompatibleAscii = valueAsByte <= 127;
     }
 
     internal void Append(DateTime value)
