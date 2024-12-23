@@ -1,12 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\CommonNetStandard.props" />
 
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <LibFiles Include="$(OutDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ModTekLibDir)" />
+  </Target>
+
   <ItemGroup>
     <InternalsVisibleTo Include="ModTek.Preloader" />
+    <InternalsVisibleTo Include="ModTek.InjectorsTask" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
+    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" Private="false" ExcludeAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

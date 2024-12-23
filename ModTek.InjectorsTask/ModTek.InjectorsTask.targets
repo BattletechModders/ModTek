@@ -1,0 +1,18 @@
+<Project>
+  <!-- PublicizeAssemblies is from Krafs.Publicizer -->
+  <Target
+    Name="ModTekInjectorsRunner"
+    DependsOnTargets="ResolveAssemblyReferences"
+    BeforeTargets="PublicizeAssemblies;ResolveReferences"
+  >
+    <ModTekInjectorsRunner BattleTechGameDir="$(BattleTechGameDir)" ReferencePaths="@(ReferencePath)">
+      <Output TaskParameter="ReferencePathsToDelete" ItemName="_ModTekReferencePathsToDelete" />
+      <Output TaskParameter="ReferencePathsToAdd" ItemName="_ModTekReferencePathsToAdd" />
+    </ModTekInjectorsRunner>
+
+    <ItemGroup>
+      <ReferencePath Remove="@(_ModTekReferencePathsToDelete)" />
+      <ReferencePath Include="@(_ModTekReferencePathsToAdd)" />
+    </ItemGroup>
+  </Target>
+</Project>

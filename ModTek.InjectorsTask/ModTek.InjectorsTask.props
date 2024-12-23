@@ -1,0 +1,6 @@
+<Project>
+  <UsingTask
+    TaskName="ModTek.InjectorsTask.ModTekInjectorsRunner"
+    AssemblyFile="$(BattleTechGameDir)\Mods\ModTek\lib\ModTek.InjectorsTask.dll"
+  />
+</Project>

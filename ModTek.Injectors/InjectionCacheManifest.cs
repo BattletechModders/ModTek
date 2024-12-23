@@ -6,7 +6,7 @@ using System.Linq;
 using ModTek.Common.Globals;
 using ModTek.Common.Utils;
 
-namespace ModTek.InjectorRunner.Injector;
+namespace ModTek.Injectors;
 
 internal class InjectionCacheManifest
 {

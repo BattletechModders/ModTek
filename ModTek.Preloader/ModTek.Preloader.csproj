@@ -3,10 +3,10 @@
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
-      <Dlls Include="$(OutDir)**" />
+      <LibFiles Include="$(OutDir)*.dll" />
       <DoorstopFiles Include="run.sh;doorstop_config.ini" />
     </ItemGroup>
-    <Copy SourceFiles="@(Dlls)" DestinationFolder="$(ModTekLibDir)" />
+    <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ModTekLibDir)" />
     <Copy SourceFiles="@(DoorstopFiles)" DestinationFolder="$(BattleTechGameDir)\" />
     <MakeDir Directories="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" />
   </Target>
@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
-    <ProjectReference Include="..\ModTek.InjectorRunner\ModTek.InjectorRunner.csproj" />
+    <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" Private="false" ExcludeAssets="all"  />
+    <ProjectReference Include="..\ModTek.Injectors\ModTek.Injectors.csproj" Private="false" ExcludeAssets="all" />
   </ItemGroup>
 </Project>

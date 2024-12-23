@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTek.InjectorRunner.Injector;
+using ModTek.Injectors;
 using ModTek.Preloader.Harmony12X;
 
 namespace ModTek.Preloader.Loader;
@@ -37,7 +37,7 @@ internal static class Preloader
     private static void PreloadAssembliesInjected()
     {
         Logger.Main.Log($"Preloading injected assemblies from `{FileUtils.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
-        foreach (var file in Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll").OrderBy(p => p))
+        foreach (var file in Injectors.Runner.GetInjectedPaths().OrderBy(p => p))
         {
             Logger.Main.Log($"\t{Path.GetFileName(file)}");
             Assembly.LoadFile(file);

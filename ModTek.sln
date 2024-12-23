@@ -30,7 +30,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplate", "examples\Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek.Common", "ModTek.Common\ModTek.Common.csproj", "{67588F2A-B438-407C-AD16-ED6F4C9D12FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek.InjectorRunner", "ModTek.InjectorRunner\ModTek.InjectorRunner.csproj", "{B9F6AA09-D3CD-4FAF-ADF8-18BF78B1CCD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek.Injectors", "ModTek.Injectors\ModTek.Injectors.csproj", "{B9F6AA09-D3CD-4FAF-ADF8-18BF78B1CCD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTek.InjectorsTask", "ModTek.InjectorsTask\ModTek.InjectorsTask.csproj", "{D4306496-4941-47A6-9AEA-B37A3E7BD15D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +76,10 @@ Global
 		{B9F6AA09-D3CD-4FAF-ADF8-18BF78B1CCD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9F6AA09-D3CD-4FAF-ADF8-18BF78B1CCD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9F6AA09-D3CD-4FAF-ADF8-18BF78B1CCD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4306496-4941-47A6-9AEA-B37A3E7BD15D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4306496-4941-47A6-9AEA-B37A3E7BD15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4306496-4941-47A6-9AEA-B37A3E7BD15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4306496-4941-47A6-9AEA-B37A3E7BD15D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
 ﻿# Release notes
 
 All notable changes should be documented in this file.
-Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
+Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtime compatibility with mods.
 
 ## Known Issues
 
@@ -9,6 +9,12 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/).
 - Some mods expect the managed assemblies location to be in the `Managed` directory,
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
+
+## Upcoming - CptMoore
+
+For modders:
+- (Experimental!) Added ability to run injectors as part of a build task outside of BT. API will most likely change.
+- Some libraries were renamed, as always don't just copy-paste, clean-copy-paste!
 
 ## 4.2 - CptMoore
 
@@ -22,7 +28,7 @@ For modders:
   - Made run.sh depend on the doorstop.ini instead of having its own inline options
 - Updated HarmonyX
   - New HarmonyX is based on a major rewrite of MonoMod, several bugs were encountered and fixed
-  - Still providing an older version of HarmonyX in-case the new HarmonyX feels unstable
+  - Still providing an older version of HarmonyX due to reports of instability (those went away after a restart or 2)
 - Various Logging improvements and changes
   - Async logging is now highly optimized
     - reduction of 300+ ns to <100 ns spent on the caller thread (usually the unity main thread)

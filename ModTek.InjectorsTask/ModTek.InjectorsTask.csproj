@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\CommonNetStandard.props" />
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <LibFiles Include="$(OutDir)*.dll;*.props;*.targets" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ModTekLibDir)" />
+  </Target>
+  
+  <ItemGroup>
+    <!-- TOOD transitive dependency to Common gets included even if Private=false -->
+    <ProjectReference Include="..\ModTek.Injectors\ModTek.Injectors.csproj" Private="false" ExcludeAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core">
+      <PrivateAssets>All</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

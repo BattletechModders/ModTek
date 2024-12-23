@@ -1,7 +1,7 @@
 ﻿using ModTek.Common.Globals;
 using ModTek.Common.Logging;
 
-namespace ModTek.InjectorRunner;
+namespace ModTek.Injectors;
 
 internal class Logger
 {

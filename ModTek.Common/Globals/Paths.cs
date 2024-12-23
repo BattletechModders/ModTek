@@ -1,15 +1,16 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using System.Reflection;
 
 namespace ModTek.Common.Globals;
 
 internal class Paths
 {
     // Common paths
-    private const string ENV_DOORSTOP_MANAGED_FOLDER_DIR = "DOORSTOP_MANAGED_FOLDER_DIR";
-    internal static readonly string ManagedDirectory = Environment.GetEnvironmentVariable(ENV_DOORSTOP_MANAGED_FOLDER_DIR)
-        ?? throw new Exception($"Can't find {ENV_DOORSTOP_MANAGED_FOLDER_DIR}");
-    internal static readonly string BaseDirectory = Path.GetFullPath(Path.Combine(ManagedDirectory, "..", ".."));
+
+    // BATTLETECH/Mods/ModTek/lib/ModTek.Common.dll -> BATTLETECH
+    internal static readonly string BaseDirectory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "..", "..", ".."));
+    // Mac has Data, but we have a symlink from BattleTech_Data to Data anyway
+    internal static readonly string ManagedDirectory = Path.Combine(BaseDirectory, "BattleTech_Data", "Managed");
 
     internal static readonly string ModsDirectory = Path.Combine(BaseDirectory, "Mods");
     internal static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");

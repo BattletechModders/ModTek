@@ -6,7 +6,7 @@ using ModTek.Common.Globals;
 using ModTek.Common.Utils;
 using Mono.Cecil;
 
-namespace ModTek.InjectorRunner.Injector;
+namespace ModTek.Injectors;
 
 class AssemblyCache : IAssemblyResolver
 {

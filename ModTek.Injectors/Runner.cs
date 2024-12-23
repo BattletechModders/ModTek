@@ -6,13 +6,13 @@ using ModTek.Common.Globals;
 using ModTek.Common.Logging;
 using ModTek.Common.Utils;
 
-namespace ModTek.InjectorRunner.Injector;
+namespace ModTek.Injectors;
 
-internal class InjectorsRunner : IDisposable
+internal class Runner : IDisposable
 {
     internal static void Run()
     {
-        using var injectorsRunner = new InjectorsRunner();
+        using var injectorsRunner = new Runner();
         if (injectorsRunner.IsUpToDate)
         {
             return;
@@ -22,9 +22,14 @@ internal class InjectorsRunner : IDisposable
         injectorsRunner.SaveToDisk();
     }
 
+    internal static string[] GetInjectedPaths()
+    {
+        return Directory.GetFiles(Paths.AssembliesInjectedDirectory, "*.dll");
+    }
+
     private readonly AssemblyCache _assemblyCache;
     private readonly InjectionCacheManifest _injectionCacheManifest;
-    private InjectorsRunner()
+    private Runner()
     {
         _assemblyCache = new AssemblyCache();
         _injectionCacheManifest = new InjectionCacheManifest();

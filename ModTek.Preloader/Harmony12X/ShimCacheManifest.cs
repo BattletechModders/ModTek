@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTek.InjectorRunner.Injector;
+using ModTek.Injectors;
 using Mono.Cecil;
 
 namespace ModTek.Preloader.Harmony12X;
