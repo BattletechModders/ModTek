@@ -1,33 +1,28 @@
-﻿<Project InitialTargets="ValidateBattleTechGameDir">
-  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
-    <Error Text="BattleTechGameDir variable not set properly" />
-  </Target>
+﻿<!-- includes references to BT, Unity and only System dlls provided there -->
+<Project>
+  <Import Project=".\CommonBase.props" />
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <LangVersion>13</LangVersion>
     <AssemblySearchPaths>
       {HintPathFromItem};
       $(BattleTechGameDir)\BattleTech_Data\Managed
     </AssemblySearchPaths>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <DebugType>embedded</DebugType>
-    <NoWarn>CS0436</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <ModTekLibDir>$(BattleTechGameDir)\Mods\ModTek\lib\</ModTekLibDir>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PolySharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
+  </ItemGroup>
+
+  <!-- DisableImplicitFrameworkReferences -->
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System">
       <Private>False</Private>
     </Reference>

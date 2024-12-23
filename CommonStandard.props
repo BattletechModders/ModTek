@@ -1,0 +1,12 @@
+﻿<!--
+required to make netstandard2.0 compilation work:
+- don't use managed directory via AssemblySearchPaths
+- don't specify libs explicitly using DisableImplicitFrameworkReferences
+-->
+<Project>
+  <Import Project=".\CommonBase.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+</Project>

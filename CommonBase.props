@@ -1,0 +1,22 @@
+﻿<!-- shared properties between Common and CommonStandard -->
+<Project InitialTargets="ValidateBattleTechGameDir">
+  <Target Name="ValidateBattleTechGameDir" Condition="'$(BattleTechGameDir)' == '' Or !Exists('$(BattleTechGameDir)')">
+    <Error Text="BattleTechGameDir variable not set properly" />
+  </Target>
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <LangVersion>13</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ModTekLibDir>$(BattleTechGameDir)\Mods\ModTek\lib\</ModTekLibDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PolySharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

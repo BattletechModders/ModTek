@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\Common.props" />
+  <Import Project="..\CommonStandard.props" />
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\Injectors\" />
   </Target>
 
   <ItemGroup>
+    <!-- we only need Mono.Cecil, but HarmonyX pins the version we need  -->
     <PackageReference Include="HarmonyX">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>

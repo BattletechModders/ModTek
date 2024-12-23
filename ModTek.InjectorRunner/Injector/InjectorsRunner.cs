@@ -10,9 +10,21 @@ namespace ModTek.InjectorRunner.Injector;
 
 internal class InjectorsRunner : IDisposable
 {
+    internal static void Run()
+    {
+        using var injectorsRunner = new InjectorsRunner();
+        if (injectorsRunner.IsUpToDate)
+        {
+            return;
+        }
+
+        injectorsRunner.RunInjectors();
+        injectorsRunner.SaveToDisk();
+    }
+
     private readonly AssemblyCache _assemblyCache;
     private readonly InjectionCacheManifest _injectionCacheManifest;
-    internal InjectorsRunner()
+    private InjectorsRunner()
     {
         _assemblyCache = new AssemblyCache();
         _injectionCacheManifest = new InjectionCacheManifest();

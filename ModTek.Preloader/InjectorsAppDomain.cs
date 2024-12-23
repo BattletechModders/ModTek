@@ -1,7 +1,8 @@
 using System;
 using ModTek.Common.Globals;
+using ModTek.InjectorRunner.Injector;
 
-namespace ModTek.InjectorRunner.Injector;
+namespace ModTek.Preloader;
 
 internal class InjectorsAppDomain : MarshalByRefObject
 {
@@ -35,13 +36,6 @@ internal class InjectorsAppDomain : MarshalByRefObject
 
     private void RunInjectors()
     {
-        using var injectorsRunner = new InjectorsRunner();
-        if (injectorsRunner.IsUpToDate)
-        {
-            return;
-        }
-
-        injectorsRunner.RunInjectors();
-        injectorsRunner.SaveToDisk();
+        InjectorsRunner.Run();
     }
 }
