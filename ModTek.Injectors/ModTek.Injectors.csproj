@@ -18,12 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HarmonyX">
+    <PackageReference Include="Mono.Cecil">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <Reference Include="Mono.Cecil">
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
 </Project>
