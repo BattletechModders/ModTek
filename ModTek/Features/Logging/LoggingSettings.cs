@@ -46,24 +46,9 @@ internal class LoggingSettings
     internal bool LogStackTracesOnExceptions = true;
 
     [JsonProperty]
-    internal const string IgnoreLoggerLogLevel_Description = "Each logger has a log level, and when logging below that level it won't be logged. That behavior can be ignored to a certain extend. Set to true for FYLS behavior, not recommended though.";
-    [JsonProperty]
-    internal bool IgnoreLoggerLogLevel;
-
-    [JsonProperty]
     internal const string DebugLogLevelSetters_Description = "Log who changed a log level changed.";
     [JsonProperty]
     internal bool DebugLogLevelSetters;
-
-    [JsonProperty]
-    internal const string SkipOriginalLoggers_Description = "If true, the original (HBS based) loggers and therefore their appenders and log files will be skipped.";
-    [JsonProperty]
-    internal bool SkipOriginalLoggers = true;
-
-    [JsonProperty]
-    internal const string IgnoreSkipForLoggers_Description = "Loggers defined here will never be skipped, meaning their log files will still be separately available.";
-    [JsonProperty(Required = Required.DisallowNull)]
-    internal string[] IgnoreSkipForLoggers = {};
 
     [JsonProperty]
     internal const string UnityConsoleAppenderEnabled_Description = "Append HBS log statements to the unity console. Disabled by default as it reduces performance.";

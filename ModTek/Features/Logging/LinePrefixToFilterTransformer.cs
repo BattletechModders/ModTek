@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using HBS.Logging;
-using NullableLogging;
+using ModTek.Public;
 
 namespace ModTek.Features.Logging;
 

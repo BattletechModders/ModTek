@@ -56,10 +56,11 @@ internal static class LogLevelExtension
         return (ELogLevels)intLevel;
     }
 
+    internal const int TraceLogLevel = 200;
     // log levels
     private enum ELogLevels
     {
-        Trace = 200, // (extended) trace steps and variables, usually slows down the game considerably
+        Trace = TraceLogLevel, // (extended) trace steps and variables, usually slows down the game considerably
         Debug = 210, // also used to trace steps and variables, but at a reduced rate to keep the logfiles readable and performance ok
         Log = 220, // minimal logs required to know what the user is doing in general, should have no impact on performance; user clicked x
         Warning = 230, // something wrong happened, but the mod will deal with it; a wrong config value, which has a safe fallback

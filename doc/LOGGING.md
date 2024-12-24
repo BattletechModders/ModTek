@@ -86,14 +86,11 @@ If a mod author wants to have a separate copy of all logs a logger produces, one
 ### Nullable loggers
 
 > **Note**
-> Nullable loggers is an advanced feature only necesary if one takes the time to use it
+> Nullable loggers are a convenience feature and mainly for advanced users who are faced with log spam and unreadable code.
 
-Another way of enhancing performance is using nullable loggers. This is only for advanced users requiring lots of performance while still wanting readable code.
+The best way of improving logging performance is not to log at all, or at least when requested.
+The simplest way is to use the `Is*Enabled` flags to avoid expensive operations when logging is disabled for a log level.
 
-In C# one can use Null-conditional operators to check for null and skip code from executing.
-This is very useful in logging, as to avoid logging in debug and trace levels, one usually checked the log levels of a logger before actually doing expensive calculations.
-
-Old style:
 ```csharp
 // init
 var logger = Logger.GetLogger("YourMod");
@@ -104,6 +101,9 @@ if (logger.IsDebugEnabled)
    logger.LogDebug(ExpensiveOperationToCreateAString());
 }
 ```
+
+In C# one can use Null-conditional operators to check for null and skip code from executing.
+When applied to logging, it makes for more readable code.
 
 With nullable loggers:
 ```csharp
@@ -124,7 +124,8 @@ if (nullableLogger != null)
 }
 ```
 
-There is a caveat, the game changes log levels after the mods have initialized, so in order to keep up there is a Harmony patch required and some boilerplate code.
-
-For the boilerplate code, see [NullableLogger.cs](../ModTek/NullableLogger.cs) and [Log.cs](../ModTek/Log.cs) as used by ModTek itself.
-ModTek comments out some parts in `NullableLogger.cs` and replaces them with internal calls, these would need to be reverted back.
+ModTek provides a utility class called [NullableLogger](../ModTek/Public/NullableLogger.cs) that makes it easy to setup
+nullable logging in your mod.
+An example of how to use `NullableLogger` can be found in [Log.cs](../ModTek/Log.cs).
+The `NullableLogger` keeps track of changes to log levels and adjusts itself according,
+as repeated `Is*Enabled` checks are slower than simple null checks.

@@ -19,26 +19,8 @@ internal static class LogImpl_LogAtLevel_Patch
 {
     public static bool Prepare()
     {
-        if (!ModTek.Enabled)
-        {
-            return false;
-        }
-
-        if (Settings == null)
-        {
-            Settings = ModTek.Config.Logging;
-            if (Settings.SkipOriginalLoggers)
-            {
-                IgnoreSkipForLoggers = Settings.IgnoreSkipForLoggers.ToHashSet();
-            }
-        }
-
-        return true;
+        return ModTek.Enabled;
     }
-
-    private static LoggingSettings Settings;
-    private static HashSet<string> IgnoreSkipForLoggers;
-    private static bool SkipOriginalLoggers => IgnoreSkipForLoggers != null;
 
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
@@ -62,7 +44,9 @@ internal static class LogImpl_LogAtLevel_Patch
     {
         try
         {
-            if (Settings.IgnoreLoggerLogLevel || __instance.IsEnabledFor(level))
+            // TODO __instance.IsEnabledFor is slow, speedup requires to keep track of all loggers and/or children
+            // NullableLogger can skip this check
+            if (__instance.IsEnabledFor(level))
             {
                 LoggingFeature.LogAtLevel(
                     ___name,
@@ -72,12 +56,7 @@ internal static class LogImpl_LogAtLevel_Patch
                     location
                 );
             }
-
-            var skipOriginal = SkipOriginalLoggers && !IgnoreSkipForLoggers.Contains(___name);
-            if (skipOriginal)
-            {
-                return false;
-            }
+            return false;
         }
         catch (Exception e)
         {

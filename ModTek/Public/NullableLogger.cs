@@ -1,46 +1,49 @@
-﻿// get the latest version of the nullable logger from MechEngineer
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using HBS.Logging;
+using JetBrains.Annotations;
 using ModTek.Features.Logging;
 
-namespace NullableLogging;
+namespace ModTek.Public;
 
 [HarmonyPatch]
-internal sealed class NullableLogger
+[PublicAPI]
+public sealed class NullableLogger
 {
     // instantiation
 
-    internal static NullableLogger GetLogger(string name, LogLevel? defaultLogLevel = null)
+    [PublicAPI]
+    public static NullableLogger GetLogger(string name, LogLevel? defaultLogLevel = null)
     {
-        lock (_loggers)
+        lock (s_loggers)
         {
-            if (!_loggers.TryGetValue(name, out var logger))
+            if (!s_loggers.TryGetValue(name, out var logger))
             {
                 logger = new(name, defaultLogLevel);
-                _loggers[name] = logger;
+                s_loggers[name] = logger;
             }
             return logger;
         }
     }
 
-    // useful constants
+    // useful "constants"
 
-    internal const LogLevel TraceLogLevel = (LogLevel)200;
+    [PublicAPI]
+    public static LogLevel TraceLogLevel => (LogLevel)LogLevelExtension.TraceLogLevel;
 
     // tracking
 
-    private static readonly SortedList<string, NullableLogger> _loggers = new();
+    private static readonly SortedList<string, NullableLogger> s_loggers = new();
 
     [HarmonyPatch(typeof(Logger.LogImpl), nameof(Logger.LogImpl.Level), MethodType.Setter)]
     [HarmonyPostfix]
     [HarmonyWrapSafe]
     private static void LogImpl_set_Level_Postfix()
     {
-        lock (_loggers)
+        lock (s_loggers)
         {
-            foreach (var modLogger in _loggers.Values)
+            foreach (var modLogger in s_loggers.Values)
             {
                 modLogger.RefreshLogLevel();
             }
@@ -49,10 +52,10 @@ internal sealed class NullableLogger
 
     // instantiation
 
-    internal Logger.LogImpl Log { get; }
+    private readonly Logger.LogImpl _logImpl;
     private NullableLogger(string name, LogLevel? defaultLogLevel)
     {
-        Log = (Logger.LogImpl)(
+        _logImpl = (Logger.LogImpl)(
             defaultLogLevel == null
                 ? Logger.GetLogger(name)
                 : Logger.GetLogger(name, defaultLogLevel.Value)
@@ -60,13 +63,14 @@ internal sealed class NullableLogger
         RefreshLogLevel();
     }
 
-    // log levels
+    // logging
 
-    internal ILevel? Trace { get; private set; }
-    internal ILevel? Debug { get; private set; }
-    internal ILevel? Info { get; private set; }
-    internal ILevel? Warning { get; private set; }
-    internal ILevel? Error { get; private set; }
+    [PublicAPI] public ILog Log => _logImpl;
+    [PublicAPI] public ILevel? Trace { get; private set; }
+    [PublicAPI] public ILevel? Debug { get; private set; }
+    [PublicAPI] public ILevel? Info { get; private set; }
+    [PublicAPI] public ILevel? Warning { get; private set; }
+    [PublicAPI] public ILevel? Error { get; private set; }
 
     private void RefreshLogLevel()
     {
@@ -80,50 +84,48 @@ internal sealed class NullableLogger
 
     private ILevel? SyncLevelLogger(ref bool lowerLevelEnabled, LogLevel logLevel, ILevel? logger)
     {
-        if (lowerLevelEnabled || Log.IsEnabledFor(logLevel))
+        if (lowerLevelEnabled || _logImpl.IsEnabledFor(logLevel))
         {
             lowerLevelEnabled = true;
-            return logger ?? new LevelLogger(logLevel, Log);
+            return logger ?? new LevelLogger(logLevel, _logImpl.Name);
         }
         return null;
     }
 
     // logging
 
-    internal interface ILevel
+    [PublicAPI]
+    public interface ILevel
     {
-        void Log(Exception e);
-        void Log(string message);
-        void Log(string message, Exception e);
+        [PublicAPI] void Log(Exception e);
+        [PublicAPI] void Log(string message);
+        [PublicAPI] void Log(string message, Exception e);
     }
 
     private sealed class LevelLogger : ILevel
     {
         private readonly LogLevel _level;
-        private readonly Logger.LogImpl _log;
+        private readonly string _loggerName;
 
-        internal LevelLogger(LogLevel level, Logger.LogImpl log)
+        internal LevelLogger(LogLevel level, string loggerName)
         {
             _level = level;
-            _log = log;
+            _loggerName = loggerName;
         }
 
         public void Log(Exception e)
         {
-            // _log.LogAtLevel(_level, null, e);
-            LoggingFeature.LogAtLevel(_log.Name, _level, null, e, null);
+            LoggingFeature.LogAtLevel(_loggerName, _level, null, e, null);
         }
 
         public void Log(string message)
         {
-            // _log.LogAtLevel(_level, message);
-            LoggingFeature.LogAtLevel(_log.Name, _level, message, null, null);
+            LoggingFeature.LogAtLevel(_loggerName, _level, message, null, null);
         }
 
         public void Log(string message, Exception e)
         {
-            // _log.LogAtLevel(_level, message, e);
-            LoggingFeature.LogAtLevel(_log.Name, _level, message, e, null);
+            LoggingFeature.LogAtLevel(_loggerName, _level, message, e, null);
         }
     }
 }

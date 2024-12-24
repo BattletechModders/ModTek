@@ -15,6 +15,8 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
 For modders:
 - (Experimental!) Added ability to run injectors as part of a build task outside of BT. API will most likely change.
 - Some libraries were renamed, as always don't just copy-paste, clean-copy-paste!
+- Moved the NullableLogger to the `ModTek.Public` namespace. The NullableLogger allows readable code when skipping
+  trace and debug logging, but otherwise it is equivalent to the HBS logger. Do not use if you don't need it.
 
 ## 4.2 - CptMoore
 
