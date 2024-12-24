@@ -8,6 +8,12 @@
     <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ModTekLibDir)" />
   </Target>
 
+  <Target Name="NetStandardFetch" BeforeTargets="ResolveReferences" Condition="!Exists('$(ModTekLibDir)\netstandard.dll')">
+    <DownloadFile
+      SourceUrl="https://github.com/BattletechModders/MonoLibs/raw/refs/heads/main/unityjit/Facades/netstandard.dll"
+      DestinationFolder="$(ModTekLibDir)\" />
+  </Target>
+
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

@@ -55,7 +55,19 @@ internal class Runner : IDisposable
     private void SearchInjectorEntrypointAndInvoke(string injectorPath)
     {
         Logger.Main.Log($"\t{Path.GetFileName(injectorPath)}");
-        var injector = Assembly.LoadFile(injectorPath);
+        Assembly injector;
+        try
+        {
+            injector = Assembly.LoadFile(injectorPath);
+        }
+        catch (Exception ex)
+        {
+            // TODO don't catch once injector netstandard2.0 requirement is here (ModTek >=5)
+            // TODO check if we are in .NET world instead of .NET Framework world
+            // TODO check if that was the issue
+            Logger.Main.Log("\t\tInjector assembly could not be loaded (not netstandard2.0?)" + ex);
+            return;
+        }
         foreach (var injectMethod in injector
                      .GetTypes()
                      .Where(t => t.Name == "Injector")
