@@ -28,11 +28,8 @@
 
   <ItemGroup>
     <PackageReference Include="HarmonyX" />
-    <!-- there seems to be an issue between Mono Cecil 0.11.5 in.NET Framework (ModTek) and .NET Standard (RTPerfFix) 0.11.4 (version pinned by HarmonyX) -->
-    <!-- Exception: Object of type 'ModTek.Injectors.AssemblyCache' cannot be converted to type 'Mono.Cecil.IAssemblyResolver'. -->
-    <!-- Mono Cecil 0.11.6 in .NET Framework (ModTek) and 0.11.4 in .NET Standard (RTPerfFix) seems to be ok -->
-    <!-- remove this once HarmonyX is updated to use a newer Mono.Cecil version -->
-    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <!-- TODO check if can be removed, see Directory.Packages.props -->
+    <PackageReference Include="Mono.Cecil" />
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>
