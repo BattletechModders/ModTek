@@ -62,12 +62,6 @@ internal unsafe class FastBuffer
         FormattingHelpers.WriteDigits(position, (uint)value, digits);
     }
 
-    internal void Append(decimal value)
-    {
-        // TODO optimize
-        Append(value.ToString(CultureInfo.InvariantCulture));
-    }
-
     internal void Append(string value)
     {
         var processingCount = value.Length;
@@ -170,14 +164,24 @@ internal unsafe class FastBuffer
 
     internal void Append(DateTime value)
     {
+        AppendTime(value.Hour, value.Minute, value.Second, value.Ticks);
+    }
+
+    internal void Append(TimeSpan value)
+    {
+        AppendTime(value.Hours, value.Minutes, value.Seconds, value.Ticks);
+    }
+
+    private void AppendTime(int hours, int minutes, int seconds, long ticks)
+    {
         var position = GetPointerAndIncrementLength(17);
-        FormattingHelpers.WriteDigits(position, value.Hour, 2);
+        FormattingHelpers.WriteDigits(position, hours, 2);
         position[2] = (byte)':';
-        FormattingHelpers.WriteDigits(position + 3, value.Minute, 2);
+        FormattingHelpers.WriteDigits(position + 3, minutes, 2);
         position[5] = (byte)':';
-        FormattingHelpers.WriteDigits(position + 6, value.Second, 2);
+        FormattingHelpers.WriteDigits(position + 6, seconds, 2);
         position[8] = (byte)'.';
-        FormattingHelpers.WriteDigits(position + 9, value.Ticks, 7);
+        FormattingHelpers.WriteDigits(position + 9, ticks, 7);
         position[16] = (byte)' ';
     }
 

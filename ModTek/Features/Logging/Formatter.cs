@@ -42,9 +42,7 @@ internal class Formatter
         if (_startupTimeEnabled)
         {
             var ts = messageDto.StartupTime();
-            var secondsWithFraction = ts.Ticks * 1E-07m;
-            s_buffer.Append(secondsWithFraction);
-            s_buffer.Append((byte)' ');
+            s_buffer.Append(ts);
         }
 
         if (messageDto.ThreadId != s_unityMainThreadId)
