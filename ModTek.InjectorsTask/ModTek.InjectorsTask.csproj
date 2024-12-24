@@ -13,7 +13,6 @@
   </Target>
   
   <ItemGroup>
-    <!-- TOOD transitive dependency to Common gets included even if Private=false -->
     <ProjectReference Include="..\ModTek.Injectors\ModTek.Injectors.csproj" Private="false" ExcludeAssets="all" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ModTek.Common.Globals;
 
-internal class Paths
+internal static class Paths
 {
     // Common paths
 

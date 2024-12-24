@@ -5,7 +5,8 @@
     DependsOnTargets="ResolveAssemblyReferences"
     BeforeTargets="PublicizeAssemblies;ResolveReferences"
   >
-    <ModTekInjectorsRunner BattleTechGameDir="$(BattleTechGameDir)" ReferencePaths="@(ReferencePath)">
+    <!-- TODO reference path thing does not work, first build still fails (rider opt?) -->
+    <ModTekInjectorsRunner ReferencePaths="@(ReferencePath)">
       <Output TaskParameter="ReferencePathsToDelete" ItemName="_ModTekReferencePathsToDelete" />
       <Output TaskParameter="ReferencePathsToAdd" ItemName="_ModTekReferencePathsToAdd" />
     </ModTekInjectorsRunner>
