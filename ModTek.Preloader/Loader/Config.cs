@@ -29,7 +29,7 @@ internal class Config
                 "Harmony12XLogChannelFilter_Description": "{{Harmony12XLogChannelFilter_Description}}",
                 "Harmony12XLogChannelFilter": {{Harmony12XLogChannelFilter}},
                 "Harmony12XFakeAssemblyLocationEnabled_Description": "{{Harmony12XFakeAssemblyLocationEnabled_Description}}",
-                "Harmony12XFakeAssemblyLocationEnabled": {{Harmony12XFakeAssemblyLocationEnabled}}
+                "Harmony12XFakeAssemblyLocationEnabled": {{Harmony12XFakeAssemblyLocationEnabled.ToString().ToLowerInvariant()}}
               }
               """
         );
