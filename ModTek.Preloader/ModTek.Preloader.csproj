@@ -28,8 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="HarmonyX" />
-    <!-- TODO check if can be removed, see Directory.Packages.props -->
-    <PackageReference Include="Mono.Cecil" />
     <Reference Include="Newtonsoft.Json">
       <Private>False</Private>
     </Reference>

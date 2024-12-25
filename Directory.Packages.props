@@ -6,13 +6,7 @@
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="17.12.6" />
     <PackageVersion Include="Krafs.Publicizer" Version="2.3.0" />
     <PackageVersion Include="GitVersion.MsBuild" Version="5.12.0" />
-    <!-- remove Mono.Cecil reference in ModTek.Preloader.csproj if Mono.Cecil gets updated transivitely via HarmonyX -->
     <PackageVersion Include="HarmonyX" Version="2.13.0" />
-    <!-- there seems to be an issue between Mono Cecil 0.11.5 in.NET Framework (ModTek) and .NET Standard (RTPerfFix) 0.11.4 (version pinned by HarmonyX) -->
-    <!-- Exception: Object of type 'ModTek.Injectors.AssemblyCache' cannot be converted to type 'Mono.Cecil.IAssemblyResolver'. -->
-    <!-- Mono Cecil 0.11.6 in .NET Framework (ModTek) and 0.11.4 in .NET Standard (RTPerfFix) seems to be ok -->
-    <!-- remove this once HarmonyX is updated to use a newer Mono.Cecil version (also remove PackageReference in Preloader csproj) -->
-    <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="PolySharp" Version="1.15.0" />
   </ItemGroup>
 </Project>

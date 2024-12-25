@@ -18,9 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mono.Cecil">
+    <!-- we only care about Mono.Cecil but HarmonyX pins the version -->
+    <PackageReference Include="HarmonyX">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
+    <Reference Include="Mono.Cecil">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 </Project>

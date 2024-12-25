@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using ModTek.Injectors;
 using ModTek.Preloader.Harmony12X;
 
 namespace ModTek.Preloader.Loader;

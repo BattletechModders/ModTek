@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using ModTek.Injectors;
@@ -28,6 +30,30 @@ public class ModTekInjectorsRunner : Task
 
     public override bool Execute()
     {
+        try
+        {
+            ExecuteInternal();
+        }
+        catch (Exception ex)
+        {
+            Log.LogWarning($"{Environment.OSVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
+            Log.LogErrorFromException(ex, true, true, null);
+
+            var baseLocation = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "..", "..", "..", ".."));
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .OrderBy(assembly => assembly.GetName().Name)
+                .Where(assembly => Path.GetFullPath(assembly.Location).StartsWith(baseLocation));
+            foreach (var assembly in assemblies)
+            {
+                var targetFramework = assembly.GetCustomAttribute(typeof(TargetFrameworkAttribute)) as TargetFrameworkAttribute;
+                Log.LogWarning($"{targetFramework?.FrameworkDisplayName ?? "??"} {assembly.GetName().Name} {assembly.GetName().Version} {assembly.Location}");
+            }
+        }
+        return !Log.HasLoggedErrors;
+    }
+
+    private void ExecuteInternal()
+    {
         var executingAssembly = Assembly.GetExecutingAssembly();
         var applicationDirectory = Path.GetDirectoryName(executingAssembly.Location)!;
 
@@ -35,19 +61,29 @@ public class ModTekInjectorsRunner : Task
         var currentDomain = AppDomain.CurrentDomain;
         currentDomain.AssemblyResolve += (_, args) =>
         {
+            var requestingName = args.RequestingAssembly.FullName;
             var resolvingName = new AssemblyName(args.Name);
+
+            // sometimes assemblies loaded without a public token can't resolve against requests that require a public token
+            // so lets compare only the name
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(a => resolvingName.Name == a.GetName().Name))
+            {
+                Log.LogMessage($"Returning already loaded assembly {assembly.Location} for {requestingName}");
+                return assembly;
+            }
+
+            // if we can provide the missing dll, return it
             var path = Path.Combine(applicationDirectory, resolvingName.Name + ".dll");
-            var assembly = Assembly.LoadFrom(path);
-            Log.LogMessage(
-                $"""
-                Requested {args.Name}
-                and loaded assembly {assembly.FullName}
-                from {path}
-                at the behest of {args.RequestingAssembly.FullName}
-                {Environment.StackTrace}
-                """
-            );
-            return assembly;
+            if (File.Exists(path))
+            {
+                Log.LogMessage($"Loading assembly {path} for {requestingName}");
+                var assembly = Assembly.LoadFrom(path);
+                return assembly;
+            }
+
+            // not good
+            Log.LogWarning($"Could not find assembly {resolvingName.Name} for {requestingName}");
+            return null;
         };
 
         Runner.Run();
@@ -70,6 +106,5 @@ public class ModTekInjectorsRunner : Task
         }
         ReferencePathsToDelete = referencePathsToDelete.ToArray();
         ReferencePathsToAdd = referencePathsToAdd.ToArray();
-        return !Log.HasLoggedErrors;
     }
 }
