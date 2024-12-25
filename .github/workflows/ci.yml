@@ -9,6 +9,7 @@ jobs:
     uses: ./.github/workflows/mod-builder.yml
     with:
       checkout-directory: 'ModTek'
+      modtek-download-url: '' # don't download ModTek when ModTek is being built!
       build-script: |
         build_modtek() {
           btdir="$1"
