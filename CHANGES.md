@@ -13,7 +13,14 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
 ## 4.3 - CptMoore
 
 For modders:
-- (Experimental!) Added ability to run injectors as part of a build task outside of BT. API will most likely change.
+- (Experimental!) Added ability to run injectors as part of a build task outside of BT.
+  - API might change in the future.
+  - Requires injectors to target netstandard2.0 or it mostly won't work.
+    - In a future ModTek version, non-netstandard Injectors will be unsupported even when running under BT.
+  - See [RogueTechPerfFixes](https://github.com/BattletechModders/RogueTechPerfFixes) as an example.
+    - Consists of an injector that adds fields to the base-game dlls, which the main project requires for compilation.
+    - CI/CD can build both without having the ability to run a game.
+  - TODO some nicer documentation would be nice.
 - Some libraries were renamed, as always don't just copy-paste, clean-copy-paste!
 - Moved the NullableLogger to the `ModTek.Public` namespace. The NullableLogger allows readable code when skipping
   trace and debug logging, but otherwise it is equivalent to the HBS logger. Do not use if you don't need it.
