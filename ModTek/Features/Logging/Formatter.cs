@@ -27,7 +27,7 @@ internal class Formatter
     internal int GetFormattedLogLine(ref MTLoggerMessageDto messageDto, out byte[] bytes)
     {
         s_buffer ??= new FastBuffer();
-        s_buffer.Setup();
+        s_buffer.ClearAndPin();
 
         if (_absoluteTimeEnabled)
         {
@@ -81,6 +81,8 @@ internal class Formatter
         }
 
         s_buffer.Append(s_environmentNewline);
+
+        s_buffer.Unpin();
 
         return s_buffer.GetBytes(out bytes);
     }

@@ -28,7 +28,7 @@ internal unsafe class FastBuffer
 
     private GCHandle _handle;
     private byte* _bufferPtr;
-    internal void Setup()
+    internal void ClearAndPin()
     {
         _length = 0;
 
@@ -38,6 +38,14 @@ internal unsafe class FastBuffer
         }
         _handle = GCHandle.Alloc(_buffer, GCHandleType.Pinned);
         _bufferPtr = (byte*)_handle.AddrOfPinnedObject();
+    }
+
+    internal void Unpin()
+    {
+        if (_handle.IsAllocated)
+        {
+            _handle.Free();
+        }
     }
 
     internal void Append(byte value)
