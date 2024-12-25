@@ -1,29 +1,20 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using ModTek.Common.Globals;
 using ModTek.Common.Utils;
-using Newtonsoft.Json;
 
 namespace ModTek.Preloader.Loader;
 
 internal class Config
 {
-#pragma warning disable CS0649
-    [JsonProperty]
-    internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{FileUtils.GetRelativePath(Paths.PreloaderConfigFile)}`.";
-
-    [JsonProperty]
+    internal readonly string _Description = $"When changing any of the listed settings, copy the relevant parts into `{FileUtils.GetRelativePath(Paths.PreloaderConfigFile)}`. This is not a normal JSON format, each key-value pairs have to be on separate lines.";
     internal readonly string Harmony12XLogChannelFilter_Description
         = $"The channels to log into `{FileUtils.GetRelativePath(Paths.HarmonyLogFile)}`: None=0 Info=2 IL=4 Warn=8 Error=16 Debug=32 All=62";
-    [JsonProperty]
     internal int Harmony12XLogChannelFilter = 26;
-
-    [JsonProperty]
     internal readonly string Harmony12XFakeAssemblyLocationEnabled_Description =
         "Make Assembly.Location return the path of the original non-shimmed assembly and not the path to the shimmed assembly. Workaround to some mods expecting their assembly to be in their respective mod directory.";
-    [JsonProperty]
     internal bool Harmony12XFakeAssemblyLocationEnabled = true;
-#pragma warning restore CS0649
 
     internal static Config Instance = new();
 
@@ -32,7 +23,15 @@ internal class Config
         FileUtils.CreateDirectoryForFile(Paths.PreloaderConfigDefaultsFile);
         File.WriteAllText(
             Paths.PreloaderConfigDefaultsFile,
-            JsonConvert.SerializeObject(this, Formatting.Indented)
+            $$"""
+              {
+                "_Description": "{{_Description}}",
+                "Harmony12XLogChannelFilter_Description": "{{Harmony12XLogChannelFilter_Description}}",
+                "Harmony12XLogChannelFilter": {{Harmony12XLogChannelFilter}},
+                "Harmony12XFakeAssemblyLocationEnabled_Description": "{{Harmony12XFakeAssemblyLocationEnabled_Description}}",
+                "Harmony12XFakeAssemblyLocationEnabled": {{Harmony12XFakeAssemblyLocationEnabled}}
+              }
+              """
         );
 
         if (File.Exists(Paths.PreloaderConfigFile))
@@ -40,15 +39,22 @@ internal class Config
             try
             {
                 var text = File.ReadAllText(Paths.PreloaderConfigFile);
-                JsonConvert.PopulateObject(
-                    text,
-                    this,
-                    new JsonSerializerSettings
+                // avoid preloading a JSON library, so let's do some Regex instead
+                var regex = new Regex("""^\s*"([^"]+?)"\s*:\s*(.+?)\s*,?\s*$""");
+                foreach (Match match in regex.Matches(text))
+                {
+                    var key = match.Groups[0].Value;
+                    var value = match.Groups[1].Value;
+                    switch (key)
                     {
-                        ObjectCreationHandling = ObjectCreationHandling.Replace,
-                        NullValueHandling = NullValueHandling.Ignore,
+                        case "Harmony12XLogChannelFilter":
+                            Harmony12XLogChannelFilter = int.Parse(value);
+                            break;
+                        case "Harmony12XFakeAssemblyLocationEnabled":
+                            Harmony12XFakeAssemblyLocationEnabled = bool.Parse(value);
+                            break;
                     }
-                );
+                }
             }
             catch (Exception e)
             {

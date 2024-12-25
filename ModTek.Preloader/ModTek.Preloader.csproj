@@ -28,9 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="HarmonyX" />
-    <Reference Include="Newtonsoft.Json">
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
