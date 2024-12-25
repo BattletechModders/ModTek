@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="ModTek.InjectorsTask.props" />
+  <Import Project="ModTek.InjectorsTask.targets" />
+</Project>

@@ -1,4 +1,5 @@
 <Project>
+  <!-- DO NOT IMPORT DIRECTLY, import ModTekInjectorsTask.props -->
   <!-- PublicizeAssemblies is from Krafs.Publicizer -->
   <Target
     Name="ModTekInjectorsRunner"
