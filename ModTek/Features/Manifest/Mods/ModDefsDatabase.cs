@@ -124,6 +124,7 @@ internal static class ModDefsDatabase
             yield break;
         }
 
+        LoadOrder.SortPaths(modJsons);
         CreateModDefs(modJsons);
         SetupModLoadOrderAndRemoveUnloadableMods();
 
@@ -218,14 +219,14 @@ internal static class ModDefsDatabase
                 do
                 {
                     ++counter;
-                    tmpname = modDef.Name + "{dublicate " + counter + "}";
+                    tmpname = modDef.Name + "{duplicate " + counter + "}";
                 }
                 while (allModDefs.ContainsKey(tmpname));
 
                 modDef.Name = tmpname;
                 modDef.Enabled = false;
                 modDef.LoadFail = true;
-                modDef.FailReason = "dublicate";
+                modDef.FailReason = "duplicate";
                 allModDefs.Add(modDef.Name, modDef);
                 continue;
             }
@@ -259,7 +260,7 @@ internal static class ModDefsDatabase
     private static void SetupModLoadOrderAndRemoveUnloadableMods()
     {
         // get a load order and remove mods that won't be loaded
-        ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded, LoadOrder.FromFile(FilePaths.LoadOrderPath));
+        ModLoadOrder = LoadOrder.CreateLoadOrder(ModDefs, out var notLoaded);
         foreach (var mod in notLoaded)
         {
             var reason = "Warning: Will not load " + mod.QuotedName;

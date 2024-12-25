@@ -24,6 +24,9 @@ For modders:
 - Some libraries were renamed, as always don't just copy-paste, clean-copy-paste!
 - Moved the NullableLogger to the `ModTek.Public` namespace. The NullableLogger allows readable code when skipping
   trace and debug logging, but otherwise it is equivalent to the HBS logger. Do not use if you don't need it.
+- The load order is now deterministic:
+  - The load order ignores load_order.json during sorting.
+  - It is now based 1. dependency instructions 2. path depth 3. path name
 
 ## 4.2 - CptMoore
 

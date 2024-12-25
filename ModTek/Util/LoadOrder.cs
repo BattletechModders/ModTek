@@ -8,7 +8,34 @@ namespace ModTek.Util;
 
 internal static class LoadOrder
 {
-    public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> registeredMods, out List<ModDefEx> notLoaded, List<string> cachedOrder)
+    // sort based on most shallow and then mod path
+    // makes the duplicate detection behavior deterministic
+    // makes the load order in general deterministic
+    //
+    // Paths:
+    // Mods/ModB (but mod.json says ModA)
+    // Mods/MyMods/ModA
+    // Mods/ModA
+    // =>
+    // Mods/ModA
+    // Mods/ModB (will be later filtered as duplicate)
+    // Mods/MyMods/ModA (will be later filtered as duplicate)
+    internal static void SortPaths(string[] modJsonPaths)
+    {
+        Array.Sort(modJsonPaths, (a, b) =>
+        {
+            var aCount = a.Count(c => c == Path.DirectorySeparatorChar);
+            var bCount = b.Count(c => c == Path.DirectorySeparatorChar);
+            var cmp = aCount - bCount;
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+            return string.Compare(a, b, StringComparison.Ordinal);
+        });
+    }
+
+    public static List<string> CreateLoadOrder(Dictionary<string, ModDefEx> registeredMods, out List<ModDefEx> notLoaded)
     {
         var candidates = new Dictionary<string, ModDefEx>(registeredMods);
         var loadOrder = new List<string>();
@@ -28,18 +55,6 @@ internal static class LoadOrder
         }
 
         FillInOptionalDependencies(candidates);
-
-        // load the order specified in the file
-        foreach (var modName in cachedOrder)
-        {
-            if (!candidates.ContainsKey(modName) || candidates[modName].CalcMissingDependsOn(loadOrder).Count > 0)
-            {
-                continue;
-            }
-
-            candidates.Remove(modName);
-            loadOrder.Add(modName);
-        }
 
         // everything that is left in the candidates list hasn't been loaded before
         notLoaded = new List<ModDefEx>();
@@ -86,30 +101,6 @@ internal static class LoadOrder
         }
 
         File.WriteAllText(path, JsonConvert.SerializeObject(order, Formatting.Indented));
-    }
-
-    public static List<string> FromFile(string path)
-    {
-        List<string> order;
-
-        if (File.Exists(path))
-        {
-            try
-            {
-                order = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
-                Log.Main.Info?.Log("Loaded cached load order.");
-                return order;
-            }
-            catch (Exception e)
-            {
-                Log.Main.Info?.Log("Loading cached load order failed, rebuilding it.", e);
-            }
-        }
-
-        // create a new one if it doesn't exist or couldn't be added
-        Log.Main.Info?.Log("Building new load order!");
-        order = new List<string>();
-        return order;
     }
 
     private static void FillInOptionalDependencies(Dictionary<string, ModDefEx> modDefs)
