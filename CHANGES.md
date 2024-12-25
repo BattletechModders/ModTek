@@ -10,7 +10,7 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
-## Upcoming - CptMoore
+## 4.3 - CptMoore
 
 For modders:
 - (Experimental!) Added ability to run injectors as part of a build task outside of BT. API will most likely change.
