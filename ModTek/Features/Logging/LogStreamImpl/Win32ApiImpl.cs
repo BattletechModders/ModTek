@@ -71,16 +71,7 @@ internal class Win32ApiImpl : ILogStream
 
     private long AcquirePosition(int count)
     {
-        while (true)
-        {
-            var spinWait = new SpinWait();
-            var position = Volatile.Read(ref _position);
-            if (Interlocked.CompareExchange(ref _position, position + count, position) == position)
-            {
-                return position;
-            }
-            spinWait.SpinOnce();
-        }
+        return Interlocked.Add(ref _position, count) - count;
     }
 
     private NativeOverlapped PrepareOverlap(long position)
