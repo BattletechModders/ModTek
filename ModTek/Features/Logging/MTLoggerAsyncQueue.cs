@@ -67,24 +67,31 @@ internal class MTLoggerAsyncQueue
 
     private void LoggingLoop()
     {
-        while (true)
+        try
         {
-            ref var message = ref _queue.AcquireCommittedOrWait();
+            while (true)
+            {
+                ref var message = ref _queue.AcquireCommittedOrWait();
 
-            s_loggingStopwatch.Start();
-            try
-            {
-                _processor.Process(ref message);
+                s_loggingStopwatch.Start();
+                try
+                {
+                    _processor.Process(ref message);
+                }
+                catch (Exception e)
+                {
+                    LoggingFeature.WriteExceptionToFatalLog(e);
+                }
+                finally
+                {
+                    message.Reset();
+                    s_loggingStopwatch.Stop();
+                }
             }
-            catch (Exception e)
-            {
-                LoggingFeature.WriteExceptionToFatalLog(e);
-            }
-            finally
-            {
-                message.Reset();
-                s_loggingStopwatch.Stop();
-            }
+        }
+        catch (LightWeightBlockingQueue.ShutdownException)
+        {
+            // ignored
         }
     }
 
