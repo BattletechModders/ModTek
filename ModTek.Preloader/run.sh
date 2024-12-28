@@ -79,6 +79,10 @@ case ${os_type} in
       cd "$BASEDIR" || exit 99
       ln -fs Data BattleTech_Data
     )
+    # why is this suddenly necessary? ask the doorstop devs
+    additional_path="BattleTech.app/Contents/Resources"
+    DOORSTOP_TARGET_ASSEMBLY="$additional_path/$DOORSTOP_TARGET_ASSEMBLY"
+    DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE="$additional_path/$DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE"
 
     export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES:-}"
     DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES%:}"
