@@ -32,12 +32,14 @@ fi
 
 # get doorstop settings for linux/mac from the ini (why does doorstop not do this for us?)
 doorstop_config() { grep "^${1}=" "${BASEDIR}/doorstop_config.ini" | cut -d= -f2- ; }
-doorstop_bool() { sed s@true@1@ | sed s@false@0@ ; }
-export DOORSTOP_MONO_DEBUG_ENABLED="$(doorstop_config debug_enabled | doorstop_bool)"
+doorstop_convert_bool() { sed s@true@1@ | sed s@false@0@ ; }
+doorstop_convert_path() { tr '\\' '/' ; }
+export DOORSTOP_MONO_DEBUG_ENABLED="$(doorstop_config debug_enabled | doorstop_convert_bool)"
 export DOORSTOP_MONO_DEBUG_ADDRESS="$(doorstop_config debug_address)"
-export DOORSTOP_MONO_DEBUG_SUSPEND="$(doorstop_config debug_suspend | doorstop_bool)"
-export DOORSTOP_ENABLED="$(doorstop_config enabled | doorstop_bool)"
-export DOORSTOP_TARGET_ASSEMBLY="$(doorstop_config target_assembly | tr '\\' '/' )"
+export DOORSTOP_MONO_DEBUG_SUSPEND="$(doorstop_config debug_suspend | doorstop_convert_bool)"
+export DOORSTOP_ENABLED="$(doorstop_config enabled | doorstop_convert_bool)"
+export DOORSTOP_TARGET_ASSEMBLY="$(doorstop_config target_assembly | doorstop_convert_path)"
+export DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE="$(doorstop_config dll_search_path_override | doorstop_convert_path)"
 
 # check if the first parameter is the executable, e.g. as forwarded through Steam
 if [ -n "${1:-}" ] && [ -x "$1" ]

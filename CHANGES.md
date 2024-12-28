@@ -27,6 +27,7 @@ For modders:
 - The load order is now deterministic:
   - The load order ignores load_order.json during sorting.
   - It is now based 1. dependency instructions 2. path depth 3. path name
+- Updated UnityDoorstop to 4.3.0
 
 ## 4.2 - CptMoore
 
