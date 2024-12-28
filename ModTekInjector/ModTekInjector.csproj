@@ -15,4 +15,9 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- the injector requires the ModTek.dll to be built and accessible -->
+    <ProjectReference Include="..\ModTek\ModTek.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 </Project>

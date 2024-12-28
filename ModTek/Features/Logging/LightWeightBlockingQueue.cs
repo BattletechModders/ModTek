@@ -58,11 +58,17 @@ internal class LightWeightBlockingQueue
                     {
                         return ref item;
                     }
+                    else
+                    {
+                        // this branch hits 0 times, since the log writer runs in a single-thread
+                        // still made the whole thing thread safe, to allow for future multithreaded log writing
+                    }
                 }
                 else
                 {
-                    // this branch happens 292 times for 157187 dispatches (0.19%)
-                    // for now not worth it to optimize
+                    // this branch happened 292 times for 157187 dispatches (0.19%)
+                    // for now not worth it to optimize, especially since this is only on the log writer thread
+                    // also only happens if the queue is empty and just was added to, so just a latency issue
                 }
 
                 spinWait.Reset(); // fast retry if something was found earlier
@@ -97,6 +103,15 @@ internal class LightWeightBlockingQueue
                     {
                         return ref item;
                     }
+                    else
+                    {
+                        // this branch hits about 0 times, since it is overwhelmingly single-threaded (main thread)
+                    }
+                }
+                else
+                {
+                    // this branch hits 0 times if the queue never gets filled
+                    // if it is full, any further optimizations would just wait for the slow I/O writer thread anyway
                 }
             }
             

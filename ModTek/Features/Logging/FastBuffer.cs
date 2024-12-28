@@ -89,7 +89,7 @@ internal unsafe class FastBuffer
             // loop unrolling similar to Buffer.memcpy1
             // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
 
-            // 8 is a sweat spot, for large amounts of data 4 is slower, 16 is slower
+            // 8 is a sweat spot, for large amounts of data: 4 is slower, 16 is slower
             {
                 const int IterSize = 8;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
