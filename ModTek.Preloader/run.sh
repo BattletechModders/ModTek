@@ -67,11 +67,20 @@ case ${os_type} in
     LD_PRELOAD="${LD_PRELOAD%:}"
   ;;
   Darwin*)
+    # why is this suddenly necessary? see https://github.com/NeighTools/UnityDoorstop/issues/67
+    # we have: BASEDIR="/..../BATTLETECH/BattleTech.app/Contents/Resources"
+    # we want: additional_path="BattleTech.app/Contents/Resources"
+    contents_path="$(dirname "$BASEDIR")"
+    app_dir="$(basename "$(dirname "$contents_path")")"
+    additional_path="$app_dir/Contents/Resources"
+    DOORSTOP_TARGET_ASSEMBLY="$additional_path/$DOORSTOP_TARGET_ASSEMBLY"
+    DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE="$additional_path/$DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE"
+
     # guess executable path if launched without specifying an executable
     if [ -z "${executable_path:-}" ]
     then
       # BASEDIR should be the Resources directory
-      executable_path="$(dirname "$BASEDIR")/MacOS/${executable_name}"
+      executable_path="$contents_path/MacOS/${executable_name}"
     fi
     
     # fix mods wanting BattleTech_Data
@@ -79,10 +88,6 @@ case ${os_type} in
       cd "$BASEDIR" || exit 99
       ln -fs Data BattleTech_Data
     )
-    # why is this suddenly necessary? ask the doorstop devs
-    additional_path="BattleTech.app/Contents/Resources"
-    DOORSTOP_TARGET_ASSEMBLY="$additional_path/$DOORSTOP_TARGET_ASSEMBLY"
-    DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE="$additional_path/$DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE"
 
     export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES:-}"
     DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES%:}"
