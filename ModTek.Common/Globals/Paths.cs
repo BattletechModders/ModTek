@@ -7,10 +7,20 @@ internal static class Paths
 {
     // Common paths
 
-    // BATTLETECH/Mods/ModTek/lib/ModTek.Common.dll -> BATTLETECH
+    // Linux:
+    // BATTLETECH/Mods/ModTek/lib/ModTek.Common.dll
+    // BATTLETECH/BattleTech_Data/Managed
+    // Mac:
+    // BATTLETECH/BattleTech.app/Contents/Resources/Mods/ModTek/lib/ModTek.Common.dll
+    // BATTLETECH/BattleTech.app/Contents/Resources/Data/Managed
+    //  run.sh on Mac should create a symlink from BattleTech_Data -> Data
+    // Windows:
+    // BATTLETECH\Mods\ModTek\lib\ModTek.Common.dll
+    // BATTLETECH\BattleTech_Data\Managed
     internal static readonly string BaseDirectory = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "..", "..", ".."));
     // Mac has Data, but we have a symlink from BattleTech_Data to Data anyway
-    internal static readonly string ManagedDirectory = Path.Combine(BaseDirectory, "BattleTech_Data", "Managed");
+    internal static readonly string ManagedDirectory = Path.Combine(BaseDirectory, IsMac ? "Data" : "BattleTech_Data", "Managed");
+    private static bool IsMac => File.Exists(Path.Combine(BaseDirectory, "Data", "Managed", "Assembly-CSharp.dll"));
 
     internal static readonly string ModsDirectory = Path.Combine(BaseDirectory, "Mods");
     internal static readonly string ModTekDirectory = Path.Combine(ModsDirectory, "ModTek");
