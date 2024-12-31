@@ -99,9 +99,7 @@ Steps to get a working debugger setup:
 1. in `BATTLETECH/doorstop_config.ini` change `debug_enabled=false` to `debug_enabled=true`
 2. start the game now or just at least once to let all dlls be created or updated that you will let dnSpy(Ex) open
 3. download [dnSpy(Ex)](https://github.com/dnSpyEx/dnSpy) and extract it to its own folder somewhere
-4. start dnSpy(Ex) and add all dlls from `Mods/.modtek/AssembliesShimmed`, `Mods/.modtek/AssembliesInjected`, `BATTLETECH/BattleTech_Data/Managed` and `Mods/*/*.dll` to its project window.
-   1. Unfortunately that will contain a lot of duplicates, you need to make sure to select the correct assembly for adding a breakpoint
-   2. TODO add a way to import the current list of dlls (as seen by ModTek) to dnSpy
+4. start dnSpy(Ex), remove all dlls, drag and drop the `BATTLETECH/Mods/.modtek/AssembliesLoaded/` folder to load all dlls
 5. find the spot you want to debug, place a breakpoint
 6. connect dnSpy(Ex) to BattleTech by pressing `Start` and use `Unity (connect)` using the default port
 your breakpoint should be hit as long as no mods patch the method with your breakpoint (see `HarmonyFileLog.log`)
