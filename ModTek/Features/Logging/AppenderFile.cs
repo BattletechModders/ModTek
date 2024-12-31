@@ -72,19 +72,19 @@ internal class AppenderFile : IDisposable
             FiltersStopWatch.Stop();
         }
 
-        byte[] logBytes;
+        byte[] threadUnsafeBytes;
         int length;
         FormatterStopWatch.Start();
         try
         {
-            length = _formatter.GetFormattedLogLine(ref messageDto, out logBytes);
+            length = _formatter.GetFormattedLogLine(ref messageDto, out threadUnsafeBytes);
         }
         finally
         {
             FormatterStopWatch.Stop();
         }
 
-        Write(logBytes, length);
+        Write(threadUnsafeBytes, length);
     }
 
     internal static readonly MTStopwatch WriteStopwatch = new();

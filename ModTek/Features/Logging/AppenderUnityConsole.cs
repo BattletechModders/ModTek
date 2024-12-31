@@ -40,8 +40,8 @@ internal class AppenderUnityConsole
         }
 
         // working with bytes and converting is more costly here, but cheaper elsewhere
-        var count = _formatter.GetFormattedLogLine(ref messageDto, out var logBytes);
-        var logLine = System.Text.Encoding.UTF8.GetString(logBytes, 0, count);
+        var count = _formatter.GetFormattedLogLine(ref messageDto, out var threadUnsafeBytes);
+        var logLine = System.Text.Encoding.UTF8.GetString(threadUnsafeBytes, 0, count);
         s_ignoreNextUnityCapture = true;
         _debugUnityLogger.Log(LogLevelToLogType(messageDto.LogLevel), logLine);
     }

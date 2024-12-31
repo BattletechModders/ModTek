@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -20,18 +19,21 @@ internal unsafe class FastBuffer
 
     private int _length;
     private byte[] _buffer;
-    internal int GetBytes(out byte[] bytes)
+    internal int GetThreadUnsafeBytes(out byte[] threadUnsafeBytes)
     {
-        bytes = _buffer;
+        threadUnsafeBytes = _buffer;
         return _length;
+    }
+
+    internal void Reset()
+    {
+        _length = 0;
     }
 
     private GCHandle _handle;
     private byte* _bufferPtr;
-    internal void ClearAndPin()
+    internal void Pin()
     {
-        _length = 0;
-
         if (_handle.IsAllocated)
         {
             return;

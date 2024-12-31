@@ -24,10 +24,11 @@ internal class Formatter
     [ThreadStatic]
     private static FastBuffer s_buffer;
 
-    internal int GetFormattedLogLine(ref MTLoggerMessageDto messageDto, out byte[] bytes)
+    internal int GetFormattedLogLine(ref MTLoggerMessageDto messageDto, out byte[] threadUnsafeBytes)
     {
         s_buffer ??= new FastBuffer();
-        s_buffer.ClearAndPin();
+        s_buffer.Reset();
+        s_buffer.Pin();
 
         if (_absoluteTimeEnabled)
         {
@@ -84,7 +85,7 @@ internal class Formatter
 
         s_buffer.Unpin();
 
-        return s_buffer.GetBytes(out bytes);
+        return s_buffer.GetThreadUnsafeBytes(out threadUnsafeBytes);
     }
 
     private static string GetLocationString(IStackTrace st)
