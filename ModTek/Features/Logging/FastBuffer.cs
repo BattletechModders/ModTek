@@ -12,22 +12,44 @@ namespace ModTek.Features.Logging;
 // - byte based APIs -> avoids unnecessary conversions and allocations if possible
 internal unsafe class FastBuffer
 {
+    [ThreadStatic]
+    private static FastBuffer s_buffer;
+    internal static FastBuffer GetThreadStaticBufferAndReset()
+    {
+        s_buffer ??= new FastBuffer();
+        s_buffer.Reset();
+        return s_buffer;
+    }
+
     internal FastBuffer()
     {
-        EnlargeCapacity(16 * 1024);
+        EnlargeCapacity(4 * 1024);
     }
 
     private int _length;
     private byte[] _buffer;
-    internal int GetThreadUnsafeBytes(out byte[] threadUnsafeBytes)
+    internal int GetBytes(out byte[] bytes)
     {
-        threadUnsafeBytes = _buffer;
+        bytes = _buffer;
         return _length;
     }
 
     internal void Reset()
     {
         _length = 0;
+    }
+
+    internal AutoUnpin PinnedUse()
+    {
+        Pin();
+        return new AutoUnpin(this);
+    }
+    internal readonly struct AutoUnpin(FastBuffer fastBuffer) : IDisposable
+    {
+        public void Dispose()
+        {
+            fastBuffer.Unpin();
+        }
     }
 
     private GCHandle _handle;

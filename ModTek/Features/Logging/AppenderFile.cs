@@ -34,7 +34,7 @@ internal class AppenderFile : IDisposable
     private void Write(string text)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(text);
-        Write(bytes, bytes.Length);
+        _writer.Append(bytes, 0, bytes.Length);
     }
 
     internal static readonly MTStopwatch FlushStopWatch = new()
@@ -43,6 +43,7 @@ internal class AppenderFile : IDisposable
     };
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
+    internal static readonly MTStopwatch WriteStopwatch = new();
     internal void Append(ref MTLoggerMessageDto messageDto)
     {
         if (messageDto.FlushToDisk)
@@ -72,27 +73,26 @@ internal class AppenderFile : IDisposable
             FiltersStopWatch.Stop();
         }
 
-        byte[] threadUnsafeBytes;
-        int length;
+        // using a pool would allow us to implement file async API via Win32 API
+        // using thread local instance field would allow to use batching
+        var buffer = FastBuffer.GetThreadStaticBufferAndReset();
         FormatterStopWatch.Start();
         try
         {
-            length = _formatter.GetFormattedLogLine(ref messageDto, out threadUnsafeBytes);
+            using (buffer.PinnedUse())
+            {
+                _formatter.GetFormattedLogLine(ref messageDto, buffer);
+            }
         }
         finally
         {
             FormatterStopWatch.Stop();
         }
 
-        Write(threadUnsafeBytes, length);
-    }
-
-    internal static readonly MTStopwatch WriteStopwatch = new();
-    private void Write(byte[] bytes, int length)
-    {
         WriteStopwatch.Start();
         try
         {
+            var length = buffer.GetBytes(out var bytes);
             _writer.Append(bytes, 0, length);
         }
         finally

@@ -141,14 +141,6 @@ internal class Win32ApiImpl : ILogStream
         NativeOverlapped* lpOverlapped);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern unsafe int WriteFile(
-        SafeHandle handle,
-        byte* bytes,
-        int numBytesToWrite,
-        out int numBytesWritten,
-        IntPtr mustBeZero);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool FlushFileBuffers(SafeHandle hHandle);
 }

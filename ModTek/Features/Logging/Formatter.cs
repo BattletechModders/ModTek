@@ -21,15 +21,8 @@ internal class Formatter
         _startupTimeEnabled = settings.StartupTimeEnabled;
     }
 
-    [ThreadStatic]
-    private static FastBuffer s_buffer;
-
-    internal int GetFormattedLogLine(ref MTLoggerMessageDto messageDto, out byte[] threadUnsafeBytes)
+    internal void GetFormattedLogLine(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
     {
-        s_buffer ??= new FastBuffer();
-        s_buffer.Reset();
-        s_buffer.Pin();
-
         if (_absoluteTimeEnabled)
         {
             var dt = messageDto.GetDateTime();
@@ -37,55 +30,51 @@ internal class Formatter
             {
                 dt = dt.ToLocalTime();
             }
-            s_buffer.Append(dt);
+            buffer.Append(dt);
         }
 
         if (_startupTimeEnabled)
         {
             var ts = messageDto.StartupTime();
-            s_buffer.Append(ts);
+            buffer.Append(ts);
         }
 
         if (messageDto.ThreadId != s_unityMainThreadId)
         {
-            s_buffer.Append(s_threadIdPrefix);
-            s_buffer.Append(messageDto.ThreadId);
-            s_buffer.Append(s_threadIdSuffix);
+            buffer.Append(s_threadIdPrefix);
+            buffer.Append(messageDto.ThreadId);
+            buffer.Append(s_threadIdSuffix);
         }
 
         // TODO create injector and add a nameAsBytes field that should be passed along instead of string
-        s_buffer.Append(messageDto.LoggerName);
+        buffer.Append(messageDto.LoggerName);
 
-        s_buffer.Append(LogLevelExtension.GetCachedFormattedBytes(messageDto.LogLevel));
+        buffer.Append(LogLevelExtension.GetCachedFormattedBytes(messageDto.LogLevel));
 
         var prefix = s_whitespaceBytes;
         if (!string.IsNullOrEmpty(messageDto.Message))
         {
-            s_buffer.Append(prefix);
-            s_buffer.Append(messageDto.Message);
+            buffer.Append(prefix);
+            buffer.Append(messageDto.Message);
             prefix = s_environmentNewline;
         }
 
         if (messageDto.Exception != null)
         {
-            s_buffer.Append(prefix);
-            s_buffer.Append(messageDto.Exception.ToString());
+            buffer.Append(prefix);
+            buffer.Append(messageDto.Exception.ToString());
             prefix = s_environmentNewline;
         }
 
         if (messageDto.Location != null)
         {
-            s_buffer.Append(prefix);
-            s_buffer.Append(s_locationTraceLabel);
-            s_buffer.Append(s_environmentNewline);
-            s_buffer.Append(GetLocationString(messageDto.Location));
+            buffer.Append(prefix);
+            buffer.Append(s_locationTraceLabel);
+            buffer.Append(s_environmentNewline);
+            buffer.Append(GetLocationString(messageDto.Location));
         }
 
-        s_buffer.Append(s_environmentNewline);
-
-        s_buffer.Unpin();
-
-        return s_buffer.GetThreadUnsafeBytes(out threadUnsafeBytes);
+        buffer.Append(s_environmentNewline);
     }
 
     private static string GetLocationString(IStackTrace st)
