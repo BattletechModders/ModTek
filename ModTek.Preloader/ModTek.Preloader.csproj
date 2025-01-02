@@ -11,7 +11,7 @@
     <MakeDir Directories="$(BattleTechGameDir)\Mods\ModTek\AssembliesOverride" />
   </Target>
 
-  <Target Name="DoorstopFetch" BeforeTargets="CopyFilesToGame" Condition="!Exists('$(BattleTechGameDir)\winhttp.dll')">
+  <Target Name="DoorstopDownloadAndInstall" BeforeTargets="CopyFilesToGame" Condition="!Exists('$(MSBuildProjectExtensionsPath)\doorstop') Or !Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
       <DoorstopUrl>https://github.com/BattletechModders/UnityDoorstop/releases/download/4.3.0steamfix/doorstop_all_4.3.0steamfix.zip</DoorstopUrl>
       <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstop</DoorstopIntDir>
