@@ -52,19 +52,10 @@ internal static class LoggingFeature
 
         if (_settings.AsynchronousLoggingEnabled)
         {
-            Application.quitting += () => _queue = null;
-            _queue = new MTLoggerAsyncQueue(new MessageProcessor());
+            _queue = new MTLoggerAsyncQueue();
         }
 
         HarmonyXLoggerAdapter.Setup();
-    }
-
-    private class MessageProcessor : MTLoggerAsyncQueue.IMessageProcessor
-    {
-        public void Process(ref MTLoggerMessageDto message)
-        {
-            ProcessLoggerMessage(ref message);
-        }
     }
 
     private static void AddAppenders(string basePath, Dictionary<string, AppenderSettings> logs)
@@ -110,6 +101,7 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
+    private static object s_syncLock = new(); // FastBuffer is not thread safe and we don't use ThreadLocal
     internal static readonly MTStopwatch MessageSetupStopWatch = new();
     // tracks all overhead on the main thread that happens due to async logging
     internal static readonly MTStopwatch DispatchStopWatch = new();
@@ -130,18 +122,21 @@ internal static class LoggingFeature
 
         if (!IsDispatchAvailable(out var threadId))
         {
-            var messageDto = new MTLoggerMessageDto
+            lock (s_syncLock)
             {
-                Timestamp = timestamp,
-                LoggerName = loggerName,
-                LogLevel = logLevel,
-                Message = messageAsString,
-                Exception = exception,
-                Location = location,
-                ThreadId = threadId
-            };
-            ProcessLoggerMessage(ref messageDto);
-            return;
+                var messageDto = new MTLoggerMessageDto
+                {
+                    Timestamp = timestamp,
+                    LoggerName = loggerName,
+                    LogLevel = logLevel,
+                    Message = messageAsString,
+                    Exception = exception,
+                    Location = location,
+                    ThreadId = threadId
+                };
+                LogMessage(ref messageDto);
+                return;
+            }
         }
 
         DispatchStopWatch.Start();
@@ -164,13 +159,15 @@ internal static class LoggingFeature
     {
         var flushEvent = new ManualResetEventSlim(false);
 
-        // this cannot guarantee everything is flushed during a shutdown, chances are good though
         if (!IsDispatchAvailable(out _))
         {
-            var messageDto = new MTLoggerMessageDto();
-            messageDto.FlushToDiskPostEvent = flushEvent;
-            ProcessLoggerMessage(ref messageDto);
-            return;
+            lock (s_syncLock)
+            {
+                var messageDto = new MTLoggerMessageDto();
+                messageDto.FlushToDiskPostEvent = flushEvent;
+                LogMessage(ref messageDto);
+                return;
+            }
         }
 
         DispatchStopWatch.Start();
@@ -190,7 +187,21 @@ internal static class LoggingFeature
         // capture caller thread
         currentThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        return !(_queue == null || _queue.LogWriterThreadId == currentThreadId);
+        if (_queue == null) // async is disabled
+        {
+            return false;
+        }
+
+        if (_queue.IsShuttingOrShutDown)
+        {
+            if (_queue.LogWriterThreadId != currentThreadId) // avoid deadlock if we are on logger thread already
+            {
+                _queue.WaitForShutdown();
+            }
+            return false;
+        }
+
+        return true;
     }
 
     private static DiagnosticsStackTrace GrabStackTrace()
@@ -212,7 +223,7 @@ internal static class LoggingFeature
         return new DiagnosticsStackTrace(6, false);
     }
 
-    private static void ProcessLoggerMessage(ref MTLoggerMessageDto messageDto)
+    internal static void LogMessage(ref MTLoggerMessageDto messageDto)
     {
         try
         {

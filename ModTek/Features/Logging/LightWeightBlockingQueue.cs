@@ -16,8 +16,7 @@ namespace ModTek.Features.Logging;
 // 3. full -> producer: low latency; consumer: high throughput (solution is not optimized for this case)
 internal class LightWeightBlockingQueue
 {
-    internal void Shutdown() => _shutdown = true;
-    private volatile bool _shutdown; // some way to break the waiting
+    internal volatile bool _shuttingOrShutDown; // some way to break the waiting
 
     // 65k leads to about ~20MB, pre-allocation reports less due to absent strings
     // see https://en.wikipedia.org/wiki/Modulo#Performance_issues
@@ -75,9 +74,14 @@ internal class LightWeightBlockingQueue
             }
             else
             {
-                if (_shutdown)
+                if (_shuttingOrShutDown)
                 {
-                    // this can still drop logs, very unlikely but possible
+                    // this can still drop logs, very unlikely but possible:
+                    // after threads already checked _shuttingOrShutDown as false
+                    // and _shuttingOrShutDown is set to true
+                    // and before the threads increased the _nextWriteIndex
+                    // the timeframe just mentioned should be <=100ns if cpu resources are available
+                    // and the whole thing is unlikely since we wait >=1ms before shutting down
                     Thread.Sleep(1);
                     if (Size(_nextReadIndex, _nextWriteIndex) == 0)
                     {

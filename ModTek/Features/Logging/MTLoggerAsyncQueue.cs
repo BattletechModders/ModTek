@@ -7,20 +7,13 @@ namespace ModTek.Features.Logging;
 
 internal class MTLoggerAsyncQueue
 {
-    private readonly IMessageProcessor _processor;
     private readonly LightWeightBlockingQueue _queue;
     internal readonly int LogWriterThreadId;
 
-    internal interface IMessageProcessor
+    internal MTLoggerAsyncQueue()
     {
-        void Process(ref MTLoggerMessageDto message);
-    }
-    
-    internal MTLoggerAsyncQueue(IMessageProcessor processor)
-    {
-        _processor = processor;
         _queue = new LightWeightBlockingQueue();
-        Application.quitting += () => _queue.Shutdown();
+        Application.quitting += () => _queue._shuttingOrShutDown = true;
         var thread = new Thread(LoggingLoop)
         {
             Name = nameof(MTLoggerAsyncQueue),
@@ -65,6 +58,22 @@ internal class MTLoggerAsyncQueue
         CallbackForEveryNumberOfMeasurements = 50_000
     };
 
+    public bool IsShuttingOrShutDown => _queue._shuttingOrShutDown;
+
+    public void WaitForShutdown()
+    {
+        var spinWait = new SpinWait();
+        while (true)
+        {
+            if (_isShutdown)
+            {
+                break;
+            }
+            spinWait.SpinOnce();
+        }
+    }
+
+    private volatile bool _isShutdown;
     private void LoggingLoop()
     {
         try
@@ -76,7 +85,7 @@ internal class MTLoggerAsyncQueue
                 s_loggingStopwatch.Start();
                 try
                 {
-                    _processor.Process(ref message);
+                    LoggingFeature.LogMessage(ref message);
                 }
                 catch (Exception e)
                 {
@@ -91,7 +100,7 @@ internal class MTLoggerAsyncQueue
         }
         catch (LightWeightBlockingQueue.ShutdownException)
         {
-            // ignored
+            _isShutdown = true;
         }
     }
 

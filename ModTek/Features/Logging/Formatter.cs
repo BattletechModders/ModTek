@@ -21,7 +21,7 @@ internal class Formatter
         _startupTimeEnabled = settings.StartupTimeEnabled;
     }
 
-    internal void GetFormattedLogLine(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
+    internal void SerializeMessageToBuffer(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
     {
         if (_absoluteTimeEnabled)
         {
