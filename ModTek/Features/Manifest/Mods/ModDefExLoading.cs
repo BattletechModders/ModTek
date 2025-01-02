@@ -197,6 +197,7 @@ internal static class ModDefExLoading
             catch (Exception e)
             {
                 Log.Main.Warning?.Log($"\t{modDef.QuotedName}: Failed to invoke '{method.DeclaringType?.Name}.{method.Name}', exception", e);
+                ModDefsDatabase.FailedToLoadMods.Add(modDef.Name);
             }
         }
     }
