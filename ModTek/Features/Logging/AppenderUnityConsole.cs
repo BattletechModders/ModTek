@@ -41,14 +41,11 @@ internal class AppenderUnityConsole
         }
 
         _buffer.Reset();
-        using (_buffer.PinnedUse())
-        {
-            _formatter.SerializeMessageToBuffer(ref messageDto, _buffer);
-        }
-        var count = _buffer.GetBytes(out var threadUnsafeBytes);
+        _formatter.SerializeMessage(ref messageDto, _buffer);
+        var length = _buffer.GetBytes(out var threadUnsafeBytes);
         // working with bytes and converting is more costly here, but cheaper elsewhere
         // unity console is slow anyway, and also disabled by default
-        var logLine = System.Text.Encoding.UTF8.GetString(threadUnsafeBytes, 0, count);
+        var logLine = System.Text.Encoding.UTF8.GetString(threadUnsafeBytes, 0, length);
         s_ignoreNextUnityCapture = true;
         _debugUnityLogger.Log(LogLevelToLogType(messageDto.LogLevel), logLine);
     }

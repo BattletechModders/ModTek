@@ -41,13 +41,14 @@ internal class LightWeightBlockingQueue
         return (endIndex - startIndex) & FastModuloMaskForBitwiseAnd;
     }
 
-    internal ref MTLoggerMessageDto AcquireCommittedOrWait()
+    internal ref MTLoggerMessageDto AcquireCommittedOrWait(out int queueSize)
     {
         var spinWait = new SpinWait();
         while (true)
         {
             var index = _nextReadIndex;
-            if (Size(index, _nextWriteIndex) > 0)
+            queueSize = Size(index, _nextWriteIndex);
+            if (queueSize > 0)
             {
                 ref var item = ref _ringBuffer[index];
                 // makes sure no overtake on the ring happens

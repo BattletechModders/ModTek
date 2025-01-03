@@ -21,8 +21,10 @@ internal class Formatter
         _startupTimeEnabled = settings.StartupTimeEnabled;
     }
 
-    internal void SerializeMessageToBuffer(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
+    internal void SerializeMessage(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
     {
+        buffer.Pin();
+
         if (_absoluteTimeEnabled)
         {
             var dt = messageDto.GetDateTime();
@@ -47,6 +49,7 @@ internal class Formatter
         }
 
         // TODO create injector and add a nameAsBytes field that should be passed along instead of string
+        //  should improve performance by 20% since string/char[] -> byte[] is slow
         buffer.Append(messageDto.LoggerName);
 
         buffer.Append(LogLevelExtension.GetCachedFormattedBytes(messageDto.LogLevel));
@@ -62,6 +65,8 @@ internal class Formatter
         if (messageDto.Exception != null)
         {
             buffer.Append(prefix);
+            // TODO find a faster (pinvoke?) method for conversion
+            //  this takes like 60-80% of the formatting time
             buffer.Append(messageDto.Exception.ToString());
             prefix = s_environmentNewline;
         }
@@ -75,6 +80,8 @@ internal class Formatter
         }
 
         buffer.Append(s_environmentNewline);
+
+        buffer.Unpin();
     }
 
     private static string GetLocationString(IStackTrace st)

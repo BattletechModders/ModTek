@@ -12,12 +12,12 @@ namespace ModTek.Features.Logging;
 // - byte based APIs -> avoids unnecessary conversions and allocations if possible
 internal unsafe class FastBuffer
 {
-    internal FastBuffer()
+    internal FastBuffer(int initialCapacity = 16 * 1024)
     {
-        EnlargeCapacity(16 * 1024);
+        EnlargeCapacity(initialCapacity);
     }
 
-    private int _length;
+    internal int _length;
     private byte[] _buffer;
     internal int GetBytes(out byte[] bytes)
     {
@@ -30,22 +30,9 @@ internal unsafe class FastBuffer
         _length = 0;
     }
 
-    internal IDisposable PinnedUse()
-    {
-        Pin();
-        return new AutoUnpin(this);
-    }
-    private readonly struct AutoUnpin(FastBuffer fastBuffer) : IDisposable
-    {
-        public void Dispose()
-        {
-            fastBuffer.Unpin();
-        }
-    }
-
     private GCHandle _handle;
     private byte* _bufferPtr;
-    private void Pin()
+    internal void Pin()
     {
         if (_handle.IsAllocated)
         {
@@ -55,7 +42,7 @@ internal unsafe class FastBuffer
         _bufferPtr = (byte*)_handle.AddrOfPinnedObject();
     }
 
-    private void Unpin()
+    internal void Unpin()
     {
         if (_handle.IsAllocated)
         {
@@ -167,12 +154,12 @@ internal unsafe class FastBuffer
             return;
 
             Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
-            var measurement = UTF8FallbackStopwatch.BeginMeasurement();
+            var measurement = UTF8FallbackStopwatch.StartMeasurement();
             var charIndex = value.Length - processingCount;
             const int Utf8MaxBytesPerChar = 4;
             EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
             _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
-            measurement.End();
+            measurement.Stop();
         }
     }
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };

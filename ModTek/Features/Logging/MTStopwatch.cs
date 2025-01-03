@@ -14,20 +14,15 @@ internal class MTStopwatch
     private long _ticks;
     private long _count;
 
-    internal AutoStop BeginMeasurement()
+    internal Measurement StartMeasurement()
     {
-        return new AutoStop(this);
+        return new Measurement(this);
     }
-    internal readonly struct AutoStop(MTStopwatch stopwatch) : IDisposable
+    internal readonly struct Measurement(MTStopwatch stopwatch)
     {
         private readonly long _begin = Stopwatch.GetTimestamp();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            End();
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void End()
+        internal void Stop()
         {
             var elapsed = Stopwatch.GetTimestamp() - _begin;
             stopwatch.AddMeasurement(elapsed);

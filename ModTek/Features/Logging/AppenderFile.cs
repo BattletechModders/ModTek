@@ -10,7 +10,10 @@ internal class AppenderFile : IDisposable
     private readonly Filters _filters;
     private readonly Formatter _formatter;
     private readonly LogStream _writer;
-    private readonly FastBuffer _buffer = new();
+
+    private const int _bufferFlushThreshold = 16 * 1024; // 16kb seems to bring most gains
+    private const int _bufferInitialCapacity = _bufferFlushThreshold + 8 * 1024;
+    private readonly FastBuffer _buffer = new(_bufferInitialCapacity);
 
     internal AppenderFile(string path, AppenderSettings settings)
     {
@@ -45,39 +48,56 @@ internal class AppenderFile : IDisposable
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
     internal static readonly MTStopwatch WriteStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
-    internal void Append(ref MTLoggerMessageDto messageDto)
+    internal void Append(ref MTLoggerMessageDto messageDto, int queueSize)
     {
+        var hasMore = queueSize > 1;
+
         if (messageDto.FlushToDisk)
         {
-            using (FlushStopWatch.BeginMeasurement())
+            if (_buffer._length > 0)
             {
-                _writer.FlushToDisk();
+                FlushToOS();
             }
+
+            var measurement = FlushStopWatch.StartMeasurement();
+            _writer.FlushToDisk();
+            measurement.Stop();
             return;
         }
 
-        using (FiltersStopWatch.BeginMeasurement())
         {
-            if (!_filters.IsIncluded(ref messageDto))
+            var measurement = FiltersStopWatch.StartMeasurement();
+            var included = _filters.IsIncluded(ref messageDto);
+            measurement.Stop();
+            if (!included)
             {
+                if (!hasMore && _buffer._length > 0)
+                {
+                    FlushToOS();
+                }
                 return;
             }
         }
 
-        using (FormatterStopWatch.BeginMeasurement())
         {
-            _buffer.Reset();
-            using (_buffer.PinnedUse())
+            var measurement = FormatterStopWatch.StartMeasurement();
+            _formatter.SerializeMessage(ref messageDto, _buffer);
+            measurement.Stop();
+
+            if (!hasMore || _buffer._length >= _bufferFlushThreshold)
             {
-                _formatter.SerializeMessageToBuffer(ref messageDto, _buffer);
+                FlushToOS();
             }
         }
+    }
 
-        using (WriteStopwatch.BeginMeasurement())
-        {
-            var length = _buffer.GetBytes(out var threadUnsafeBytes);
-            _writer.Append(threadUnsafeBytes, 0, length);
-        }
+    private void FlushToOS()
+    {
+        var measurement = WriteStopwatch.StartMeasurement();
+        var length = _buffer.GetBytes(out var threadUnsafeBytes);
+        _writer.Append(threadUnsafeBytes, 0, length);
+        _buffer.Reset();
+        measurement.Stop();
     }
 
     public void Dispose()

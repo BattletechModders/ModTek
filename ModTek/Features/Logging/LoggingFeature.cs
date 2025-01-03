@@ -139,9 +139,9 @@ internal static class LoggingFeature
             }
         }
 
-        var measurement = DispatchStopWatch.BeginMeasurement();
+        var measurement = DispatchStopWatch.StartMeasurement();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        measurement.End();
+        measurement.Stop();
 
         updateDto.Timestamp = timestamp;
         updateDto.LoggerName = loggerName;
@@ -170,9 +170,9 @@ internal static class LoggingFeature
             }
         }
 
-        var measurement = DispatchStopWatch.BeginMeasurement();
+        var measurement = DispatchStopWatch.StartMeasurement();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        measurement.End();
+        measurement.Stop();
 
         updateDto.FlushToDiskPostEvent = flushEvent;
         updateDto.Commit();
@@ -223,16 +223,16 @@ internal static class LoggingFeature
         return new DiagnosticsStackTrace(6, false);
     }
 
-    internal static void LogMessage(ref MTLoggerMessageDto messageDto)
+    internal static void LogMessage(ref MTLoggerMessageDto messageDto, int queueSize = 0)
     {
         try
         {
             _consoleLog?.Append(ref messageDto);
 
-            _mainLog.Append(ref messageDto);
+            _mainLog.Append(ref messageDto, queueSize);
             foreach (var logAppender in _logsAppenders)
             {
-                logAppender.Append(ref messageDto);
+                logAppender.Append(ref messageDto, queueSize);
             }
         }
         finally

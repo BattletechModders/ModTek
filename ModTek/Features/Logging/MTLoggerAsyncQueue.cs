@@ -17,7 +17,7 @@ internal class MTLoggerAsyncQueue
         var thread = new Thread(LoggingLoop)
         {
             Name = nameof(MTLoggerAsyncQueue),
-            Priority = ThreadPriority.BelowNormal, // game should take priority
+            Priority = ThreadPriority.AboveNormal,
             IsBackground = false // don't exit automatically
         };
         thread.Start();
@@ -43,15 +43,15 @@ internal class MTLoggerAsyncQueue
             logger.Log(
                 $"""
                 Asynchronous logging offloaded {offloadedTime} from the main thread.
-                Flushed {AppenderFile.FlushStopWatch.GetStats()}.
-                End-to-end processing had an average latency of {latencyStats.AverageNanoseconds / 1_000_000}ms.
+                Async internal processing had an average latency of {latencyStats.AverageNanoseconds / 1_000}us.
                   On-thread processing took a total of {dtoStats.TotalTime} with an average of {dtoStats.AverageNanoseconds}ns.
                     Dispatch {dispatchStats}.
                   Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.
+                    Flushed (to disk) {AppenderFile.FlushStopWatch.GetStats()}.
                     Filters {AppenderFile.FiltersStopWatch.GetStats()}.
                     Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
                       UTF8-Fallback {FastBuffer.UTF8FallbackStopwatch.GetStats()}.
-                    Write {AppenderFile.WriteStopwatch.GetStats()}.
+                    Write (to OS buffers) {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );
         },
@@ -80,12 +80,12 @@ internal class MTLoggerAsyncQueue
         {
             while (true)
             {
-                ref var message = ref _queue.AcquireCommittedOrWait();
+                ref var message = ref _queue.AcquireCommittedOrWait(out var queueSize);
 
-                var measurement = s_loggingStopwatch.BeginMeasurement();
+                var measurement = s_loggingStopwatch.StartMeasurement();
                 try
                 {
-                    LoggingFeature.LogMessage(ref message);
+                    LoggingFeature.LogMessage(ref message, queueSize);
                 }
                 catch (Exception e)
                 {
@@ -94,7 +94,7 @@ internal class MTLoggerAsyncQueue
                 finally
                 {
                     message.Reset();
-                    measurement.End();
+                    measurement.Stop();
                 }
             }
         }

@@ -72,7 +72,7 @@ internal static class FormattingHelpers
         // Fallback contract is 0->0
         return Log2SoftwareFallback(value);
     }
-    private static unsafe int Log2SoftwareFallback(uint value)
+    private static int Log2SoftwareFallback(uint value)
     {
         // No AggressiveInlining due to large method size
         // Has conventional contract 0->0 (Log(0) is undefined)
@@ -85,10 +85,7 @@ internal static class FormattingHelpers
         value |= value >> 16;
 
         var offset = (value * 0x07C4ACDDu) >> 27;
-        fixed (byte* ptr = s_log2DeBruijn)
-        {
-            return ptr[offset];
-        }
+        return s_log2DeBruijn[offset];
     }
     private static readonly byte[] s_log2DeBruijn =
     [
