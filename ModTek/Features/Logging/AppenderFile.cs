@@ -49,33 +49,22 @@ internal class AppenderFile : IDisposable
     {
         if (messageDto.FlushToDisk)
         {
-            FlushStopWatch.Start();
-            try
+            using (FlushStopWatch.BeginMeasurement())
             {
                 _writer.FlushToDisk();
-            }
-            finally
-            {
-                FlushStopWatch.Stop();
             }
             return;
         }
 
-        FiltersStopWatch.Start();
-        try
+        using (FiltersStopWatch.BeginMeasurement())
         {
             if (!_filters.IsIncluded(ref messageDto))
             {
                 return;
             }
         }
-        finally
-        {
-            FiltersStopWatch.Stop();
-        }
 
-        FormatterStopWatch.Start();
-        try
+        using (FormatterStopWatch.BeginMeasurement())
         {
             _buffer.Reset();
             using (_buffer.PinnedUse())
@@ -83,20 +72,11 @@ internal class AppenderFile : IDisposable
                 _formatter.SerializeMessageToBuffer(ref messageDto, _buffer);
             }
         }
-        finally
-        {
-            FormatterStopWatch.Stop();
-        }
 
-        WriteStopwatch.Start();
-        try
+        using (WriteStopwatch.BeginMeasurement())
         {
             var length = _buffer.GetBytes(out var threadUnsafeBytes);
             _writer.Append(threadUnsafeBytes, 0, length);
-        }
-        finally
-        {
-            WriteStopwatch.Stop();
         }
     }
 

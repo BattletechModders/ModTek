@@ -82,7 +82,7 @@ internal class MTLoggerAsyncQueue
             {
                 ref var message = ref _queue.AcquireCommittedOrWait();
 
-                s_loggingStopwatch.Start();
+                var measurement = s_loggingStopwatch.BeginMeasurement();
                 try
                 {
                     LoggingFeature.LogMessage(ref message);
@@ -94,7 +94,7 @@ internal class MTLoggerAsyncQueue
                 finally
                 {
                     message.Reset();
-                    s_loggingStopwatch.Stop();
+                    measurement.End();
                 }
             }
         }

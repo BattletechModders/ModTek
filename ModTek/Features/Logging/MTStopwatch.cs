@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace ModTek.Features.Logging;
@@ -12,30 +13,25 @@ internal class MTStopwatch
 
     private long _ticks;
     private long _count;
-    private Tracker _tracker;
 
-    internal void Track(Action action)
+    internal AutoStop BeginMeasurement()
     {
-        Start();
-        try
-        {
-            action();
-        }
-        finally
-        {
-            Stop();
-        }
+        return new AutoStop(this);
     }
-
-    internal void Start()
+    internal readonly struct AutoStop(MTStopwatch stopwatch) : IDisposable
     {
-        _tracker.Begin();
-    }
-
-    internal void Stop()
-    {
-        var elapsed = _tracker.End();
-        AddMeasurement(elapsed);
+        private readonly long _begin = Stopwatch.GetTimestamp();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
+        {
+            End();
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void End()
+        {
+            var elapsed = Stopwatch.GetTimestamp() - _begin;
+            stopwatch.AddMeasurement(elapsed);
+        }
     }
 
     internal void AddMeasurement(long elapsedTicks)

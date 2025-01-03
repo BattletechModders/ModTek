@@ -139,9 +139,9 @@ internal static class LoggingFeature
             }
         }
 
-        DispatchStopWatch.Start();
+        var measurement = DispatchStopWatch.BeginMeasurement();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        DispatchStopWatch.Stop();
+        measurement.End();
 
         updateDto.Timestamp = timestamp;
         updateDto.LoggerName = loggerName;
@@ -170,9 +170,9 @@ internal static class LoggingFeature
             }
         }
 
-        DispatchStopWatch.Start();
+        var measurement = DispatchStopWatch.BeginMeasurement();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        DispatchStopWatch.Stop();
+        measurement.End();
 
         updateDto.FlushToDiskPostEvent = flushEvent;
         updateDto.Commit();

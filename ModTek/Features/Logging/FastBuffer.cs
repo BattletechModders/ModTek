@@ -30,12 +30,12 @@ internal unsafe class FastBuffer
         _length = 0;
     }
 
-    internal AutoUnpin PinnedUse()
+    internal IDisposable PinnedUse()
     {
         Pin();
         return new AutoUnpin(this);
     }
-    internal readonly struct AutoUnpin(FastBuffer fastBuffer) : IDisposable
+    private readonly struct AutoUnpin(FastBuffer fastBuffer) : IDisposable
     {
         public void Dispose()
         {
@@ -167,12 +167,12 @@ internal unsafe class FastBuffer
             return;
 
             Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
-            UTF8FallbackStopwatch.Start();
+            var measurement = UTF8FallbackStopwatch.BeginMeasurement();
             var charIndex = value.Length - processingCount;
             const int Utf8MaxBytesPerChar = 4;
             EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
             _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
-            UTF8FallbackStopwatch.Stop();
+            measurement.End();
         }
     }
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
