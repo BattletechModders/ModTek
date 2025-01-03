@@ -26,6 +26,14 @@ jobs:
           cd -
           dotnet clean --verbosity normal --configuration Release -p:BattleTechGameDir="$btdir"
         }
+
+        mkdir ~/ModTekNuPackages
+        dotnet nuget add source --name ModTek ~/ModTekNuPackages
+        # dotnet nuget remove source ModTek
+        curl -OL https://github.com/BattletechModders/HarmonyX/releases/download/latest/HarmonyX.2.13.0-modtek-1.nupkg
+        dotnet nuget push --source ModTek HarmonyX.2.13.0-modtek-1.nupkg
+        rm HarmonyX.2.13.0-modtek-1.nupkg
+        # dotnet add ModTek.Preloader package HarmonyX -v 2.13.0-modtek-1 --source ModTek
         
         BATTLETECH_DIR_OLD_HARMONY="${BATTLETECH_DIR}oldharmony"
         cp -a "$BATTLETECH_DIR" "$BATTLETECH_DIR_OLD_HARMONY"
