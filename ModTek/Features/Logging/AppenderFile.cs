@@ -48,10 +48,8 @@ internal class AppenderFile : IDisposable
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
     internal static readonly MTStopwatch WriteStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
-    internal void Append(ref MTLoggerMessageDto messageDto, int queueSize)
+    internal void Append(ref MTLoggerMessageDto messageDto)
     {
-        var hasMore = queueSize > 1;
-
         if (messageDto.FlushToDisk)
         {
             if (_buffer._length > 0)
@@ -71,7 +69,7 @@ internal class AppenderFile : IDisposable
             measurement.Stop();
             if (!included)
             {
-                if (!hasMore && _buffer._length > 0)
+                if (!messageDto.HasMore && _buffer._length > 0)
                 {
                     FlushToOS();
                 }
@@ -84,7 +82,7 @@ internal class AppenderFile : IDisposable
             _formatter.SerializeMessage(ref messageDto, _buffer);
             measurement.Stop();
 
-            if (!hasMore || _buffer._length >= _bufferFlushThreshold)
+            if (!messageDto.HasMore || _buffer._length >= _bufferFlushThreshold)
             {
                 FlushToOS();
             }

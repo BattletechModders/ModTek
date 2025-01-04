@@ -41,13 +41,13 @@ internal class LightWeightBlockingQueue
         return (endIndex - startIndex) & FastModuloMaskForBitwiseAnd;
     }
 
-    internal ref MTLoggerMessageDto AcquireCommittedOrWait(out int queueSize)
+    internal ref MTLoggerMessageDto AcquireCommittedOrWait()
     {
         var spinWait = new SpinWait();
         while (true)
         {
             var index = _nextReadIndex;
-            queueSize = Size(index, _nextWriteIndex);
+            var queueSize = Size(index, _nextWriteIndex);
             if (queueSize > 0)
             {
                 ref var item = ref _ringBuffer[index];
@@ -56,6 +56,7 @@ internal class LightWeightBlockingQueue
                 {
                     if (Interlocked.CompareExchange(ref _nextReadIndex, Next(index), index) == index)
                     {
+                        item.QueueSizeAtTimeOfDequeue = queueSize;
                         return ref item;
                     }
                     else

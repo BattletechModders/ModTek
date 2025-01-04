@@ -20,6 +20,8 @@ internal struct MTLoggerMessageDto
     }
 
     internal volatile bool CommittedToQueue;
+    internal int QueueSizeAtTimeOfDequeue;
+    internal bool HasMore => QueueSizeAtTimeOfDequeue > 1;
 
     // either these are set
     internal long Timestamp;

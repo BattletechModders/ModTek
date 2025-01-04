@@ -223,16 +223,16 @@ internal static class LoggingFeature
         return new DiagnosticsStackTrace(6, false);
     }
 
-    internal static void LogMessage(ref MTLoggerMessageDto messageDto, int queueSize = 0)
+    internal static void LogMessage(ref MTLoggerMessageDto messageDto)
     {
         try
         {
             _consoleLog?.Append(ref messageDto);
 
-            _mainLog.Append(ref messageDto, queueSize);
+            _mainLog.Append(ref messageDto);
             foreach (var logAppender in _logsAppenders)
             {
-                logAppender.Append(ref messageDto, queueSize);
+                logAppender.Append(ref messageDto);
             }
         }
         finally

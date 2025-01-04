@@ -80,12 +80,12 @@ internal class MTLoggerAsyncQueue
         {
             while (true)
             {
-                ref var message = ref _queue.AcquireCommittedOrWait(out var queueSize);
+                ref var message = ref _queue.AcquireCommittedOrWait();
 
                 var measurement = s_loggingStopwatch.StartMeasurement();
                 try
                 {
-                    LoggingFeature.LogMessage(ref message, queueSize);
+                    LoggingFeature.LogMessage(ref message);
                 }
                 catch (Exception e)
                 {
