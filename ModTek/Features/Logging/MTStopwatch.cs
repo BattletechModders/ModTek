@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace ModTek.Features.Logging;
@@ -21,7 +20,6 @@ internal class MTStopwatch
     internal readonly struct Measurement(MTStopwatch stopwatch)
     {
         private readonly long _begin = Stopwatch.GetTimestamp();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Stop()
         {
             var elapsed = Stopwatch.GetTimestamp() - _begin;

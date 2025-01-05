@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
-using UnityEngine;
 
 namespace ModTek.Features.Logging;
 
@@ -139,9 +139,8 @@ internal static class LoggingFeature
             }
         }
 
-        var measurement = DispatchStopWatch.StartMeasurement();
+        var timestampDispatch = Stopwatch.GetTimestamp();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        measurement.Stop();
 
         updateDto.Timestamp = timestamp;
         updateDto.LoggerName = loggerName;
@@ -152,7 +151,9 @@ internal static class LoggingFeature
         updateDto.ThreadId = threadId;
         updateDto.Commit();
 
-        MessageSetupStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - timestamp);
+        var timestampEnd = Stopwatch.GetTimestamp();
+        DispatchStopWatch.AddMeasurement(timestampEnd - timestampDispatch);
+        MessageSetupStopWatch.AddMeasurement(timestampDispatch - timestamp);
     }
 
     internal static void Flush()
@@ -182,6 +183,7 @@ internal static class LoggingFeature
         flushEvent.Wait();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsDispatchAvailable(out int currentThreadId)
     {
         // capture caller thread

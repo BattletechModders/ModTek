@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using HBS.Logging;
 using UnityEngine;
@@ -51,6 +52,7 @@ internal struct MTLoggerMessageDto
     }
 
     // allow queue to read it
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Commit()
     {
         this.CommittedToQueue = true;
