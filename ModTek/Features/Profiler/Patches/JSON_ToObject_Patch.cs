@@ -1,5 +1,5 @@
 ﻿using fastJSON;
-using ModTek.Features.Logging;
+using ModTek.Util.Stopwatch;
 
 namespace ModTek.Features.Profiler.Patches;
 
@@ -11,26 +11,23 @@ internal static class JSON_ToObject_Patch
         return ModTek.Enabled && ModTek.Config.ProfilerEnabled;
     }
 
-    private static readonly MTStopwatch s_stopwatch = new()
-    {
-        Callback = stats =>
+    private static readonly MTStopwatchWithCallback s_stopwatch = new(stats =>
         {
             Log.Main.Trace?.Log(
                 $"JSON.ToObject called {stats.Count} times, taking a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns."
             );
-        },
-        CallbackForEveryNumberOfMeasurements = 1000
-    };
+        }
+    );
 
     [HarmonyPriority(Priority.First)]
-    public static void Prefix(ref MTStopwatch.Tracker __state)
+    public static void Prefix(ref long __state)
     {
-        __state.Begin();
+        __state = MTStopwatch.GetTimestamp();
     }
 
     [HarmonyPriority(Priority.Last)]
-    public static void Postfix(ref MTStopwatch.Tracker __state)
+    public static void Postfix(ref long __state)
     {
-        s_stopwatch.AddMeasurement(__state.End());
+        s_stopwatch.EndMeasurement(__state);
     }
 }

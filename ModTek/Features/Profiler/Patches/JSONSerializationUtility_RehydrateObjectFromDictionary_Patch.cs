@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using HBS;
 using HBS.Util;
-using ModTek.Features.Logging;
+using ModTek.Util.Stopwatch;
 
 namespace ModTek.Features.Profiler.Patches;
 
@@ -24,31 +24,28 @@ internal static class JSONSerializationUtility_RehydrateObjectFromDictionary_Pat
         return ModTek.Enabled && ModTek.Config.ProfilerEnabled;
     }
 
-    private static readonly MTStopwatch s_stopwatch  = new()
-    {
-        Callback = stats =>
+    private static readonly MTStopwatchWithCallback s_stopwatch  = new(stats =>
         {
             var id = "JSONSerializationUtility.RehydrateObjectFromDictionary";
             Log.Main.Trace?.Log($"{id} was called {stats.Count} times, taking a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.");
-        },
-        CallbackForEveryNumberOfMeasurements = 1000
-    };
+        }
+    );
 
     [HarmonyPriority(Priority.First)]
-    public static void Prefix(string classStructure, ref MTStopwatch.Tracker __state)
+    public static void Prefix(string classStructure, ref long __state)
     {
         if (string.IsNullOrEmpty(classStructure))
         {
-            __state.Begin();
+            __state = MTStopwatch.GetTimestamp();
         }
     }
 
     [HarmonyPriority(Priority.Last)]
-    public static void Postfix(string classStructure, ref MTStopwatch.Tracker __state)
+    public static void Postfix(string classStructure, ref long __state)
     {
-        if (string.IsNullOrEmpty(classStructure))
+        if (__state > 0)
         {
-            s_stopwatch.AddMeasurement(__state.End());
+            s_stopwatch.EndMeasurement(__state);
         }
     }
 }

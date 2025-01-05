@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using HBS.Logging;
 using ModTek.Misc;
+using ModTek.Util.Stopwatch;
 
 namespace ModTek.Features.Logging;
 
@@ -101,12 +101,12 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
-    internal static readonly MTStopwatch DispatchStopWatch = new() { SkipFirstNumberOfMeasurements = 100, Sampling = 100 };
+    internal static readonly MTStopwatchWithSampling DispatchStopWatch = new(100);
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
         // capture timestamp as early as possible, to be as close to the callers intended time
-        var timestamp = Stopwatch.GetTimestamp();
+        var timestamp = MTStopwatch.GetTimestamp();
 
         // convert message to string while still in caller thread
         var messageAsString = message?.ToString(); // do this asap too, as this can throw exceptions
@@ -144,7 +144,7 @@ internal static class LoggingFeature
         updateDto.ThreadId = threadId;
         updateDto.Commit();
 
-        DispatchStopWatch.EndMeasurementSampled(timestamp);
+        DispatchStopWatch.EndMeasurement(timestamp);
     }
 
     internal static void Flush()
@@ -158,10 +158,9 @@ internal static class LoggingFeature
             LogMessageThreadSafe(ref messageDto);
             return;
         }
-
-        var measurement = DispatchStopWatch.StartMeasurement();
+        var measurement = MTStopwatch.GetTimestamp();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
-        measurement.Stop();
+        DispatchStopWatch.EndMeasurement(measurement);
 
         updateDto.FlushToDiskPostEvent = flushEvent;
         updateDto.Commit();

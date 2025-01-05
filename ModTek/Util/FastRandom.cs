@@ -5,24 +5,24 @@ using System.Runtime.CompilerServices;
 namespace ModTek.Util;
 
 // .NET 9 XoshiroImpl
-internal static class FastRandom
+internal sealed class FastRandom
 {
-    private static ulong _s0, _s1, _s2, _s3;
+    private ulong _s0, _s1, _s2, _s3;
 
-    static FastRandom()
+    internal FastRandom()
     {
         var rnd = new Random();
         do
         {
-            _s0 = ((ulong)(uint)rnd.Next() << 32) | (uint)rnd.Next();
-            _s1 = ((ulong)(uint)rnd.Next() << 32) | (uint)rnd.Next();
-            _s2 = ((ulong)(uint)rnd.Next() << 32) | (uint)rnd.Next();
-            _s3 = ((ulong)(uint)rnd.Next() << 32) | (uint)rnd.Next();
+            _s0 = ((ulong)rnd.Next() << 32) | (uint)rnd.Next();
+            _s1 = ((ulong)rnd.Next() << 32) | (uint)rnd.Next();
+            _s2 = ((ulong)rnd.Next() << 32) | (uint)rnd.Next();
+            _s3 = ((ulong)rnd.Next() << 32) | (uint)rnd.Next();
         } while ((_s0 | _s1 | _s2 | _s3) == 0); // at least one value must be non-zero
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong NextUInt64()
+    internal ulong NextUInt64()
     {
         ulong s0 = _s0, s1 = _s1, s2 = _s2, s3 = _s3;
 

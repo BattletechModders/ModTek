@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using ModTek.Util.Stopwatch;
 
 namespace ModTek.Features.Logging;
 
@@ -154,15 +155,15 @@ internal unsafe class FastBuffer
             return;
 
             Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
-            var measurement = UTF8FallbackStopwatch.StartMeasurement();
+            var measurement = MTStopwatch.GetTimestamp();
             var charIndex = value.Length - processingCount;
             const int Utf8MaxBytesPerChar = 4;
             EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
             _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
-            measurement.Stop();
+            UTF8FallbackStopwatch.EndMeasurement(measurement);
         }
     }
-    internal static readonly MTStopwatch UTF8FallbackStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
+    internal static readonly MTStopwatch UTF8FallbackStopwatch = new();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset, out bool isUnicodeCompatibleAscii)

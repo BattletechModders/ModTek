@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using ModTek.Common.Utils;
+using ModTek.Util.Stopwatch;
 using UnityEngine;
 
 namespace ModTek.Features.Logging;
@@ -41,13 +42,10 @@ internal class AppenderFile : IDisposable
         _writer.Append(bytes, 0, bytes.Length);
     }
 
-    internal static readonly MTStopwatch FlushStopWatch = new()
-    {
-        SkipFirstNumberOfMeasurements = 0
-    };
+    internal static readonly MTStopwatch FlushStopWatch = new();
     internal static readonly MTStopwatch FiltersStopWatch = new();
     internal static readonly MTStopwatch FormatterStopWatch = new();
-    internal static readonly MTStopwatch WriteStopwatch = new() { SkipFirstNumberOfMeasurements = 0 };
+    internal static readonly MTStopwatch WriteStopwatch = new();
     internal void Append(ref MTLoggerMessageDto messageDto)
     {
         if (messageDto.FlushToDisk)
@@ -57,16 +55,16 @@ internal class AppenderFile : IDisposable
                 FlushToOS();
             }
 
-            var measurement = FlushStopWatch.StartMeasurement();
+            var measurement = MTStopwatch.GetTimestamp();
             _writer.FlushToDisk();
-            measurement.Stop();
+            FlushStopWatch.EndMeasurement(measurement);
             return;
         }
 
         {
-            var measurement = FiltersStopWatch.StartMeasurement();
+            var measurement = MTStopwatch.GetTimestamp();
             var included = _filters.IsIncluded(ref messageDto);
-            measurement.Stop();
+            FiltersStopWatch.EndMeasurement(measurement);
             if (!included)
             {
                 if (!messageDto.HasMore && _buffer._length > 0)
@@ -78,9 +76,9 @@ internal class AppenderFile : IDisposable
         }
 
         {
-            var measurement = FormatterStopWatch.StartMeasurement();
+            var measurement = MTStopwatch.GetTimestamp();
             _formatter.SerializeMessage(ref messageDto, _buffer);
-            measurement.Stop();
+            FormatterStopWatch.EndMeasurement(measurement);
 
             if (!messageDto.HasMore || _buffer._length >= _bufferFlushThreshold)
             {
@@ -91,11 +89,11 @@ internal class AppenderFile : IDisposable
 
     private void FlushToOS()
     {
-        var measurement = WriteStopwatch.StartMeasurement();
+        var measurement = MTStopwatch.GetTimestamp();
         var length = _buffer.GetBytes(out var threadUnsafeBytes);
         _writer.Append(threadUnsafeBytes, 0, length);
         _buffer.Reset();
-        measurement.Stop();
+        WriteStopwatch.EndMeasurement(measurement);
     }
 
     public void Dispose()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using ModTek.Util.Stopwatch;
 using UnityEngine;
 using ThreadPriority = System.Threading.ThreadPriority;
 
@@ -24,9 +25,7 @@ internal class MTLoggerAsyncQueue
         LogWriterThreadId = thread.ManagedThreadId;
     }
 
-    private static readonly MTStopwatch s_loggingStopwatch = new()
-    {
-        Callback = stats =>
+    private static readonly MTStopwatchWithCallback s_loggingStopwatch = new(stats =>
         {
             var logger = Log.Main.Trace;
             if (logger is null)
@@ -51,9 +50,8 @@ internal class MTLoggerAsyncQueue
                     Write (to OS buffers) {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );
-        },
-        CallbackForEveryNumberOfMeasurements = 50_000
-    };
+        }
+    );
 
     public bool IsShuttingOrShutDown => _queue._shuttingOrShutDown;
 
@@ -79,7 +77,7 @@ internal class MTLoggerAsyncQueue
             {
                 ref var message = ref _queue.AcquireCommittedOrWait();
 
-                var measurement = s_loggingStopwatch.StartMeasurement();
+                var measurement = MTStopwatch.GetTimestamp();
                 try
                 {
                     LoggingFeature.LogMessage(ref message);
@@ -91,7 +89,7 @@ internal class MTLoggerAsyncQueue
                 finally
                 {
                     message.Reset();
-                    measurement.Stop();
+                    s_loggingStopwatch.EndMeasurement(measurement);
                 }
             }
         }

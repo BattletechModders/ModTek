@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using HBS.Logging;
+using ModTek.Util.Stopwatch;
 using UnityEngine;
 
 namespace ModTek.Features.Logging;
 
 internal struct MTLoggerMessageDto
 {
-    private static readonly long s_stopwatchTimestamp = Stopwatch.GetTimestamp();
+    private static readonly long s_stopwatchTimestamp = MTStopwatch.GetTimestamp();
     private static readonly DateTime s_dateTime = DateTime.UtcNow;
     private static readonly TimeSpan s_unityStartupTime = TimeSpan.FromSeconds(Time.realtimeSinceStartup);
 
