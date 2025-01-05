@@ -13,13 +13,13 @@ internal sealed class MTStopwatchWithCallback : MTStopwatch
     private readonly Action<MTStopwatchStats> _callback;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected override void AddMeasurement(long elapsedTicks)
+    protected override void AddMeasurement(long elapsedTicks, long delta)
     {
-        var count = Interlocked.Increment(ref _count);
+        var count = Interlocked.Add(ref _count, delta);
         var ticks = Interlocked.Add(ref _ticks, elapsedTicks);
         if ((count & CallbackFastModuloMask) == 0)
         {
-            _callback.Invoke(new MTStopwatchStats(this, ticks, count));
+            _callback.Invoke(new MTStopwatchStats(this, count, ticks));
         }
     }
     private const long CallbackEveryMeasurement = 1 << 14; // every 16k, FastModulo requires base 2

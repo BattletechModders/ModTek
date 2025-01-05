@@ -6,10 +6,10 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
 {
     internal MTStopwatchWithSampling(uint sampling)
     {
-        Sampling = sampling;
+        _sampling = sampling;
         _sampleIfRandomSmallerOrEqualsTo = ulong.MaxValue / sampling;
     }
-    internal readonly uint Sampling;
+    private readonly uint _sampling;
     private readonly ulong _sampleIfRandomSmallerOrEqualsTo;
     private readonly FastRandom _random = new();
 
@@ -20,7 +20,7 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
         // fast random is much faster, runs unrolled and therefore in parallel on the CPU
         if (_random.NextUInt64() <= _sampleIfRandomSmallerOrEqualsTo)
         {
-            AddMeasurement(GetTimestamp() - start);
+            AddMeasurement((GetTimestamp() - start) * _sampling, _sampling);
         }
     }
 }
