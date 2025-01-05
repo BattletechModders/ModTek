@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using ModTek.Util;
 
 namespace ModTek.Features.Logging;
 
 internal class MTStopwatch
 {
-    internal Action<Stats> Callback { get; set; }
-    internal long CallbackForEveryNumberOfMeasurements { get; set; } = 100;
-    internal long SkipFirstNumberOfMeasurements { get; set; } = 1000; // let's wait for the JIT to warm up
+    internal Action<Stats> Callback;
+    internal long CallbackForEveryNumberOfMeasurements = 100;
+    internal long SkipFirstNumberOfMeasurements = 10_000; // let's wait for the JIT to warm up
+
+    internal uint Sampling
+    {
+        set
+        {
+            _sampling = value;
+            _sampleIfRandomSmallerOrEqualsTo = ulong.MaxValue / value;
+        }
+    }
+    private uint _sampling = 1;
+    private ulong _sampleIfRandomSmallerOrEqualsTo = ulong.MaxValue;
 
     private long _ticks;
     private long _count;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Measurement StartMeasurement()
     {
         return new Measurement(this);
@@ -20,13 +34,31 @@ internal class MTStopwatch
     internal readonly struct Measurement(MTStopwatch stopwatch)
     {
         private readonly long _begin = Stopwatch.GetTimestamp();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Stop()
         {
-            var elapsed = Stopwatch.GetTimestamp() - _begin;
-            stopwatch.AddMeasurement(elapsed);
+            stopwatch.EndMeasurement(_begin);
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void EndMeasurementSampled(long start)
+    {
+        // measuring takes about 16-30ns
+        // fast random is much faster
+        if (FastRandom.NextUInt64() <= _sampleIfRandomSmallerOrEqualsTo)
+        {
+            AddMeasurement(Stopwatch.GetTimestamp() - start);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void EndMeasurement(long start)
+    {
+        AddMeasurement(Stopwatch.GetTimestamp() - start);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AddMeasurement(long elapsedTicks)
     {
         var count = Interlocked.Increment(ref _count);
@@ -47,11 +79,12 @@ internal class MTStopwatch
     internal struct Tracker
     {
         private long _begin;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Begin()
         {
             _begin = Stopwatch.GetTimestamp();
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal long End()
         {
             return Stopwatch.GetTimestamp() - _begin;
@@ -61,6 +94,7 @@ internal class MTStopwatch
     internal Stats GetStats() => new(this);
     internal readonly struct Stats
     {
+        private readonly MTStopwatch _sw;
         internal long Ticks { get; }
         internal long Count { get; }
         internal TimeSpan TotalTime => TimeSpanFromTicks(Ticks);
@@ -68,19 +102,22 @@ internal class MTStopwatch
 
         internal Stats(MTStopwatch sw)
         {
-            Ticks = Interlocked.Read(ref sw._ticks);
-            Count = Math.Max(Interlocked.Read(ref sw._count) - sw.SkipFirstNumberOfMeasurements, 0);
+            Ticks = Interlocked.Read(ref sw._ticks) * sw._sampling;
+            Count = Math.Max(Interlocked.Read(ref sw._count) - sw.SkipFirstNumberOfMeasurements, 0) * sw._sampling;
+            _sw = sw;
         }
 
         internal Stats(MTStopwatch sw, long ticks, long count)
         {
-            Ticks = ticks;
-            Count = Math.Max(count - sw.SkipFirstNumberOfMeasurements, 0);
+            Ticks = ticks * sw._sampling;
+            Count = Math.Max(count - sw.SkipFirstNumberOfMeasurements, 0) * sw._sampling;
+            _sw = sw;
         }
 
         public override string ToString()
         {
-            return $"measured {Count} times, taking a total of {TotalTime} with an average of {AverageNanoseconds}ns";
+            var verb = _sw._sampling > 1 ? "estimated at" : "measured";
+            return $"{verb} {Count} times, taking a total of {TotalTime} with an average of {AverageNanoseconds}ns";
         }
     }
 

@@ -62,7 +62,7 @@ internal struct MTLoggerMessageDto
     // uncommit, prepare for re-use
     internal void Reset()
     {
-        LatencyStopWatch.AddMeasurement(Stopwatch.GetTimestamp() - Timestamp);
+        LatencyStopWatch.EndMeasurement(Timestamp);
         this = default;
     }
 }

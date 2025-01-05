@@ -35,23 +35,16 @@ internal class MTLoggerAsyncQueue
             }
 
             var dispatchStats = LoggingFeature.DispatchStopWatch.GetStats();
-            var messagePrepareStats = LoggingFeature.MessageSetupStopWatch.GetStats();
-            var onThreadTotal = dispatchStats.TotalTime + messagePrepareStats.TotalTime;
-            var onThreadAverage = dispatchStats.AverageNanoseconds + messagePrepareStats.AverageNanoseconds;
-
-            // estimated overhead introduced by async logging is subtracted
             var offloadedTime = stats.TotalTime.Subtract(dispatchStats.TotalTime);
             var latencyStats = MTLoggerMessageDto.LatencyStopWatch.GetStats();
 
             logger.Log(
                 $"""
-                Asynchronous logging offloaded {offloadedTime} from the main thread.
+                Asynchronous logging offloaded at least {offloadedTime} from the main thread.
                 Async internal processing had an average latency of {latencyStats.AverageNanoseconds / 1_000}us.
-                  On-thread processing took a total of {onThreadTotal} with an average of {onThreadAverage}ns.
-                    Message prepare {messagePrepareStats}.
-                    Dispatch {dispatchStats}.
+                  On-thread processing {dispatchStats}.
                   Off-thread processing took a total of {stats.TotalTime} with an average of {stats.AverageNanoseconds}ns.
-                    Flushed (to disk) {AppenderFile.FlushStopWatch.GetStats()}.
+                    Flushing (to disk) {AppenderFile.FlushStopWatch.GetStats()}.
                     Filters {AppenderFile.FiltersStopWatch.GetStats()}.
                     Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
                       UTF8-Fallback {FastBuffer.UTF8FallbackStopwatch.GetStats()}.

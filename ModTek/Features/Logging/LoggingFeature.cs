@@ -101,10 +101,7 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
-    private static object s_syncLock = new(); // FastBuffer is not thread safe and we don't use ThreadLocal
-    internal static readonly MTStopwatch MessageSetupStopWatch = new();
-    // tracks all overhead on the main thread that happens due to async logging
-    internal static readonly MTStopwatch DispatchStopWatch = new();
+    internal static readonly MTStopwatch DispatchStopWatch = new() { SkipFirstNumberOfMeasurements = 100, Sampling = 100 };
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {
@@ -122,24 +119,20 @@ internal static class LoggingFeature
 
         if (!IsDispatchAvailable(out var threadId))
         {
-            lock (s_syncLock)
+            var messageDto = new MTLoggerMessageDto
             {
-                var messageDto = new MTLoggerMessageDto
-                {
-                    Timestamp = timestamp,
-                    LoggerName = loggerName,
-                    LogLevel = logLevel,
-                    Message = messageAsString,
-                    Exception = exception,
-                    Location = location,
-                    ThreadId = threadId
-                };
-                LogMessage(ref messageDto);
-                return;
-            }
+                Timestamp = timestamp,
+                LoggerName = loggerName,
+                LogLevel = logLevel,
+                Message = messageAsString,
+                Exception = exception,
+                Location = location,
+                ThreadId = threadId
+            };
+            LogMessageThreadSafe(ref messageDto);
+            return;
         }
 
-        var timestampDispatch = Stopwatch.GetTimestamp();
         ref var updateDto = ref _queue.AcquireUncommitedOrWait();
 
         updateDto.Timestamp = timestamp;
@@ -151,9 +144,7 @@ internal static class LoggingFeature
         updateDto.ThreadId = threadId;
         updateDto.Commit();
 
-        var timestampEnd = Stopwatch.GetTimestamp();
-        DispatchStopWatch.AddMeasurement(timestampEnd - timestampDispatch);
-        MessageSetupStopWatch.AddMeasurement(timestampDispatch - timestamp);
+        DispatchStopWatch.EndMeasurementSampled(timestamp);
     }
 
     internal static void Flush()
@@ -162,13 +153,10 @@ internal static class LoggingFeature
 
         if (!IsDispatchAvailable(out _))
         {
-            lock (s_syncLock)
-            {
-                var messageDto = new MTLoggerMessageDto();
-                messageDto.FlushToDiskPostEvent = flushEvent;
-                LogMessage(ref messageDto);
-                return;
-            }
+            var messageDto = new MTLoggerMessageDto();
+            messageDto.FlushToDiskPostEvent = flushEvent;
+            LogMessageThreadSafe(ref messageDto);
+            return;
         }
 
         var measurement = DispatchStopWatch.StartMeasurement();
@@ -224,6 +212,17 @@ internal static class LoggingFeature
 
         return new DiagnosticsStackTrace(6, false);
     }
+
+    // without dispatch, thread safety is not guaranteed
+    // we also wait until dispatch thread is shutdown in IsDispatchAvailable before we go through here
+    internal static void LogMessageThreadSafe(ref MTLoggerMessageDto messageDto)
+    {
+        lock (s_logMessageLock)
+        {
+            LogMessage(ref messageDto);
+        }
+    }
+    private static readonly object s_logMessageLock = new(); // FastBuffer is not thread safe
 
     internal static void LogMessage(ref MTLoggerMessageDto messageDto)
     {
