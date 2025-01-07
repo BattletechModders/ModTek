@@ -33,8 +33,8 @@ internal readonly struct MTStopwatchStats
             var ifAllMeasured = Count * MTStopwatch.GetTimestampOverheadInAndAfterMeasurement;
             var onlySampledMeasured = sampled * MTStopwatch.GetTimestampOverheadInAndAfterMeasurement + Count * MTStopwatchWithSampling.SamplingCheckOverhead;
             var saved = ifAllMeasured - onlySampledMeasured;
-            var savedTimeSan = MTStopwatch.TimeSpanFromTicks((long)saved);
-            suffix = $", sampling interval of {_samplingInterval} saved {savedTimeSan}";
+            var savedPercent = (byte)(saved / (Ticks + saved) * 100);
+            suffix = $", sampling interval of {_samplingInterval} saved {savedPercent}%";
         }
         return $"{verb} {Count} times, taking a total of {TotalTime} with an average of {AverageNanoseconds}ns{suffix}";
     }
