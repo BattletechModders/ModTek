@@ -9,8 +9,14 @@ internal class MTStopwatch
     protected long _count;
     protected long _ticks;
 
-    internal static readonly double GetTimestampOverheadInMeasurement; // 22.47ns
-    internal static readonly double GetTimestampOverheadInAndAfterMeasurement; // 23.216ns
+    internal double _overheadInMeasurement = s_timestampOverheadInMeasurement;
+
+    internal byte TimestampCountPerMeasurement { get; init; } = 2;
+    protected double OverheadPerMeasurement => s_timestampOverheadInAndAfterMeasurement * TimestampCountPerMeasurement;
+    internal static double OverheadPerTimestampInNanoseconds => s_timestampOverheadInAndAfterMeasurement * TicksToNsMultiplier;
+
+    protected static readonly double s_timestampOverheadInMeasurement; // 22.47ns
+    private static readonly double s_timestampOverheadInAndAfterMeasurement; // 23.216ns
     static MTStopwatch()
     {
         const int Count = 100_000;
@@ -31,8 +37,8 @@ internal class MTStopwatch
                 seSum += end - start;
             }
         }
-        GetTimestampOverheadInMeasurement = smSum / ActualCount;
-        GetTimestampOverheadInAndAfterMeasurement = ( seSum - smSum ) / ActualCount;
+        s_timestampOverheadInMeasurement = smSum / ActualCount;
+        s_timestampOverheadInAndAfterMeasurement = ( seSum - smSum ) / ActualCount;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

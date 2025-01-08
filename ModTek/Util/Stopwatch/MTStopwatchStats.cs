@@ -4,7 +4,7 @@ namespace ModTek.Util.Stopwatch;
 
 internal readonly struct MTStopwatchStats
 {
-    private readonly long _samplingInterval;
+    private readonly MTStopwatch _sw;
     internal readonly long Count;
     internal readonly long Ticks;
     internal TimeSpan TotalTime => MTStopwatch.TimeSpanFromTicks(Ticks);
@@ -12,29 +12,22 @@ internal readonly struct MTStopwatchStats
 
     internal MTStopwatchStats(MTStopwatch sw, long count, long ticks)
     {
+        _sw = sw;
         Count = count;
-        var overheadInMeasurement = MTStopwatch.GetTimestampOverheadInMeasurement;
-        if (sw is MTStopwatchWithSampling sws)
-        {
-            _samplingInterval = sws._samplingInterval;
-            overheadInMeasurement += MTStopwatchWithSampling.SamplingCheckOverhead;
-        }
-        Ticks = ticks - (long)(overheadInMeasurement * count);
+        Ticks = ticks - (long)(sw._overheadInMeasurement * count);
     }
 
     public override string ToString()
     {
         var verb = "measured";
         var suffix = "";
-        if (_samplingInterval > 1)
+        if (_sw is MTStopwatchWithSampling sws)
         {
             verb = "estimated at";
-            var sampled = Count / _samplingInterval;
-            var ifAllMeasured = Count * MTStopwatch.GetTimestampOverheadInAndAfterMeasurement;
-            var onlySampledMeasured = sampled * MTStopwatch.GetTimestampOverheadInAndAfterMeasurement + Count * MTStopwatchWithSampling.SamplingCheckOverhead;
-            var saved = ifAllMeasured - onlySampledMeasured;
-            var savedPercent = (byte)(saved / (Ticks + saved) * 100);
-            suffix = $", sampling interval of {_samplingInterval} saved {savedPercent}%";
+            var overheadWithoutSampling = sws.OverheadPerMeasurementWithoutSampling * Count;
+            var saved = overheadWithoutSampling - sws.OverheadPerMeasurementWithSampling * Count;
+            var savedPercent = (byte)(saved / (Ticks + overheadWithoutSampling) * 100);
+            suffix = $", sampling interval of {sws._samplingInterval} reduced measurement overhead by {savedPercent}%";
         }
         return $"{verb} {Count} times, taking a total of {TotalTime} with an average of {AverageNanoseconds}ns{suffix}";
     }

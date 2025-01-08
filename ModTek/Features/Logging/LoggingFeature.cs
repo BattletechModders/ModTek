@@ -101,7 +101,7 @@ internal static class LoggingFeature
         _logsAppenders = logsAppenders;
     }
 
-    internal static readonly MTStopwatchWithSampling DispatchStopWatch = new(1000);
+    internal static readonly MTStopwatchWithSampling DispatchStopWatch = new(1000) { TimestampCountPerMeasurement = 1 };
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)
     {

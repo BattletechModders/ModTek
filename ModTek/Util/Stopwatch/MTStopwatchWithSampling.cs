@@ -10,12 +10,16 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
     {
         _samplingInterval = samplingInterval;
         _sampleIfRandomSmallerOrEqualsTo = ulong.MaxValue / samplingInterval;
+        _overheadInMeasurement = _overheadInMeasurement / _samplingInterval + s_samplingCheckOverhead;
     }
     internal readonly uint _samplingInterval;
     private readonly ulong _sampleIfRandomSmallerOrEqualsTo;
     private readonly FastRandom _random = new();
 
-    internal static readonly double SamplingCheckOverhead; // 1.554ns
+    internal double OverheadPerMeasurementWithSampling => OverheadPerMeasurement/_samplingInterval + s_samplingCheckOverhead;
+    internal double OverheadPerMeasurementWithoutSampling => OverheadPerMeasurement;
+
+    private static readonly double s_samplingCheckOverhead; // 1.554ns
     internal static readonly bool DontOptimize;
     static MTStopwatchWithSampling()
     {
@@ -35,7 +39,7 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
                 sum += end - start;
             }
         }
-        SamplingCheckOverhead = (sum - GetTimestampOverheadInMeasurement * ActualCount) / ActualCount;
+        s_samplingCheckOverhead = (sum - s_timestampOverheadInMeasurement * ActualCount) / ActualCount;
         DontOptimize = dontOptimize;
     }
 
