@@ -44,17 +44,17 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool ShouldMeasure()
+    internal bool ShouldMeasure()
     {
         return _random.NextUInt64() <= _sampleIfRandomSmallerOrEqualsTo;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal override void EndMeasurement(long start)
+    internal override void EndMeasurement(long start, long delta = 1)
     {
         if (ShouldMeasure())
         {
-            AddMeasurement((GetTimestamp() - start) * _samplingInterval, _samplingInterval);
+            AddMeasurement((GetTimestamp() - start) * _samplingInterval, delta * _samplingInterval);
         }
     }
 }

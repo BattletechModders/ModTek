@@ -41,19 +41,24 @@ internal class Win32ApiImpl : ILogStream
             return;
         }
 
-        var position = AcquirePosition(count);
-        var overlapped = PrepareOverlap(position);
-
         fixed (byte* numPtr = bytes)
         {
-            if (WriteFile(_handle, numPtr + offset, count, out var numBytesWritten, &overlapped) != 0)
+            Append(numPtr + offset, count);
+        }
+    }
+
+    private unsafe void Append(byte* bytes, int numBytesToWrite)
+    {
+        var position = AcquirePosition(numBytesToWrite);
+        var overlapped = PrepareOverlap(position);
+
+        if (WriteFile(_handle, bytes, numBytesToWrite, out var numBytesWritten, &overlapped) != 0)
+        {
+            if (numBytesWritten != numBytesToWrite)
             {
-                if (numBytesWritten != count)
-                {
-                    throw new IOException($"{numBytesWritten} != {count}");
-                }
-                return;
+                throw new IOException($"{numBytesWritten} != {numBytesToWrite}");
             }
+            return;
         }
 
         var errorCode = Marshal.GetLastWin32Error();

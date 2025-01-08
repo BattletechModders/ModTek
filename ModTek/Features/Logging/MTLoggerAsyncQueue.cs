@@ -47,6 +47,7 @@ internal class MTLoggerAsyncQueue
                     Filters {AppenderFile.FiltersStopWatch.GetStats()}.
                     Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
                       UTF8-Fallback {FastBuffer.UTF8FallbackStopwatch.GetStats()}.
+                      Copy buffer per bytes {FastBuffer.CopyStopwatch.GetStats()}.
                     Write (to OS buffers) {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );

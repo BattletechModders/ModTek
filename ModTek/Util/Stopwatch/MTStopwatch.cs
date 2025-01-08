@@ -48,9 +48,9 @@ internal class MTStopwatch
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal virtual void EndMeasurement(long start)
+    internal virtual void EndMeasurement(long start, long delta = 1)
     {
-        AddMeasurement(GetTimestamp() - start, 1);
+        AddMeasurement(GetTimestamp() - start, delta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

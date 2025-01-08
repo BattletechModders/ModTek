@@ -240,12 +240,14 @@ internal unsafe class FastBuffer
                 {
                     _buffer = null;
                     _bufferPtr = null;
+                    _isG2 = false;
                 }
             }
 
             _buffer = newBuffer;
             _handle = newHandle;
             _bufferPtr = newBufferPtr;
+            _isG2 = false;
         }
         catch
         {
@@ -254,25 +256,12 @@ internal unsafe class FastBuffer
         }
     }
 
-    // from Buffer.memcpy1 and optimized
-    private static void Memcpy1(byte* dest, byte* src, int size)
+    internal static readonly MTStopwatch CopyStopwatch = new();
+    // from Buffer.memcpy1 and optimized to use 64bit/16bit types instead of just 8bit
+    internal static void Memcpy1(byte* dest, byte* src, int size)
     {
-        {
-            const int BatchSize = 8 * sizeof(ulong); // 64, 8*8
-            for (; size >= BatchSize; size -= BatchSize)
-            {
-                *(ulong*)dest = *(ulong*)src;
-                *((ulong*)dest + 1) = *((ulong*)src + 1);
-                *((ulong*)dest + 2) = *((ulong*)src + 2);
-                *((ulong*)dest + 3) = *((ulong*)src + 3);
-                *((ulong*)dest + 4) = *((ulong*)src + 4);
-                *((ulong*)dest + 5) = *((ulong*)src + 5);
-                *((ulong*)dest + 6) = *((ulong*)src + 6);
-                *((ulong*)dest + 7) = *((ulong*)src + 7);
-                dest += BatchSize;
-                src += BatchSize;
-            }
-        }
+        // make sure to only measure when there is enough, otherwise measurement is slower than the actual copy
+        var measurement = size >= 64 ? MTStopwatch.GetTimestamp() : 0;
         {
             const int BatchSize = sizeof(ulong); // 8
             for (; size >= BatchSize; size -= BatchSize)
@@ -291,9 +280,14 @@ internal unsafe class FastBuffer
                 src += BatchSize;
             }
         }
-        if (size <= 0)
-            return;
-        *dest = *src;
+        if (size > 0)
+        {
+            *dest = *src;
+        }
+        if (measurement > 0)
+        {
+            CopyStopwatch.EndMeasurement(measurement, size);
+        }
     }
 
     ~FastBuffer()
