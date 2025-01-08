@@ -43,8 +43,15 @@ internal unsafe class FastBuffer
         _bufferPtr = (byte*)_handle.AddrOfPinnedObject();
     }
 
+    private bool _isG2;
     internal void Unpin()
     {
+        if (_isG2)
+        {
+            return;
+        }
+
+        _isG2 = GC.GetGeneration(_buffer) == 2;
         if (_handle.IsAllocated)
         {
             _handle.Free();
@@ -247,28 +254,42 @@ internal unsafe class FastBuffer
         }
     }
 
-    // from Buffer.memcpy1
+    // from Buffer.memcpy1 and optimized
     private static void Memcpy1(byte* dest, byte* src, int size)
     {
-        for (; size >= 8; size -= 8)
         {
-            *dest = *src;
-            dest[1] = src[1];
-            dest[2] = src[2];
-            dest[3] = src[3];
-            dest[4] = src[4];
-            dest[5] = src[5];
-            dest[6] = src[6];
-            dest[7] = src[7];
-            dest += 8;
-            src += 8;
+            const int BatchSize = 8 * sizeof(ulong); // 64, 8*8
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(ulong*)dest = *(ulong*)src;
+                *((ulong*)dest + 1) = *((ulong*)src + 1);
+                *((ulong*)dest + 2) = *((ulong*)src + 2);
+                *((ulong*)dest + 3) = *((ulong*)src + 3);
+                *((ulong*)dest + 4) = *((ulong*)src + 4);
+                *((ulong*)dest + 5) = *((ulong*)src + 5);
+                *((ulong*)dest + 6) = *((ulong*)src + 6);
+                *((ulong*)dest + 7) = *((ulong*)src + 7);
+                dest += BatchSize;
+                src += BatchSize;
+            }
         }
-        for (; size >= 2; size -= 2)
         {
-            *dest = *src;
-            dest[1] = src[1];
-            dest += 2;
-            src += 2;
+            const int BatchSize = sizeof(ulong); // 8
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(ulong*)dest = *(ulong*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
+        {
+            const int BatchSize = sizeof(ushort); // 2
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(ushort*)dest = *(ushort*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
         }
         if (size <= 0)
             return;
