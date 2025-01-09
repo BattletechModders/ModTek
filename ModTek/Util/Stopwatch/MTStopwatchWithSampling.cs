@@ -19,28 +19,24 @@ internal sealed class MTStopwatchWithSampling : MTStopwatch
     internal double OverheadPerMeasurementWithSampling => OverheadPerMeasurement/_samplingInterval + s_samplingCheckOverhead;
     internal double OverheadPerMeasurementWithoutSampling => OverheadPerMeasurement;
 
-    private static readonly double s_samplingCheckOverhead; // 1.554ns
+    private static readonly double s_samplingCheckOverhead;
     internal static readonly bool DontOptimize;
     static MTStopwatchWithSampling()
     {
         var ws = new MTStopwatchWithSampling(100);
-        const int Count = 100_000;
-        const int WarmupCount = Count/2;
-        const double ActualCount = Count - WarmupCount;
-        var sum = 0L;
         var dontOptimize = false;
-        for (var i = 0; i < Count; i++)
+        for (var r = 0; r < 100; r++)
         {
             var start = GetTimestamp();
-            dontOptimize = ws.ShouldMeasure();
-            var end = GetTimestamp();
-            if (i >= WarmupCount)
+            const int Count = 1000;
+            for (var i = 0; i < Count; i++)
             {
-                sum += end - start;
+                dontOptimize = ws.ShouldMeasure();
             }
+            var end = GetTimestamp();
+            s_samplingCheckOverhead = (end - start)/(double)Count - s_timestampOverhead;
+            DontOptimize = dontOptimize;
         }
-        s_samplingCheckOverhead = (sum - s_timestampOverheadInMeasurement * ActualCount) / ActualCount;
-        DontOptimize = dontOptimize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

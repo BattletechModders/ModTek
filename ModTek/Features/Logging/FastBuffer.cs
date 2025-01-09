@@ -85,7 +85,7 @@ internal unsafe class FastBuffer
     // TODO once we know that its always above some value, we can just set it and remove the benchmark
     private static int FindMemCpyThreshold()
     {
-        const int MaxSize = 2 * 1024;
+        const int MaxSize = 4 * 1024;
         var srcA = new byte[MaxSize];
         var dstA = new byte[MaxSize];
         var dst = stackalloc byte[MaxSize];
@@ -98,7 +98,7 @@ internal unsafe class FastBuffer
         for (var w = 0; w < WarmupCount + 1; w++)
         {
             var shouldMeasure = w == WarmupCount;
-            const int StepSize = 128;
+            const int StepSize = 256;
             const int ThresholdMin = 256;
             for (var size=ThresholdMin+StepSize; size<=MaxSize; size+=StepSize) {
                 for (var run = 0; run < TestRunsPerSize; run++)
@@ -124,7 +124,7 @@ internal unsafe class FastBuffer
                 }
                 if (shouldMeasure)
                 {
-                    if (MTStopwatch.FastestTicksSum(memCpyTicks) > MTStopwatch.FastestTicksSum(byteBufferTicks))
+                    if (MTStopwatch.TicksMin(memCpyTicks) > MTStopwatch.TicksMin(byteBufferTicks))
                     {
                         return size - StepSize;
                     }
