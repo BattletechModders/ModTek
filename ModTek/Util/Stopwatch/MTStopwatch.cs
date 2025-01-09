@@ -41,6 +41,12 @@ internal class MTStopwatch
         s_timestampOverheadInAndAfterMeasurement = ( seSum - smSum ) / ActualCount;
     }
 
+    internal void Reset()
+    {
+        Volatile.Write(ref _count, 0);
+        Volatile.Write(ref _ticks, 0);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static long GetTimestamp()
     {
@@ -61,6 +67,17 @@ internal class MTStopwatch
     }
 
     internal MTStopwatchStats GetStats() => new(this, Volatile.Read(ref _count), Volatile.Read(ref _ticks));
+
+    internal static long FastestTicksSum(long[] ticks, double onlyIncludeFastest = 0.5)
+    {
+        Array.Sort(ticks);
+        var sum = 0L;
+        for (var i = 0; i < ticks.Length * onlyIncludeFastest; i++)
+        {
+            sum += ticks[i];
+        }
+        return sum;
+    }
 
     internal static TimeSpan TimeSpanFromTicks(long elapsedTicks)
     {

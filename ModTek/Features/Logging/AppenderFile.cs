@@ -30,7 +30,7 @@ internal class AppenderFile : IDisposable
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate}) ; HarmonyX {typeof(Harmony).Assembly.GetName().Version}
             {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
-            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp} ; Timestamp Overhead {MTStopwatch.OverheadPerTimestampInNanoseconds}ns
+            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp} ; Timestamp Overhead {MTStopwatch.OverheadPerTimestampInNanoseconds}ns ; MemCpy->BlockCpy threshold {FastBuffer.MemcpyThreshold}
             {new string('-', 80)}
 
             """

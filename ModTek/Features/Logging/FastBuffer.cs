@@ -66,11 +66,72 @@ internal unsafe class FastBuffer
 
     internal void Append(byte[] value)
     {
-        var position = GetPointerAndIncrementLength(value.Length);
-        fixed (byte* bytes = value)
+        var length = value.Length;
+        var position = GetPointerAndIncrementLength(length);
+        if (length > MemcpyThreshold)
         {
-            Memcpy1(position, bytes, value.Length);
+            var offset = (int)(position - _bufferPtr);
+            Buffer.BlockCopy(value, 0, _buffer, offset, length);
         }
+        else
+        {
+            fixed (byte* bytes = value)
+            {
+                Memcpy256(position, bytes, value.Length);
+            }
+        }
+    }
+    internal static readonly int MemcpyThreshold = FindMemCpyThreshold();
+    // TODO once we know that its always above some value, we can just set it and remove the benchmark
+    private static int FindMemCpyThreshold()
+    {
+        const int MaxSize = 2 * 1024;
+        var srcA = new byte[MaxSize];
+        var dstA = new byte[MaxSize];
+        var dst = stackalloc byte[MaxSize];
+
+        const int TestRunsPerSize = 100;
+        var byteBufferTicks = new long[TestRunsPerSize];
+        var memCpyTicks = new long[TestRunsPerSize];
+
+        const int WarmupCount = 100;
+        for (var w = 0; w < WarmupCount + 1; w++)
+        {
+            var shouldMeasure = w == WarmupCount;
+            const int StepSize = 128;
+            const int ThresholdMin = 256;
+            for (var size=ThresholdMin+StepSize; size<=MaxSize; size+=StepSize) {
+                for (var run = 0; run < TestRunsPerSize; run++)
+                {
+                    var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
+                    Buffer.BlockCopy(srcA, 0, dstA, 0, size);
+                    if (shouldMeasure)
+                    {
+                        byteBufferTicks[run] = MTStopwatch.GetTimestamp() - start;
+                    }
+                }
+                for (var run = 0; run < TestRunsPerSize; run++)
+                {
+                    var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
+                    fixed (byte* bytes = srcA)
+                    {
+                        Memcpy256(dst, bytes, size);
+                    }
+                    if (shouldMeasure)
+                    {
+                        memCpyTicks[run] = MTStopwatch.GetTimestamp() - start;
+                    }
+                }
+                if (shouldMeasure)
+                {
+                    if (MTStopwatch.FastestTicksSum(memCpyTicks) > MTStopwatch.FastestTicksSum(byteBufferTicks))
+                    {
+                        return size - StepSize;
+                    }
+                }
+            }
+        }
+        return MaxSize;
     }
 
     internal void Append(int value)
@@ -88,45 +149,45 @@ internal unsafe class FastBuffer
             return;
         }
 
-        // assume one byte per char, enlarge through AppendUsingEncoding if necessary
+        // assume one byte per char, fallback will enlarge more defensively
         EnsureCapacity(_length + processingCount);
 
         fixed (char* chars = value)
         {
-            var positionIterPtr = _bufferPtr + _length;
-            var charsIterPtr = chars;
+            var dstPtr = _bufferPtr + _length;
+            var srcPtr = (byte*)chars;
 
-            // loop unrolling similar to Buffer.memcpy1
             // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
-
-            // 8 is a sweat spot, for large amounts of data: 4 is slower, 16 is slower
+            // 8 is a sweat spot, since we can do the ASCII bit mask check with an ulong
             {
                 const int IterSize = 8;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
                 {
-                    SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
-                    SetAscii(positionIterPtr, charsIterPtr, 1, out var a1);
-                    SetAscii(positionIterPtr, charsIterPtr, 2, out var a2);
-                    SetAscii(positionIterPtr, charsIterPtr, 3, out var a3);
-                    SetAscii(positionIterPtr, charsIterPtr, 4, out var a4);
-                    SetAscii(positionIterPtr, charsIterPtr, 5, out var a5);
-                    SetAscii(positionIterPtr, charsIterPtr, 6, out var a6);
-                    SetAscii(positionIterPtr, charsIterPtr, 7, out var a7);
-                    if (!(
-                        a0 &&
-                        a1 &&
-                        a2 &&
-                        a3 &&
-                        a4 &&
-                        a5 &&
-                        a6 &&
-                        a7
-                    )) {
+                    *(dstPtr + 0) = *(srcPtr + 0 * 2);
+                    *(dstPtr + 1) = *(srcPtr + 1 * 2);
+                    *(dstPtr + 2) = *(srcPtr + 2 * 2);
+                    *(dstPtr + 3) = *(srcPtr + 3 * 2);
+                    *(dstPtr + 4) = *(srcPtr + 4 * 2);
+                    *(dstPtr + 5) = *(srcPtr + 5 * 2);
+                    *(dstPtr + 6) = *(srcPtr + 6 * 2);
+                    *(dstPtr + 7) = *(srcPtr + 7 * 2);
+
+                    const ulong NonAsciiBitmask =
+                            (1ul << (7 + 8 * 7)) +
+                            (1ul << (7 + 8 * 6)) +
+                            (1ul << (7 + 8 * 5)) +
+                            (1ul << (7 + 8 * 4)) +
+                            (1ul << (7 + 8 * 3)) +
+                            (1ul << (7 + 8 * 2)) +
+                            (1ul << (7 + 8 * 1)) +
+                            (1ul << (7 + 8 * 0));
+                    if ((*(ulong*)dstPtr & NonAsciiBitmask) != 0)
+                    {
                         goto Utf8Fallback;
                     }
+                    dstPtr += IterSize;
+                    srcPtr += 2*IterSize;
                     _length += IterSize;
-                    positionIterPtr = _bufferPtr + _length;
-                    charsIterPtr += IterSize;
                 }
             }
 
@@ -134,25 +195,29 @@ internal unsafe class FastBuffer
                 const int IterSize = 2;
                 for (; processingCount >= IterSize; processingCount -= IterSize)
                 {
-                    SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
-                    SetAscii(positionIterPtr, charsIterPtr, 1, out var a1);
-                    if (!(
-                        a0 &&
-                        a1
-                    )) {
+                    *(dstPtr + 0) = *(srcPtr + 0 * 2);
+                    *(dstPtr + 1) = *(srcPtr + 1 * 2);
+
+                    const ushort NonAsciiBitmask =
+                        (1 << (7 + 8 * 1)) +
+                        (1 << (7 + 8 * 0));
+                    if ((*(ushort*)dstPtr & NonAsciiBitmask) != 0)
+                    {
                         goto Utf8Fallback;
                     }
+                    dstPtr += IterSize;
+                    srcPtr += 2*IterSize;
                     _length += IterSize;
-                    positionIterPtr = _bufferPtr + _length;
-                    charsIterPtr += IterSize;
                 }
             }
 
             if (processingCount > 0)
             {
                 const int IterSize = 1;
-                SetAscii(positionIterPtr, charsIterPtr, 0, out var a0);
-                if (!a0)
+                *(dstPtr + 0) = *(srcPtr + 0 * 2);
+
+                const byte NonAsciiBitmask = 1 << 7;
+                if ((*dstPtr & NonAsciiBitmask) != 0)
                 {
                     goto Utf8Fallback;
                 }
@@ -171,14 +236,6 @@ internal unsafe class FastBuffer
         }
     }
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void SetAscii(byte* positionIterPtr, char* charsIterPtr, int offset, out bool isUnicodeCompatibleAscii)
-    {
-        var valueAsByte = (byte)charsIterPtr[offset];
-        positionIterPtr[offset] = valueAsByte;
-        isUnicodeCompatibleAscii = valueAsByte <= 127;
-    }
 
     internal void Append(DateTime value)
     {
@@ -224,46 +281,51 @@ internal unsafe class FastBuffer
     private void EnlargeCapacity(int targetLength)
     {
         var newBuffer = new byte[targetLength];
-        var newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
-        try
+        if (_buffer != null)
         {
-            var newBufferPtr = (byte*)newHandle.AddrOfPinnedObject();
-
-            if (_buffer != null)
+            // block copy is faster for larger byte arrays
+            Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _length);
+            try
             {
-                Memcpy1(newBufferPtr, _bufferPtr, _length);
-                try
-                {
-                    _handle.Free();
-                }
-                catch
-                {
-                    _buffer = null;
-                    _bufferPtr = null;
-                    _isG2 = false;
-                }
+                _handle.Free();
             }
-
-            _buffer = newBuffer;
-            _handle = newHandle;
-            _bufferPtr = newBufferPtr;
-            _isG2 = false;
+            catch
+            {
+                _buffer = null;
+                _bufferPtr = null;
+                _isG2 = false;
+            }
         }
-        catch
-        {
-            newHandle.Free();
-            throw;
-        }
+        _buffer = newBuffer;
+        _handle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
+        _bufferPtr = (byte*)_handle.AddrOfPinnedObject();;
+        _isG2 = false;
     }
 
-    internal static readonly MTStopwatch CopyStopwatch = new();
-    // from Buffer.memcpy1 and optimized to use 64bit/16bit types instead of just 8bit
-    internal static void Memcpy1(byte* dest, byte* src, int size)
+    // from Buffer.memcpy* and optimized to use wider types like 128 and 256 bit
+    // JIT can do xmm (128) and cpu can optimize 2x xmm (2x128) further it seems
+    internal static void Memcpy256(byte* dest, byte* src, int size)
     {
-        // make sure to only measure when there is enough, otherwise measurement is slower than the actual copy
-        var measurement = size >= 64 ? MTStopwatch.GetTimestamp() : 0;
+        { // 25% faster than if using 2x128 on AMD Zen4 hardware
+            const int BatchSize = My256Bit.Size;
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(My256Bit*)dest = *(My256Bit*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
+        { // 100% faster than if using 2x64 on xmm hardware
+            const int BatchSize = My128Bit.Size;
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(My128Bit*)dest = *(My128Bit*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
         {
-            const int BatchSize = sizeof(ulong); // 8
+            const int BatchSize = sizeof(ulong);
             for (; size >= BatchSize; size -= BatchSize)
             {
                 *(ulong*)dest = *(ulong*)src;
@@ -272,7 +334,7 @@ internal unsafe class FastBuffer
             }
         }
         {
-            const int BatchSize = sizeof(ushort); // 2
+            const int BatchSize = sizeof(ushort);
             for (; size >= BatchSize; size -= BatchSize)
             {
                 *(ushort*)dest = *(ushort*)src;
@@ -284,10 +346,21 @@ internal unsafe class FastBuffer
         {
             *dest = *src;
         }
-        if (measurement > 0)
-        {
-            CopyStopwatch.EndMeasurement(measurement, size);
-        }
+    }
+
+    // the jit can optimize this to 2x xmm 128 ops
+    // and 2x 128bit ops together are 25% faster than looping over 128bit ops
+    private struct My128Bit
+    {
+        internal const int Size = 128/8;
+        internal long _00;
+        internal long _01;
+    }
+    private struct My256Bit
+    {
+        internal const int Size = 256/8;
+        internal My128Bit _00;
+        internal My128Bit _01;
     }
 
     ~FastBuffer()
