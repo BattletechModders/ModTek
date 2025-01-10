@@ -155,7 +155,7 @@ internal unsafe class FastBuffer
         fixed (char* chars = value)
         {
             var dstPtr = _bufferPtr + _length;
-            var srcPtr = (byte*)chars;
+            var srcPtr = (byte*)chars + s_charLowBitsPosition;
 
             // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
             // 8 is a sweat spot, since we can do the ASCII bit mask check with an ulong
@@ -236,6 +236,12 @@ internal unsafe class FastBuffer
         }
     }
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new();
+    private static readonly int s_charLowBitsPosition = GetLowerBytePosition();
+    private static int GetLowerBytePosition()
+    {
+        var chars = stackalloc char[] { '1' };
+        return *(byte*)chars == 0 ? 1 : 0;
+    }
 
     internal void Append(DateTime value)
     {
