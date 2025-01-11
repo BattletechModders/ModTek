@@ -157,82 +157,21 @@ internal unsafe class FastBuffer
             var dstPtr = _bufferPtr + _length;
             var srcPtr = (byte*)chars + s_charLowBitsPosition;
 
-            // parallelism isn't what makes it particular fast, it's the batching that is helpful (fewer ops overall)
-            // 8 is a sweat spot, since we can do the ASCII bit mask check with an ulong
+            if (FastConvert(dstPtr, srcPtr, ref processingCount))
             {
-                const int IterSize = 8;
-                for (; processingCount >= IterSize; processingCount -= IterSize)
-                {
-                    *(dstPtr + 0) = *(srcPtr + 0 * 2);
-                    *(dstPtr + 1) = *(srcPtr + 1 * 2);
-                    *(dstPtr + 2) = *(srcPtr + 2 * 2);
-                    *(dstPtr + 3) = *(srcPtr + 3 * 2);
-                    *(dstPtr + 4) = *(srcPtr + 4 * 2);
-                    *(dstPtr + 5) = *(srcPtr + 5 * 2);
-                    *(dstPtr + 6) = *(srcPtr + 6 * 2);
-                    *(dstPtr + 7) = *(srcPtr + 7 * 2);
-
-                    const ulong NonAsciiBitmask =
-                            (1ul << (7 + 8 * 7)) +
-                            (1ul << (7 + 8 * 6)) +
-                            (1ul << (7 + 8 * 5)) +
-                            (1ul << (7 + 8 * 4)) +
-                            (1ul << (7 + 8 * 3)) +
-                            (1ul << (7 + 8 * 2)) +
-                            (1ul << (7 + 8 * 1)) +
-                            (1ul << (7 + 8 * 0));
-                    if ((*(ulong*)dstPtr & NonAsciiBitmask) != 0)
-                    {
-                        goto Utf8Fallback;
-                    }
-                    dstPtr += IterSize;
-                    srcPtr += 2*IterSize;
-                    _length += IterSize;
-                }
+                _length += value.Length;
             }
-
+            else
             {
-                const int IterSize = 2;
-                for (; processingCount >= IterSize; processingCount -= IterSize)
-                {
-                    *(dstPtr + 0) = *(srcPtr + 0 * 2);
-                    *(dstPtr + 1) = *(srcPtr + 1 * 2);
-
-                    const ushort NonAsciiBitmask =
-                        (1 << (7 + 8 * 1)) +
-                        (1 << (7 + 8 * 0));
-                    if ((*(ushort*)dstPtr & NonAsciiBitmask) != 0)
-                    {
-                        goto Utf8Fallback;
-                    }
-                    dstPtr += IterSize;
-                    srcPtr += 2*IterSize;
-                    _length += IterSize;
-                }
+                // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
+                var measurement = MTStopwatch.GetTimestamp();
+                var charIndex = value.Length - processingCount;
+                _length += charIndex;
+                const int Utf8MaxBytesPerChar = 4;
+                EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
+                _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
+                UTF8FallbackStopwatch.EndMeasurement(measurement);
             }
-
-            if (processingCount > 0)
-            {
-                const int IterSize = 1;
-                *(dstPtr + 0) = *(srcPtr + 0 * 2);
-
-                const byte NonAsciiBitmask = 1 << 7;
-                if ((*dstPtr & NonAsciiBitmask) != 0)
-                {
-                    goto Utf8Fallback;
-                }
-                _length += IterSize;
-            }
-
-            return;
-
-            Utf8Fallback: // this is 10x slower or more (GetBytes has no fast ASCII path and no SIMD in this old .NET)
-            var measurement = MTStopwatch.GetTimestamp();
-            var charIndex = value.Length - processingCount;
-            const int Utf8MaxBytesPerChar = 4;
-            EnsureCapacity(_length + processingCount * Utf8MaxBytesPerChar);
-            _length += Encoding.UTF8.GetBytes(value, charIndex, processingCount, _buffer, _length);
-            UTF8FallbackStopwatch.EndMeasurement(measurement);
         }
     }
     internal static readonly MTStopwatch UTF8FallbackStopwatch = new();
@@ -241,6 +180,76 @@ internal unsafe class FastBuffer
     {
         var chars = stackalloc char[] { '1' };
         return *(byte*)chars == 0 ? 1 : 0;
+    }
+    // if utf16 is only ASCII7 we can just copy the lower bits to 1 byte
+    // there is some parallelism achieved due to unrolling of the loop
+    // batching also has an effect due to fewer ops overall
+    // 8 is a sweat spot for unrolling and the ulong bit mask check
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool FastConvert(byte* dstPtr, byte* srcPtr,  ref int processingCount)
+    {
+        {
+            const int IterSize = 8;
+            for (; processingCount >= IterSize; processingCount -= IterSize)
+            {
+                *(dstPtr + 0) = *(srcPtr + 0 * 2);
+                *(dstPtr + 1) = *(srcPtr + 1 * 2);
+                *(dstPtr + 2) = *(srcPtr + 2 * 2);
+                *(dstPtr + 3) = *(srcPtr + 3 * 2);
+                *(dstPtr + 4) = *(srcPtr + 4 * 2);
+                *(dstPtr + 5) = *(srcPtr + 5 * 2);
+                *(dstPtr + 6) = *(srcPtr + 6 * 2);
+                *(dstPtr + 7) = *(srcPtr + 7 * 2);
+
+                const ulong NonAsciiBitmask =
+                        (1ul << (7 + 8 * 7)) +
+                        (1ul << (7 + 8 * 6)) +
+                        (1ul << (7 + 8 * 5)) +
+                        (1ul << (7 + 8 * 4)) +
+                        (1ul << (7 + 8 * 3)) +
+                        (1ul << (7 + 8 * 2)) +
+                        (1ul << (7 + 8 * 1)) +
+                        (1ul << (7 + 8 * 0));
+                if ((*(ulong*)dstPtr & NonAsciiBitmask) != 0)
+                {
+                    return false;
+                }
+                dstPtr += IterSize;
+                srcPtr += 2*IterSize;
+            }
+        }
+
+        {
+            const int IterSize = 2;
+            for (; processingCount >= IterSize; processingCount -= IterSize)
+            {
+                *(dstPtr + 0) = *(srcPtr + 0 * 2);
+                *(dstPtr + 1) = *(srcPtr + 1 * 2);
+
+                const ushort NonAsciiBitmask =
+                    (1 << (7 + 8 * 1)) +
+                    (1 << (7 + 8 * 0));
+                if ((*(ushort*)dstPtr & NonAsciiBitmask) != 0)
+                {
+                    return false;
+                }
+                dstPtr += IterSize;
+                srcPtr += 2*IterSize;
+            }
+        }
+
+        if (processingCount > 0)
+        {
+            *(dstPtr + 0) = *(srcPtr + 0 * 2);
+
+            const byte NonAsciiBitmask = 1 << 7;
+            if ((*dstPtr & NonAsciiBitmask) != 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     internal void Append(DateTime value)
