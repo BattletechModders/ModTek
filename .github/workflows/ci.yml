@@ -26,22 +26,8 @@ jobs:
           cd -
           dotnet clean --verbosity normal --configuration Release -p:BattleTechGameDir="$btdir"
         }
-
-        mkdir ~/ModTekNuPackages
-        dotnet nuget add source --name ModTek ~/ModTekNuPackages
-        # dotnet nuget remove source ModTek
-        curl -OL https://github.com/BattletechModders/HarmonyX/releases/download/latest/HarmonyX.2.13.0-modtek-1.nupkg
-        dotnet nuget push --source ModTek HarmonyX.2.13.0-modtek-1.nupkg
-        rm HarmonyX.2.13.0-modtek-1.nupkg
-        # dotnet add ModTek.Preloader package HarmonyX -v 2.13.0-modtek-1 --source ModTek
         
-        BATTLETECH_DIR_OLD_HARMONY="${BATTLETECH_DIR}oldharmony"
-        cp -a "$BATTLETECH_DIR" "$BATTLETECH_DIR_OLD_HARMONY"
         build_modtek "$BATTLETECH_DIR" "ModTek.zip"
-        
-        #OLD_HARMONYX_VERSION="2.10.2"
-        #sed -i -r -e 's/Include="HarmonyX" Version="[^"]+?"/Include="HarmonyX" Version="'$OLD_HARMONYX_VERSION'"/g' Directory.Packages.props
-        #build_modtek "$BATTLETECH_DIR_OLD_HARMONY" "ModTek-old-HarmonyX-${OLD_HARMONYX_VERSION}.zip"
       release-notes: |
         > **Note**
         > **ModTekInjector.exe was replaced by [UnityDoorstop](https://github.com/NeighTools/UnityDoorstop)**.
