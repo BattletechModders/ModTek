@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 
 namespace ModTek.Util;
 
+extern alias MMB;
+
 // .NET 9 XoshiroImpl
 internal sealed class FastRandom
 {
@@ -26,7 +28,7 @@ internal sealed class FastRandom
     {
         ulong s0 = _s0, s1 = _s1, s2 = _s2, s3 = _s3;
 
-        var result = BitOperations.RotateLeft(s1 * 5, 7) * 9;
+        var result = MMB::System.Numerics.BitOperations.RotateLeft(s1 * 5, 7) * 9;
         var t = s1 << 17;
 
         s2 ^= s0;
@@ -35,7 +37,7 @@ internal sealed class FastRandom
         s0 ^= s3;
 
         s2 ^= t;
-        s3 = BitOperations.RotateLeft(s3, 45);
+        s3 = MMB::System.Numerics.BitOperations.RotateLeft(s3, 45);
 
         _s0 = s0;
         _s1 = s1;

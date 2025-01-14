@@ -33,6 +33,10 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
+    <Reference Include="MonoMod.Backports" Aliases="MMB">
+      <Private>False</Private>
+    </Reference>
+
     <!-- The main game file containing most of the BattleTech game logic -->
     <!-- Publicized: See BepInEx.AssemblyPublicizer.MSBuild above -->
     <Reference Include="Assembly-CSharp">

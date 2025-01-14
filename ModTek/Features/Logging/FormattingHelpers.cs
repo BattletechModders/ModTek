@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace ModTek.Features.Logging;
 
+extern alias MMB;
+
 // copied from .NET 9
 internal static class FormattingHelpers
 {
@@ -22,7 +24,7 @@ internal static class FormattingHelpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int CountDigits(uint value)
     {
-        var tableValue = s_countDigitsTable[BitOperations.Log2(value)];
+        var tableValue = s_countDigitsTable[MMB::System.Numerics.BitOperations.Log2(value)];
         return (int)((value + tableValue) >> 32);
     }
     // Algorithm based on https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster.

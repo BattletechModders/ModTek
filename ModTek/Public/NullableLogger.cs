@@ -1,11 +1,14 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HBS.Logging;
 using JetBrains.Annotations;
 using ModTek.Features.Logging;
 
 namespace ModTek.Public;
+
+extern alias MMB;
 
 [HarmonyPatch]
 [PublicAPI]
@@ -100,6 +103,7 @@ public sealed class NullableLogger
         [PublicAPI] void Log(Exception e);
         [PublicAPI] void Log(string message);
         [PublicAPI] void Log(string message, Exception e);
+        [PublicAPI] void Log(NullableLoggerInterpolatedStringHandler handler);
     }
 
     private sealed class LevelLogger : ILevel
@@ -126,6 +130,40 @@ public sealed class NullableLogger
         public void Log(string message, Exception e)
         {
             LoggingFeature.LogAtLevel(_loggerName, _level, message, e, null);
+        }
+
+        public void Log(NullableLoggerInterpolatedStringHandler handler)
+        {
+        }
+    }
+
+    [MMB::System.Runtime.CompilerServices.InterpolatedStringHandler]
+    [PublicAPI]
+    public ref struct NullableLoggerInterpolatedStringHandler
+    {
+        [PublicAPI]
+        public NullableLoggerInterpolatedStringHandler(int literalLength, int formattedCount)
+        {
+        }
+
+        [PublicAPI]
+        public void AppendLiteral(string value)
+        {
+        }
+
+        [PublicAPI]
+        public void AppendFormatted<T>(T dt)
+        {
+        }
+
+        [PublicAPI]
+        public void AppendFormatted(MMB::System.ReadOnlySpan<char> value)
+        {
+        }
+
+        [PublicAPI]
+        public void AppendFormatted(string? value)
+        {
         }
     }
 }
