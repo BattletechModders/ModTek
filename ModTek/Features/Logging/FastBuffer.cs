@@ -77,7 +77,7 @@ internal unsafe class FastBuffer
         {
             fixed (byte* bytes = value)
             {
-                Memcpy256(position, bytes, value.Length);
+                Memcpy512(position, bytes, value.Length);
             }
         }
     }
@@ -115,7 +115,7 @@ internal unsafe class FastBuffer
                     var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
                     fixed (byte* bytes = srcA)
                     {
-                        Memcpy256(dst, bytes, size);
+                        Memcpy512(dst, bytes, size);
                     }
                     if (shouldMeasure)
                     {
@@ -317,11 +317,90 @@ internal unsafe class FastBuffer
         _isG2 = false;
     }
 
-    // from Buffer.memcpy* and optimized to use wider types like 128 and 256 bit
-    // JIT can do xmm (128) and cpu can optimize 2x xmm (2x128) further it seems
+    internal static void Memcpy64(byte* dest, byte* src, int size)
+    {
+        {
+            const int BatchSize = sizeof(ulong);
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(ulong*)dest = *(ulong*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
+        {
+            const int BatchSize = sizeof(ushort);
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(ushort*)dest = *(ushort*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
+        if (size > 0)
+        {
+            *dest = *src;
+        }
+    }
+
+    internal static void Memcpy128(byte* dest, byte* src, int size)
+    {
+        const int BatchSize = My128Bit.Size;
+        for (; size >= BatchSize; size -= BatchSize)
+        {
+            *(My128Bit*)dest = *(My128Bit*)src;
+            dest += BatchSize;
+            src += BatchSize;
+        }
+        Memcpy64(dest, src, size);
+    }
+
     internal static void Memcpy256(byte* dest, byte* src, int size)
     {
-        { // 25% faster than if using 2x128 on AMD Zen4 hardware
+        const int BatchSize = My256Bit.Size;
+        for (; size >= BatchSize; size -= BatchSize)
+        {
+            *(My256Bit*)dest = *(My256Bit*)src;
+            dest += BatchSize;
+            src += BatchSize;
+        }
+        Memcpy128(dest, src, size);
+    }
+    internal static void Memcpy512(byte* dest, byte* src, int size)
+    {
+        const int BatchSize = My512Bit.Size;
+        for (; size >= BatchSize; size -= BatchSize)
+        {
+            *(My512Bit*)dest = *(My512Bit*)src;
+            dest += BatchSize;
+            src += BatchSize;
+        }
+        Memcpy256(dest, src, size);
+    }
+    internal static void Memcpy1024(byte* dest, byte* src, int size)
+    {
+        const int BatchSize = My1024Bit.Size;
+        for (; size >= BatchSize; size -= BatchSize)
+        {
+            *(My1024Bit*)dest = *(My1024Bit*)src;
+            dest += BatchSize;
+            src += BatchSize;
+        }
+        Memcpy512(dest, src, size);
+    }
+
+    internal static void Memcpy512o(byte* dest, byte* src, int size)
+    {
+        {
+            const int BatchSize = My512Bit.Size;
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                *(My512Bit*)dest = *(My512Bit*)src;
+                dest += BatchSize;
+                src += BatchSize;
+            }
+        }
+        {
             const int BatchSize = My256Bit.Size;
             for (; size >= BatchSize; size -= BatchSize)
             {
@@ -330,7 +409,7 @@ internal unsafe class FastBuffer
                 src += BatchSize;
             }
         }
-        { // 100% faster than if using 2x64 on xmm hardware
+        {
             const int BatchSize = My128Bit.Size;
             for (; size >= BatchSize; size -= BatchSize)
             {
@@ -363,19 +442,82 @@ internal unsafe class FastBuffer
         }
     }
 
-    // the jit can optimize this to 2x xmm 128 ops
-    // and 2x 128bit ops together are 25% faster than looping over 128bit ops
+    // AVX2 - Intel® Core™ i7-10875H (Bluewinds)
+    // Memcpy512oTicks 140 ; Memcpy1024Ticks 655 ; Memcpy512Ticks 135 ; Memcpy256Ticks 135 ; Memcpy128Ticks 153 ; Memcpy64Ticks 150
+
+    // AVX2 - AMD 6850U (CptMoore)
+    // Memcpy512oTicks 140 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 139 ; Memcpy256Ticks 147 ; Memcpy128Ticks 152 ; Memcpy64Ticks 159
+
+    // AVX512 Double Pump -
+    //
+
+    // AVX512 -
+    //
+
+    // SSE -
+    //
+
+    // should translate to 8x128 ops
+    private struct My1024Bit
+    {
+        internal const int Size = 1024/8;
+        internal My512Bit _00;
+        internal My512Bit _01;
+    }
+    // should translate to 4x128 ops
+    private struct My512Bit
+    {
+        internal const int Size = 512/8;
+        internal My256Bit _00;
+        internal My256Bit _01;
+    }
+    // should translate to 2x128 ops
+    private struct My256Bit
+    {
+        internal const int Size = 256/8;
+        internal My128Bit _00;
+        internal My128Bit _01;
+    }
+    // should translate to xmm 128 op
     private struct My128Bit
     {
         internal const int Size = 128/8;
         internal long _00;
         internal long _01;
     }
-    private struct My256Bit
+
+    internal static readonly long Memcpy64Ticks = CalcMemcpyTicks(Memcpy64);
+    internal static readonly long Memcpy128Ticks = CalcMemcpyTicks(Memcpy128);
+    internal static readonly long Memcpy256Ticks = CalcMemcpyTicks(Memcpy256);
+    internal static readonly long Memcpy512Ticks = CalcMemcpyTicks(Memcpy512);
+    internal static readonly long Memcpy1024Ticks = CalcMemcpyTicks(Memcpy1024);
+    internal static readonly long Memcpy512oTicks = CalcMemcpyTicks(Memcpy512o);
+
+    private delegate void Memcpy(byte* dst, byte* src, int size);
+    private static long CalcMemcpyTicks(Memcpy memcpy)
     {
-        internal const int Size = 256/8;
-        internal My128Bit _00;
-        internal My128Bit _01;
+        const int MaxSize = 512 * 1024 - 1;
+        var src = stackalloc byte[MaxSize];
+        var dst = stackalloc byte[MaxSize];
+
+        const int TestRunsPerSize = 100;
+        var memCpyTicks = new long[TestRunsPerSize];
+
+        const int WarmupCount = 1000;
+        for (var w = 0; w < WarmupCount + 1; w++)
+        {
+            var shouldMeasure = w == WarmupCount;
+            for (var run = 0; run < TestRunsPerSize; run++)
+            {
+                var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
+                memcpy(dst, src, MaxSize);
+                if (shouldMeasure)
+                {
+                    memCpyTicks[run] = MTStopwatch.GetTimestamp() - start;
+                }
+            }
+        }
+        return MTStopwatch.TicksMin(memCpyTicks);
     }
 
     ~FastBuffer()
