@@ -497,23 +497,29 @@ internal unsafe class FastBuffer
     private static long CalcMemcpyTicks(Memcpy memcpy)
     {
         const int MaxSize = 512 * 1024 - 1;
-        var src = stackalloc byte[MaxSize];
-        var dst = stackalloc byte[MaxSize];
+        var srcA = new byte[MaxSize];
+        var dstA = new byte[MaxSize];
 
         const int TestRunsPerSize = 100;
         var memCpyTicks = new long[TestRunsPerSize];
 
         const int WarmupCount = 1000;
-        for (var w = 0; w < WarmupCount + 1; w++)
+        fixed (byte* src = srcA)
         {
-            var shouldMeasure = w == WarmupCount;
-            for (var run = 0; run < TestRunsPerSize; run++)
+            fixed (byte* dst = dstA)
             {
-                var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
-                memcpy(dst, src, MaxSize);
-                if (shouldMeasure)
+                for (var w = 0; w < WarmupCount + 1; w++)
                 {
-                    memCpyTicks[run] = MTStopwatch.GetTimestamp() - start;
+                    var shouldMeasure = w == WarmupCount;
+                    for (var run = 0; run < TestRunsPerSize; run++)
+                    {
+                        var start = shouldMeasure ? MTStopwatch.GetTimestamp() : 0;
+                        memcpy(dst, src, MaxSize);
+                        if (shouldMeasure)
+                        {
+                            memCpyTicks[run] = MTStopwatch.GetTimestamp() - start;
+                        }
+                    }
                 }
             }
         }
