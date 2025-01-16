@@ -318,10 +318,10 @@ internal unsafe class FastBuffer
     }
 
     // from Buffer.memcpy* and optimized to use wider types like 128 and 256 bit
-    // JIT can do xmm (128) and cpu can optimize 2x xmm (2x128) further it seems
+    // most gains from 128, some for 256, and almost none for 512 (therefore left out)
     internal static void Memcpy256(byte* dest, byte* src, int size)
     {
-        { // 25% faster than if using 2x128 on AMD Zen4 hardware
+        {
             const int BatchSize = My256Bit.Size;
             for (; size >= BatchSize; size -= BatchSize)
             {
@@ -330,7 +330,7 @@ internal unsafe class FastBuffer
                 src += BatchSize;
             }
         }
-        { // 100% faster than if using 2x64 on xmm hardware
+        {
             const int BatchSize = My128Bit.Size;
             for (; size >= BatchSize; size -= BatchSize)
             {
@@ -363,17 +363,15 @@ internal unsafe class FastBuffer
         }
     }
 
-    // the jit can optimize this to 2x xmm 128 ops
-    // and 2x 128bit ops together are 25% faster than looping over 128bit ops
     private struct My128Bit
     {
-        internal const int Size = 128/8;
-        internal long _00;
-        internal long _01;
+        internal const int Size = 2 * sizeof(ulong);
+        internal ulong _00;
+        internal ulong _01;
     }
     private struct My256Bit
     {
-        internal const int Size = 256/8;
+        internal const int Size = 2 * My128Bit.Size;
         internal My128Bit _00;
         internal My128Bit _01;
     }
