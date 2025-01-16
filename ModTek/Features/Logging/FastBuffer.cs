@@ -442,19 +442,22 @@ internal unsafe class FastBuffer
         }
     }
 
-    // AVX2 - Intel® Core™ i7-10875H (Bluewinds)
+    // AVX2 - Intel Core i5-12600K
+    // Memcpy512oTicks 109 ; Memcpy1024Ticks 557 ; Memcpy512Ticks 109 ; Memcpy256Ticks 109 ; Memcpy128Ticks 109 ; Memcpy64Ticks 146
+
+    // AVX512 Double Pump - 7800X3D
+    // Memcpy512oTicks 115 ; Memcpy1024Ticks 602 ; Memcpy512Ticks 113 ; Memcpy256Ticks 118 ; Memcpy128Ticks 136 ; Memcpy64Ticks 148
+
+    // AVX2 - Intel Core i7-10875H
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 655 ; Memcpy512Ticks 135 ; Memcpy256Ticks 135 ; Memcpy128Ticks 153 ; Memcpy64Ticks 150
 
-    // AVX2 - AMD 6850U (CptMoore)
+    // AVX2 - AMD 6850U
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 139 ; Memcpy256Ticks 147 ; Memcpy128Ticks 152 ; Memcpy64Ticks 159
-
-    // AVX512 Double Pump -
-    //
 
     // AVX512 -
     //
 
-    // SSE -
+    // SSE (possible?) -
     //
 
     // should translate to 8x128 ops
@@ -496,7 +499,7 @@ internal unsafe class FastBuffer
     private delegate void Memcpy(byte* dst, byte* src, int size);
     private static long CalcMemcpyTicks(Memcpy memcpy)
     {
-        const int MaxSize = 512 * 1024 - 1;
+        const int MaxSize = 128 * 1024 - 1;
         var srcA = new byte[MaxSize];
         var dstA = new byte[MaxSize];
 
