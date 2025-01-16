@@ -442,6 +442,10 @@ internal unsafe class FastBuffer
         }
     }
 
+
+    // AVX512 -
+    //
+
     // AVX2 - Intel Core i5-12600K
     // Memcpy512oTicks 109 ; Memcpy1024Ticks 557 ; Memcpy512Ticks 109 ; Memcpy256Ticks 109 ; Memcpy128Ticks 109 ; Memcpy64Ticks 146
 
@@ -457,8 +461,8 @@ internal unsafe class FastBuffer
     // AVX2 - AMD Ryzen 7 PRO 6850U
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 139 ; Memcpy256Ticks 147 ; Memcpy128Ticks 152 ; Memcpy64Ticks 159
 
-    // AVX512 -
-    //
+    // AVX - Intel Core i7-3520M
+    // Memcpy512oTicks 354 ; Memcpy1024Ticks 1129 ; Memcpy512Ticks 354 ; Memcpy256Ticks 351 ; Memcpy128Ticks 357 ; Memcpy64Ticks 410
 
     // SSE (possible?) -
     //
