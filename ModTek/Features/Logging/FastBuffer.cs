@@ -445,13 +445,16 @@ internal unsafe class FastBuffer
     // AVX2 - Intel Core i5-12600K
     // Memcpy512oTicks 109 ; Memcpy1024Ticks 557 ; Memcpy512Ticks 109 ; Memcpy256Ticks 109 ; Memcpy128Ticks 109 ; Memcpy64Ticks 146
 
-    // AVX512 Double Pump - 7800X3D
+    // AVX512 Double Pump - AMD Ryzen 7 7800X3D
     // Memcpy512oTicks 115 ; Memcpy1024Ticks 602 ; Memcpy512Ticks 113 ; Memcpy256Ticks 118 ; Memcpy128Ticks 136 ; Memcpy64Ticks 148
+
+    // AVX2 - AMD Ryzen 7 5800X3D
+    // Memcpy512oTicks 135 ; Memcpy1024Ticks 692 ; Memcpy512Ticks 138 ; Memcpy256Ticks 143 ; Memcpy128Ticks 156 ; Memcpy64Ticks 300
 
     // AVX2 - Intel Core i7-10875H
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 655 ; Memcpy512Ticks 135 ; Memcpy256Ticks 135 ; Memcpy128Ticks 153 ; Memcpy64Ticks 150
 
-    // AVX2 - AMD 6850U
+    // AVX2 - AMD Ryzen 7 PRO 6850U
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 139 ; Memcpy256Ticks 147 ; Memcpy128Ticks 152 ; Memcpy64Ticks 159
 
     // AVX512 -
