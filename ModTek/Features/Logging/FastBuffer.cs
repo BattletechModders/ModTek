@@ -377,17 +377,6 @@ internal unsafe class FastBuffer
         }
         Memcpy256(dest, src, size);
     }
-    internal static void Memcpy1024(byte* dest, byte* src, int size)
-    {
-        const int BatchSize = My1024Bit.Size;
-        for (; size >= BatchSize; size -= BatchSize)
-        {
-            *(My1024Bit*)dest = *(My1024Bit*)src;
-            dest += BatchSize;
-            src += BatchSize;
-        }
-        Memcpy512(dest, src, size);
-    }
 
     internal static void Memcpy512o(byte* dest, byte* src, int size)
     {
@@ -442,38 +431,33 @@ internal unsafe class FastBuffer
         }
     }
 
+    // AMD Ryzen 9 7950X
+    // Memcpy512oTicks 107 ; Memcpy1024Ticks 566 ; Memcpy512Ticks 108 ; Memcpy256Ticks 108 ; Memcpy128Ticks 110 ; Memcpy64Ticks 123
 
-    // AVX512 -
-    //
-
-    // AVX2 - Intel Core i5-12600K
+    // Intel Core i5-12600K
     // Memcpy512oTicks 109 ; Memcpy1024Ticks 557 ; Memcpy512Ticks 109 ; Memcpy256Ticks 109 ; Memcpy128Ticks 109 ; Memcpy64Ticks 146
 
-    // AVX512 Double Pump - AMD Ryzen 7 7800X3D
+    // AMD Ryzen 7 7800X3D
     // Memcpy512oTicks 115 ; Memcpy1024Ticks 602 ; Memcpy512Ticks 113 ; Memcpy256Ticks 118 ; Memcpy128Ticks 136 ; Memcpy64Ticks 148
 
-    // AVX2 - AMD Ryzen 7 5800X3D
+    // AMD Ryzen 5 5600X
+    // Memcpy512oTicks 125 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 127 ; Memcpy256Ticks 132 ; Memcpy128Ticks 148 ; Memcpy64Ticks 150
+
+    // AMD Ryzen 7 5800X3D
     // Memcpy512oTicks 135 ; Memcpy1024Ticks 692 ; Memcpy512Ticks 138 ; Memcpy256Ticks 143 ; Memcpy128Ticks 156 ; Memcpy64Ticks 300
 
-    // AVX2 - Intel Core i7-10875H
+    // Intel Core i7-10875H
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 655 ; Memcpy512Ticks 135 ; Memcpy256Ticks 135 ; Memcpy128Ticks 153 ; Memcpy64Ticks 150
 
-    // AVX2 - AMD Ryzen 7 PRO 6850U
+    // AMD Ryzen 7 PRO 6850U
     // Memcpy512oTicks 140 ; Memcpy1024Ticks 667 ; Memcpy512Ticks 139 ; Memcpy256Ticks 147 ; Memcpy128Ticks 152 ; Memcpy64Ticks 159
 
-    // AVX - Intel Core i7-3520M
+    // Intel Core i9-9900X
+    // Memcpy512oTicks 203 ; Memcpy1024Ticks 908 ; Memcpy512Ticks 206 ; Memcpy256Ticks 211 ; Memcpy128Ticks 209 ; Memcpy64Ticks 313
+
+    // Intel Core i7-3520M
     // Memcpy512oTicks 354 ; Memcpy1024Ticks 1129 ; Memcpy512Ticks 354 ; Memcpy256Ticks 351 ; Memcpy128Ticks 357 ; Memcpy64Ticks 410
 
-    // SSE (possible?) -
-    //
-
-    // should translate to 8x128 ops
-    private struct My1024Bit
-    {
-        internal const int Size = 1024/8;
-        internal My512Bit _00;
-        internal My512Bit _01;
-    }
     // should translate to 4x128 ops
     private struct My512Bit
     {
@@ -500,20 +484,19 @@ internal unsafe class FastBuffer
     internal static readonly long Memcpy128Ticks = CalcMemcpyTicks(Memcpy128);
     internal static readonly long Memcpy256Ticks = CalcMemcpyTicks(Memcpy256);
     internal static readonly long Memcpy512Ticks = CalcMemcpyTicks(Memcpy512);
-    internal static readonly long Memcpy1024Ticks = CalcMemcpyTicks(Memcpy1024);
     internal static readonly long Memcpy512oTicks = CalcMemcpyTicks(Memcpy512o);
 
     private delegate void Memcpy(byte* dst, byte* src, int size);
     private static long CalcMemcpyTicks(Memcpy memcpy)
     {
-        const int MaxSize = 128 * 1024 - 1;
+        const int MaxSize = 512 * 1024 - 1;
         var srcA = new byte[MaxSize];
         var dstA = new byte[MaxSize];
 
-        const int TestRunsPerSize = 100;
+        const int TestRunsPerSize = 50;
         var memCpyTicks = new long[TestRunsPerSize];
 
-        const int WarmupCount = 1000;
+        const int WarmupCount = 10000;
         fixed (byte* src = srcA)
         {
             fixed (byte* dst = dstA)
