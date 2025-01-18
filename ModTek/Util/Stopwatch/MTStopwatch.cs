@@ -64,24 +64,6 @@ internal class MTStopwatch
 
     internal MTStopwatchStats GetStats() => new(this, Volatile.Read(ref _count), Volatile.Read(ref _ticks));
 
-    internal static long TicksMin(long[] ticks)
-    {
-        var minTick = long.MaxValue;
-        for (var i = 0; i < ticks.Length; i++)
-        {
-            var tick = ticks[i];
-            if (tick == 0)
-            {
-                return 0;
-            }
-
-            if (tick < minTick)
-            {
-                minTick = tick;
-            }
-        }
-        return minTick;
-    }
     internal static double TicksAvg(long[] ticks, double ignoreLower, double ignoreUpper)
     {
         Array.Sort(ticks);

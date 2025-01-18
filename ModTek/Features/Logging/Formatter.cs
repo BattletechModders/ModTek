@@ -23,8 +23,6 @@ internal class Formatter
 
     internal void SerializeMessage(ref MTLoggerMessageDto messageDto, FastBuffer buffer)
     {
-        buffer.Pin();
-
         if (_absoluteTimeEnabled)
         {
             var dt = messageDto.GetDateTime();
@@ -80,8 +78,6 @@ internal class Formatter
         }
 
         buffer.Append(s_environmentNewline);
-
-        buffer.Unpin();
     }
 
     private static string GetLocationString(IStackTrace st)

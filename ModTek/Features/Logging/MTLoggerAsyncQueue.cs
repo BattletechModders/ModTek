@@ -46,7 +46,7 @@ internal class MTLoggerAsyncQueue
                     Flushing (to disk) {AppenderFile.FlushStopWatch.GetStats()}.
                     Filters {AppenderFile.FiltersStopWatch.GetStats()}.
                     Formatter {AppenderFile.FormatterStopWatch.GetStats()}.
-                      UTF8-Fallback {FastBuffer.UTF8FallbackStopwatch.GetStats()}.
+                      EnlargeCapacity {FastBuffer.EnlargeCapacityStopWatch.GetStats()}.
                     Write (to OS buffers) {AppenderFile.WriteStopwatch.GetStats()}.
                 """
             );

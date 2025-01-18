@@ -6,12 +6,12 @@ namespace ModTek.Features.Logging;
 // copied from .NET 9
 internal static class FormattingHelpers
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static unsafe void WriteDigits(byte* positionPtr, long value, int digits)
     {
         const byte AsciiZero = (byte)'0';
 
-        byte* current;
-        for (current = positionPtr + digits - 1; current >= positionPtr; current--)
+        for (var current = positionPtr + digits - 1; current >= positionPtr; current--)
         {
             var temp = value + AsciiZero;
             value /= 10;
