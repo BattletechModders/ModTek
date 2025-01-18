@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 using ModTek.Common.Utils;
 using ModTek.Util.Stopwatch;
 using UnityEngine;
@@ -31,6 +32,7 @@ internal class AppenderFile : IDisposable
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate}) ; HarmonyX {typeof(Harmony).Assembly.GetName().Version}
             {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
             {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp} ; Timestamp Overhead {MTStopwatch.OverheadPerTimestampInNanoseconds}ns ; MemCpy->BlockCpy threshold {FastBuffer.MemcpyThreshold}
+            {FastBuffer.MemCpyStats()}
             {new string('-', 80)}
 
             """

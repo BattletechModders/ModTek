@@ -63,7 +63,7 @@ case ${os_type} in
     #Work around used as it is a bug that is patched out in newer versions of mono.
     export TERM=xterm
 
-    export LD_PRELOAD="${BASEDIR}/libdoorstop.so:${LD_PRELOAD:-}"
+    export LD_PRELOAD="${BASEDIR}/libdoorstop.so:${BASEDIR}/libsimdutfexport.so:${LD_PRELOAD:-}"
     LD_PRELOAD="${LD_PRELOAD%:}"
   ;;
   Darwin*)

@@ -104,4 +104,19 @@
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="..\simdutf\simdutf.cpp">
+      <Link>ModTek\simdutf\simdutf.cpp</Link>
+    </ClCompile>
+    <ClCompile Include="..\simdutf\simdutfexport.cpp">
+      <Link>ModTek\simdutf\simdutfexport.cpp</Link>
+    </ClCompile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="..\simdutf\simdutf.h">
+      <Link>ModTek\simdutf\simdutf.h</Link>
+    </ClInclude>
+  </ItemGroup>
 </Project>
