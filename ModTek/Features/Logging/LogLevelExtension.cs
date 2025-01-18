@@ -6,16 +6,16 @@ namespace ModTek.Features.Logging;
 
 internal static class LogLevelExtension
 {
-    private static readonly byte[] s_trace = GetFormattedBytes(ELogLevels.Trace);
-    private static readonly byte[] s_debug = GetFormattedBytes(ELogLevels.Debug);
-    private static readonly byte[] s_log = GetFormattedBytes(ELogLevels.Log);
-    private static readonly byte[] s_warning = GetFormattedBytes(ELogLevels.Warning);
-    private static readonly byte[] s_error = GetFormattedBytes(ELogLevels.Error);
-    private static readonly byte[] s_fatal = GetFormattedBytes(ELogLevels.Fatal);
-    private static readonly byte[] s_off = GetFormattedBytes(ELogLevels.OFF);
-    private static byte[] GetFormattedBytes(ELogLevels level) => Encoding.UTF8.GetBytes(" [" + ELogToString(level) + "]");
+    private static readonly byte[] s_trace = FormatAsBytes(ELogLevels.Trace);
+    private static readonly byte[] s_debug = FormatAsBytes(ELogLevels.Debug);
+    private static readonly byte[] s_log = FormatAsBytes(ELogLevels.Log);
+    private static readonly byte[] s_warning = FormatAsBytes(ELogLevels.Warning);
+    private static readonly byte[] s_error = FormatAsBytes(ELogLevels.Error);
+    private static readonly byte[] s_fatal = FormatAsBytes(ELogLevels.Fatal);
+    private static readonly byte[] s_off = FormatAsBytes(ELogLevels.OFF);
+    private static byte[] FormatAsBytes(ELogLevels level) => Encoding.UTF8.GetBytes(" [" + ELogToString(level) + "]");
     // avoid allocations during logging
-    internal static byte[] GetCachedFormattedBytes(LogLevel level)
+    internal static byte[] GetFormattedBytes(LogLevel level)
     {
         var eLogLevel = Convert(level);
         return eLogLevel switch // fast switch with static string, in order of most occuring

@@ -50,7 +50,7 @@ internal class Formatter
         //  should improve performance by 20% since string/char[] -> byte[] is slow
         buffer.Append(messageDto.LoggerName);
 
-        buffer.Append(LogLevelExtension.GetCachedFormattedBytes(messageDto.LogLevel));
+        buffer.Append(LogLevelExtension.GetFormattedBytes(messageDto.LogLevel));
 
         var prefix = s_whitespaceBytes;
         if (!string.IsNullOrEmpty(messageDto.Message))
@@ -97,7 +97,7 @@ internal class Formatter
     }
 
     // avoid heap allocations during logging
-    // switch to inlined " "u8 once https://github.com/MonoMod/MonoMod/issues/194 is fixed
+    // " "u8 using mscorlib ReadOnlySpans is 10x slower than pre-allocating byte arrays and using Buffer.BlockCopy
     private static readonly byte[] s_threadIdPrefix = Encoding.UTF8.GetBytes("[ThreadId=");
     private static readonly byte[] s_threadIdSuffix = Encoding.UTF8.GetBytes("] ");
     private static readonly byte[] s_whitespaceBytes = Encoding.UTF8.GetBytes(" ");
