@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using HBS.Logging;
 using ModTek.Common.Utils;
 using ModTek.Util.Stopwatch;
 using UnityEngine;
@@ -8,7 +9,7 @@ namespace ModTek.Features.Logging;
 
 internal class AppenderFile : IDisposable
 {
-    private readonly Filters _filters;
+    private readonly FilterBuilder.FilterDelegate _filters;
     private readonly Formatter _formatter;
     private readonly LogStream _writer;
 
@@ -18,7 +19,7 @@ internal class AppenderFile : IDisposable
 
     internal AppenderFile(string path, AppenderSettings settings)
     {
-        _filters = new Filters(settings);
+        _filters = FilterBuilder.Compile(settings);
         _formatter = new Formatter(settings);
 
         FileUtils.CreateParentOfPath(path);
@@ -30,7 +31,7 @@ internal class AppenderFile : IDisposable
             $"""
             ModTek v{GitVersionInformation.InformationalVersion} ({GitVersionInformation.CommitDate}) ; HarmonyX {typeof(Harmony).Assembly.GetName().Version}
             {Environment.OSVersion} ; BattleTech {Application.version} ; Unity {Application.unityVersion} ; CLR {Environment.Version} ; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}"
-            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp} ; Timestamp Overhead {MTStopwatch.OverheadPerTimestampInNanoseconds}ns ; FastMemCpy Threshold {FastMemCpy.Threshold}
+            {dateTime.ToLocalTime().ToString("o", CultureInfo.InvariantCulture)} ; Startup {unityStartupTime.ToString(null, CultureInfo.InvariantCulture)} ; Ticks {stopwatchTimestamp} ; Timestamp Overhead {MTStopwatch.OverheadPerTimestampInNanoseconds}ns ; FastMemCpy Threshold {FastSimd.Threshold}
             {new string('-', 80)}
 
             """
@@ -63,7 +64,7 @@ internal class AppenderFile : IDisposable
 
         {
             var measurement = MTStopwatch.GetTimestamp();
-            var included = _filters.IsIncluded(ref messageDto);
+            var included = _filters(ref messageDto);
             FiltersStopWatch.EndMeasurement(measurement);
             if (!included)
             {

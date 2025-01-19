@@ -37,7 +37,7 @@ internal class FastBuffer
     {
         var length = value.Length;
         var position = GetPositionAndIncrementLength(length);
-        FastMemCpy.BlockCopy(value, 0, _buffer, position, length);
+        FastSimd.BlockCopy(value, 0, _buffer, position, length);
     }
 
     internal unsafe void Append(int value)

@@ -96,7 +96,7 @@ internal static class LoggingFeature
         var logsAppenders = new AppenderFile[_logsAppenders.Length + 1];
         Array.Copy(_logsAppenders, logsAppenders, _logsAppenders.Length);
         var index = _logsAppenders.Length;
-        var settings = new AppenderSettings { Includes = [new FilterSettings { LoggerNames = [loggerName] }] };
+        var settings = new AppenderSettings { Include = [loggerName] };
         logsAppenders[index] = new AppenderFile(logPath, settings);
         _logsAppenders = logsAppenders;
     }

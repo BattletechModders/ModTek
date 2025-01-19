@@ -95,13 +95,7 @@ internal class LoggingSettings
             "ModTek.log",
             new AppenderSettings
             {
-                Includes =
-                [
-                    new FilterSettings
-                    {
-                        LoggerNames = ["ModTek"],
-                    }
-                ]
+                Include = ["ModTek"]
             }
         }
     };

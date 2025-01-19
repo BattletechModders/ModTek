@@ -10,19 +10,14 @@ internal class AppenderSettings
     internal int LogRotationCount = 1;
 
     [JsonProperty]
-    internal const string Includes_Description = "If set, matching log statements matching are written to the log. Exclusion has precedence over inclusion.";
+    internal const string Include_Description = "If set, matching log statements matching are written to the log. Exclusion has precedence over inclusion.";
     [JsonProperty]
-    internal FilterSettings[] Includes;
+    internal string[] Include;
 
     [JsonProperty]
-    internal const string Excludes_Description = "If set, matching log statements are ignored. Exclusion has precedence over inclusion.";
+    internal const string Exclude_Description = "If set, matching log statements are ignored. Exclusion has precedence over inclusion.";
     [JsonProperty]
-    internal FilterSettings[] Excludes;
-
-    [JsonProperty]
-    internal readonly string PrefixesToIgnore_Description = $"Ignore any lines starting with any of the listed prefixes, internally will be converted to {nameof(Excludes)}.";
-    [JsonProperty]
-    internal string[] PrefixesToIgnore;
+    internal string[] Exclude;
 
     [JsonProperty]
     internal const string AbsoluteTimeEnabled_Description = "Adds the clock time.";

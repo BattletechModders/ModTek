@@ -1,12 +1,78 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using ModTek.Util.Stopwatch;
 
 namespace ModTek.Features.Logging;
 
-// effectively used only for byte arrays sized <= 14 (112bit)
-internal static class FastMemCpy
+internal static class FastSimd
 {
+    internal static unsafe bool FastStartsWith(this string text, string prefix)
+    {
+        if (text == null || prefix == null)
+        {
+            return false;
+        }
+        if (text.Length < prefix.Length)
+        {
+            return false;
+        }
+        fixed (char* prefixPtr = prefix)
+        {
+            fixed (char* textPtr = text)
+            {
+                return FastStartsWith4x64((ushort*)prefixPtr, (ushort*)textPtr, prefix.Length);
+            }
+        }
+    }
+
+    private static unsafe bool FastStartsWith4x64(ushort* prefix, ushort* text, int size)
+    {
+        // search backwards, failures are detected faster that way as prefixes have more in common in the beginning
+        prefix += size;
+        text += size;
+        { // 4 longs is a sweat spot
+            const int BatchSize = 4 * sizeof(ulong)/sizeof(ushort);
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                prefix -= BatchSize;
+                text -= BatchSize;
+                if (
+                    *((ulong*)prefix+3) != *((ulong*)text+3)
+                    || *((ulong*)prefix+2) != *((ulong*)text+2)
+                    || *((ulong*)prefix+1) != *((ulong*)text+1)
+                    || *((ulong*)prefix+0) != *((ulong*)text+0)
+                    )
+                {
+                    return false;
+                }
+            }
+        }
+        {
+            const int BatchSize = sizeof(ulong)/sizeof(ushort);
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                prefix -= BatchSize;
+                text -= BatchSize;
+                if (*(ulong*)prefix != *(ulong*)text)
+                {
+                    return false;
+                }
+            }
+        }
+        {
+            const int BatchSize = sizeof(ushort)/sizeof(ushort);
+            for (; size >= BatchSize; size -= BatchSize)
+            {
+                prefix -= BatchSize;
+                text -= BatchSize;
+                if (*prefix != *text)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     internal static unsafe void BlockCopy(byte[] src, int srcOffset, byte[] dst, int dstOffset, int length)
     {
         if (length > Threshold) // 700-1300 bytes are typical

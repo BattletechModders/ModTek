@@ -9,14 +9,14 @@ internal class AppenderUnityConsole
 {
     // appender part
 
-    private readonly Filters _filters;
+    private readonly FilterBuilder.FilterDelegate _filters;
     private readonly Formatter _formatter;
     private readonly ILogger _debugUnityLogger;
     private readonly FastBuffer _buffer = new();
 
     internal AppenderUnityConsole(AppenderSettings settings)
     {
-        _filters = new Filters(settings);
+        _filters = FilterBuilder.Compile(settings);
         _formatter = new Formatter(settings);
         _debugUnityLogger = Debug.unityLogger;
     }
@@ -35,7 +35,7 @@ internal class AppenderUnityConsole
             return;
         }
 
-        if (!_filters.IsIncluded(ref messageDto))
+        if (!_filters(ref messageDto))
         {
             return;
         }
