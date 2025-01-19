@@ -30,7 +30,7 @@ internal class AppenderUnityConsole
         }
 
         // breaks the loop: Unity -> HBS -(x)-> Unity
-        if (messageDto.LoggerName == UnityLoggerName)
+        if (ReferenceEquals(UnityLoggerName, messageDto.LoggerName))
         {
             return;
         }
@@ -67,8 +67,8 @@ internal class AppenderUnityConsole
         Application.logMessageReceivedThreaded += LogMessageReceivedThreaded;
     }
 
-    internal const string UnityLoggerName = "Unity";
-    private static readonly ILog _unityLogger = Logger.GetLogger(UnityLoggerName);
+    private static readonly ILog _unityLogger = Logger.GetLogger("Unity");
+    internal static readonly string UnityLoggerName = _unityLogger.Name;
 
     private static void LogMessageReceivedThreaded(string logString, string stackTrace, LogType type)
     {

@@ -44,7 +44,7 @@ internal class Filter
         {
             foreach (var loggerName in _loggerNames)
             {
-                if (loggerName == messageDto.LoggerName)
+                if (ReferenceEquals(loggerName, messageDto.LoggerName))
                 {
                     return true;
                 }
