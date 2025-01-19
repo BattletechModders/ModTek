@@ -63,12 +63,7 @@ internal static class LinePrefixToFilterTransformer
 
         if (match.Groups[2].Success)
         {
-            LogLevel logLevel;
-            if ("TRACE".Equals(match.Groups[2].Value, StringComparison.OrdinalIgnoreCase) )
-            {
-                logLevel = NullableLogger.TraceLogLevel;
-            }
-            else if (!Enum.TryParse(match.Groups[2].Value, true, out logLevel))
+            if (!LogLevelExtension.TryParse(match.Groups[2].Value, out var logLevel))
             {
                 throw new ArgumentException("Can't parse " + match.Groups[2].Value + ". Not a valid HBS log level");
             }

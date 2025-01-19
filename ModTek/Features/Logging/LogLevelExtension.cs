@@ -31,6 +31,22 @@ internal static class LogLevelExtension
         };
     }
 
+    internal static bool TryParse(string text, out LogLevel logLevel)
+    {
+        if ("TRACE".Equals(text, StringComparison.OrdinalIgnoreCase) )
+        {
+            logLevel = (LogLevel)TraceLogLevel;
+            return true;
+        }
+
+        if (Enum.TryParse(text, true, out logLevel))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     internal static string LogToString(LogLevel level)
     {
         var eLogLevel = Convert(level);
