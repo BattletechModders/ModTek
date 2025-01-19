@@ -42,28 +42,38 @@ internal class Filter
     {
         if (_loggerNames != null)
         {
+            var found = false;
             foreach (var loggerName in _loggerNames)
             {
                 if (ReferenceEquals(loggerName, messageDto.LoggerName))
                 {
-                    return true;
+                    found = true;
+                    break;
                 }
             }
 
-            return false;
+            if (!found)
+            {
+                return false;
+            }
         }
 
         if (_logLevels != null)
         {
+            var found = false;
             foreach (var logLevel in _logLevels)
             {
                 if (logLevel == messageDto.LogLevel)
                 {
-                    return true;
+                    found = true;
+                    break;
                 }
             }
 
-            return false;
+            if (!found)
+            {
+                return false;
+            }
         }
 
         if (_messagePrefixesMatcher != null && !_messagePrefixesMatcher.IsMatch(messageDto.Message))
