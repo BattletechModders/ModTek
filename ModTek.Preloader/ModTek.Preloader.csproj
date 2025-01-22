@@ -33,5 +33,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" Private="false" ExcludeAssets="all"  />
     <ProjectReference Include="..\ModTek.Injectors\ModTek.Injectors.csproj" Private="false" ExcludeAssets="all" />
+    <ProjectReference Include="..\HarmonyXInterop\Harmony109Interop\Harmony109Interop.csproj" Private="false" ExcludeAssets="all" />
+    <ProjectReference Include="..\HarmonyXInterop\Harmony12Interop\Harmony12Interop.csproj" Private="false" ExcludeAssets="all" />
+    <ProjectReference Include="..\HarmonyXInterop\HarmonyXInterop\HarmonyXInterop.csproj" Private="false" ExcludeAssets="all" />
   </ItemGroup>
 </Project>
