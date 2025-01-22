@@ -1,0 +1,17 @@
+﻿<Solution>
+  <Folder Name="/examples/">
+    <Project Path="examples\ModTemplate\ModTemplate.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/HarmonyXInterop/">
+    <Project Path="HarmonyXInterop\Harmony109Interop\Harmony109Interop.csproj" Type="Classic C#" />
+    <Project Path="HarmonyXInterop\Harmony12Interop\Harmony12Interop.csproj" Type="Classic C#" />
+    <Project Path="HarmonyXInterop\HarmonyXInterop\HarmonyXInterop.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="ModTek.Common\ModTek.Common.csproj" Type="Classic C#" />
+  <Project Path="ModTek.InjectorsTask\ModTek.InjectorsTask.csproj" Type="Classic C#" />
+  <Project Path="ModTek.Injectors\ModTek.Injectors.csproj" Type="Classic C#" />
+  <Project Path="ModTek.Preloader\ModTek.Preloader.csproj" Type="Classic C#" />
+  <Project Path="ModTekInjector\ModTekInjector.csproj" Type="Classic C#" />
+  <Project Path="ModTekSimpleInjector\ModTekSimpleInjector.csproj" Type="Classic C#" />
+  <Project Path="ModTek\ModTek.csproj" Type="Classic C#" />
+</Solution>

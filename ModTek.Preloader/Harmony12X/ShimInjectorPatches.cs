@@ -29,7 +29,7 @@ internal static class ShimInjectorPatches
             }
         }
 
-        var harmony = new Harmony("ModTekPreloader.Harmony12X");
+        var harmony = new HarmonyLib.Harmony("ModTekPreloader.Harmony12X");
         harmony.PatchAll(typeof(AssemblyLoadPatches));
         if (Config.Instance.Harmony12XFakeAssemblyLocationEnabled)
         {
