@@ -7,10 +7,13 @@
   </PropertyGroup>
 
   <Target Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
+    <ItemGroup>
+      <LibFiles Include="$(OutDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(ModTekLibDir)" />
     <Copy SourceFiles="@(Asset)" DestinationFolder="$(BattleTechGameDir)\Mods\ModTek\" />
   </Target>
-
+  
   <PropertyGroup>
     <!-- avoids IgnoresAccessChecksToAttribute warnings -->
     <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
@@ -24,6 +27,10 @@
     <Publicize Include="UnityEngine.CoreModule" IncludeCompilerGeneratedMembers="false" />
     <!-- Avoid overriding publicizied methods by not publicizing them in the first place -->
     <Publicize Include="Newtonsoft.Json" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
   </ItemGroup>
 
   <ItemGroup>

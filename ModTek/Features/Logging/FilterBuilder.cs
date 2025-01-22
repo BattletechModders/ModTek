@@ -1,6 +1,10 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Reflection.Emit;
 using HBS.Logging;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using MonoMod.Utils;
 
 namespace ModTek.Features.Logging;
@@ -13,8 +17,41 @@ internal class FilterBuilder
 {
     internal delegate bool FilterDelegate(ref MTLoggerMessageDto messageDto);
 
+    internal static LanguageVersion LanguageVersion;
+
     internal static FilterDelegate Compile(AppenderSettings settings)
     {
+        {
+            var syntaxTree = CSharpSyntaxTree.ParseText("""
+namespace MyT;
+class MyTest {
+    int ok() {
+        return 0;
+    }
+}
+""");
+
+            var compilation = CSharpCompilation.Create(
+                "assemblyName",
+                [syntaxTree],
+                [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            LanguageVersion = compilation.LanguageVersion;
+
+            using var dllStream = new MemoryStream();
+            using var pdbStream = new MemoryStream();
+
+            var emitResult = compilation.Emit(dllStream, pdbStream);
+            if (!emitResult.Success)
+            {
+                throw new Exception(emitResult.Diagnostics[0].ToString());
+            }
+
+            //load assembly
+            //type.Assembly.SetMonoCorlibInternal(true); // mono alternative for IgnoresAccessChecksToAttribute
+        }
+
         var assemblyName = new AssemblyName("ModTekLoggingDynamic");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndCollect);
         var moduleBuilder = assemblyBuilder.DefineDynamicModule("Module");
