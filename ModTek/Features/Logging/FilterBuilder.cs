@@ -68,18 +68,18 @@ internal class FilterBuilder
     private FilterBuilder(ILGenerator il)
     {
         this._il = il;
-        _loggerNameLocalBuilder = il.DeclareLocal(typeof(string));
-        _logLevelLocalBuilder = il.DeclareLocal(typeof(LogLevel));
-        _messageLocalBuilder = il.DeclareLocal(typeof(string));
 
+        _loggerNameLocalBuilder = il.DeclareLocal(typeof(string));
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(MTLoggerMessageDto), nameof(MTLoggerMessageDto.LoggerName)));
         il.Emit(OpCodes.Stloc, _loggerNameLocalBuilder);
 
+        _logLevelLocalBuilder = il.DeclareLocal(typeof(LogLevel));
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(MTLoggerMessageDto), nameof(MTLoggerMessageDto.LogLevel)));
         il.Emit(OpCodes.Stloc, _logLevelLocalBuilder);
 
+        _messageLocalBuilder = il.DeclareLocal(typeof(string));
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(MTLoggerMessageDto), nameof(MTLoggerMessageDto.Message)));
         il.Emit(OpCodes.Stloc, _messageLocalBuilder);
@@ -231,6 +231,8 @@ internal class FilterBuilder
         var loggerName = messageDto.LoggerName;
         var logLevel = messageDto.LogLevel;
         var message = messageDto.Message;
+
+        // logger + 1 loglevel + 0 prefix
         if (ReferenceEquals(loggerName, "Achievements"))
         {
             if (logLevel == LogLevel.Log)
@@ -240,15 +242,24 @@ internal class FilterBuilder
             return false;
         }
 
+        // logger + 2 loglevel + 2x2 prefix
         if (ReferenceEquals(loggerName, "Analytics"))
         {
             if (logLevel == LogLevel.Warning)
             {
-                if (message.FastStartsWith("Analytics Event requested with invalid IP"))
+                if (message.FastStartsWith("Request next called but no servers have been found"))
                 {
                     return true;
                 }
-                if (message.FastStartsWith("Request next called but no servers have been found"))
+                if (message.FastStartsWith("Request next called but reporting is disabled"))
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (logLevel == LogLevel.Error)
+            {
+                if (message.FastStartsWith("Analytics Event requested with invalid IP"))
                 {
                     return true;
                 }
@@ -260,6 +271,13 @@ internal class FilterBuilder
             }
             return false;
         }
+
+        // logger + 0 loglevel + 0 prefix
+        if (ReferenceEquals(loggerName, "Last"))
+        {
+            return true;
+        }
+
         return false;
     }
 }
