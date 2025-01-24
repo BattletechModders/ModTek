@@ -10,11 +10,6 @@ namespace HarmonyXInterop;
 
 public static class HarmonyInterop
 {
-    private static readonly Func<MethodBase, PatchInfo, MethodInfo> UpdateWrapper =
-        AccessTools.MethodDelegate<Func<MethodBase, PatchInfo, MethodInfo>>(
-            AccessTools.Method(typeof(HarmonyManipulator).Assembly.GetType("HarmonyLib.PatchFunctions"),
-                "UpdateWrapper"));
-
     private static readonly HashSet<MethodBase> PrefixesWrapped = new();
     private static readonly Stopwatch OverheadTracking = new();
     public static void ApplyPatch(MethodBase target, PatchInfoWrapper add, PatchInfoWrapper remove)
@@ -68,7 +63,7 @@ public static class HarmonyInterop
                 Logging.Info($"Cumulative overhead setting up Harmony 1<>X interoperability: {OverheadTracking.ElapsedMilliseconds} ms");
             }
 
-            UpdateWrapper(target, pInfo);
+            PatchFunctions.UpdateWrapper(target, pInfo);
         }
         catch (Exception e)
         {
