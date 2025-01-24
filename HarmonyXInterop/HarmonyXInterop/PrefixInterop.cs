@@ -30,7 +30,7 @@ internal static class PrefixInterop
                 if (!Wrappers.TryGetValue(original, out var wrapper))
                 {
                     Logging.Info($"PrefixWrapper being created for: {GetDescription(original)}");
-                    wrapper = WrapperBuilder.CreatePrefixWrapper(original);
+                    wrapper = WrapperClassBuilder.CreatePrefixWrapper(original);
                     Logging.Info($"PrefixWrapper created: {GetDescription(wrapper)}");
                     Wrappers[original] = wrapper;
                 }
