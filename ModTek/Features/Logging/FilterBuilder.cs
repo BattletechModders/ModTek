@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using HBS.Logging;
-using MonoMod.Utils;
 
 namespace ModTek.Features.Logging;
 
@@ -15,24 +15,15 @@ internal class FilterBuilder
 
     internal static FilterDelegate Compile(AppenderSettings settings)
     {
-        var assemblyName = new AssemblyName("ModTekLoggingDynamic");
-        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndCollect);
-        var moduleBuilder = assemblyBuilder.DefineDynamicModule("Module");
-        var typeBuilder = moduleBuilder.DefineType("Filters",
-            TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed
-        );
-
-        var methodName = "IsMatch";
-        var methodBuilder = typeBuilder.DefineMethod(
-            methodName,
-            MethodAttributes.Public | MethodAttributes.Static,
-            CallingConventions.Standard,
+        var dynamicMethod = new DynamicMethod(
+            "IsMatch", // methods with the same name are allowed
             typeof(bool),
-            [typeof(MTLoggerMessageDto).MakeByRefType()]
+            [typeof(MTLoggerMessageDto).MakeByRefType()],
+            typeof(FilterBuilder),
+            true
         );
-        var parameterBuilder = methodBuilder.DefineParameter(0, 0, "text");
 
-        var il = methodBuilder.GetILGenerator();
+        var il = dynamicMethod.GetILGenerator();
 
         if (settings.Include is { Length: > 0 } || settings.Exclude is { Length: > 0 })
         {
@@ -54,10 +45,7 @@ internal class FilterBuilder
             il.Emit(OpCodes.Ret);
         }
 
-        var type = typeBuilder.CreateType();
-        type.Assembly.SetMonoCorlibInternal(true); // mono alternative for IgnoresAccessChecksToAttribute
-        var method = type.GetMethod(methodName, BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
-        return method!.CreateDelegate(typeof(FilterDelegate)) as FilterDelegate;
+        return dynamicMethod.CreateDelegate(typeof(FilterDelegate)) as FilterDelegate;
     }
 
     private readonly ILGenerator _il;
