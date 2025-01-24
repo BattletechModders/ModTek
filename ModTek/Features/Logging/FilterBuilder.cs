@@ -100,7 +100,7 @@ internal class FilterBuilder
             noMatchRetValue = OpCodes.Ldc_I4_1;
         }
 
-        Label? labelToNextCheck = null;
+        Label? labelToNextLoggerName = null;
         Label? labelToNextLogLevel = null;
         Label? labelToNextMessagePrefix = null;
         var previousFilter = filterSettings[0];
@@ -108,8 +108,8 @@ internal class FilterBuilder
             var filter = filterSettings[0];
             _il.Emit(OpCodes.Ldloc, _loggerNameLocalBuilder);
             _il.Emit(OpCodes.Ldstr, filter.LoggerName);
-            labelToNextCheck = _il.DefineLabel();
-            _il.Emit(OpCodes.Bne_Un_S, labelToNextCheck.Value);
+            labelToNextLoggerName = _il.DefineLabel();
+            _il.Emit(OpCodes.Bne_Un_S, labelToNextLoggerName.Value);
 
             if (filter.LogLevel != null)
             {
@@ -158,11 +158,11 @@ internal class FilterBuilder
                     _il.Emit(noMatchRetValue);
                     _il.Emit(OpCodes.Ret);
                 }
-                _il.MarkLabel(labelToNextCheck.Value);
+                _il.MarkLabel(labelToNextLoggerName.Value);
                 _il.Emit(OpCodes.Ldloc, _loggerNameLocalBuilder);
                 _il.Emit(OpCodes.Ldstr, filter.LoggerName);
-                labelToNextCheck = _il.DefineLabel();
-                _il.Emit(OpCodes.Bne_Un_S, labelToNextCheck.Value);
+                labelToNextLoggerName = _il.DefineLabel();
+                _il.Emit(OpCodes.Bne_Un_S, labelToNextLoggerName.Value);
             }
 
             if (labelToNextLogLevel == null || previousFilter.LogLevel != filter.LogLevel)
@@ -216,7 +216,7 @@ internal class FilterBuilder
         {
             _il.MarkLabel(labelToNextMessagePrefix.Value);
         }
-        _il.MarkLabel(labelToNextCheck.Value);
+        _il.MarkLabel(labelToNextLoggerName.Value);
         _il.Emit(noMatchRetValue);
         _il.Emit(OpCodes.Ret);
     }
