@@ -10,12 +10,12 @@ internal class AppenderSettings
     internal int LogRotationCount = 1;
 
     [JsonProperty]
-    internal const string Include_Description = "If set, matching log statements matching are written to the log. Exclusion has precedence over inclusion.";
+    internal const string Include_Description = "If set, matching log statements by prefix are written to the log. Exclusion has precedence over inclusion.";
     [JsonProperty]
     internal string[] Include;
 
     [JsonProperty]
-    internal const string Exclude_Description = "If set, matching log statements are ignored. Exclusion has precedence over inclusion.";
+    internal const string Exclude_Description = "If set, matching log statements by prefix are ignored. Exclusion has precedence over inclusion.";
     [JsonProperty]
     internal string[] Exclude;
 

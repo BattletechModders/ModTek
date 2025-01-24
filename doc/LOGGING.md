@@ -68,21 +68,6 @@ In the advanced merge json example from before, set 200 as the log level for you
 }
 ```
 
-### Mod Local Logs
-
-> **Note**
-> It is not recommended to use this feature as it produces duplicate IO
-
-If a mod author wants to have a separate copy of all logs a logger produces, one can enable a separate log in `mod.json`:
-```json
-{
-  "Log": {
-    "FilePath": "log.txt",
-    "LoggerName": "YourMod"
-  }
-}
-```
-
 ### Nullable loggers
 
 > **Note**

@@ -87,20 +87,6 @@ internal static class LoggingFeature
         AddAppenders(basePath, logs);
     }
 
-    internal static void AddModLogAppender(string logPath, string loggerName)
-    {
-        if (!_settings.ModLogAppendersEnabled)
-        {
-            return;
-        }
-        var logsAppenders = new AppenderFile[_logsAppenders.Length + 1];
-        Array.Copy(_logsAppenders, logsAppenders, _logsAppenders.Length);
-        var index = _logsAppenders.Length;
-        var settings = new AppenderSettings { Include = [loggerName] };
-        logsAppenders[index] = new AppenderFile(logPath, settings);
-        _logsAppenders = logsAppenders;
-    }
-
     internal static readonly MTStopwatchWithSampling DispatchStopWatch = new(1000) { TimestampCountPerMeasurement = 1 };
     // used for intercepting all logging attempts and to log centrally
     internal static void LogAtLevel(string loggerName, LogLevel logLevel, object message, Exception exception, IStackTrace location)

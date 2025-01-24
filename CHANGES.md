@@ -10,6 +10,14 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 
+## 4.4 - CptMoore
+
+For modders:
+- Logging
+  - Includes and Excludes were renamed to Include/Exclude and use the `PrefixesToIgnore` syntax.
+  - `PrefixesToIgnore` was removed.
+  - Removed the newly introduced simple mod logger in `mod.json` and keeping the undocumented `Logs` logger config.
+
 ## 4.3 - CptMoore
 
 For modders:

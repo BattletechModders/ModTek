@@ -11,11 +11,46 @@ internal static class LinePrefixToFilterTransformer
 {
     internal static List<FilterSettings> CreateFilters(string[] prefixes)
     {
+        FilterSettings previous = null;
         return prefixes
-            .OrderBy(x => x, StringComparer.Ordinal)
+            .OrderBy(s => s)
             .Distinct()
             .Select(CreateFilterSettingsFromLinePrefix)
+            .OrderBy(f => f.LoggerName, StringComparer.Ordinal)
+            .ThenBy(f => f.LogLevel)
+            .ThenBy(f => f.MessagePrefix, StringComparer.Ordinal)
+            .Where(f =>
+            {
+                var ok = true;
+                if (previous != null)
+                {
+                    ok = !AlreadyIncludes(previous, f);
+                }
+                previous = f;
+                return ok;
+            })
             .ToList();
+    }
+
+    private static bool AlreadyIncludes(FilterSettings b, FilterSettings i)
+    {
+        if (b.LoggerName == i.LoggerName)
+        {
+            if (b.LogLevel == null)
+            {
+                return true;
+            }
+
+            if (b.LogLevel == i.LogLevel)
+            {
+                if (b.MessagePrefix == null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static FilterSettings CreateFilterSettingsFromLinePrefix(string linePrefix)
