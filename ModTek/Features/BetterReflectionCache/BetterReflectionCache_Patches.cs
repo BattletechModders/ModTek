@@ -4,8 +4,11 @@ using HBS.Reflection;
 
 namespace ModTek.Features.BetterReflectionCache;
 
+// reflection cache is used for json deserialization in BT
+// this has faster performance
+// and support for nested types (full type instead of type simple name)
 [HarmonyPatch(typeof(ReflectionCache))]
-public class BetterReflectionCache_Patches
+internal static class BetterReflectionCache_Patches
 {
     private static readonly Dictionary<Key, MemberInfoHelper> s_members = new();
     private static readonly Dictionary<Key, MethodInfoHelper> s_methods = new();
@@ -15,7 +18,7 @@ public class BetterReflectionCache_Patches
     /*
     [HarmonyPatch(nameof(ReflectionCache.Instance))]
     [HarmonyPrepare]
-    public static void Migrate()
+    internal static void Migrate()
     {
         foreach (var helper in ReflectionCache.instance.members.Values)
         {
@@ -26,7 +29,7 @@ public class BetterReflectionCache_Patches
 
     [HarmonyPatch(nameof(ReflectionCache.Get))]
     [HarmonyPrefix]
-    public static void Get(
+    internal static void Get(
         ref bool __runOriginal,
         ref bool __result,
         Type t,
@@ -48,7 +51,7 @@ public class BetterReflectionCache_Patches
 
     [HarmonyPatch(nameof(ReflectionCache.Set))]
     [HarmonyPrefix]
-    public static void Set(
+    internal static void Set(
         ref bool __runOriginal,
         ref bool __result,
         Type t,
@@ -69,7 +72,7 @@ public class BetterReflectionCache_Patches
 
     [HarmonyPatch(nameof(ReflectionCache.GetMemberHelper))]
     [HarmonyPrefix]
-    public static void GetMemberHelper(
+    internal static void GetMemberHelper(
         ref bool __runOriginal,
         ref MemberInfoHelper __result,
         Type t,
@@ -97,7 +100,7 @@ public class BetterReflectionCache_Patches
 
     [HarmonyPatch(nameof(ReflectionCache.Invoke))]
     [HarmonyPrefix]
-    public static void Invoke(
+    internal static void Invoke(
         ref bool __runOriginal,
         ref bool __result,
         Type t,
@@ -120,7 +123,7 @@ public class BetterReflectionCache_Patches
 
     [HarmonyPatch(nameof(ReflectionCache.GetMethodHelper))]
     [HarmonyPrefix]
-    public static void GetMethodHelper(
+    internal static void GetMethodHelper(
         ref bool __runOriginal,
         ref MethodInfoHelper __result,
         Type t,
@@ -152,7 +155,7 @@ public class BetterReflectionCache_Patches
         [ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out]
     )]
     [HarmonyPrefix]
-    public static void TryCacheMethod(ref bool __runOriginal)
+    internal static void TryCacheMethod(ref bool __runOriginal)
     {
         __runOriginal = false;
         throw new NotImplementedException();
