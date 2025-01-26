@@ -9,6 +9,9 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
 - Some mods expect the managed assemblies location to be in the `Managed` directory,
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
+- Missing (markdown) documentations:
+    - ModTekSimpleInjector -> link to xml, but from where?
+    - Run injectors from dotnet/msbuild thanks to netstandard2.0 -> still experimental
 
 ## 4.4 - CptMoore
 
@@ -17,6 +20,8 @@ For modders:
   - Includes and Excludes were renamed to Include/Exclude and use the `PrefixesToIgnore` syntax.
   - `PrefixesToIgnore` was removed.
   - Removed the newly introduced simple mod logger in `mod.json` and keeping the undocumented `Logs` logger config.
+- Added ModTekSimpleInjector, simplifies adding instance fields to existing base game types.
+  - See [ModTekSimpleInjector.Example.xml](ModTekSimpleInjector/ModTekSimpleInjector.Example.xml) for documentation.
 
 ## 4.3 - CptMoore
 

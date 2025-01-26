@@ -15,8 +15,8 @@ indent_style = space
 indent_size = 4
 charset = utf-8-bom
 
-# XML project files
-[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+# XML + XML project files
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj,xml,xsd}]
 indent_size = 2
 
 # XML config files

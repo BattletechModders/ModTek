@@ -92,7 +92,12 @@ internal class Runner : IDisposable
         Console.SetError(errorLogger);
         try
         {
-            injectMethod.Invoke(null, new object[] { _assemblyCache });
+            injectMethod.Invoke(null, [_assemblyCache]);
+        }
+        catch (Exception ex)
+        {
+            Logger.Main.Log($"Injector {name} threw an exception: " + ex);
+            throw;
         }
         finally
         {
