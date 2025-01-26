@@ -11,7 +11,8 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 - Missing (markdown) documentations:
     - ModTekSimpleInjector -> link to xml, but from where?
-    - Run injectors from dotnet/msbuild thanks to netstandard2.0 -> still experimental
+    - Run injectors from dotnet/msbuild thanks to netstandard2.0 -> still highly experimental
+    - `Logs` section within `mod.json` -> probably unstable API (options and stuff seems to always change)
 
 ## 4.4 - CptMoore
 
