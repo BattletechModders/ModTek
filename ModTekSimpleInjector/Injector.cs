@@ -50,25 +50,32 @@ internal static class Injector
 
     private static void ProcessAdditions(IAssemblyResolver resolver, Additions additions)
     {
-        foreach (var addition in additions.AddField)
+        if (additions.AddField is { Length: > 0 })
         {
-            if (addition.Name.StartsWith("example"))
+            foreach (var addition in additions.AddField)
             {
-                continue;
+                if (addition.Name.StartsWith("example"))
+                {
+                    continue;
+                }
+                Console.WriteLine($"Processing {addition}");
+                ResolveAssemblyAndType(resolver, addition, out var assemblyDefinition, out var typeDefinition);
+                ProcessAddField(assemblyDefinition, typeDefinition, addition);
             }
-            Console.WriteLine($"Processing {addition}");
-            ResolveAssemblyAndType(resolver, addition, out var assemblyDefinition, out var typeDefinition);
-            ProcessAddField(assemblyDefinition, typeDefinition, addition);
         }
-        foreach (var addition in additions.AddEnumConstant)
+
+        if (additions.AddEnumConstant is { Length: > 0 })
         {
-            if (addition.Name.StartsWith("example"))
+            foreach (var addition in additions.AddEnumConstant)
             {
-                continue;
+                if (addition.Name.StartsWith("example"))
+                {
+                    continue;
+                }
+                Console.WriteLine($"Processing {addition}");
+                ResolveAssemblyAndType(resolver, addition, out _, out var typeDefinition);
+                ProcessAddEnumConstant(typeDefinition, addition);
             }
-            Console.WriteLine($"Processing {addition}");
-            ResolveAssemblyAndType(resolver, addition, out _, out var typeDefinition);
-            ProcessAddEnumConstant(typeDefinition, addition);
         }
     }
 
