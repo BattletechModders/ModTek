@@ -4,10 +4,6 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModTekLibDir)" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Krafs.Publicizer" />
-    <Publicize Include="0Harmony:HarmonyLib.PatchFunctions.UpdateWrapper" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="HarmonyX">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
