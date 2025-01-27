@@ -39,10 +39,6 @@ internal static class Injector
         var greaterThanFix = new Regex(@"(?<=[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}])<");
         foreach (var file in files)
         {
-            if (file.EndsWith("ModTekSimpleInjector.Example.xml"))
-            {
-                continue;
-            }
             Console.WriteLine($"Processing additions in file {file}");
             var xml = File.ReadAllText(file);
             var sanitized = greaterThanFix.Replace(xml, "&lt;");
@@ -56,12 +52,20 @@ internal static class Injector
     {
         foreach (var addition in additions.AddField)
         {
+            if (addition.Name.StartsWith("example"))
+            {
+                continue;
+            }
             Console.WriteLine($"Processing {addition}");
             ResolveAssemblyAndType(resolver, addition, out var assemblyDefinition, out var typeDefinition);
             ProcessAddField(assemblyDefinition, typeDefinition, addition);
         }
         foreach (var addition in additions.AddEnumConstant)
         {
+            if (addition.Name.StartsWith("example"))
+            {
+                continue;
+            }
             Console.WriteLine($"Processing {addition}");
             ResolveAssemblyAndType(resolver, addition, out _, out var typeDefinition);
             ProcessAddEnumConstant(typeDefinition, addition);
