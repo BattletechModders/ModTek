@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Mono.Cecil;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
@@ -33,6 +34,9 @@ internal static class Injector
         var files = Directory.GetFiles(baseDirectory, "ModTekSimpleInjector.*.xml");
         Array.Sort(files);
         var serializer = new XmlSerializer(typeof(Additions));
+        // find a valid class name character in front of "<" and assume its part of the ofType expression
+        // in XML < is invalid in attribute values, Rider does not care though
+        var greaterThanFix = new Regex(@"(?<=[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}])<");
         foreach (var file in files)
         {
             if (file.EndsWith("ModTekSimpleInjector.Example.xml"))
@@ -40,7 +44,9 @@ internal static class Injector
                 continue;
             }
             Console.WriteLine($"Processing additions in file {file}");
-            using var reader = new StreamReader(file);
+            var xml = File.ReadAllText(file);
+            var sanitized = greaterThanFix.Replace(xml, "&lt;");
+            using var reader = new StringReader(sanitized);
             var additions = (Additions)serializer.Deserialize(reader);
             ProcessAdditions(resolver, additions);
         }
@@ -104,15 +110,41 @@ internal static class Injector
         type.Fields.Add(field);
     }
 
-    private static Type ResolveType(string additionType)
+    private static Type ResolveType(string typeName)
     {
-        var typeName = additionType;
         var isArray = typeName.EndsWith("[]");
         if (isArray)
         {
             typeName = typeName[..^2];
         }
+
+        var genericArgumentsRegex = new Regex("^(.+?)<(.+)>$");
+        var genericArgumentsMatch = genericArgumentsRegex.Match(typeName);
+        Type[] genericArgumentsTypes;
+        if (genericArgumentsMatch.Success)
+        {
+            var genericArgumentsString = genericArgumentsMatch.Groups[2].Value;
+            var genericArgumentsStrings = genericArgumentsString.Split(',');
+            typeName = genericArgumentsMatch.Groups[1].Value;
+            typeName += "`" + genericArgumentsStrings.Length;
+            genericArgumentsTypes = new Type[genericArgumentsStrings.Length];
+            for (var i = 0; i < genericArgumentsTypes.Length; i++)
+            {
+                genericArgumentsTypes[i] = ResolveType(genericArgumentsStrings[i]);
+            }
+        }
+        else
+        {
+            genericArgumentsTypes = null;
+        }
+
+        // we only support mscorlib classes for now
         var fieldType = typeof(int).Assembly.GetType(typeName);
+
+        if (genericArgumentsTypes != null)
+        {
+            fieldType = fieldType.MakeGenericType(genericArgumentsTypes);
+        }
         if (isArray)
         {
             fieldType = fieldType.MakeArrayType();

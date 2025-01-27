@@ -19,17 +19,22 @@ Do not rely on fields added by other mods, unless explicitly advised to do so.
   Fields can be of any types found in mscorlib.
     Keywords (e.g. byte) are not supported, use the types full name (e.g. System.Byte).
     For custom types use `System.Object` and `Unsafe.As<object, MyType>(ref addedField)` for high performance access.
-    A `[]` suffix means that the type should be an array of the specified type.
+    A `[]` suffix means that the specified type should be an array.
   -->
   <AddField ToType="HBS.Logging.Logger/LogImpl" InAssembly="Assembly-CSharp"
-    Name="nameAsBytes2" OfType="System.Byte[]" />
+    Name="exampleField" OfType="System.String" />
+
+  <!-- Generics are supported. No whitespaces allowed. -->
+  <AddField ToType="HBS.Logging.Logger" InAssembly="Assembly-CSharp"
+    Name="exampleField2" OfType="System.Nullable<System.Int32>" />
 
   <!-- AddField and Attributes
   Added fields are private by default, using other attributes is **strongly** discouraged.
-  Publicizers allow to efficiently access private fields anyway.
+  Publicizers allow to efficiently access private fields.
+  Static fields can be defined in a mod and do not require to be injected.
   -->
   <AddField ToType="HBS.Logging.Logger/LogImpl" InAssembly="Assembly-CSharp"
-    Name="secondaryName" OfType="System.String" Attributes="Public" />
+    Name="exampleField3" OfType="System.String" Attributes="Public" />
 
   <!-- AddEnumConstant
   AddEnumConstant adds an enum constant to an existing enum type.
@@ -38,5 +43,5 @@ Do not rely on fields added by other mods, unless explicitly advised to do so.
   Enums are just ints and one can convert to and from enums using ints, other mods might already be using an int value you are targeting.
   -->
   <AddEnumConstant ToType="HBS.Logging.LogLevel" InAssembly="Assembly-CSharp"
-    Name="Trace" Value="200" />
+    Name="exampleEnumConstant" Value="100" />
 </ModTekSimpleInjector>
