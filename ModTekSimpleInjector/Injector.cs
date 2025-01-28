@@ -97,7 +97,7 @@ internal static class Injector
                 ?? throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
             moduleDefinition = assemblyDefinition.MainModule;
 
-            customAttribute = CreateMonoDocumentationAttribute(sourceFile);
+            customAttribute = CreateCustomAttribute(sourceFile);
         }
 
         internal void InjectField(AddField fieldAddition)
@@ -106,7 +106,7 @@ internal static class Injector
             var fieldTypeReference = moduleDefinition.ImportReference(fieldType);
 
             var field = new FieldDefinition(fieldAddition.Name, fieldAddition.Attributes, fieldTypeReference);
-            field.CustomAttributes.Add(customAttribute);
+            //field.CustomAttributes.Add(customAttribute); // TODO can't reference non-existing attributes
             typeDefinition.Fields.Add(field);
         }
 
@@ -122,10 +122,11 @@ internal static class Injector
             {
                 Constant = constantValue
             };
+            //field.CustomAttributes.Add(customAttribute); // TODO can't reference non-existing attributes
             typeDefinition.Fields.Add(field);
         }
 
-        private CustomAttribute CreateMonoDocumentationAttribute(string source)
+        private CustomAttribute CreateCustomAttribute(string source)
         {
             var attributeType = typeof(SourceAttribute);
             var attributeConstructor = moduleDefinition.ImportReference(attributeType.GetConstructor([typeof(string)]));
