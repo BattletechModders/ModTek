@@ -44,7 +44,7 @@ internal static class Injector
             var sanitized = greaterThanFix.Replace(xml, "&lt;");
             using var reader = new StringReader(sanitized);
             var additions = (Additions)serializer.Deserialize(reader);
-            ProcessAdditions(file, resolver, additions);
+            ProcessAdditions(Path.GetFileName(file), resolver, additions);
         }
     }
 
@@ -97,7 +97,7 @@ internal static class Injector
                 ?? throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
             moduleDefinition = assemblyDefinition.MainModule;
 
-            customAttribute = CreateMonoDocumentationAttribute($"Generated using {sourceFile}");
+            customAttribute = CreateMonoDocumentationAttribute(sourceFile);
         }
 
         internal void InjectField(AddField fieldAddition)
@@ -125,12 +125,12 @@ internal static class Injector
             typeDefinition.Fields.Add(field);
         }
 
-        private CustomAttribute CreateMonoDocumentationAttribute(string comment)
+        private CustomAttribute CreateMonoDocumentationAttribute(string source)
         {
-            var attributeType = typeof(int).Assembly.GetType("System.MonoDocumentationNoteAttribute");
+            var attributeType = typeof(SourceAttribute);
             var attributeConstructor = moduleDefinition.ImportReference(attributeType.GetConstructor([typeof(string)]));
             var attribute = new CustomAttribute(attributeConstructor);
-            var attributeArgument = new CustomAttributeArgument(moduleDefinition.ImportReference(typeof(string)), comment);
+            var attributeArgument = new CustomAttributeArgument(moduleDefinition.ImportReference(typeof(string)), source);
             attribute.ConstructorArguments.Add(attributeArgument);
             return attribute;
         }
@@ -176,6 +176,14 @@ internal static class Injector
             fieldType = fieldType.MakeArrayType();
         }
         return fieldType;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Field)]
+public class SourceAttribute : Attribute
+{
+    public SourceAttribute(string source)
+    {
     }
 }
 
