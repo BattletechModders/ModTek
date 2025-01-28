@@ -44,11 +44,11 @@ internal static class Injector
             var sanitized = greaterThanFix.Replace(xml, "&lt;");
             using var reader = new StringReader(sanitized);
             var additions = (Additions)serializer.Deserialize(reader);
-            ProcessAdditions(resolver, additions);
+            ProcessAdditions(file, resolver, additions);
         }
     }
 
-    private static void ProcessAdditions(IAssemblyResolver resolver, Additions additions)
+    private static void ProcessAdditions(string sourceFile, IAssemblyResolver resolver, Additions additions)
     {
         if (additions.AddField is { Length: > 0 })
         {
@@ -58,9 +58,8 @@ internal static class Injector
                 {
                     continue;
                 }
-                Console.WriteLine($"Processing {addition}");
-                ResolveAssemblyAndType(resolver, addition, out var assemblyDefinition, out var typeDefinition);
-                ProcessAddField(assemblyDefinition, typeDefinition, addition);
+                var injection = new SimpleInjection(sourceFile, resolver, addition);
+                injection.InjectField(addition);
             }
         }
 
@@ -72,53 +71,69 @@ internal static class Injector
                 {
                     continue;
                 }
-                Console.WriteLine($"Processing {addition}");
-                ResolveAssemblyAndType(resolver, addition, out _, out var typeDefinition);
-                ProcessAddEnumConstant(typeDefinition, addition);
+                var injection = new SimpleInjection(sourceFile, resolver, addition);
+                injection.InjectEnumConstant(addition);
             }
         }
     }
 
-    private static void ResolveAssemblyAndType(
-        IAssemblyResolver resolver,
-        Addition addition,
-        out AssemblyDefinition assemblyDefinition,
-        out TypeDefinition typeDefinition
-    ) {
-        var assemblyName = new AssemblyNameReference(addition.InAssembly, null);
-        assemblyDefinition = resolver.Resolve(assemblyName);
-        if (assemblyDefinition == null)
-        {
-            throw new ArgumentException($"Unable to resolve assembly {addition.InAssembly}");
-        }
-        typeDefinition = assemblyDefinition.MainModule.GetType(addition.ToType);
-        if (typeDefinition == null)
-        {
-            throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
-        }
-    }
-
-    private static void ProcessAddField(AssemblyDefinition assembly, TypeDefinition type, AddField fieldAddition)
+    private class SimpleInjection
     {
-        var fieldType = ResolveType(fieldAddition.OfType);
-        var fieldTypeReference = assembly.MainModule.ImportReference(fieldType);
-        var field = new FieldDefinition(fieldAddition.Name, fieldAddition.Attributes, fieldTypeReference);
-        type.Fields.Add(field);
-    }
+        private readonly TypeDefinition typeDefinition;
+        private readonly ModuleDefinition moduleDefinition;
+        private readonly CustomAttribute customAttribute;
 
-    private static void ProcessAddEnumConstant(TypeDefinition type, AddEnumConstant enumConstant)
-    {
-        const FieldAttributes EnumFieldAttributes =
-            FieldAttributes.Static
-            | FieldAttributes.Literal
-            | FieldAttributes.Public
-            | FieldAttributes.HasDefault;
-        var constantValue = enumConstant.Value;
-        var field = new FieldDefinition(enumConstant.Name, EnumFieldAttributes, type)
+        public SimpleInjection(
+            string sourceFile,
+            IAssemblyResolver resolver,
+            Addition addition
+        ) {
+            Console.WriteLine($"Processing {addition}");
+            var assemblyName = new AssemblyNameReference(addition.InAssembly, null);
+
+            var assemblyDefinition = resolver.Resolve(assemblyName)
+                ?? throw new ArgumentException($"Unable to resolve assembly {addition.InAssembly}");
+            typeDefinition = assemblyDefinition.MainModule.GetType(addition.ToType)
+                ?? throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
+            moduleDefinition = assemblyDefinition.MainModule;
+
+            customAttribute = CreateMonoDocumentationAttribute($"Generated using {sourceFile}");
+        }
+
+        internal void InjectField(AddField fieldAddition)
         {
-            Constant = constantValue
-        };
-        type.Fields.Add(field);
+            var fieldType = ResolveType(fieldAddition.OfType);
+            var fieldTypeReference = moduleDefinition.ImportReference(fieldType);
+
+            var field = new FieldDefinition(fieldAddition.Name, fieldAddition.Attributes, fieldTypeReference);
+            field.CustomAttributes.Add(customAttribute);
+            typeDefinition.Fields.Add(field);
+        }
+
+        internal void InjectEnumConstant(AddEnumConstant enumConstant)
+        {
+            const FieldAttributes EnumFieldAttributes =
+                FieldAttributes.Static
+                | FieldAttributes.Literal
+                | FieldAttributes.Public
+                | FieldAttributes.HasDefault;
+            var constantValue = enumConstant.Value;
+            var field = new FieldDefinition(enumConstant.Name, EnumFieldAttributes, typeDefinition)
+            {
+                Constant = constantValue
+            };
+            typeDefinition.Fields.Add(field);
+        }
+
+        private CustomAttribute CreateMonoDocumentationAttribute(string comment)
+        {
+            var attributeType = typeof(int).Assembly.GetType("System.MonoDocumentationNoteAttribute");
+            var attributeConstructor = moduleDefinition.ImportReference(attributeType.GetConstructor([typeof(string)]));
+            var attribute = new CustomAttribute(attributeConstructor);
+            var attributeArgument = new CustomAttributeArgument(moduleDefinition.ImportReference(typeof(string)), comment);
+            attribute.ConstructorArguments.Add(attributeArgument);
+            return attribute;
+        }
     }
 
     private static Type ResolveType(string typeName)
