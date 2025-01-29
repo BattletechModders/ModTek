@@ -48,6 +48,11 @@ Do not rely on fields added by other mods, unless explicitly advised to do so.
   <AddField ToType="HBS.Logging.Logger" InAssembly="Assembly-CSharp"
     Name="exampleField5" OfType="System.Char[]" />
 
+  <!-- Comments can be added that appear via attributes to the field  -->
+  <AddField ToType="HBS.Logging.Logger" InAssembly="Assembly-CSharp"
+    Name="exampleField6" OfType="System.SByte" Attributes="Public"
+    Comment="This field is public for the json de-/serializer, do not use!" />
+
   <!--
   AddEnumConstant adds an enum constant to an existing enum type.
   Multiple enum constants with the same value can be added, they should behave like aliases. This is usually unwanted.
