@@ -16,7 +16,7 @@ Do not rely on fields added by other mods, unless explicitly advised to do so.
 
   <!--
   AddField adds a new instance field to an existing type.
-  Fields can be of any types found in mscorlib.
+  Fields can be of any types found in mscorlib, System or System.Core.
   Keywords (e.g. byte) are not supported, use the types full name (e.g. System.Byte).
   -->
   <AddField ToType="HBS.Logging.Logger" InAssembly="Assembly-CSharp"

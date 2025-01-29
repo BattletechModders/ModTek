@@ -8,8 +8,9 @@ namespace ModTekSimpleInjector;
 
 internal class SimpleInjection
 {
-    private readonly TypeDefinition _typeDefinition;
+    private readonly ModuleDefinition[] _coreModules;
     private readonly ModuleDefinition _moduleDefinition;
+    private readonly TypeDefinition _typeDefinition;
     private readonly CustomAttribute _customAttribute;
 
     public SimpleInjection(
@@ -17,6 +18,12 @@ internal class SimpleInjection
         IAssemblyResolver resolver,
         Addition addition
     ) {
+        _coreModules = [
+            resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule,
+            resolver.Resolve(new AssemblyNameReference("System", null)).MainModule,
+            resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule,
+        ];
+
         Console.WriteLine($"Processing {addition}");
         var assemblyName = new AssemblyNameReference(addition.InAssembly, null);
 
@@ -120,7 +127,7 @@ internal class SimpleInjection
         Type Type { get; }
     }
 
-    private static Type ResolveType(string typeName)
+    private TypeReference ResolveType(string typeName)
     {
         var isArray = typeName.EndsWith("[]");
         if (isArray)
@@ -130,14 +137,14 @@ internal class SimpleInjection
 
         var genericArgumentsRegex = new Regex("^(.+?)<(.+)>$");
         var genericArgumentsMatch = genericArgumentsRegex.Match(typeName);
-        Type[] genericArgumentsTypes;
+        TypeReference[] genericArgumentsTypes;
         if (genericArgumentsMatch.Success)
         {
             var genericArgumentsString = genericArgumentsMatch.Groups[2].Value;
             var genericArgumentsStrings = genericArgumentsString.Split(',');
             typeName = genericArgumentsMatch.Groups[1].Value;
             typeName += "`" + genericArgumentsStrings.Length;
-            genericArgumentsTypes = new Type[genericArgumentsStrings.Length];
+            genericArgumentsTypes = new TypeReference[genericArgumentsStrings.Length];
             for (var i = 0; i < genericArgumentsTypes.Length; i++)
             {
                 genericArgumentsTypes[i] = ResolveType(genericArgumentsStrings[i]);
@@ -148,18 +155,20 @@ internal class SimpleInjection
             genericArgumentsTypes = null;
         }
 
-        // TODO fix msbuild and unity mono supporting different classes in mscorlib!
-        // we only support mscorlib classes for now
-        var fieldType = typeof(int).Assembly.GetType(typeName);
+        TypeReference typeReference = _coreModules.Select(m => m.GetType(typeName)).FirstOrDefault();
+        if (typeReference == null)
+        {
+            throw new ArgumentException($"Unable to resolve type {typeName}");
+        }
 
         if (genericArgumentsTypes != null)
         {
-            fieldType = fieldType.MakeGenericType(genericArgumentsTypes);
+            typeReference = typeReference.MakeGenericInstanceType(genericArgumentsTypes);
         }
         if (isArray)
         {
-            fieldType = fieldType.MakeArrayType();
+            typeReference = typeReference.MakeArrayType();
         }
-        return fieldType;
+        return typeReference;
     }
 }
