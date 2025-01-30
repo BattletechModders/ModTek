@@ -85,17 +85,16 @@ internal class SimpleInjection
                 | MethodAttributes.SpecialName
                 | MethodAttributes.RTSpecialName;
             var methodDefinition = new MethodDefinition(".ctor", CtorAttributes, moduleDefinition.TypeSystem.Void);
-            // if not wanting CustomAttributeNamedArgument, one can use:
-            // foreach (var parameter in parameters)
-            // {
-            //     var parameterDefinition = new ParameterDefinition(
-            //         parameter.name,
-            //         ParameterAttributes.None,
-            //         moduleDefinition.ImportReference(parameter.type)
-            //     );
-            //     methodDefinition.Parameters.Add(parameterDefinition);
-            // }
             attributeTypeDefinition.Methods.Add(methodDefinition);
+            foreach (var parameter in parameters)
+            {
+                var attributeFieldDefinition = new FieldDefinition(
+                    parameter.Name,
+                    FieldAttributes.Public,
+                    moduleDefinition.ImportReference(parameter.Type)
+                );
+                attributeTypeDefinition.Fields.Add(attributeFieldDefinition);
+            }
             moduleDefinition.Types.Add(attributeTypeDefinition);
         }
         var attributeConstructor = attributeTypeDefinition.GetConstructors().First();
