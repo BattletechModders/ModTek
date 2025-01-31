@@ -14,24 +14,33 @@ public class Additions
     public AddEnumConstant[] AddEnumConstant = [];
 }
 
-public abstract class Addition
+public abstract class AssemblyAddition
 {
     [XmlAttribute("InAssembly")]
     public string InAssembly;
-    [XmlAttribute("ToType")]
-    public string ToType;
     [XmlAttribute("Comment")]
     public string Comment;
 
     public override string ToString()
     {
-        return $"{this.GetType().Name}:{InAssembly}:{ToType}:{Comment}";
+        return $"{this.GetType().Name}:{InAssembly}:{Comment}";
+    }
+}
+
+public abstract class MemberAddition : AssemblyAddition
+{
+    [XmlAttribute("ToType")]
+    public string ToType;
+
+    public override string ToString()
+    {
+        return $"{base.ToString()}:{ToType}";
     }
 }
 
 [XmlType("AddField")]
 [XmlRoot(ElementName = "AddField")]
-public class AddField : Addition
+public class AddField : MemberAddition
 {
     [XmlAttribute("Name")]
     public string Name;
@@ -48,7 +57,7 @@ public class AddField : Addition
 
 [XmlType("AddEnumConstant")]
 [XmlRoot(ElementName = "AddEnumConstant")]
-public class AddEnumConstant : Addition
+public class AddEnumConstant : MemberAddition
 {
     [XmlAttribute("Name")]
     public string Name;

@@ -15,6 +15,8 @@ What is hard and therefore not supported:
   - injectors run before mods are loaded. if a modded type is added, but the mod is not even loaded.. what now?
   - also how does the injector know where to find the types? -> mod dlls are unknown during injector time
   - some kind of special assembly type with "injectable" types would be a solution, requires some ahead of type loading
+  - if a mod wants to inject into another mod -> just PR the damn thing!
+  - only valid use-case are struct-based fields. those can be more efficient performance wise
 - modifying existing fields
   - visibility should not be modified during runtime since it can crash (subclassing), and compile time via publicizer is good enough
   - changing static, const would also crash stuff
@@ -43,7 +45,8 @@ internal static class Injector
             var sanitized = greaterThanFix.Replace(xml, "&lt;");
             using var reader = new StringReader(sanitized);
             var additions = (Additions)serializer.Deserialize(reader);
-            ProcessAdditions(Path.GetFileName(file), resolver, additions);
+            var fileName = Path.GetFileName(file);
+            ProcessAdditions(fileName, resolver, additions);
         }
     }
 
@@ -58,7 +61,7 @@ internal static class Injector
                     continue;
                 }
                 var injection = new SimpleInjection(sourceFile, resolver, addition);
-                injection.InjectField(addition);
+                injection.Inject(addition);
             }
         }
 
@@ -71,7 +74,7 @@ internal static class Injector
                     continue;
                 }
                 var injection = new SimpleInjection(sourceFile, resolver, addition);
-                injection.InjectEnumConstant(addition);
+                injection.Inject(addition);
             }
         }
     }

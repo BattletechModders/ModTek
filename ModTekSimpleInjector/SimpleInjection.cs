@@ -8,47 +8,50 @@ namespace ModTekSimpleInjector;
 
 internal class SimpleInjection
 {
-    private readonly ModuleDefinition[] _coreModules;
+    private readonly ModuleDefinition[] _resolveInModules;
     private readonly ModuleDefinition _moduleDefinition;
-    private readonly TypeDefinition _typeDefinition;
     private readonly CustomAttribute _customAttribute;
-
+    private readonly TypeDefinition _typeDefinition;
     public SimpleInjection(
         string sourceFile,
         IAssemblyResolver resolver,
-        Addition addition
+        MemberAddition addition
     ) {
-        _coreModules = [
-            resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule,
-            resolver.Resolve(new AssemblyNameReference("System", null)).MainModule,
-            resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule,
-        ];
-
         Console.WriteLine($"Processing {addition}");
         var assemblyName = new AssemblyNameReference(addition.InAssembly, null);
 
         var assemblyDefinition = resolver.Resolve(assemblyName)
             ?? throw new ArgumentException($"Unable to resolve assembly {addition.InAssembly}");
-        _typeDefinition = assemblyDefinition.MainModule.GetType(addition.ToType)
-            ?? throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
         _moduleDefinition = assemblyDefinition.MainModule;
+
+        // TODO improve resolver while keeping performance high
+        _resolveInModules = [
+            _moduleDefinition,
+            resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule,
+            resolver.Resolve(new AssemblyNameReference("System", null)).MainModule,
+            resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule,
+        ];
+
 
         _customAttribute = CreateCustomAttribute(_moduleDefinition,"ModTekSimpleInjector", "InjectedAttribute", [
             new ParameterInfo<string>("source", sourceFile),
             new ParameterInfo<string>("comment", addition.Comment)
         ]);
+
+        _typeDefinition = _moduleDefinition.GetType(addition.ToType)
+            ?? throw new ArgumentException($"Unable to resolve type {addition.ToType} in assembly {addition.InAssembly}");
     }
 
-    internal void InjectField(AddField fieldAddition)
+    internal void Inject(AddField fieldAddition)
     {
-        var fieldType = ResolveType(fieldAddition.OfType);
-        var fieldTypeReference = _moduleDefinition.ImportReference(fieldType);
-        var fieldDefinition = new FieldDefinition(fieldAddition.Name, fieldAddition.Attributes, fieldTypeReference);
+        var typeReference = ResolveType(fieldAddition.OfType);
+        var typeReferenceImported = _moduleDefinition.ImportReference(typeReference);
+        var fieldDefinition = new FieldDefinition(fieldAddition.Name, fieldAddition.Attributes, typeReferenceImported);
         fieldDefinition.CustomAttributes.Add(_customAttribute);
         _typeDefinition.Fields.Add(fieldDefinition);
     }
 
-    internal void InjectEnumConstant(AddEnumConstant enumConstant)
+    internal void Inject(AddEnumConstant enumConstant)
     {
         const FieldAttributes EnumFieldAttributes =
             FieldAttributes.Static
@@ -154,7 +157,7 @@ internal class SimpleInjection
             genericArgumentsTypes = null;
         }
 
-        TypeReference typeReference = _coreModules.Select(m => m.GetType(typeName)).FirstOrDefault();
+        TypeReference typeReference = _resolveInModules.Select(m => m.GetType(typeName)).FirstOrDefault();
         if (typeReference == null)
         {
             throw new ArgumentException($"Unable to resolve type {typeName}");
