@@ -24,24 +24,23 @@ class AssemblyCache : IAssemblyResolver
         var readWrite = parameters.ReadWrite;
         parameters.ReadWrite = false;
 
-        if (!_assemblies.TryGetValue(reference.Name, out var assemblyBag))
+        var assemblyName = reference.Name;
+        if (!_assemblies.TryGetValue(assemblyName, out var assemblyBag))
         {
-            var sw = Stopwatch.StartNew();
-            if (!s_assemblyCandidates.TryGetValue(reference.Name, out var assemblyCandidate))
+            if (!s_assemblyCandidates.TryGetValue(assemblyName, out var assemblyCandidate))
             {
                 throw new AssemblyResolutionException(reference);
             }
             var assembly = ModuleDefinition.ReadModule(assemblyCandidate.Path, parameters).Assembly;
             assemblyBag = new AssemblyBag(assembly, assemblyCandidate.IsReadOnly);
-            _assemblies[reference.Name] = assemblyBag;
-            Logger.Main.Log($"Assembly {reference.Name} found and loaded in {sw.ElapsedMilliseconds}ms");
+            _assemblies[assemblyName] = assemblyBag;
         }
 
         if (readWrite)
         {
             if (assemblyBag.IsReadOnly)
             {
-                throw new ArgumentException($"Assembly {reference.Name} is not allowed to be opened for modification");
+                throw new ArgumentException($"Assembly {assemblyName} is not allowed to be opened for modification");
             }
             assemblyBag.Modified = true;
         }
@@ -73,6 +72,11 @@ class AssemblyCache : IAssemblyResolver
             foreach (var file in Directory.GetFiles(searchDirectory, "*.dll"))
             {
                 var name = Path.GetFileNameWithoutExtension(file);
+                // fix wrong dll name
+                if (name == "Dapper.Unity")
+                {
+                    name = "Dapper";
+                }
                 if (candidates.ContainsKey(name))
                 {
                     continue;

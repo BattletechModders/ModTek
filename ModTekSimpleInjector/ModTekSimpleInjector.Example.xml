@@ -13,7 +13,8 @@ Names starting with "example" are ignored.
 <ModTekSimpleInjector>
   <!--
   AddField adds a new instance field to an existing type.
-  Fields can be of any types found in mscorlib, System, System.Core or form the assembly being injected into.
+  Fields can be of any types found in mscorlib, System, System.Core,
+    and from the assembly being injected into or its references.
   Keywords (e.g. byte) are not supported, use the types full name (e.g. System.Byte).
   -->
   <AddField ToType="HBS.Logging.Logger" InAssembly="Assembly-CSharp"

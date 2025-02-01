@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
@@ -24,12 +25,16 @@ internal class SimpleInjection
             ?? throw new ArgumentException($"Unable to resolve assembly {addition.InAssembly}");
         _moduleDefinition = assemblyDefinition.MainModule;
 
-        _resolveInModules = [
-            _moduleDefinition,
-            resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule,
-            resolver.Resolve(new AssemblyNameReference("System", null)).MainModule,
-            resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule,
-        ];
+        var modules = new List<ModuleDefinition>();
+        modules.Add(_moduleDefinition);
+        modules.AddRange(
+            _moduleDefinition.AssemblyReferences
+                .Select(assemblyReference => resolver.Resolve(assemblyReference).MainModule)
+        );
+        modules.Add(resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule);
+        modules.Add(resolver.Resolve(new AssemblyNameReference("System", null)).MainModule);
+        modules.Add(resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule);
+        _resolveInModules = modules.ToArray();
 
         _customAttribute = CreateCustomAttribute(_moduleDefinition,"ModTekSimpleInjector", "InjectedAttribute", [
             new ParameterInfo<string>("source", sourceFile),

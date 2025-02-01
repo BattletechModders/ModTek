@@ -32,6 +32,9 @@ internal static class Injector
     public static void Inject(IAssemblyResolver resolver)
     {
         var baseDirectory = Path.GetDirectoryName(typeof(Injector).Assembly.Location);
+        var prefixLength =
+            Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(baseDirectory))))!
+                .Length + 1;
         var files = Directory.GetFiles(baseDirectory, "ModTekSimpleInjector.*.xml");
         Array.Sort(files);
         var serializer = new XmlSerializer(typeof(Additions));
@@ -40,7 +43,7 @@ internal static class Injector
         var greaterThanFix = new Regex(@"(?<=[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}])<");
         foreach (var file in files)
         {
-            Console.WriteLine($"Processing additions in file {file}");
+            Console.WriteLine($"Processing additions in file `{file[prefixLength..]}`");
             var xml = File.ReadAllText(file);
             var sanitized = greaterThanFix.Replace(xml, "&lt;");
             using var reader = new StringReader(sanitized);
