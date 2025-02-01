@@ -27,10 +27,16 @@ internal class SimpleInjection
 
         var modules = new List<ModuleDefinition>();
         modules.Add(_moduleDefinition);
-        modules.AddRange(
-            _moduleDefinition.AssemblyReferences
-                .Select(assemblyReference => resolver.Resolve(assemblyReference).MainModule)
-        );
+        foreach (var assemblyReference in _moduleDefinition.AssemblyReferences)
+        {
+            // workaround for Mono.Cecil adding System.Private.CoreLib to assembly references when on msbuild task
+            if (assemblyReference.Name == "System.Private.CoreLib")
+            {
+                continue;
+            }
+            var module = resolver.Resolve(assemblyReference).MainModule;
+            modules.Add(module);
+        }
         modules.Add(resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule);
         modules.Add(resolver.Resolve(new AssemblyNameReference("System", null)).MainModule);
         modules.Add(resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule);
