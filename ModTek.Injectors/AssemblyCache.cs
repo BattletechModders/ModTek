@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ModTek.Common.Globals;
@@ -10,22 +11,7 @@ namespace ModTek.Injectors;
 
 class AssemblyCache : IAssemblyResolver
 {
-    private readonly Dictionary<string, AssemblyBag> assemblies = new();
-    private readonly List<string> searchDirectories;
-
-    internal AssemblyCache()
-    {
-        searchDirectories = new List<string>
-        {
-            Paths.ModTekLibDirectory,
-            Paths.ManagedDirectory
-        };
-
-        if (Directory.Exists(Paths.AssembliesOverrideDirectory))
-        {
-            searchDirectories.Insert(0, Paths.AssembliesOverrideDirectory);
-        }
-    }
+    private readonly Dictionary<string, AssemblyBag> _assemblies = new(StringComparer.Ordinal);
 
     public AssemblyDefinition Resolve(AssemblyNameReference name)
     {
@@ -34,145 +20,105 @@ class AssemblyCache : IAssemblyResolver
 
     public AssemblyDefinition Resolve(AssemblyNameReference reference, ReaderParameters parameters)
     {
-        parameters.AssemblyResolver = parameters.AssemblyResolver ?? this;
+        parameters.AssemblyResolver ??= this;
+        var readWrite = parameters.ReadWrite;
+        parameters.ReadWrite = false;
 
-        if (!assemblies.TryGetValue(reference.Name, out var assemblyBag))
+        if (!_assemblies.TryGetValue(reference.Name, out var assemblyBag))
         {
-            var assembly = SearchAssembly(reference, parameters);
-            assemblyBag = new AssemblyBag(assembly);
-            assemblies[reference.Name] = assemblyBag;
+            var sw = Stopwatch.StartNew();
+            if (!s_assemblyCandidates.TryGetValue(reference.Name, out var assemblyCandidate))
+            {
+                throw new AssemblyResolutionException(reference);
+            }
+            var assembly = ModuleDefinition.ReadModule(assemblyCandidate.Path, parameters).Assembly;
+            assemblyBag = new AssemblyBag(assembly, assemblyCandidate.IsReadOnly);
+            _assemblies[reference.Name] = assemblyBag;
+            Logger.Main.Log($"Assembly {reference.Name} found and loaded in {sw.ElapsedMilliseconds}ms");
+        }
+
+        if (readWrite)
+        {
+            if (assemblyBag.IsReadOnly)
+            {
+                throw new ArgumentException($"Assembly {reference.Name} is not allowed to be opened for modification");
+            }
+            assemblyBag.Modified = true;
         }
 
         return assemblyBag.Definition;
     }
 
-    private AssemblyDefinition SearchAssembly(AssemblyNameReference reference, ReaderParameters parameters)
+    private static readonly Dictionary<string, AssemblyCandidate> s_assemblyCandidates = GatherAssemblyCandidates();
+    private static Dictionary<string, AssemblyCandidate> GatherAssemblyCandidates()
     {
-        // TODO allow Harmony modifications
-        if (reference.Name.StartsWith("OHarmony"))
-        {
-            if (reference.Name != "OHarmony")
-            {
-                throw new NotSupportedException("Only 0Harmony is supported, no shims.");
-            }
-            var version = reference.Version;
-            if (!(version.Major == 1 && version.Minor == 2))
-            {
-                throw new NotSupportedException("Only 0Harmony 1.2 is supported for assembly definition loading.");
-            }
-        }
-        var searchPattern = $"{reference.Name}.dll";
+        var candidates = new Dictionary<string, AssemblyCandidate>(StringComparer.Ordinal);
+        // this represents the loaded assemblies from the Managed directory when the injectors run
+        string[] alreadyLoadedAssemblies =
+        [
+            "mscorlib", "System", "System.Core", "Mono.Security"
+        ];
+        string[] searchDirectories =
+        [
+            Paths.AssembliesOverrideDirectory,
+            Paths.ModTekLibDirectory, // this is not allowed to be patched!
+            Paths.ManagedDirectory,
+        ];
         foreach (var searchDirectory in searchDirectories)
         {
-            foreach (var file in Directory.GetFiles(searchDirectory, searchPattern))
+            if (!Directory.Exists(searchDirectory))
             {
-                return ModuleDefinition.ReadModule(file, parameters).Assembly;
+                continue;
+            }
+            foreach (var file in Directory.GetFiles(searchDirectory, "*.dll"))
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+                if (candidates.ContainsKey(name))
+                {
+                    continue;
+                }
+                var isReadOnly = alreadyLoadedAssemblies.Contains(name)
+                                 || ReferenceEquals(Paths.ModTekLibDirectory, searchDirectory);
+                candidates[name] = new AssemblyCandidate(file, isReadOnly);
             }
         }
-        throw new AssemblyResolutionException(reference);
+        return candidates;
     }
+    private record AssemblyCandidate(string Path, bool IsReadOnly);
 
     internal void SaveAssembliesToDisk()
     {
         FileUtils.SetupCleanDirectory(Paths.AssembliesInjectedDirectory);
         Logger.Main.Log($"Assemblies modified by injectors and saved to `{FileUtils.GetRelativePath(Paths.AssembliesInjectedDirectory)}`:");
-        foreach (var kv in assemblies.OrderBy(kv => kv.Key))
+        foreach (var kv in _assemblies.OrderBy(kv => kv.Key))
         {
             var name = kv.Key;
             var bag = kv.Value;
-            if (!bag.CheckIfChanged(out var serialized))
+            if (!bag.Modified)
             {
                 continue;
             }
-            // TODO allow Harmony modifications
-            if (name.StartsWith("OHarmony"))
-            {
-                Logger.Main.Log($"\t {name} not saved. Modifying harmony assemblies is not supported.");
-                return;
-            }
             var path = Path.Combine(Paths.AssembliesInjectedDirectory, $"{name}.dll");
             Logger.Main.Log($"\t{Path.GetFileName(path)}");
-            File.WriteAllBytes(path, serialized);
+            bag.SaveTo(path);
         }
     }
 
     public void Dispose()
     {
-        assemblies.Clear();
+        _assemblies.Clear();
     }
 
-    private class AssemblyBag
+    private class AssemblyBag(AssemblyDefinition definition, bool isReadOnly)
     {
-        internal readonly AssemblyDefinition Definition;
+        internal AssemblyDefinition Definition { get; } = definition;
+        internal bool IsReadOnly { get; } = isReadOnly;
+        internal bool Modified;
 
-        // skips change detection
-        // performance improvements (1.4s)
-        private static readonly string[] AlwaysChangedAssemblies =
+        public void SaveTo(string path)
         {
-            "Assembly-CSharp"
-        };
-
-        // skips change detection
-        // skips serialization
-        // performance improvements (0.5s)
-        private static readonly string[] NeverChangedAssemblies =
-        {
-            "mscorlib", "System", "System.Core"
-        };
-
-        private readonly bool AlwaysChanged;
-        private readonly bool NeverChanged;
-        private readonly byte[] Serialized;
-
-        public AssemblyBag(AssemblyDefinition definition)
-        {
-            Definition = definition;
-            AlwaysChanged = AlwaysChangedAssemblies.Contains(Name);
-            NeverChanged = NeverChangedAssemblies.Contains(Name);
-            Serialized = AlwaysChanged || NeverChanged ? null : Serialize(definition);
-        }
-
-        private string Name => Definition.Name.Name;
-
-        internal bool CheckIfChanged(out byte[] serialized)
-        {
-            if (NeverChanged)
-            {
-                serialized = null;
-                return false;
-            }
-            serialized = Serialize(Definition);
-            if (AlwaysChanged)
-            {
-                return true;
-            }
-            return !serialized.SequenceEqual(Serialized);
-        }
-
-        private static byte[] Serialize(AssemblyDefinition definition)
-        {
-            using var stream = new MemoryStream();
-            definition.Write(stream);
-            return stream.ToArray();
-        }
-    }
-
-    // SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)
-    private class AssemblySecurityPermission
-    {
-        private readonly bool skipVerification;
-        public AssemblySecurityPermission(AssemblyDefinition assembly)
-        {
-            skipVerification = assembly.SecurityDeclarations
-                .SelectMany(x => x.SecurityAttributes)
-                .SelectMany(x => x.Properties)
-                .Where(x => x.Name == "SkipVerification")
-                .Select(x => (bool)x.Argument.Value)
-                .FirstOrDefault();
-        }
-        public override string ToString()
-        {
-            return $"SkipVerification = {skipVerification})";
+            using var stream = new FileStream(path, FileMode.Create);
+            Definition.Write(stream);
         }
     }
 }

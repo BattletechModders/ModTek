@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,8 +19,12 @@ internal class Runner : IDisposable
             return;
         }
 
+        var sw = Stopwatch.StartNew();
         injectorsRunner.RunInjectors();
+        Logger.Main.Log($"Injectors ran for {sw.ElapsedMilliseconds}ms");
+        sw.Restart();
         injectorsRunner.SaveToDisk();
+        Logger.Main.Log($"Saving injected assemblies to disk took {sw.ElapsedMilliseconds}ms");
     }
 
     internal static string[] GetInjectedPaths()
@@ -35,9 +40,9 @@ internal class Runner : IDisposable
         _injectionCacheManifest = new InjectionCacheManifest();
     }
 
-    internal bool IsUpToDate => _injectionCacheManifest.IsUpToDate;
+    private bool IsUpToDate => _injectionCacheManifest.IsUpToDate;
 
-    internal void RunInjectors()
+    private void RunInjectors()
     {
         Logger.Main.Log($"Searching injector assemblies in `{FileUtils.GetRelativePath(Paths.InjectorsDirectory)}`:");
         foreach (var injectorPath in Directory.GetFiles(Paths.InjectorsDirectory, "*.dll").OrderBy(p => p))
@@ -46,7 +51,7 @@ internal class Runner : IDisposable
         }
     }
 
-    internal void SaveToDisk()
+    private void SaveToDisk()
     {
         _assemblyCache.SaveAssembliesToDisk();
         _injectionCacheManifest.RefreshAndSave();
@@ -90,6 +95,8 @@ internal class Runner : IDisposable
         var originalConsoleError = Console.Error;
         Console.SetOut(infoLogger);
         Console.SetError(errorLogger);
+
+        var sw = Stopwatch.StartNew();
         try
         {
             injectMethod.Invoke(null, [_assemblyCache]);
@@ -101,6 +108,7 @@ internal class Runner : IDisposable
         }
         finally
         {
+            Logger.Main.Log($"Injector {name} ran for {sw.ElapsedMilliseconds}ms");
             Console.SetOut(originalConsoleOut);
             Console.SetError(originalConsoleError);
         }

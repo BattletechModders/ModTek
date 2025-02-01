@@ -10,9 +10,11 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
   however injected assemblies are now found under `Mods/.modtek/AssembliesInjected` or loaded directly into memory after injection.
 - The HarmonyX feature works well, however some mods might rely on some buggy Harmony 1.2 behaviors that HarmonyX shims don't replicate.
 - Missing (markdown) documentations:
-    - ModTekSimpleInjector -> link to xml, but from where?
+  - Injectors in general
+    - How to build an injector
     - Run injectors from dotnet/msbuild thanks to netstandard2.0 -> still highly experimental
-    - `Logs` section within `mod.json` -> probably unstable API (options and stuff seems to always change)
+    - Use of ModTekSimpleInjector [ModTekSimpleInjector.Example.xml](ModTekSimpleInjector/ModTekSimpleInjector.Example.xml)
+  - `Logs` section within `mod.json` -> probably unstable API (options and stuff seems to always change)
 
 ## 4.4 - CptMoore
 

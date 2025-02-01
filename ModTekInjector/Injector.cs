@@ -17,7 +17,7 @@ internal static class Injector
     {
         Console.WriteLine($"Injecting call to {MODTEK_INIT_TYPE}.{MODTEK_INIT_METHOD} from {GAME_HOOK_TYPE}.{GAME_HOOK_METHOD}");
 
-        var game = resolver.Resolve(new AssemblyNameReference("Assembly-CSharp", null));
+        var game = resolver.Resolve(new AssemblyNameReference("Assembly-CSharp", null), new ReaderParameters { ReadWrite = true });
         var modtek = resolver.Resolve(new AssemblyNameReference("ModTek", null));
         InjectCall(game, modtek);
     }

@@ -20,18 +20,16 @@ internal class SimpleInjection
         Console.WriteLine($"Processing {addition}");
         var assemblyName = new AssemblyNameReference(addition.InAssembly, null);
 
-        var assemblyDefinition = resolver.Resolve(assemblyName)
+        var assemblyDefinition = resolver.Resolve(assemblyName, new ReaderParameters { ReadWrite = true })
             ?? throw new ArgumentException($"Unable to resolve assembly {addition.InAssembly}");
         _moduleDefinition = assemblyDefinition.MainModule;
 
-        // TODO improve resolver while keeping performance high
         _resolveInModules = [
             _moduleDefinition,
             resolver.Resolve(new AssemblyNameReference("mscorlib", null)).MainModule,
             resolver.Resolve(new AssemblyNameReference("System", null)).MainModule,
             resolver.Resolve(new AssemblyNameReference("System.Core", null)).MainModule,
         ];
-
 
         _customAttribute = CreateCustomAttribute(_moduleDefinition,"ModTekSimpleInjector", "InjectedAttribute", [
             new ParameterInfo<string>("source", sourceFile),
@@ -157,7 +155,9 @@ internal class SimpleInjection
             genericArgumentsTypes = null;
         }
 
-        TypeReference typeReference = _resolveInModules.Select(m => m.GetType(typeName)).FirstOrDefault();
+        TypeReference typeReference = _resolveInModules
+            .Select(m => m.GetType(typeName))
+            .FirstOrDefault(t => t !=null);
         if (typeReference == null)
         {
             throw new ArgumentException($"Unable to resolve type {typeName}");
