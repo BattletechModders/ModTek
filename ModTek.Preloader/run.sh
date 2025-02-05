@@ -63,6 +63,7 @@ case ${os_type} in
     #Work around used as it is a bug that is patched out in newer versions of mono.
     export TERM=xterm
 
+    #LD_PRELOAD can't handle whitespaces as good as LD_LIBRARY_PATH
     export LD_LIBRARY_PATH="${BASEDIR}"
     export LD_PRELOAD="libdoorstop.so:${LD_PRELOAD:-}"
     LD_PRELOAD="${LD_PRELOAD%:}"
