@@ -46,8 +46,6 @@ internal class Formatter
             buffer.Append(s_threadIdSuffix);
         }
 
-        // TODO create injector and add a nameAsBytes field that should be passed along instead of string
-        //  should improve performance by 20% since string/char[] -> byte[] is slow
         buffer.Append(messageDto.LoggerName);
 
         buffer.Append(LogLevelExtension.GetFormattedBytes(messageDto.LogLevel));
@@ -63,8 +61,6 @@ internal class Formatter
         if (messageDto.Exception != null)
         {
             buffer.Append(prefix);
-            // TODO find a faster (pinvoke?) method for conversion
-            //  this takes like 60-80% of the formatting time
             buffer.Append(messageDto.Exception.ToString());
             prefix = s_environmentNewline;
         }
