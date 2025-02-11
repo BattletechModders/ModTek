@@ -84,11 +84,11 @@ internal class SimpleInjection
         var attributeTypeDefinition = moduleDefinition.GetType(@namespace, name);
         if (attributeTypeDefinition == null)
         {
-            var baseType = moduleDefinition.ImportReference(typeof(Attribute));
+            var baseType = moduleDefinition.TypeSystem.LookupType("System", "Attribute");
             attributeTypeDefinition = new TypeDefinition(
                 @namespace,
                 name,
-                TypeAttributes.NotPublic | TypeAttributes.Sealed,
+                TypeAttributes.NestedAssembly | TypeAttributes.Sealed,
                 baseType
             );
             const MethodAttributes CtorAttributes =

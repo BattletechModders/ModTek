@@ -16,4 +16,9 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer" />
+    <Publicize Include="Mono.Cecil:Mono.Cecil.TypeSystem.LookupType" />
+  </ItemGroup>
 </Project>
