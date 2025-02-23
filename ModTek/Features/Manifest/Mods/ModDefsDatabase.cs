@@ -132,9 +132,20 @@ internal static class ModDefsDatabase
         var countCurrent = 0;
         var countMax = (float) ModLoadOrder.Count;
         Log.Main.Info?.Log("");
-        foreach (var modName in ModLoadOrder)
+        foreach (var modName in ModLoadOrder.ToList())
         {
-            var modDef = ModDefs[modName];
+            // TODO something already triggered a ModDefs.Remove(), see OnModLoadFailure
+            //   allModDefs, ModDefs, ModLoadOrder are not properly linked + encapsulated, including error/failure handling
+            //  refactor to strive for:
+            //   - null checks in ModsInLoadOrder() should not be necessary, nor the conversion from string to ModDefEx
+            //   - OnModLoadFailure should not need to remove items from ModDefs (or ModLoadOrder)
+            //     - "ModDefs" is a mix of candidates and active ModDefs unfortunately, therefore we have to separately track state
+            //     - rather have allModDefs, candidateModDefs, activeModDefs; latter two being sorted dicts to reflect the suggested and final load orders
+            if (!ModDefs.TryGetValue(modName, out var modDef))
+            {
+                Log.Main.Error?.Log($"Internal error: Something already removed {modName} from ModDefs dict, should not have happened, maybe duplicate modDef.Name value?");
+                continue;
+            }
 
             if (ModTek.Config.BlockedMods.Contains(modName))
             {
@@ -292,6 +303,7 @@ internal static class ModDefsDatabase
         }
 
         ModDefs.Remove(modName);
+        ModLoadOrder.Remove(modName);
 
         if (allModDefs.TryGetValue(modName, out var modDef))
         {
