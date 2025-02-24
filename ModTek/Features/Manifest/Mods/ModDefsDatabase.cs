@@ -303,7 +303,7 @@ internal static class ModDefsDatabase
         }
 
         ModDefs.Remove(modName);
-        ModLoadOrder.Remove(modName);
+        ModLoadOrder?.Remove(modName);
 
         if (allModDefs.TryGetValue(modName, out var modDef))
         {
