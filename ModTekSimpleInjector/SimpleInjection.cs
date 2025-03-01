@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
 namespace ModTekSimpleInjector;
@@ -43,8 +44,8 @@ internal class SimpleInjection
         _resolveInModules = modules.ToArray();
 
         _customAttribute = CreateCustomAttribute(_moduleDefinition,"ModTekSimpleInjector", "InjectedAttribute", [
-            new ParameterInfo<string>("source", sourceFile),
-            new ParameterInfo<string>("comment", addition.Comment)
+            new ParameterInfo("source", sourceFile),
+            new ParameterInfo("comment", addition.Comment)
         ]);
 
         _typeDefinition = _moduleDefinition.GetType(addition.ToType)
@@ -79,37 +80,47 @@ internal class SimpleInjection
         ModuleDefinition moduleDefinition,
         string @namespace,
         string name,
-        IParameterInfo[] parameters
+        ParameterInfo[] parameters
     ) {
         var attributeTypeDefinition = moduleDefinition.GetType(@namespace, name);
         if (attributeTypeDefinition == null)
         {
-            var baseType = moduleDefinition.TypeSystem.LookupType("System", "Attribute");
+            var baseTypeReference = moduleDefinition.TypeSystem.LookupType("System", "Attribute");
             attributeTypeDefinition = new TypeDefinition(
                 @namespace,
                 name,
-                TypeAttributes.NestedAssembly | TypeAttributes.Sealed,
-                baseType
+                TypeAttributes.NotPublic | TypeAttributes.Sealed,
+                baseTypeReference
             );
+
             const MethodAttributes CtorAttributes =
-                MethodAttributes.Public
+                MethodAttributes.Assembly
                 | MethodAttributes.HideBySig
                 | MethodAttributes.SpecialName
                 | MethodAttributes.RTSpecialName;
             var methodDefinition = new MethodDefinition(".ctor", CtorAttributes, moduleDefinition.TypeSystem.Void);
+            { // calling the base constructor does not seem required, better safe than sorry though
+                var baseConstructorMethodReference = new MethodReference(".ctor", moduleDefinition.TypeSystem.Void, baseTypeReference);
+                var methodBody = methodDefinition.Body = new MethodBody(methodDefinition);
+                methodBody.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+                methodBody.Instructions.Add(Instruction.Create(OpCodes.Call, baseConstructorMethodReference));
+                methodBody.Instructions.Add(Instruction.Create(OpCodes.Ret));
+            }
             attributeTypeDefinition.Methods.Add(methodDefinition);
+
             foreach (var parameter in parameters)
             {
                 var attributeFieldDefinition = new FieldDefinition(
                     parameter.Name,
-                    FieldAttributes.Public,
-                    moduleDefinition.ImportReference(parameter.Type)
+                    FieldAttributes.Assembly,
+                    moduleDefinition.TypeSystem.String
                 );
                 attributeTypeDefinition.Fields.Add(attributeFieldDefinition);
             }
             moduleDefinition.Types.Add(attributeTypeDefinition);
         }
-        var attributeConstructor = attributeTypeDefinition.GetConstructors().First();
+
+        var attributeConstructor = attributeTypeDefinition.GetConstructors().Single();
         var attribute = new CustomAttribute(attributeConstructor);
         foreach (var parameter in parameters)
         {
@@ -118,7 +129,7 @@ internal class SimpleInjection
                 continue;
             }
             var attributeArgument = new CustomAttributeArgument(
-                moduleDefinition.ImportReference(parameter.Type),
+                moduleDefinition.TypeSystem.String,
                 parameter.Value
             );
             var attributeNamedArgument = new CustomAttributeNamedArgument(parameter.Name, attributeArgument);
@@ -126,17 +137,7 @@ internal class SimpleInjection
         }
         return attribute;
     }
-    private record ParameterInfo<T>(string Name, T value) : IParameterInfo
-    {
-        public Type Type => typeof(T);
-        public object Value => value;
-    }
-    private interface IParameterInfo
-    {
-        string Name { get; }
-        object Value { get; }
-        Type Type { get; }
-    }
+    private record ParameterInfo(string Name, string Value);
 
     private TypeReference ResolveType(string typeName)
     {
