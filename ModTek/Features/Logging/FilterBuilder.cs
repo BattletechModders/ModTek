@@ -166,6 +166,8 @@ internal class FilterBuilder
 
             _il.Emit(isMatchRetValue);
             _il.Emit(OpCodes.Ret);
+
+            previousFilter = filter;
         }
 
         noMatchLabels.Add(labelToNextLoggerName.Value);
