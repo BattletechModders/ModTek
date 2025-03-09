@@ -55,11 +55,11 @@ internal static class LinePrefixToFilterTransformer
 
     private static FilterSettings CreateFilterSettingsFromLinePrefix(string linePrefix)
     {
-        var regex = new Regex(@"^([^\]]+)(?: \[([^\]]+)\](?: (.+))?)?$");
+        var regex = new Regex(@"^(.+?)(?: \[([^\]]+)\](?: (.+))?)?$");
         var match = regex.Match(linePrefix);
         if (!match.Success)
         {
-            throw new ArgumentException($"Not can't match pattern ({regex}) against value: {linePrefix}");
+            throw new ArgumentException($"Can't match pattern ({regex}) against value: {linePrefix}");
         }
 
         var settings = new FilterSettings
