@@ -24,25 +24,27 @@ internal class FilterBuilder
         );
 
         var il = dynamicMethod.GetILGenerator();
+        var filterBuilder = new FilterBuilder(il);
 
-        var noMatchReturn = OpCodes.Ldc_I4_1;
-        if (settings.Include is { Length: > 0 } || settings.Exclude is { Length: > 0 })
+        if (settings.Exclude is { Length: > 0 })
         {
-            var filterBuilder = new FilterBuilder(il);
-            if (settings.Exclude is { Length: > 0 })
-            {
-                var filterSettings = LinePrefixToFilterTransformer.CreateFilters(settings.Exclude).ToArray();
-                filterBuilder.AddFilter(filterSettings, OpCodes.Ldc_I4_0);
-            }
-            if (settings.Include is { Length: > 0 })
-            {
-                var filterSettings = LinePrefixToFilterTransformer.CreateFilters(settings.Include).ToArray();
-                filterBuilder.AddFilter(filterSettings, OpCodes.Ldc_I4_1);
-                noMatchReturn = OpCodes.Ldc_I4_0;
-            }
+            var filterSettings = LinePrefixToFilterTransformer.CreateFilters(settings.Exclude).ToArray();
+            filterBuilder.AddFilter(filterSettings, OpCodes.Ldc_I4_0); // return false if matched
         }
-        il.Emit(noMatchReturn);
-        il.Emit(OpCodes.Ret);
+
+        if (settings.Include is { Length: > 0 })
+        {
+            var filterSettings = LinePrefixToFilterTransformer.CreateFilters(settings.Include).ToArray();
+            filterBuilder.AddFilter(filterSettings, OpCodes.Ldc_I4_1); // return true if matched
+
+            il.Emit(OpCodes.Ldc_I4_0); // return false if not matched
+            il.Emit(OpCodes.Ret);
+        }
+        else
+        {
+            il.Emit(OpCodes.Ldc_I4_1); // return true if not matched
+            il.Emit(OpCodes.Ret);
+        }
 
         return dynamicMethod.CreateDelegate(typeof(FilterDelegate)) as FilterDelegate;
     }
