@@ -73,15 +73,26 @@ The base installation folder is the `Contents/Resources` directory within the .a
 For a standard Steam installation that means the following path:
 > `~/"Library/Application Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/"`
 
+The easiest way to go to this folder is to go into Steam and select the gear icon->Manage->Browse local files. This will open up a Finder window. Right click on the Battletech app and select "Show Package Contents." From the next view, double click on Contents and then Resources. You are now in the correct folder. Copy the content of the ModTek download into the Resources folder.
+
 ### Steam on macOS
 
-Launch options for macOS need to contain the absolute path to the run script.
+After copying the ModTek folders you will need to configure both the Steam launcher and set the correct file permissions for run.sh. To do both you need to first open a Terminal window in the resources directory. Either launch Terminal and CD to the Resources directory you navigated to above or if you have configured Terminal keyboard shortcut service, use that to open a Terminal Window in the Resources directory. First you will need to set the correct permissions for the run.sh script required to load ModTek via Doorstop. 
+
+In Terminal type:
+> `chmod +x run.sh`
+
+This will set the correct run execute permissions for the run.sh script. 
+
+Next you need to set the launch options for ModTek to load. Launch options for macOS need to contain the absolute path to the run.sh script.
+
 In a terminal, run this from the same location where the run script is:
 > `echo "\"$(pwd)/run.sh\" %command%"`
 
 The launch options should then look something like this:
 > `"/Users/ReplaceThisByYourUsername/Library/Application Support/Steam/steamapps/common/BATTLETECH/BattleTech.app/Contents/Resources/run.sh" %command%`
 
+In Steam go to Battletech, select Gear->Properties and paste the output from running the command above in Terminal (copy and paste) into the Launch Options box. 
 
 ## Enabling or Disabling
 
