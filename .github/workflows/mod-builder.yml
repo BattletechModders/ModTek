@@ -90,6 +90,7 @@ jobs:
           git push --delete origin refs/tags/"$LATEST_UNSTABLE_TAG" || true
           git tag "$LATEST_UNSTABLE_TAG"
           git push --force origin refs/tags/"$LATEST_UNSTABLE_TAG"
+          sleep 15
           gh release create "$LATEST_UNSTABLE_TAG" "$DIST_DIR"/* \
             --generate-notes \
             --title "Latest (unstable)" \
