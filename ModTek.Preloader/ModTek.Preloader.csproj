@@ -31,12 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- force versions set in Directory.Packages.props -->
-    <PackageReference Include="MonoMod.RuntimeDetour" />
-    <PackageReference Include="Mono.Cecil" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ModTek.Common\ModTek.Common.csproj" Private="false" ExcludeAssets="all"  />
     <ProjectReference Include="..\ModTek.Injectors\ModTek.Injectors.csproj" Private="false" ExcludeAssets="all" />
     <ProjectReference Include="..\HarmonyXInterop\Harmony109Interop\Harmony109Interop.csproj" Private="false" ExcludeAssets="all" />
