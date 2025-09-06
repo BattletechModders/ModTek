@@ -61,7 +61,11 @@ If a crash happens with the following error
 > #1  0x007f982693674c in init_mono
 > ```
 
-Add a file /etc/sysctl.d/01-disable-aslr.conf with contents
+#### Proper fix
+Add the env variable `MODTEK_DISABLE_ASLR=true`, e.g. to your `~/.profile` file.
+
+#### Unsecure fix (obsolete)
+A previous variant of the fix suggested to add `/etc/sysctl.d/01-disable-aslr.conf` with contents
 > kernel.randomize_va_space = 0
 
 ## macOS

@@ -57,7 +57,14 @@ case ${os_type} in
       executable_path="${BASEDIR}/${executable_name}"
       cd "${BASEDIR}"
     fi
-    
+    set -- "$executable_path" "$@"
+
+    # disable ASLR which causes issues with runtime patching on some systems
+    if [ "${MODTEK_DISABLE_ASLR:-}" = "true" ]
+    then
+      set -- "setarch" "-R" "$@"
+    fi
+
     #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
     #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
     #Work around used as it is a bug that is patched out in newer versions of mono.
@@ -84,6 +91,7 @@ case ${os_type} in
       # BASEDIR should be the Resources directory
       executable_path="$contents_path/MacOS/${executable_name}"
     fi
+    set -- "$executable_path" "$@"
     
     # fix mods wanting BattleTech_Data
     (
@@ -102,4 +110,4 @@ case ${os_type} in
   ;;
 esac
 
-exec "$executable_path" "$@"
+exec "$@"
