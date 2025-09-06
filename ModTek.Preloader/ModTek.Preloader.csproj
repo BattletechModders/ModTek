@@ -13,11 +13,11 @@
 
   <Target Name="DoorstopDownloadAndInstall" BeforeTargets="CopyFilesToGame" Condition="!Exists('$(MSBuildProjectExtensionsPath)\doorstop') Or !Exists('$(BattleTechGameDir)\winhttp.dll')">
     <PropertyGroup>
-      <DoorstopUrl>https://github.com/BattletechModders/UnityDoorstop/releases/download/4.3.0steamfix/doorstop_all_4.3.0steamfix.zip</DoorstopUrl>
+      <DoorstopUrl>https://github.com/BattletechModders/UnityDoorstop/releases/download/4.4.1steamfix/doorstop_all_4.4.1steamfix.zip</DoorstopUrl>
       <DoorstopIntDir>$(MSBuildProjectExtensionsPath)\doorstop</DoorstopIntDir>
     </PropertyGroup>
     <DownloadFile SourceUrl="$(DoorstopUrl)" DestinationFolder="$(DoorstopIntDir)" />
-    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_all_4.3.0steamfix.zip" DestinationFolder="$(DoorstopIntDir)" />
+    <Unzip SourceFiles="$(DoorstopIntDir)\doorstop_all_4.4.1steamfix.zip" DestinationFolder="$(DoorstopIntDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_win_release\x64\winhttp.dll" DestinationFolder="$(BattleTechGameDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_linux_release\x64\libdoorstop.so" DestinationFolder="$(BattleTechGameDir)" />
     <Copy SourceFiles="$(DoorstopIntDir)\doorstop_macos_release\x64\libdoorstop.dylib" DestinationFolder="$(BattleTechGameDir)" />
