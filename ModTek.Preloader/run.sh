@@ -59,21 +59,21 @@ case ${os_type} in
     fi
     set -- "$executable_path" "$@"
 
+    # TERM=xterm
+    #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
+    #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
+
+    set -- env \
+      TERM="xterm" \
+      LD_LIBRARY_PATH="${BASEDIR}" \
+      LD_PRELOAD="libdoorstop.so${LD_PRELOAD:+:${LD_PRELOAD}}" \
+      "$@"
+
     # disable ASLR which causes issues with runtime patching on some systems
     if [ "${MODTEK_DISABLE_ASLR:-}" = "true" ]
     then
       set -- "setarch" "-R" "$@"
     fi
-
-    #Fix for Mono error On Ubuntu 22.04 LTS and probably others 'System.ConsoleDriver' threw an exception. ---> System.Exception: Magic number is wrong: 542
-    #Fix discussion at https://stackoverflow.com/questions/49242075/mono-bug-magic-number-is-wrong-542
-    #Work around used as it is a bug that is patched out in newer versions of mono.
-    export TERM=xterm
-
-    #LD_PRELOAD can't handle whitespaces as good as LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH="${BASEDIR}"
-    export LD_PRELOAD="libdoorstop.so:${LD_PRELOAD:-}"
-    LD_PRELOAD="${LD_PRELOAD%:}"
   ;;
   Darwin*)
     # why is this suddenly necessary? see https://github.com/NeighTools/UnityDoorstop/issues/67
@@ -92,15 +92,28 @@ case ${os_type} in
       executable_path="$contents_path/MacOS/${executable_name}"
     fi
     set -- "$executable_path" "$@"
-    
+
+    doorstop_library_path="${BASEDIR}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
+    doorstop_insert_libraries="libdoorstop.dylib${DYLD_INSERT_LIBRARIES:+:${DYLD_INSERT_LIBRARIES}}"
+    if [ "$(uname -m)" = "x86_64" ]
+    then
+      set -- env \
+        DYLD_LIBRARY_PATH="${doorstop_library_path}" \
+        DYLD_INSERT_LIBRARIES="${doorstop_insert_libraries}" \
+        "$@"
+    else
+      # on Apple Silicon, run the game in x86_64 mode and pass in all required env variables
+      set -- arch -x86_64 \
+        -e DYLD_LIBRARY_PATH="${doorstop_library_path}" \
+        -e DYLD_INSERT_LIBRARIES="${doorstop_insert_libraries}"
+        "$@"
+    fi
+
     # fix mods wanting BattleTech_Data
     (
       cd "$BASEDIR" || exit 99
       ln -fs Data BattleTech_Data
     )
-
-    export DYLD_INSERT_LIBRARIES="${BASEDIR}/libdoorstop.dylib:${DYLD_INSERT_LIBRARIES:-}"
-    DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES%:}"
   ;;
   *)
     # alright who is running games on freebsd
@@ -110,4 +123,5 @@ case ${os_type} in
   ;;
 esac
 
+echo "args3:" "$@"
 exec "$@"
