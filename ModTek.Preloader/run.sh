@@ -105,7 +105,7 @@ case ${os_type} in
       # on Apple Silicon, run the game in x86_64 mode and pass in all required env variables
       set -- arch -x86_64 \
         -e DYLD_LIBRARY_PATH="${doorstop_library_path}" \
-        -e DYLD_INSERT_LIBRARIES="${doorstop_insert_libraries}"
+        -e DYLD_INSERT_LIBRARIES="${doorstop_insert_libraries}" \
         "$@"
     fi
 
