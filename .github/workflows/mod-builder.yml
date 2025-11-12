@@ -48,7 +48,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9
+          dotnet-version: 10
       - name: Prepare BATTLETECH/BattleTech_Data/Managed
         env:
           # TODO migrate these to a org-private git repo or org-private nuget package repo
