@@ -64,17 +64,47 @@ internal static class FileUtils
 
     internal static bool FileIsOnDenyList(string filePath)
     {
-        return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.OrdinalIgnoreCase));
+        for (var i = 0; i < IGNORE_LIST.Length; i++)
+        {
+            if (filePath.EndsWith(IGNORE_LIST[i], StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     internal static List<string> FindFiles(string basePath, params string[] suffixes)
     {
-        var query = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories)
-            .Where(path => !FileIsOnDenyList(path));
+        var files = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
+
+        // For large mods this is a startup hotspot. Parallel filtering helps while AsOrdered keeps stable order.
+        var query = files.Length >= 512
+            ? files.AsParallel().AsOrdered().Where(path => !FileIsOnDenyList(path))
+            : files.Where(path => !FileIsOnDenyList(path));
+
         if (suffixes != null && suffixes.Length > 0)
         {
-            query = query.Where(path => suffixes.Any(p => path.EndsWith(p, StringComparison.OrdinalIgnoreCase)));
+            var activeSuffixes = suffixes.Where(p => !string.IsNullOrEmpty(p)).ToArray();
+            if (activeSuffixes.Length == 0)
+            {
+                return query.ToList();
+            }
+
+            query = query.Where(path =>
+            {
+                for (var i = 0; i < activeSuffixes.Length; i++)
+                {
+                    if (path.EndsWith(activeSuffixes[i], StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
         }
+
         return query.ToList();
     }
 
