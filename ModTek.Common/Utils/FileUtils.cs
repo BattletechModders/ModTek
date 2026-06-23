@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -53,29 +54,6 @@ internal static class FileUtils
         }
 
         return relativePath;
-    }
-
-    private static readonly string[] IGNORE_LIST =
-    {
-        ".DS_STORE",
-        "~",
-        ".nomedia"
-    };
-
-    internal static bool FileIsOnDenyList(string filePath)
-    {
-        return IGNORE_LIST.Any(x => filePath.EndsWith(x, StringComparison.OrdinalIgnoreCase));
-    }
-
-    internal static List<string> FindFiles(string basePath, params string[] suffixes)
-    {
-        var query = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories)
-            .Where(path => !FileIsOnDenyList(path));
-        if (suffixes != null && suffixes.Length > 0)
-        {
-            query = query.Where(path => suffixes.Any(p => path.EndsWith(p, StringComparison.OrdinalIgnoreCase)));
-        }
-        return query.ToList();
     }
 
     internal const string JSON_TYPE = ".json";

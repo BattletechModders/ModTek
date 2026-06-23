@@ -66,6 +66,8 @@ internal static class ModsManifest
         bundleManager.UnloadAll();
 
         BetterBTRL.Instance.RefreshTypedEntries();
+
+        Log.Main.Debug?.Log($"{nameof(FileUtils2.FindFilesSW)} {FileUtils2.FindFilesSW.GetStats()}");
     }
 
     private static IEnumerable<ProgressReport> BuildModdedBTRL()
@@ -135,7 +137,7 @@ internal static class ModsManifest
         else if (entry.IsDirectory)
         {
             var patterns = entry.Type == nameof(SoundBankDef) ? new []{FileUtils.JSON_TYPE} : null;
-            foreach (var file in FileUtils.FindFiles(entry.AbsolutePath, patterns))
+            foreach (var file in FileUtils2.FindFiles(entry.AbsolutePath, patterns))
             {
                 var copy = entry.copy();
                 copy.Path = FileUtils.GetRealRelativePath(file, modDef.Directory);
