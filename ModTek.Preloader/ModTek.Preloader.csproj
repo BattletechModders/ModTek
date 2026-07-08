@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="HarmonyX" />
+    <PackageReference Include="MonoMod.RuntimeDetour" /> <!-- patch RuntimeDetour to a newer version than HarmonyX provides -->
   </ItemGroup>
 
   <ItemGroup>
