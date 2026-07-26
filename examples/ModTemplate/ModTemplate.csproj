@@ -31,7 +31,7 @@
     <None Include="$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.json;$(BattleTechGameDir)\BattleTech_Data\StreamingAssets\data\**\*.csv" LinkBase="BattleTech_Data"/>
   </ItemGroup>
   -->
-  
+
   <!-- Copy the mod dll to the BT game dir if the mod directory exists there -->
   <Target Condition="Exists('$(BattleTechGameDir)\Mods\$(ProjectName)\')" Name="CopyFilesToGame" AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BattleTechGameDir)\Mods\$(ProjectName)\" />
@@ -44,7 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Allows to access internal and private members without Harmony Traverse, do not use if inheriting from classes made public -->
-    <PackageReference Include="Krafs.Publicizer" Version="2.3.0" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.1" />
     <!-- Main game library, best to publicize it to access internals easily and efficiently -->
     <Publicize Include="Assembly-CSharp" />
   </ItemGroup>
@@ -56,13 +56,13 @@
     </PackageReference>
 
     <!-- Harmony is needed to hook into the game -->
-    <PackageReference Include="HarmonyX" Version="2.10.2">
+    <PackageReference Include="HarmonyX" Version="2.16.1">
       <PrivateAssets>All</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
 
     <!-- Enables many newer language features for .NET Framework -->
-    <PackageReference Include="PolySharp" Version="1.15.0">
+    <PackageReference Include="PolySharp" Version="1.16.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
