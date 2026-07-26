@@ -46,7 +46,7 @@ jobs:
       DIST_DIR: ${{ github.workspace }}/dist
     steps:
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10
       - name: Prepare BATTLETECH/BattleTech_Data/Managed
@@ -69,7 +69,7 @@ jobs:
           7z x -r -o"$BATTLETECH_DIR" ModTek.zip
           rm ModTek.zip
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: ${{ inputs.checkout-directory }}
           fetch-depth: 0 # tags for GitVersion
