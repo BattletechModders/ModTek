@@ -70,6 +70,7 @@ internal class MDDBCache
         Log.Main.Info?.Log("MDDBCache: Copying over DB and rebuilding cache.");
         CachedItems.Clear();
         MetadataDatabase.ReloadFromDisk();
+        CustomTagFeature.ApplyMissingIndexes();
     }
 
     private readonly Stopwatch saveSW = new();

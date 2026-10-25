@@ -10,6 +10,14 @@ namespace ModTek.Features.CustomTags;
 
 internal static class CustomTagFeature
 {
+    internal static void ApplyMissingIndexes()
+    {
+        // fix for missing NOCASE index
+        MetadataDatabase.Instance.Execute(
+            "CREATE INDEX IF NOT EXISTS ModTek_TagSetTag_TagSetID_NoCase ON TagSetTag (TagSetID COLLATE NOCASE)"
+        );
+    }
+
     internal static void ProcessTags()
     {
         var customTags = BetterBTRL.Instance.AllEntriesOfType(InternalCustomResourceType.CustomTag.ToString());

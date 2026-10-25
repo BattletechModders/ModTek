@@ -322,6 +322,9 @@ internal class BetterBTRL
         }
         sw.Stop();
         Log.Main.Info?.LogIfSlow(sw);
+
+        // not resetting HasChanges since not all use-cases are known and LogIfSlow never complains
+        // HasChanges = false;
     }
 
     public VersionManifestEntry[] AllEntries()
