@@ -12,6 +12,7 @@ namespace ModTek.Features.CustomSoundBankDefs;
 
 internal static class SoundBanksFeature
 {
+    // TODO remove CustomVoices mod being dependent on this
     internal static readonly Dictionary<string, SoundBankDef> soundBanks = new();
 
     internal static IEnumerator<ProgressReport> SoundBanksProcessing()

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using BattleTech;
 using BattleTech.UI;
@@ -13,31 +11,17 @@ namespace ModTek.Features.CustomSoundBankDefs;
 
 internal static class CustomSoundHelper
 {
-    private static readonly FieldInfo f_guidIdMap = typeof(WwiseManager).GetField("guidIdMap", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    private static Dictionary<string, uint> guidIdMap(this WwiseManager manager)
+    internal static void RegisterEvents(this SoundBankDef bank)
     {
-        return (Dictionary<string, uint>) f_guidIdMap.GetValue(manager);
-    }
-
-    internal static void registerEvents(this SoundBankDef bank)
-    {
-        bank.loaded = true;
+        var guidIdMap = SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap;
         foreach (var ev in bank.events)
         {
             Log.Main.Debug?.Log("\t\tsound event:" + ev.Key + ":" + ev.Value);
-            if (SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().ContainsKey(ev.Key) == false)
-            {
-                SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap().Add(ev.Key, ev.Value);
-            }
-            else
-            {
-                SceneSingletonBehavior<WwiseManager>.Instance.guidIdMap()[ev.Key] = ev.Value;
-            }
+            guidIdMap[ev.Key] = ev.Value;
         }
     }
 
-    internal static void setVolume(this SoundBankDef bank)
+    internal static void SetVolume(this SoundBankDef bank)
     {
         var volume = AudioEventManager.MasterVolume / 100f;
         switch (bank.type)
@@ -64,13 +48,7 @@ internal static class CustomSoundHelper
 }
 
 [HarmonyPatch(typeof(AudioEventManager))]
-[HarmonyPatch("LoadAudioSettings")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(AudioEventManager.LoadAudioSettings))]
 internal static class AudioEventManager_LoadAudioSettings
 {
     public static bool Prepare()
@@ -81,26 +59,20 @@ internal static class AudioEventManager_LoadAudioSettings
     public static void Postfix()
     {
         Log.Main.Debug?.Log("AudioEventManager.LoadAudioSettings");
-        foreach (var soundBank in SoundBanksFeature.soundBanks)
+        foreach (var (_, soundBank) in SoundBanksFeature.soundBanks)
         {
-            if (soundBank.Value.loaded != true)
+            if (soundBank.loaded != true)
             {
                 continue;
             }
 
-            soundBank.Value.setVolume();
+            soundBank.SetVolume();
         }
     }
 }
 
 [HarmonyPatch(typeof(AudioSettingsModule))]
-[HarmonyPatch("SaveSettings")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(AudioSettingsModule.SaveSettings))]
 internal static class AudioSettingsModule_SaveSettings
 {
     public static bool Prepare()
@@ -111,26 +83,18 @@ internal static class AudioSettingsModule_SaveSettings
     public static void Postfix(AudioSettingsModule __instance)
     {
         Log.Main.Debug?.Log("AudioSettingsModule.SaveSettings");
-        foreach (var soundBank in SoundBanksFeature.soundBanks)
+        foreach (var (_, soundBank) in SoundBanksFeature.soundBanks)
         {
-            if (soundBank.Value.loaded != true)
+            if (soundBank.loaded)
             {
-                continue;
+                soundBank.SetVolume();
             }
-
-            soundBank.Value.setVolume();
         }
     }
 }
 
 [HarmonyPatch(typeof(WwiseManager))]
-[HarmonyPatch("LoadCombatBanks")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(WwiseManager.LoadCombatBanks))]
 internal static class WwiseManager_LoadCombatBanks
 {
     public static bool Prepare()
@@ -160,13 +124,7 @@ internal static class WwiseManager_LoadCombatBanks
 }
 
 [HarmonyPatch(typeof(WwiseManager))]
-[HarmonyPatch("UnloadCombatBanks")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(WwiseManager.UnloadCombatBanks))]
 internal static class WwiseManager_UnloadCombatBanks
 {
     public static bool Prepare()
@@ -201,13 +159,7 @@ internal static class WwiseManager_UnloadCombatBanks
 }
 
 [HarmonyPatch(typeof(LoadedAudioBank))]
-[HarmonyPatch("UnloadBank")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(LoadedAudioBank.UnloadBank))]
 internal static class LoadedAudioBank_UnloadBank
 {
     public static bool Prepare()
@@ -218,21 +170,15 @@ internal static class LoadedAudioBank_UnloadBank
     public static void Postfix(LoadedAudioBank __instance)
     {
         Log.Main.Debug?.Log("LoadedAudioBank.UnloadBank " + __instance.name);
-        if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name))
+        if (SoundBanksFeature.soundBanks.TryGetValue(__instance.name, out var soundBank))
         {
-            SoundBanksFeature.soundBanks[__instance.name].loaded = false;
+            soundBank.Unload();
         }
     }
 }
 
 [HarmonyPatch(typeof(LoadedAudioBank))]
-[HarmonyPatch("LoadBankExternal")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(
-    new Type[]
-    {
-    }
-)]
+[HarmonyPatch(nameof(LoadedAudioBank.LoadBankExternal))]
 internal static class LoadedAudioBank_LoadBankExternal
 {
     public static bool Prepare()
@@ -240,33 +186,33 @@ internal static class LoadedAudioBank_LoadBankExternal
         return ModTek.Enabled;
     }
 
-    [Obsolete]
-    public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result, ref uint ___id)
+    public static bool Prefix(LoadedAudioBank __instance, ref AKRESULT __result)
     {
         Log.Main.Debug?.Log("LoadedAudioBank.LoadBankExternal " + __instance.name);
-        if (SoundBanksFeature.soundBanks.ContainsKey(__instance.name) == false)
+        if (!SoundBanksFeature.soundBanks.TryGetValue(__instance.name, out var soundBank))
         {
             Log.Main.Warning?.Log($"Soundbank {__instance.name} does not exists");
             return false;
         }
-        string filename = SoundBanksFeature.soundBanks[__instance.name].filename;
-        if(File.Exists(filename) == false)
+
+        if(!File.Exists(soundBank.filename))
         {
-            Log.Main.Warning?.Log($"Soundbank {filename} does not exists");
+            Log.Main.Warning?.Log($"Soundbank {soundBank.filename} does not exists");
             return false;
         };
-        byte[] content = null;
+        byte[] content;
         try
         {
-            content = File.ReadAllBytes(filename);
+            content = File.ReadAllBytes(soundBank.filename);
         }
         catch (Exception e)
         {
-            Log.Main.Error?.Log($"\tfail to read soundbank from fs\n{e.ToString()}");
+            Log.Main.Error?.Log($"\tfail to read soundbank from fs\n{e}");
+            return false;
         }
-        Log.Main.Debug?.Log($"\t'{filename}' loaded. Length: {content.Length}");
-        ProcessParameters pparams = null;
-        if ((content[0] == 'B') && (content[1] == 'K') && (content[2] == 'H') && (content[3] == 'D'))
+        Log.Main.Debug?.Log($"\t'{soundBank.filename}' loaded. Length: {content.Length}");
+        ProcessParameters pparams;
+        if (content[0] == 'B' && content[1] == 'K' && content[2] == 'H' && content[3] == 'D')
         {
             pparams = null;
         }
@@ -274,12 +220,10 @@ internal static class LoadedAudioBank_LoadBankExternal
         {
             pparams = SoundBanksProcessHelper.GetRegisteredProcParams(__instance.name);
         }
-        GCHandle? handle = null;
-        var dataLength = (uint)content.Length;
+
         if (pparams != null)
         {
             Log.Main.Debug?.Log("\tfound post-process parameters " + pparams.param1 + " " + pparams.param2);
-            byte[] result = null;
             try
             {
                 var aes = Aes.Create();
@@ -291,6 +235,7 @@ internal static class LoadedAudioBank_LoadBankExternal
                 aes.Key = Convert.FromBase64String(pparams.param1);
                 aes.IV = Convert.FromBase64String(pparams.param2);
                 var encryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+                byte[] result;
                 using (var msEncrypt = new MemoryStream())
                 {
                     using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
@@ -300,44 +245,24 @@ internal static class LoadedAudioBank_LoadBankExternal
 
                     result = msEncrypt.ToArray();
                 }
-                handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-                dataLength = (uint)result.Length;
+                content = result;
             }
             catch (Exception e)
             {
-                Log.Main.Error?.Log($"\tfail to process soundbank from fs\n{e.ToString()}");
-                handle = GCHandle.Alloc(content, GCHandleType.Pinned);
-                dataLength = (uint)content.Length;
+                Log.Main.Error?.Log($"\tfail to process soundbank from fs\n{e}");
+                // why try to continue on exceptions? instead of failing?
             }
         }
-        else
+
+        soundBank.Load(content, ref __instance.id, ref __result);
+
+        if (__result == AKRESULT.AK_Success)
         {
-            handle = GCHandle.Alloc(content, GCHandleType.Pinned);
-            dataLength = (uint)content.Length;
+            soundBank.RegisterEvents();
+            soundBank.SetVolume();
         }
 
-        if (handle.HasValue == false)
-        {
-            return false;
-        }
-
-        try
-        {
-            var id = uint.MaxValue;
-            __result = AkSoundEngine.LoadBank(handle.Value.AddrOfPinnedObject(), dataLength, out id);
-            ___id = id;
-            if (__result == AKRESULT.AK_Success)
-            {
-                SoundBanksFeature.soundBanks[__instance.name].registerEvents();
-                SoundBanksFeature.soundBanks[__instance.name].setVolume();
-            };
-        }
-        catch
-        {
-            __result = AKRESULT.AK_Fail;
-        }
-
-        Log.Main.Debug?.Log("\tResult:" + __result + " id:" + ___id + " length:" + dataLength);
+        Log.Main.Debug?.Log("\tResult:" + __result + " id:" + __instance.id + " length:" + content.Length);
         return false;
     }
 }
