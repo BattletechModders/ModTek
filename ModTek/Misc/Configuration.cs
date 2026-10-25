@@ -50,6 +50,11 @@ internal class Configuration
     internal float DataManagerEverSpinnyDetectionTimespan = 30f;
 
     [JsonProperty]
+    internal const string DataManagerMaxConcurrentLoadsLight_Description = "How many small items to load in parallel, jsons etc...";
+    [JsonProperty]
+    internal int DataManagerMaxConcurrentLoadsLight = 10; // base game default
+
+    [JsonProperty]
     internal const string DelayPrewarmToMainMenu_Description = "Delays executing prewarm requests until entering the main menu and dlc packs are loaded. Prevents choppy intro video and makes sure to include dlc items during prewarm.";
     [JsonProperty]
     internal bool DelayPrewarmToMainMenu = true;

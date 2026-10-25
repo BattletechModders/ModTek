@@ -22,6 +22,8 @@ internal class ModsManifestPreloader
 
     internal static void PrewarmResourcesIfEnabled()
     {
+        DataManager.MaxConcurrentLoadsLight = ModTek.Config.DataManagerMaxConcurrentLoadsLight;
+
         if (preloader != null)
         {
             Log.Main.Info?.Log("ERROR: Can't start prewarming, prewarm load request exists already");
