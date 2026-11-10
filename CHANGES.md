@@ -19,8 +19,7 @@ Since v2, ModTek adheres to [Semantic Versioning](http://semver.org/) for runtim
 ## 4.5 - CptMoore
 
 For modders:
-- Updated HarmonyX to 2.15.0
-- Updated UnityDoorstop to 4.4.1
+- Continuously Updated Major Dependencies
 
 ## 4.4 - CptMoore
 

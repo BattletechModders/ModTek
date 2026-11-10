@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <LangVersion>14</LangVersion>
+    <LangVersion>15</LangVersion>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
